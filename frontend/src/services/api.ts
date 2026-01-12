@@ -1,0 +1,174 @@
+import type { Article, ArticleListItem, Country, CountryStats, Dashboard, PaginatedResponse, SearchResult, Sector, SectorBreakdown, TrendingCountry } from '../types';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
+
+// Session helper
+const getSessionId = () => {
+    let id = localStorage.getItem('boa_session');
+    if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem('boa_session', id);
+    }
+    return id;
+};
+
+// Request helper
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-Session-ID': getSessionId(),
+        ...options.headers,
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `API Error: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+export const api = {
+    // Articles
+    getArticles: (params: Record<string, string> = {}) => {
+        const searchParams = new URLSearchParams(params);
+        return request<PaginatedResponse<ArticleListItem>>(`/articles?${searchParams}`);
+    },
+    getArticle: (slug: string) => request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(`/articles/${slug}`),
+    getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured'),
+    getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest'),
+
+    // Countries
+    getCountries: () => request<{ data: Country[]; by_region: Record<string, Country[]> }>('/countries'),
+    getPlatformStats: () => request<{ total_countries: number; total_articles: number; total_views: number; regions: number }>('/countries/stats'),
+    getCountry: (code: string) => request<{ country: Country; stats: CountryStats }>(`/countries/${code}`),
+
+    // Dashboards
+    getDashboards: () => request<{ data: Dashboard[] }>('/dashboards'),
+    getRegionDashboard: (region: string) => request<{
+        dashboard: Dashboard;
+        featured_articles: ArticleListItem[];
+        trending_countries: TrendingCountry[];
+        sector_breakdown: SectorBreakdown[]
+    }>(`/dashboards/${region}`),
+    getContinentalOverview: () => request<{
+        overview: {
+            total_articles_30d: number;
+            countries_covered: number;
+            regions: number;
+        };
+        by_region: { name: string; count: number }[];
+        top_countries: { code: string; name: string; flag_emoji: string; articles: number; views: number }[];
+        top_sectors: { id: string; name: string; icon: string; count: number }[];
+        highlights: ArticleListItem[];
+    }>('/dashboards/continental/overview'),
+
+    // Search
+    search: (query: string) => request<{ results: SearchResult[]; suggestions: string[] }>(`/search?q=${encodeURIComponent(query)}`),
+    autocomplete: (query: string) => request<{ suggestions: { text: string; type: string }[] }>(`/search/autocomplete?q=${encodeURIComponent(query)}`),
+
+    // Intelligence
+    getSectors: () => request<{ data: Sector[] }>('/market-intel/sectors'),
+    getSector: (id: string) => request<{
+        sector: Sector;
+        by_country: { code: string; name: string; flag_emoji: string; count: number }[];
+        by_region: { name: string; count: number; views: number }[];
+        recent_articles: ArticleListItem[];
+        top_performers: ArticleListItem[];
+    }>(`/market-intel/sector/${id}`),
+    getCountryOutlook: (code: string) => request<{
+        country: Country;
+        outlook: {
+            investment_readiness: number;
+            narrative_strength: number;
+            media_presence: number;
+            engagement_level: number;
+        };
+        sector_opportunities: { id: string; name: string; articles: number; avg_engagement: number }[];
+    }>(`/market-intel/country/${code}/outlook`),
+    getNarratives: (params: Record<string, string> = {}) => {
+        const searchParams = new URLSearchParams(params);
+        return request<{
+            data: {
+                id: string;
+                country_code: string;
+                sector_id: string;
+                narrative_theme: string;
+                key_messages: string[];
+                target_audience: string;
+                priority: number;
+                tone: string;
+            }[]
+        }>(`/narratives?${searchParams}`);
+    },
+    getCountryNarrative: (code: string) => request<{
+        country: Country;
+        narratives: {
+            id: string;
+            country_code: string;
+            sector_id: string;
+            narrative_theme: string;
+            key_messages: string[];
+            target_audience: string;
+            priority: number;
+            tone: string;
+        }[];
+        aligned_articles: ArticleListItem[];
+        sector_coverage: { id: string; name: string; article_count: number; }[];
+    }>(`/narratives/country/${code}`),
+    getReports: () => request<{ data: ArticleListItem[] }>('/market-intel/reports'),
+    getReportsBySector: (sectorId: string) => request<{ data: ArticleListItem[] }>(`/market-intel/reports/sector/${sectorId}`),
+    getReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/reports/${id}`),
+    getAudienceInsights: () => request<{
+        demographics: { age_group: string; percentage: number }[];
+        regions: { name: string; percentage: number }[];
+        interests: { topic: string; score: number }[];
+        engagement_trends: { date: string; views: number }[];
+    }>('/intel/audience'),
+    getPremiumCountryReport: (code: string) => request<{
+        country: Country;
+        article_count: number;
+        top_sectors: { sector: Sector; count: number }[];
+        recent_articles: ArticleListItem[];
+        sentiment_score: number;
+        investment_readiness_score: number;
+        tourism_appeal_score: number;
+        narrative_gaps: string[];
+        recommendations: string[];
+    }>(`/intel/country/${code}/report`),
+    getSectorTrends: (id: string) => request<{
+        sector: Sector;
+        trends: {
+            year: string;
+            market_size: number;
+            growth_rate: number;
+            investment_volume: number;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }[];
+        top_companies: string[];
+        regulatory_outlook: string;
+    }>(`/intel/sector/${id}/trends`),
+
+    // Personalization
+    getRecommendations: () => request<{ data: ArticleListItem[]; based_on?: { countries: string[]; sectors: string[] } }>('/personalization/recommended'),
+    getPreferences: () => request<{
+        countries_of_interest: string[];
+        sectors_of_interest: string[];
+        language_preference: string;
+        format_preference: string;
+    }>('/personalization/preferences'),
+    savePreferences: (prefs: {
+        countries_of_interest: string[];
+        sectors_of_interest: string[];
+        language_preference: string;
+        format_preference: string;
+    }) => request('/personalization/preferences', {
+        method: 'POST',
+        body: JSON.stringify(prefs),
+    }),
+};
