@@ -35,9 +35,14 @@ app.use('*', logger());
 app.use('*', secureHeaders());
 app.use('*', prettyJSON());
 app.use('*', cors({
-    origin: ['https://bestofafrica.com', 'http://localhost:3000', 'http://localhost:5173'],
+    origin: (origin) => {
+        if (origin.endsWith('.pages.dev') || origin === 'http://localhost:5173' || origin === 'https://bestofafrica.com') {
+            return origin;
+        }
+        return 'https://bestofafrica.com';
+    },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Session-ID'],
     exposeHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
     maxAge: 86400,
     credentials: true,
