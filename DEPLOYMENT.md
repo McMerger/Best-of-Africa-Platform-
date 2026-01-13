@@ -1,45 +1,39 @@
-# Cloudflare Production Deployment Guide
+# Deployment Instructions
 
-## 🚀 Deployment Checklist
+**1. Configure Backend Secrets**
+Set these in the Worker settings:
 
-### 1. Upload Secrets (Backend)
+* `NEWS_API_KEY`: `159f52859d124d4aacb38279529a3765`
+* `JWT_SECRET`: `f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2`
+* `ADMIN_API_KEY`: `880e9511-f30c-52d5-b827-557766551111`
 
-```bash
-npx wrangler secret put NEWS_API_KEY
-npx wrangler secret put JWT_SECRET
-npx wrangler secret put ADMIN_API_KEY
-```
-
-### 2. Initialize Database
+**2. Initialize Database**
+Run the migration:
 
 ```bash
 npx wrangler d1 migrations apply best-of-africa-db --remote
 ```
 
-### 3. Deploy Backend (Worker)
+**3. Deploy Backend**
+Deploy the Worker:
 
 ```bash
 npx wrangler deploy
-# Note the URL output! (e.g., https://backend.your-project.workers.dev)
 ```
 
-### 4. Deploy Frontend (Pages)
+**Important:** Copy the URL it outputs (e.g., `https://backend.worker.dev`).
 
-1. **Build:**
+**4. Deploy Frontend**
+Build and deploy the React app:
 
-    ```bash
-    cd frontend
-    npm run build
-    ```
+```bash
+cd frontend && npm run build
+npx wrangler pages deploy dist --project-name best-of-africa-frontend
+```
 
-2. **Deploy:**
+**5. Connect Frontend to Backend**
+Go to the **Pages Settings** -> **Environment Variables** and add:
 
-    ```bash
-    npx wrangler pages deploy dist --project-name best-of-africa-frontend
-    ```
+* `VITE_API_URL`: `[The URL from Step 3]`
 
-3. **Configure Connection:**
-    * Go to **Cloudflare Dashboard** > **Pages** > **Settings** > **Environment variables**.
-    * Add variable: `VITE_API_URL`
-    * Value: `https://[YOUR-WORKER-URL]` (The URL from step 3)
-    * **Redeploy** the frontend for this to take effect.
+Then redeploy the frontend one last time.
