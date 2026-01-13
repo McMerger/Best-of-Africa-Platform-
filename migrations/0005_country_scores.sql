@@ -3,10 +3,10 @@
 -- Add diplomacy_score and image_strength_score to countries table
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- Add score columns to countries
-ALTER TABLE countries
-ADD COLUMN diplomacy_score REAL DEFAULT 0.5;
-ALTER TABLE countries
-ADD COLUMN image_strength_score REAL DEFAULT 0.5;
+-- ALTER TABLE countries
+-- ADD COLUMN diplomacy_score REAL DEFAULT 0.5;
+-- ALTER TABLE countries
+-- ADD COLUMN image_strength_score REAL DEFAULT 0.5;
 -- Update some sample scores for key countries
 UPDATE countries
 SET diplomacy_score = 0.85,
