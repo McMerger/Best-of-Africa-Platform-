@@ -9,7 +9,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "best-of-africa-db"
-database_id = "placeholder-create-with-wrangler"
+database_id = "532cd4e1-1d5f-4562-a11a-561ec3fd8d77"
 migrations_dir = "migrations"
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -17,11 +17,11 @@ migrations_dir = "migrations"
 # ═══════════════════════════════════════════════════════════════════════════════
 [[kv_namespaces]]
 binding = "CACHE"
-id = "placeholder-create-with-wrangler"
+id = "ad2a3549ed6f43d89c89c39bd4479860"
 
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "placeholder-create-with-wrangler"
+id = "0857fddd4ac44687ae11f58c009c3a87"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # R2 BUCKET - Media Storage (images, assets)

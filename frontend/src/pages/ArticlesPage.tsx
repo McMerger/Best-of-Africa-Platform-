@@ -27,9 +27,9 @@ export const ArticlesPage: React.FC = () => {
             .then(res => {
                 setArticles(res.data);
                 setPagination({
-                    page: res.page || parseInt(page),
-                    limit: res.limit || 12,
-                    total: res.total || res.data.length
+                    page: res.pagination?.page || parseInt(page),
+                    limit: res.pagination?.limit || 12,
+                    total: res.pagination?.total || res.data.length
                 });
             })
             .catch(console.error)
