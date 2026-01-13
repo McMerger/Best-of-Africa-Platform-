@@ -62,7 +62,7 @@ router.get('/', async (c) => {
     const articles = await c.env.DB.prepare(`
     SELECT 
       a.id, a.slug, a.title, a.subtitle, a.summary,
-      a.country_code, c.name as country_name,
+      a.country_code, c.name as country_name, c.flag_emoji as country_flag,
       a.sector_id, s.name as sector_name,
       a.hero_image_url, a.reading_time_minutes,
       a.published_at, a.engagement_score, a.is_sponsored

@@ -45,7 +45,7 @@ router.get('/', async (c) => {
             const articleIds = vectorResults.matches.map(m => m.id);
 
             if (articleIds.length === 0) {
-                return c.json({ data: [], query: q, type: 'semantic' });
+                return c.json({ results: [], suggestions: [], query: q, type: 'semantic' });
             }
 
             const placeholders = articleIds.map(() => '?').join(',');
@@ -67,11 +67,28 @@ router.get('/', async (c) => {
                 (a: any, b: any) => (scoreMap.get(b.id) || 0) - (scoreMap.get(a.id) || 0)
             );
 
+            // Transform to SearchResult format
+            const searchResults = sorted.map((article: any) => ({
+                article: {
+                    id: article.id,
+                    slug: article.slug,
+                    title: article.title,
+                    summary: article.summary || '',
+                    country_code: article.country_code,
+                    country_name: article.country_name || '',
+                    sector_id: article.sector_id,
+                    sector_name: article.sector_name || '',
+                    hero_image_url: article.hero_image_url,
+                    reading_time_minutes: 5,
+                    published_at: article.published_at
+                },
+                score: scoreMap.get(article.id) || 0,
+                highlights: []
+            }));
+
             return c.json({
-                data: sorted.map((article: any) => ({
-                    ...article,
-                    relevance_score: scoreMap.get(article.id) || 0,
-                })),
+                results: searchResults,
+                suggestions: [],
                 query: q,
                 type: 'semantic',
             });
@@ -122,8 +139,68 @@ router.get('/', async (c) => {
             }
         }
 
+        // ═══════════════════════════════════════════════════════════════════════════
+        // RAG: Generate AI summary from top results using Workers AI
+        // ═══════════════════════════════════════════════════════════════════════════
+        let aiSummary: string | null = null;
+        const topResults = merged.slice(0, 5);
+
+        if (topResults.length > 0) {
+            try {
+                // Extract summaries/titles from top results for context
+                const briefsContext = topResults.map((item: any, i: number) => {
+                    const title = item.title || 'Untitled';
+                    const summary = item.summary || '';
+                    return `${i + 1}. "${title}": ${summary.slice(0, 200)}...`;
+                }).join('\n');
+
+                // Generate synthesis using Workers AI Llama model
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a concise market intelligence analyst. Provide a 2-sentence synthesis of information. Be direct and factual.'
+                        },
+                        {
+                            role: 'user',
+                            content: `Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`
+                        }
+                    ],
+                    max_tokens: 150
+                });
+
+                if (aiResponse?.response) {
+                    aiSummary = aiResponse.response;
+                }
+            } catch (aiError) {
+                console.error('AI summary generation failed:', aiError);
+                // Continue without summary - non-blocking
+            }
+        }
+
+        // Transform results to match frontend SearchResult type
+        const searchResults = merged.slice(0, limitNum).map((item: any) => ({
+            article: {
+                id: item.id,
+                slug: item.slug,
+                title: item.title,
+                summary: item.summary || '',
+                country_code: item.country_code,
+                country_name: item.country_name || '',
+                sector_id: item.sector_id,
+                sector_name: item.sector_name || '',
+                hero_image_url: item.hero_image_url,
+                reading_time_minutes: item.reading_time_minutes || 5,
+                published_at: item.published_at
+            },
+            score: item.relevance_score || 0.5,
+            highlights: []
+        }));
+
         return c.json({
-            data: merged.slice(0, limitNum),
+            results: searchResults,
+            suggestions: [], // Populated by separate /suggest endpoint
+            ai_summary: aiSummary,
             query: q,
             type: 'hybrid',
         });
@@ -145,8 +222,28 @@ router.get('/', async (c) => {
     LIMIT ?
   `).bind(`%${q}%`, `%${q}%`, `%${q}%`, limitNum).all();
 
+    // Transform to SearchResult format
+    const searchResults = (results.results || []).map((article: any) => ({
+        article: {
+            id: article.id,
+            slug: article.slug,
+            title: article.title,
+            summary: article.summary || '',
+            country_code: article.country_code,
+            country_name: article.country_name || '',
+            sector_id: article.sector_id,
+            sector_name: article.sector_name || '',
+            hero_image_url: article.hero_image_url,
+            reading_time_minutes: 5,
+            published_at: article.published_at
+        },
+        score: 0.5,
+        highlights: []
+    }));
+
     return c.json({
-        data: results.results || [],
+        results: searchResults,
+        suggestions: [],
         query: q,
         type: 'fulltext',
     });

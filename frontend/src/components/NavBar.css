@@ -1,6 +1,13 @@
 .navbar {
-    background: var(--color-primary);
+    background: rgba(5, 41, 98, 0.85);
+    /* distinct glass feel */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: white;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .navbar-top {
@@ -41,9 +48,10 @@
 }
 
 .navbar-links {
-    background: #041f4a;
-    /* Slightly darker blue */
+    background: rgba(4, 31, 74, 0.6);
+    /* Semi-transparent sub-nav */
     padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .navbar-links ul {

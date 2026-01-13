@@ -64,6 +64,8 @@ export interface Country {
     tourism_highlights: string[] | null;
     flag_emoji: string | null;
     hero_image_url: string | null;
+    diplomacy_score: number | null;
+    image_strength_score: number | null;
     created_at: string;
     updated_at: string;
 }

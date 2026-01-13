@@ -12,13 +12,22 @@ const getSessionId = () => {
     return id;
 };
 
+// Auth token helper
+const getAuthToken = () => localStorage.getItem('boa_auth_token');
+
 // Request helper
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-    const headers = {
+    const token = getAuthToken();
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Session-ID': getSessionId(),
-        ...options.headers,
+        ...((options.headers as Record<string, string>) || {}),
     };
+
+    // Add auth token if available
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
@@ -69,8 +78,8 @@ export const api = {
     }>('/dashboards/continental/overview'),
 
     // Search
-    search: (query: string) => request<{ results: SearchResult[]; suggestions: string[] }>(`/search?q=${encodeURIComponent(query)}`),
-    autocomplete: (query: string) => request<{ suggestions: { text: string; type: string }[] }>(`/search/autocomplete?q=${encodeURIComponent(query)}`),
+    search: (query: string) => request<{ results: SearchResult[]; suggestions: string[]; ai_summary?: string }>(`/search?q=${encodeURIComponent(query)}`),
+    autocomplete: (query: string) => request<{ suggestions: { text: string; type: string }[] }>(`/search/suggest?q=${encodeURIComponent(query)}`),
 
     // Intelligence
     getSectors: () => request<{ data: Sector[] }>('/market-intel/sectors'),
@@ -144,15 +153,21 @@ export const api = {
     getSectorTrends: (id: string) => request<{
         sector: Sector;
         trends: {
-            year: string;
+            year: number;
             market_size: number;
             growth_rate: number;
             investment_volume: number;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            regulatory_outlook: string;
         }[];
         top_companies: string[];
-        regulatory_outlook: string;
-    }>(`/intel/sector/${id}/trends`),
+        summary: {
+            latest_year: number | null;
+            current_market_size: number | null;
+            current_growth_rate: number | null;
+            yoy_change: number | null;
+            regulatory_outlook: string;
+        };
+    }>(`/market-intel/sector/${id}/trends`),
 
     // Personalization
     getRecommendations: () => request<{ data: ArticleListItem[]; based_on?: { countries: string[]; sectors: string[] } }>('/personalization/recommended'),
@@ -171,4 +186,23 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(prefs),
     }),
+
+    // Analytics
+    getSectorPerformance: () => request<{
+        data: { sector_id: string; sector_name: string; growth_yoy: number; volatility: string; article_count: number }[];
+        updated_at: string;
+    }>('/market-intel/performance'),
+
+    getLeadingSector: () => request<{
+        name: string;
+        growth: number;
+        trend: string;
+        updated_at: string;
+    }>('/market-intel/leading-sector'),
+
+    getSentimentDivergence: () => request<{
+        average_divergence: number;
+        countries: { country_code: string; country_name: string; reality_score: number; perception_score: number; gap: number }[];
+        updated_at: string;
+    }>('/market-intel/sentiment-divergence'),
 };

@@ -1,15 +1,44 @@
 
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
-import { Mail, MessageSquare, Send } from 'lucide-react';
+import { Mail, MessageSquare, Send, Loader } from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
 export const ContactPage: React.FC = () => {
-    const [status, setStatus] = useState<'idle' | 'success'>('idle');
+    const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        organization: '',
+        email: '',
+        inquiry_type: 'Strategic Partnership',
+        message: ''
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setStatus('success');
-        // Mock submission
+        setStatus('submitting');
+        setError('');
+
+        try {
+            const res = await fetch(`${API_BASE}/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || 'Failed to submit');
+            }
+
+            setStatus('success');
+            setFormData({ name: '', organization: '', email: '', inquiry_type: 'Strategic Partnership', message: '' });
+        } catch (err: any) {
+            setError(err.message);
+            setStatus('error');
+        }
     };
 
     return (
@@ -36,26 +65,27 @@ export const ContactPage: React.FC = () => {
                     </div>
                 ) : (
                     <div style={{ background: 'white', padding: '40px', borderRadius: '8px', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                        {error && <div style={{ marginBottom: '20px', padding: '12px', background: '#fef2f2', color: '#dc2626', borderRadius: '4px' }}>{error}</div>}
                         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Name</label>
-                                    <input required type="text" placeholder="Your Name" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                    <input required type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Your Name" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Organization</label>
-                                    <input required type="text" placeholder="Company / Institution" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                    <input type="text" value={formData.organization} onChange={e => setFormData({ ...formData, organization: e.target.value })} placeholder="Company / Institution" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
                                 </div>
                             </div>
 
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Email</label>
-                                <input required type="email" placeholder="official@organization.com" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
+                                <input required type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="official@organization.com" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }} />
                             </div>
 
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Inquiry Type</label>
-                                <select style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }}>
+                                <select value={formData.inquiry_type} onChange={e => setFormData({ ...formData, inquiry_type: e.target.value })} style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd' }}>
                                     <option>Strategic Partnership</option>
                                     <option>Media / Press</option>
                                     <option>Report Access</option>
@@ -66,11 +96,12 @@ export const ContactPage: React.FC = () => {
 
                             <div>
                                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Message</label>
-                                <textarea required rows={5} placeholder="How can we assist you?" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd', fontFamily: 'inherit' }} />
+                                <textarea required rows={5} value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })} placeholder="How can we assist you?" style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ddd', fontFamily: 'inherit' }} />
                             </div>
 
-                            <button type="submit" style={{ background: '#052962', color: 'white', border: 'none', padding: '15px', borderRadius: '4px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                                <Mail size={18} /> Send Message
+                            <button type="submit" disabled={status === 'submitting'} style={{ background: '#052962', color: 'white', border: 'none', padding: '15px', borderRadius: '4px', fontWeight: 700, fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: status === 'submitting' ? 0.7 : 1 }}>
+                                {status === 'submitting' ? <Loader size={18} className="animate-spin" /> : <Mail size={18} />}
+                                {status === 'submitting' ? 'Sending...' : 'Send Message'}
                             </button>
                         </form>
                     </div>

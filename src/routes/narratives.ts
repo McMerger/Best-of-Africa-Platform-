@@ -216,4 +216,61 @@ router.delete('/:id', requireAdmin, async (c) => {
     return c.json({ success: true });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /narratives/country/:code/index - Narrative alignment index score
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/country/:code/index', async (c) => {
+    const code = c.req.param('code').toUpperCase();
+
+    const [country, narrativeCount, alignedArticles] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT diplomacy_score, image_strength_score, narrative_priority
+            FROM countries WHERE code = ?
+        `).bind(code).first(),
+
+        c.env.DB.prepare(`
+            SELECT COUNT(*) as count FROM narrative_strategies
+            WHERE country_code = ? AND status = 'active'
+        `).bind(code).first<{ count: number }>(),
+
+        c.env.DB.prepare(`
+            SELECT COUNT(*) as count FROM articles
+            WHERE country_code = ? AND status = 'published' AND engagement_score > 50
+        `).bind(code).first<{ count: number }>()
+    ]);
+
+    if (!country) {
+        return c.json({ error: 'not_found' }, 404);
+    }
+
+    const data = country as any;
+
+    // Calculate narrative index from multiple factors
+    const diplomacyScore = (data.diplomacy_score || 0.5) * 100;
+    const imageScore = (data.image_strength_score || 0.5) * 100;
+    const narrativesActive = narrativeCount?.count || 0;
+    const highEngageArticles = alignedArticles?.count || 0;
+
+    // Weighted calculation
+    const narrativeIndex = Math.round(
+        (diplomacyScore * 0.3) +
+        (imageScore * 0.3) +
+        (Math.min(narrativesActive * 10, 20)) +
+        (Math.min(highEngageArticles * 2, 20))
+    );
+
+    return c.json({
+        country_code: code,
+        narrative_index: Math.min(narrativeIndex, 100),
+        diplomacy_score: Math.round(diplomacyScore),
+        image_strength: Math.round(imageScore),
+        active_narratives: narrativesActive,
+        aligned_articles: highEngageArticles,
+        assessment: narrativeIndex > 70 ? 'Strong alignment with global investment themes.'
+            : narrativeIndex > 50 ? 'Moderate narrative positioning.'
+                : 'Narrative development opportunity.',
+        updated_at: new Date().toISOString()
+    });
+});
+
 export { router as narrativesRouter };

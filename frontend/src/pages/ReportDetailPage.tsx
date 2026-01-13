@@ -61,15 +61,18 @@ export const ReportDetailPage: React.FC = () => {
 
                     <aside style={{ width: '250px' }}>
                         <div style={{ position: 'sticky', top: '20px' }}>
-                            <button style={{ width: '100%', padding: '15px', background: '#052962', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer', marginBottom: '20px' }}>
+                            <button
+                                onClick={() => alert('PDF download will be available soon. For now, you can print this page as PDF.')}
+                                style={{ width: '100%', padding: '15px', background: '#052962', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer', marginBottom: '20px' }}
+                            >
                                 <Download size={20} /> Download PDF
                             </button>
 
                             <div style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
                                 <h4 style={{ fontSize: '14px', textTransform: 'uppercase', color: '#666', marginBottom: '15px' }}>Report Specs</h4>
                                 <ul style={{ listStyle: 'none', fontSize: '14px', color: '#333' }}>
-                                    <li style={{ marginBottom: '10px' }}><strong>Pages:</strong> 24</li>
-                                    <li style={{ marginBottom: '10px' }}><strong>Charts:</strong> 12</li>
+                                    <li style={{ marginBottom: '10px' }}><strong>Words:</strong> {report.content ? Math.round(report.content.split(' ').length / 250) * 250 : 'N/A'}</li>
+                                    <li style={{ marginBottom: '10px' }}><strong>Read Time:</strong> {report.reading_time_minutes || 10} min</li>
                                     <li style={{ marginBottom: '10px' }}><strong>Data Source:</strong> BoA Intelligence</li>
                                     <li><strong>License:</strong> Institutional</li>
                                 </ul>

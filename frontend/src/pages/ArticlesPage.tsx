@@ -8,24 +8,42 @@ import { ArticleCard } from '../components/ArticleCard';
 export const ArticlesPage: React.FC = () => {
     const [articles, setArticles] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState({ page: 1, limit: 12, total: 0 });
 
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     useEffect(() => {
         const country = searchParams.get('country');
         const sector = searchParams.get('sector');
         const region = searchParams.get('region');
-        const filters: Record<string, string> = {};
+        const page = searchParams.get('page') || '1';
+        const filters: Record<string, string> = { page, limit: '12' };
         if (country) filters.country = country;
         if (sector) filters.sector = sector;
         if (region) filters.region = region;
 
         setLoading(true);
         api.getArticles(filters)
-            .then(res => setArticles(res.data))
+            .then(res => {
+                setArticles(res.data);
+                setPagination({
+                    page: res.page || parseInt(page),
+                    limit: res.limit || 12,
+                    total: res.total || res.data.length
+                });
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [searchParams]);
+
+    const totalPages = Math.ceil(pagination.total / pagination.limit) || 1;
+    const currentPage = pagination.page;
+
+    const goToPage = (page: number) => {
+        const params = new URLSearchParams(searchParams);
+        params.set('page', page.toString());
+        setSearchParams(params);
+    };
 
     return (
         <Layout>
@@ -41,10 +59,22 @@ export const ArticlesPage: React.FC = () => {
                                 <ArticleCard key={article.id} article={article} />
                             ))}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                            <button disabled style={{ padding: '10px 20px', cursor: 'not-allowed', opacity: 0.5 }}>Previous</button>
-                            <span style={{ padding: '10px' }}>Page 1 of 8</span>
-                            <button style={{ padding: '10px 20px', cursor: 'pointer', background: '#052962', color: 'white', border: 'none', borderRadius: '4px' }}>Next</button>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
+                            <button
+                                onClick={() => goToPage(currentPage - 1)}
+                                disabled={currentPage <= 1}
+                                style={{ padding: '10px 20px', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', opacity: currentPage <= 1 ? 0.5 : 1, background: '#052962', color: 'white', border: 'none', borderRadius: '4px' }}
+                            >
+                                Previous
+                            </button>
+                            <span style={{ padding: '10px', fontWeight: 600 }}>Page {currentPage} of {totalPages}</span>
+                            <button
+                                onClick={() => goToPage(currentPage + 1)}
+                                disabled={currentPage >= totalPages}
+                                style={{ padding: '10px 20px', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', opacity: currentPage >= totalPages ? 0.5 : 1, background: '#052962', color: 'white', border: 'none', borderRadius: '4px' }}
+                            >
+                                Next
+                            </button>
                         </div>
                     </>
                 )}

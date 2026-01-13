@@ -243,4 +243,77 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
     return { id: dashboardId, region, title: `${region} Africa Dashboard`, key_metrics: keyMetrics };
 }
 
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /dashboards/analytics - Platform-wide analytics (for Continental Overview)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/analytics/summary', async (c) => {
+    // Aggregate platform metrics
+    const [articleStats, sentimentData, sectorTrends] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT 
+                COUNT(*) as total_articles,
+                AVG(engagement_score) as avg_engagement,
+                SUM(view_count) as total_views
+            FROM articles 
+            WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+        `).first(),
+
+        c.env.DB.prepare(`
+            SELECT AVG(image_strength_score) as avg_sentiment
+            FROM countries
+            WHERE image_strength_score IS NOT NULL
+        `).first(),
+
+        c.env.DB.prepare(`
+            SELECT s.id, s.name, COUNT(a.id) as recent_count
+            FROM sectors s
+            LEFT JOIN articles a ON a.sector_id = s.id 
+                AND a.status = 'published' 
+                AND a.published_at > datetime('now', '-7 days')
+            GROUP BY s.id
+            ORDER BY recent_count DESC
+        `).all()
+    ]);
+
+    const stats = articleStats as any;
+    const sentiment = sentimentData as any;
+    const sectors = (sectorTrends.results || []) as any[];
+
+    // Calculate stability index from engagement and sentiment
+    const avgEngagement = stats?.avg_engagement || 50;
+    const avgSentiment = (sentiment?.avg_sentiment || 0.5) * 100;
+    const stabilityScore = Math.round((avgEngagement + avgSentiment) / 2);
+
+    const stabilityIndex = stabilityScore > 70 ? 'HIGH'
+        : stabilityScore > 50 ? 'MODERATE'
+            : 'VOLATILE';
+
+    // Calculate overall sentiment percentage
+    const sentimentPct = Math.round(avgSentiment);
+    const sentimentTrend = avgEngagement > 50 ? 'up' : 'down';
+
+    // Generate sector trends
+    const sectorWithTrends = sectors.map(s => ({
+        id: s.id,
+        name: s.name,
+        trend: s.recent_count > 5 ? 'Rising' : s.recent_count > 2 ? 'Stable' : 'Emerging',
+        article_count: s.recent_count
+    }));
+
+    // Generate market summary based on data
+    const topSector = sectors[0]?.name || 'Technology';
+    const marketSummary = `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage this week with ${sectors[0]?.recent_count || 0} reports. Platform engagement is ${avgEngagement > 60 ? 'strong' : 'steady'} across ${stats?.total_articles || 0} published analyses.`;
+
+    return c.json({
+        market_summary: marketSummary,
+        stability_index: stabilityIndex,
+        stability_score: stabilityScore,
+        sentiment_pct: sentimentPct,
+        sentiment_trend: sentimentTrend,
+        sector_trends: sectorWithTrends,
+        total_articles_7d: stats?.total_articles || 0,
+        updated_at: new Date().toISOString()
+    });
+});
+
 export { router as dashboardsRouter };
