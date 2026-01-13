@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { CinematicLoader } from '../components/CinematicLoader';
+// import { CinematicLoader } from '../components/CinematicLoader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { Country } from '../types';
+import { Card, CardContent } from '@/components/ui/card';
 
 export const CountriesPage: React.FC = () => {
     const [data, setData] = useState<{ by_region: Record<string, Country[]> } | null>(null);
     const [stats, setStats] = useState<{ total_countries: number; total_articles: number; total_views: number; regions: number } | null>(null);
+    const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
     useEffect(() => {
         Promise.all([
@@ -19,37 +22,35 @@ export const CountriesPage: React.FC = () => {
         }).catch(console.error);
     }, []);
 
-    const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-
-    if (!data) return <Layout><CinematicLoader text="LOADING MAP DATA..." /></Layout>;
+    if (!data) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
 
     // Hex Map Coordinates (Abstract Layout)
     const hexLayout = [
-        { id: 'North', x: 150, y: 50, color: '#052962' },
-        { id: 'West', x: 60, y: 120, color: '#052962' },
-        { id: 'Central', x: 150, y: 120, color: '#052962' },
-        { id: 'East', x: 240, y: 120, color: '#052962' },
-        { id: 'Southern', x: 150, y: 190, color: '#052962' }
+        { id: 'North', x: 150, y: 50 },
+        { id: 'West', x: 60, y: 120 },
+        { id: 'Central', x: 150, y: 120 },
+        { id: 'East', x: 240, y: 120 },
+        { id: 'Southern', x: 150, y: 190 }
     ];
 
     return (
         <Layout>
-            <div className="container">
-                <header style={{ marginBottom: '60px', padding: '40px 0', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, color: '#052962', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', background: '#052962', borderRadius: '50%' }} className="animate-pulse-green"></div>
+            <div className="container py-12">
+                <header className="mb-16 flex flex-col items-center justify-between gap-12 border-b border-border pb-12 lg:flex-row">
+                    <div className="flex-1">
+                        <div className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary">
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
                             Geospatial Intelligence
                         </div>
-                        <h1 style={{ fontSize: '56px', fontWeight: 800, color: '#111', margin: 0, lineHeight: '1', letterSpacing: '-1px' }}>Continental Atlas</h1>
-                        <p style={{ fontSize: '18px', color: '#64748b', marginTop: '10px', maxWidth: '600px', lineHeight: '1.5' }}>
+                        <h1 className="mb-4 text-5xl font-black leading-none tracking-tighter text-foreground lg:text-6xl text-left">Continental Atlas</h1>
+                        <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
                             Interactive intelligence mapping across {stats?.total_countries || '54'} markets.
-                            <br /><span style={{ fontSize: '14px', color: '#052962', fontWeight: 600 }}>Hover map to filter by region.</span>
+                            <br /><span className="text-sm font-bold text-primary">Hover map to filter by region.</span>
                         </p>
                     </div>
 
                     {/* Digital Hex Atlas */}
-                    <div style={{ width: '320px', height: '260px', position: 'relative' }}>
+                    <div className="relative h-[260px] w-[320px] shrink-0">
                         <svg width="320" height="260" viewBox="0 0 300 240">
                             <defs>
                                 <filter id="glow">
@@ -69,26 +70,22 @@ export const CountriesPage: React.FC = () => {
                                         onClick={() => setSelectedRegion(isSelected ? null : region.id)}
                                         onMouseEnter={() => setSelectedRegion(region.id)}
                                         onMouseLeave={() => setSelectedRegion(null)}
-                                        style={{ cursor: 'pointer', transition: 'all 0.3s' }}
+                                        className="cursor-pointer transition-all duration-300 group"
                                     >
                                         {/* Hexagon Shape */}
                                         <path
                                             d={`M${region.x} ${region.y - 35} L${region.x + 40} ${region.y - 15} L${region.x + 40} ${region.y + 25} L${region.x} ${region.y + 45} L${region.x - 40} ${region.y + 25} L${region.x - 40} ${region.y - 15} Z`}
-                                            fill={isSelected ? '#052962' : 'white'}
-                                            stroke="#052962"
+                                            className={isSelected ? "fill-primary stroke-none" : "fill-background stroke-primary"}
                                             strokeWidth={isSelected ? '0' : '2'}
                                             filter={isSelected ? 'url(#glow)' : ''}
-                                            style={{ transition: 'all 0.3s' }}
+                                            style={{ transition: 'all 0.3s ease' }}
                                         />
                                         {/* Label */}
                                         <text
                                             x={region.x}
                                             y={region.y - 5}
                                             textAnchor="middle"
-                                            fill={isSelected ? 'white' : '#052962'}
-                                            fontWeight="800"
-                                            fontSize="10"
-                                            style={{ textTransform: 'uppercase', pointerEvents: 'none' }}
+                                            className={isSelected ? "fill-primary-foreground font-extrabold uppercase text-[10px]" : "fill-primary font-extrabold uppercase text-[10px]"}
                                         >
                                             {region.id}
                                         </text>
@@ -97,10 +94,7 @@ export const CountriesPage: React.FC = () => {
                                             x={region.x}
                                             y={region.y + 15}
                                             textAnchor="middle"
-                                            fill={isSelected ? '#10B981' : '#64748b'}
-                                            fontWeight="700"
-                                            fontSize="14"
-                                            style={{ pointerEvents: 'none' }}
+                                            className={isSelected ? "fill-primary font-bold text-sm" : "fill-muted-foreground font-bold text-sm"}
                                         >
                                             {count}
                                         </text>
@@ -114,37 +108,39 @@ export const CountriesPage: React.FC = () => {
                 {Object.entries(data.by_region)
                     .filter(([region]) => !selectedRegion || region === selectedRegion)
                     .map(([region, countries]) => (
-                        <section key={region} style={{ marginBottom: '60px', animation: 'fade-in-up 0.5s ease-out' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', borderBottom: '2px solid #052962', paddingBottom: '10px' }}>
-                                <div style={{ fontSize: '24px', fontWeight: 800, color: '#052962', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <section key={region} className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="mb-8 flex items-center gap-4 border-b-2 border-primary pb-2">
+                                <div className="text-2xl font-black uppercase tracking-tight text-primary">
                                     {region} Africa
                                 </div>
-                                <div style={{ fontSize: '12px', fontWeight: 600, background: '#e0f2fe', color: '#0284c7', padding: '4px 8px', borderRadius: '4px' }}>
+                                <div className="rounded bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">
                                     {countries.length} Markets
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px' }}>
+                            <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
                                 {countries.map(country => (
-                                    <Link to={`/countries/${country.code}`} key={country.code} style={{ display: 'block', padding: '25px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '0', textDecoration: 'none', color: 'inherit', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}>
-                                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#052962', opacity: 0, transition: 'opacity 0.2s' }} className="hover-bar"></div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                            <div style={{ fontSize: '32px' }}>{country.flag_emoji}</div>
-                                            <div style={{ fontSize: '16px', color: '#cbd5e1' }}>↗</div>
-                                        </div>
-                                        <h3 style={{ fontSize: '18px', marginBottom: '5px', fontWeight: 700, color: '#1e293b' }}>{country.name}</h3>
-                                        <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '15px', fontWeight: 500 }}>{country.capital}</div>
-                                        <div style={{ fontSize: '11px', color: '#052962', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>View Analysis</div>
+                                    <Link to={`/countries/${country.code}`} key={country.code} className="group">
+                                        <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-lg">
+                                            <CardContent className="relative overflow-hidden p-6">
+                                                <div className="absolute left-0 top-0 h-full w-1 bg-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                                                <div className="mb-4 flex items-start justify-between">
+                                                    <div className="text-4xl">{country.flag_emoji}</div>
+                                                    <div className="text-muted-foreground transition-colors group-hover:text-primary">↗</div>
+                                                </div>
+                                                <h3 className="mb-1 text-lg font-bold text-foreground group-hover:text-primary">{country.name}</h3>
+                                                <div className="mb-4 text-sm font-medium text-muted-foreground">{country.capital}</div>
+                                                <div className="text-[10px] font-bold uppercase tracking-wider text-primary opacity-60 transition-opacity group-hover:opacity-100">
+                                                    View Analysis
+                                                </div>
+                                            </CardContent>
+                                        </Card>
                                     </Link>
                                 ))}
                             </div>
                         </section>
                     ))}
             </div>
-            <style>{`
-                a:hover .hover-bar { opacity: 1 !important; }
-                a:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1 !important; }
-            `}</style>
         </Layout>
     );
 };

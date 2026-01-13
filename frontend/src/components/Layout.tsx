@@ -9,18 +9,12 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
             <NavBar />
             <Breadcrumbs />
-            <main style={{ flex: 1, paddingTop: '40px', animation: 'fadeInPage 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <main className="flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-10">
                 {children}
             </main>
-            <style>{`
-                @keyframes fadeInPage {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
             <Footer />
         </div>
     );

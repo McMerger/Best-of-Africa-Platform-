@@ -1,186 +1,209 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
-import { api } from '../services/api';
-import { Save } from 'lucide-react';
+import { User, Bell, Shield, LogOut, CreditCard, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
 
 export const SettingsPage: React.FC = () => {
-    const [preferences, setPreferences] = useState({
-        countries_of_interest: [] as string[],
-        sectors_of_interest: [] as string[],
-        language_preference: 'en',
-        format_preference: 'full'
+    const [user, setUser] = useState({
+        name: 'Jonathan Doe',
+        email: 'j.doe@investment-fund.com',
+        role: 'Institutional Analyst',
+        tier: 'Premium',
+        notifications: {
+            email: true,
+            push: false,
+            reports: true
+        }
     });
-    const [message, setMessage] = useState('');
-    const [statusColor, setStatusColor] = useState('#10B981'); // Green for success
 
-    const [allCountries, setAllCountries] = useState<{ code: string, name: string }[]>([]);
-    const [allSectors, setAllSectors] = useState<{ id: string, name: string }[]>([]);
+    const [isEditing, setIsEditing] = useState(false);
 
-    useEffect(() => {
-        Promise.all([
-            api.getPreferences(),
-            api.getCountries(),
-            api.getSectors()
-        ]).then(([prefs, countriesRes, sectorsRes]) => {
-            setPreferences(prefs);
-            setAllCountries(countriesRes.data);
-            setAllSectors(sectorsRes.data);
-        }).catch(err => console.error("Failed to load settings data", err));
-    }, []);
-
-    const handleSave = () => {
-        api.savePreferences(preferences)
-            .then(() => {
-                setMessage('Changes saved successfully.');
-                setStatusColor('#10B981');
-                setTimeout(() => setMessage(''), 3000);
-            })
-            .catch(_ => {
-                setMessage('Could not save changes. Please try again.');
-                setStatusColor('#dc2626'); // Red for error
-            });
+    const toggleNotification = (key: keyof typeof user.notifications) => {
+        setUser(prev => ({
+            ...prev,
+            notifications: {
+                ...prev.notifications,
+                [key]: !prev.notifications[key]
+            }
+        }));
     };
 
     return (
         <Layout>
-            <div className="container" style={{ maxWidth: '900px', paddingBottom: '80px' }}>
-                <header style={{ marginBottom: '40px', paddingTop: '40px', borderBottom: '1px solid #e5e7eb', paddingBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h1 style={{ fontSize: '32px', marginBottom: '10px' }}>Settings</h1>
-                        <p style={{ color: '#666' }}>Manage your platform preferences and content filters.</p>
-                    </div>
-                    <div>
-                        <button
-                            onClick={handleSave}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                background: '#052962', color: 'white',
-                                padding: '10px 24px', border: 'none', borderRadius: '6px',
-                                fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                                transition: 'background 0.2s'
-                            }}
-                        >
-                            <Save size={18} /> Save Changes
-                        </button>
-                    </div>
+            <div className="container py-20 max-w-4xl">
+                <header className="mb-12 border-b border-border pb-8">
+                    <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground">Control Center</h1>
+                    <p className="text-lg text-muted-foreground">Manage your account, preferences, and subscription.</p>
                 </header>
 
-                {message && (
-                    <div style={{ position: 'fixed', bottom: '30px', right: '30px', background: statusColor, color: 'white', padding: '15px 25px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', animation: 'fadeIn 0.3s ease-out', zIndex: 1000, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {statusColor === '#10B981' ? '✓' : '⚠'} {message}
-                    </div>
-                )}
+                <div className="grid gap-10">
 
-                <div style={{ display: 'grid', gap: '30px' }}>
-
-                    {/* SECTION 1: REGIONAL FOCUS */}
-                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Regional Focus</h2>
-                            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Select the markets you want to track in your dashboard.</p>
-                        </div>
-                        <div style={{ padding: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                                {allCountries.map(c => (
-                                    <label key={c.code} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '4px', cursor: 'pointer', transition: 'background 0.1s', background: preferences.countries_of_interest.includes(c.code) ? '#eff6ff' : 'transparent' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={preferences.countries_of_interest.includes(c.code)}
-                                            onChange={(e) => {
-                                                const newCountries = e.target.checked
-                                                    ? [...preferences.countries_of_interest, c.code]
-                                                    : preferences.countries_of_interest.filter(code => code !== c.code);
-                                                setPreferences({ ...preferences, countries_of_interest: newCountries });
-                                            }}
-                                            style={{ accentColor: '#052962', width: '16px', height: '16px' }}
-                                        />
-                                        <span style={{ fontSize: '14px', color: '#334155', fontWeight: preferences.countries_of_interest.includes(c.code) ? 600 : 400 }}>{c.name}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SECTION 2: SECTOR INTERESTS */}
-                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Sector Interests</h2>
-                            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>Prioritize industries for your intelligence feed.</p>
-                        </div>
-                        <div style={{ padding: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
-                                {allSectors.map(s => (
-                                    <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '4px', cursor: 'pointer', transition: 'background 0.1s', background: preferences.sectors_of_interest.includes(s.id) ? '#eff6ff' : 'transparent' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={preferences.sectors_of_interest.includes(s.id)}
-                                            onChange={(e) => {
-                                                const newSectors = e.target.checked
-                                                    ? [...preferences.sectors_of_interest, s.id]
-                                                    : preferences.sectors_of_interest.filter(id => id !== s.id);
-                                                setPreferences({ ...preferences, sectors_of_interest: newSectors });
-                                            }}
-                                            style={{ accentColor: '#052962', width: '16px', height: '16px' }}
-                                        />
-                                        <span style={{ fontSize: '14px', color: '#334155', fontWeight: preferences.sectors_of_interest.includes(s.id) ? 600 : 400 }}>{s.name}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SECTION 3: DISPLAY PREFERENCES */}
-                    <div style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-                        <div style={{ padding: '20px', borderBottom: '1px solid #f1f5f9', background: '#f8fafc' }}>
-                            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#0f172a' }}>Display Preferences</h2>
-                        </div>
-                        <div style={{ padding: '20px', display: 'flex', gap: '40px' }}>
-                            <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: '#334155' }}>Interface Language</label>
-                                <select
-                                    value={preferences.language_preference}
-                                    onChange={e => setPreferences({ ...preferences, language_preference: e.target.value })}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                    {/* PROFILE SETTINGS */}
+                    <Card className="border-border shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                        <User className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-lg font-bold text-foreground">Profile Details</CardTitle>
+                                        <CardDescription>Personal information and professional credentials.</CardDescription>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant={isEditing ? "default" : "outline"}
+                                    onClick={() => setIsEditing(!isEditing)}
+                                    className={isEditing ? "" : ""}
                                 >
-                                    <option value="en">English</option>
-                                    <option value="fr">French</option>
-                                    <option value="pt">Portuguese</option>
-                                </select>
+                                    {isEditing ? 'Save Changes' : 'Edit Profile'}
+                                </Button>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: '#334155' }}>Default Article View</label>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    {['full', 'summary'].map(format => (
-                                        <button
-                                            key={format}
-                                            onClick={() => setPreferences({ ...preferences, format_preference: format })}
-                                            style={{
-                                                flex: 1,
-                                                padding: '10px',
-                                                border: preferences.format_preference === format ? '1px solid #052962' : '1px solid #cbd5e1',
-                                                borderRadius: '6px',
-                                                background: preferences.format_preference === format ? '#052962' : 'white',
-                                                color: preferences.format_preference === format ? 'white' : '#64748b',
-                                                textTransform: 'capitalize',
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontWeight: 500
-                                            }}
-                                        >
-                                            {format}
-                                        </button>
-                                    ))}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="name">Full Name</Label>
+                                    <Input
+                                        id="name"
+                                        value={user.name}
+                                        readOnly={!isEditing}
+                                        onChange={(e) => setUser({ ...user, name: e.target.value })}
+                                        className={cn(!isEditing && "bg-muted text-muted-foreground")}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input
+                                        id="email"
+                                        value={user.email}
+                                        readOnly={!isEditing}
+                                        className="bg-muted text-muted-foreground"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="role">Professional Role</Label>
+                                    <Input
+                                        id="role"
+                                        value={user.role}
+                                        readOnly={!isEditing}
+                                        onChange={(e) => setUser({ ...user, role: e.target.value })}
+                                        className={cn(!isEditing && "bg-muted text-muted-foreground")}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Account Tier</Label>
+                                    <div className="flex items-center h-10 px-3 rounded-md bg-secondary border border-border">
+                                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 mr-2">
+                                            {user.tier}
+                                        </Badge>
+                                        <span className="text-sm text-muted-foreground">Access valid until Dec 2026</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
+                    {/* NOTIFICATIONS */}
+                    <Card className="border-border shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <Bell className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg font-bold text-foreground">Notifications</CardTitle>
+                                    <CardDescription>Configure how you receive intelligence alerts.</CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            {[
+                                { key: 'email', label: 'Email Digest', desc: 'Daily summary of tracked markets.', icon: Mail },
+                                { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: Zap },
+                                { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: CreditCard },
+                            ].map((item) => (
+                                <div key={item.key} className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="rounded-full bg-card p-2 shadow-sm border border-border">
+                                            <item.icon className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-foreground">{item.label}</div>
+                                            <div className="text-xs text-muted-foreground">{item.desc}</div>
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={user.notifications[item.key as keyof typeof user.notifications]}
+                                        onCheckedChange={() => toggleNotification(item.key as keyof typeof user.notifications)}
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    {/* SECURITY & DANGER ZONE */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <Card className="border-border shadow-sm">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <Shield className="h-5 w-5 text-primary" />
+                                    <CardTitle className="text-base font-bold text-foreground">Security</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <Button variant="outline" className="w-full justify-start border-border">
+                                    Change Password
+                                </Button>
+                                <Button variant="outline" className="w-full justify-start border-border">
+                                    Two-Factor Authentication
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-destructive/20 bg-destructive/5 shadow-sm">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <LogOut className="h-5 w-5 text-destructive" />
+                                    <CardTitle className="text-base font-bold text-destructive">Session</CardTitle>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <p className="text-sm text-destructive">Securely sign out of your account on all devices.</p>
+                                <Button variant="destructive" className="w-full">
+                                    Sign Out
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
-            <style>{`
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-            `}</style>
-        </Layout >
+        </Layout>
     );
 };
+
+// Mock Icon for Zap
+function Zap(props: React.SVGProps<SVGSVGElement>) {
+    return (
+        <svg
+            {...props}
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+    )
+}

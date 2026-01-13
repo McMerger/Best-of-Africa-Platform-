@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
-import { CinematicLoader } from '../components/CinematicLoader';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const HomePage: React.FC = () => {
     const [featured, setFeatured] = useState<ArticleListItem[]>([]);
     const [latest, setLatest] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState<'narrative' | 'intelligence'>('narrative');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -29,85 +32,108 @@ export const HomePage: React.FC = () => {
         fetchData();
     }, []);
 
-    const [viewMode, setViewMode] = useState<'narrative' | 'intelligence'>('narrative');
-
-    if (loading) return <Layout><CinematicLoader text="LOADING DATA..." /></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
 
     return (
         <Layout>
-            <div className="container">
+            <div className="container py-8">
                 {/* Mode Toggle - The "Lens" */}
-                <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 100, background: 'white', padding: '5px', borderRadius: '30px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', display: 'flex', gap: '5px', border: '1px solid #e2e8f0' }}>
-                    <button
+                {/* Floating Action Button style toggle */}
+                <div className="fixed bottom-8 right-8 z-50 flex gap-2 rounded-full border bg-background/80 p-1.5 shadow-xl backdrop-blur-md">
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setViewMode('narrative')}
-                        style={{ padding: '8px 16px', borderRadius: '24px', border: 'none', background: viewMode === 'narrative' ? '#052962' : 'transparent', color: viewMode === 'narrative' ? 'white' : '#64748b', cursor: 'pointer', fontSize: '12px', fontWeight: 700, transition: 'all 0.2s' }}
+                        className={cn(
+                            "rounded-full px-4 text-xs font-bold uppercase transition-all",
+                            viewMode === 'narrative'
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "text-muted-foreground hover:bg-transparent hover:text-foreground"
+                        )}
                     >
                         Narrative
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setViewMode('intelligence')}
-                        style={{ padding: '8px 16px', borderRadius: '24px', border: 'none', background: viewMode === 'intelligence' ? '#052962' : 'transparent', color: viewMode === 'intelligence' ? 'white' : '#64748b', cursor: 'pointer', fontSize: '12px', fontWeight: 700, transition: 'all 0.2s' }}
+                        className={cn(
+                            "rounded-full px-4 text-xs font-bold uppercase transition-all",
+                            viewMode === 'intelligence'
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "text-muted-foreground hover:bg-transparent hover:text-foreground"
+                        )}
                     >
                         Intelligence
-                    </button>
+                    </Button>
                 </div>
 
-                {/* Kinetic Statement Hero (Always visible as Brand Anchor) */}
-                <section style={{ padding: '80px 0 60px', borderBottom: '1px solid #e5e7eb', marginBottom: '60px' }}>
-                    <h1 style={{ fontSize: '72px', fontWeight: 900, lineHeight: '0.9', letterSpacing: '-2px', marginBottom: '30px', maxWidth: '900px' }} className="fade-in-hero">
+                {/* Kinetic Statement Hero */}
+                <section className="mb-16 border-b border-border pb-16 pt-20">
+                    <h1 className="fade-in-hero mb-8 max-w-4xl text-6xl font-black leading-[0.9] tracking-tighter lg:text-8xl text-foreground">
                         THE NARRATIVE <br />
                         IS THE MARKET.
                     </h1>
-                    <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-                        <p style={{ fontSize: '20px', color: '#64748b', maxWidth: '500px', lineHeight: '1.5', margin: 0 }}>
+                    <div className="flex flex-col gap-8 md:flex-row md:items-center">
+                        <p className="max-w-lg text-xl leading-relaxed text-muted-foreground">
                             Real-time geopolitical intelligence for the African continent.
-                            <span style={{ color: '#052962', fontWeight: 600, marginLeft: '5px' }}>Active. Adaptive. Authoritative.</span>
+                            <span className="ml-1 font-semibold text-primary">Active. Adaptive. Authoritative.</span>
                         </p>
-                        <div style={{ height: '1px', flex: 1, background: '#e2e8f0' }}></div>
-                        <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: '#052962', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', background: '#10B981', borderRadius: '50%' }} className="animate-pulse-green"></div>
+                        <div className="hidden h-px flex-1 bg-border md:block" />
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
+                            <div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
                             Platform Live
                         </div>
                     </div>
                 </section>
 
                 {featured.length > 0 && (
-                    <section style={{ marginBottom: '60px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #052962', paddingBottom: '15px', marginBottom: '25px' }}>
-                            <h2 className="section-title" style={{ margin: 0, fontSize: '24px', letterSpacing: '-0.5px' }}>
+                    <section className="mb-20">
+                        <div className="mb-8 flex items-end justify-between border-b-2 border-primary pb-4">
+                            <h2 className="text-2xl font-bold tracking-tight text-foreground">
                                 {viewMode === 'narrative' ? 'Headlines' : 'Intelligence Briefing'}
                             </h2>
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#052962', textTransform: 'uppercase' }}>{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                            <span className="text-xs font-bold uppercase text-primary">
+                                {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                            </span>
                         </div>
 
                         {viewMode === 'narrative' ? (
-                            // Narrative View: Visual, Bento Grid
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '20px' }}>
-                                <div style={{ gridColumn: 'span 8' }}>
+                            // Narrative View: Bento Grid
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+                                <div className="md:col-span-8">
                                     <ArticleCard article={featured[0]} featured />
                                 </div>
-                                <div style={{ gridColumn: 'span 4', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div className="flex flex-col gap-6 md:col-span-4">
                                     {featured.slice(1, 3).map(article => (
-                                        <div key={article.id} style={{ flex: 1 }}>
+                                        <div key={article.id} className="flex-1">
                                             <ArticleCard article={article} />
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         ) : (
-                            // Intelligence View: Dense, Data-First List
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                            // Intelligence View: Dense Lists
+                            <div className="overflow-hidden rounded-lg border border-border">
                                 {featured.map((article, i) => (
-                                    <div key={article.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '20px', background: i % 2 === 0 ? 'white' : '#f8fafc', borderBottom: '1px solid #e2e8f0', alignItems: 'center' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#C70000', textTransform: 'uppercase', marginBottom: '5px' }}>
+                                    <div
+                                        key={article.id}
+                                        className={cn(
+                                            "flex flex-col justify-between gap-4 border-b border-border p-6 last:border-0 md:flex-row md:items-center",
+                                            i % 2 === 0 ? "bg-card" : "bg-muted/30"
+                                        )}
+                                    >
+                                        <div className="flex-1">
+                                            <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-destructive">
                                                 {article.sector_name || 'General'}
                                             </div>
-                                            <h3 style={{ fontSize: '18px', margin: 0, color: '#0f172a' }}>{article.title}</h3>
+                                            <h3 className="text-lg font-medium text-foreground">{article.title}</h3>
                                         </div>
-                                        <div style={{ textAlign: 'right', minWidth: '150px' }}>
-                                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#052962' }}>High Impact</div>
-                                            <div style={{ fontSize: '12px', color: '#64748b' }}>{new Date(article.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC</div>
+                                        <div className="min-w-[150px] text-right">
+                                            <div className="text-sm font-bold text-primary">High Impact</div>
+                                            <div className="text-xs text-muted-foreground">
+                                                {new Date(article.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} UTC
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -117,10 +143,15 @@ export const HomePage: React.FC = () => {
                 )}
 
                 <section>
-                    <h2 className="section-title" style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginBottom: '20px' }}>
+                    <h2 className="mb-8 border-t border-border pt-8 text-xl font-bold tracking-tight text-foreground">
                         Latest News
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: viewMode === 'narrative' ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)', gap: '20px' }}>
+                    <div className={cn(
+                        "grid gap-6",
+                        viewMode === 'narrative'
+                            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+                            : "grid-cols-1 lg:grid-cols-2"
+                    )}>
                         {latest.map(article => (
                             <ArticleCard key={article.id} article={article} />
                         ))}

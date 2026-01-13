@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Dashboard } from '../types';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronRight, BarChart3 } from 'lucide-react';
 
 export const DashboardsPage: React.FC = () => {
     const [dashboards, setDashboards] = useState<Dashboard[]>([]);
@@ -13,34 +16,57 @@ export const DashboardsPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className="container">
-                <h1 style={{ fontSize: '42px', marginBottom: '20px' }}>Regional Intelligence Dashboards</h1>
-                <p style={{ fontSize: '18px', marginBottom: '40px', maxWidth: '800px' }}>
-                    Real-time analysis of narrative trends, investment opportunities, and key developments across the continent.
-                </p>
+            <div className="container py-12">
+                <div className="mb-12">
+                    <h1 className="mb-4 font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+                        Regional Intelligence Dashboards
+                    </h1>
+                    <p className="max-w-2xl text-lg text-muted-foreground">
+                        Real-time analysis of narrative trends, investment opportunities, and key developments across the continent.
+                    </p>
+                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                     {dashboards.map(d => (
-                        <div key={d.id} style={{ border: '1px solid #ddd', padding: '25px', background: '#fff' }}>
-                            <div style={{ textTransform: 'uppercase', fontSize: '12px', fontWeight: 700, color: '#C70000', marginBottom: '10px' }}>
-                                {d.region} Region
-                            </div>
-                            <h2 style={{ fontSize: '24px', marginBottom: '15px' }}>{d.title}</h2>
-                            <p style={{ fontSize: '14px', color: '#555', marginBottom: '20px', lineHeight: '1.5' }}>
-                                {d.summary}
-                            </p>
-
-                            <div style={{ marginBottom: '20px' }}>
-                                <strong>Trending Topics:</strong>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '5px' }}>
-                                    {d.trending_topics.map(t => (
-                                        <span key={t} style={{ background: '#f0f0f0', fontSize: '12px', padding: '2px 6px' }}>{t}</span>
-                                    ))}
+                        <Card key={d.id} className="flex flex-col transition-all hover:shadow-lg">
+                            <CardHeader className="pb-4">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <BarChart3 className="h-4 w-4 text-primary" />
+                                    <span className="text-xs font-bold uppercase tracking-widest text-destructive">
+                                        {d.region} Region
+                                    </span>
                                 </div>
-                            </div>
+                                <CardTitle className="text-2xl font-bold text-foreground">
+                                    {d.title}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex-1 pb-4">
+                                <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+                                    {d.summary}
+                                </p>
 
-                            <Link to={`/dashboards/${d.region}`} className="btn">View Full Dashboard</Link>
-                        </div>
+                                <div>
+                                    <strong className="mb-2 block text-xs font-bold uppercase text-muted-foreground">Trending Topics</strong>
+                                    <div className="flex flex-wrap gap-2">
+                                        {d.trending_topics.map(t => (
+                                            <span
+                                                key={t}
+                                                className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-secondary-foreground hover:bg-secondary/80"
+                                            >
+                                                {t}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="pt-4">
+                                <Button asChild className="w-full">
+                                    <Link to={`/dashboards/${d.region}`}>
+                                        View Full Dashboard <ChevronRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            </CardFooter>
+                        </Card>
                     ))}
                 </div>
             </div>

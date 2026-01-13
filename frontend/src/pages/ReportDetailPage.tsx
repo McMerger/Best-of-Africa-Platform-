@@ -1,10 +1,12 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Article, ArticleListItem } from '../types';
 import { Calendar, Clock, Download, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const ReportDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -13,6 +15,7 @@ export const ReportDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (id) {
+            setLoading(true);
             api.getReport(id)
                 .then(res => setData(res))
                 .catch(console.error)
@@ -20,63 +23,77 @@ export const ReportDetailPage: React.FC = () => {
         }
     }, [id]);
 
-    if (loading) return <Layout><div className="container">Loading report...</div></Layout>;
-    if (!data) return <Layout><div className="container">Report not found</div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+    if (!data) return <Layout><div className="container py-20 text-center text-xl text-muted-foreground">Report not found</div></Layout>;
 
     const { report } = data;
 
     return (
         <Layout>
-            <div className="container" style={{ maxWidth: '900px' }}>
-                <header style={{ padding: '60px 0 40px', borderBottom: '1px solid #eee', marginBottom: '40px' }}>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                        <span style={{ background: '#052962', color: 'white', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}>PREMIUM REPORT</span>
-                        <span style={{ background: '#f0f0f0', color: '#555', padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>{report.sector_id}</span>
+            <div className="container py-16 max-w-5xl">
+                <header className="mb-12 border-b border-border pb-12">
+                    <div className="mb-4 flex gap-3">
+                        <span className="rounded bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">PREMIUM REPORT</span>
+                        <span className="rounded bg-muted px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{report.sector_id || 'General'}</span>
                     </div>
-                    <h1 style={{ fontSize: '42px', marginBottom: '20px', lineHeight: '1.2' }}>{report.title}</h1>
-                    <p style={{ fontSize: '22px', color: '#666', lineHeight: '1.4' }}>{report.subtitle || report.summary}</p>
+                    <h1 className="mb-6 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">{report.title}</h1>
+                    <p className="text-xl leading-relaxed text-muted-foreground">{report.subtitle || report.summary}</p>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginTop: '30px', fontSize: '14px', color: '#555' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Calendar size={16} /> {new Date(report.published_at).toLocaleDateString()}
+                    <div className="mt-8 flex items-center gap-6 text-sm font-bold text-muted-foreground">
+                        <span className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4" /> {new Date(report.published_at).toLocaleDateString()}
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Clock size={16} /> {report.reading_time_minutes} min read
+                        <span className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" /> {report.reading_time_minutes} min read
                         </span>
                     </div>
                 </header>
 
-                <div style={{ display: 'flex', gap: '40px' }}>
-                    <main style={{ flex: 1, fontSize: '18px', lineHeight: '1.7', color: '#333' }}>
+                <div className="grid gap-12 lg:grid-cols-[1fr_300px]">
+                    <main className="prose prose-lg dark:prose-invert max-w-none text-foreground/80">
                         {report.content ? (
                             <div dangerouslySetInnerHTML={{ __html: report.content.replace(/\n/g, '<br/>') }} />
                         ) : (
-                            <div style={{ padding: '40px', background: '#f9f9f9', borderRadius: '8px', textAlign: 'center', border: '1px dashed #ccc' }}>
-                                <Lock size={40} color="#052962" style={{ marginBottom: '15px' }} />
-                                <p style={{ fontWeight: 600 }}>This is a premium restricted report.</p>
-                                <p>Please log in with an institutional account to view full findings.</p>
+                            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center">
+                                <Lock className="mb-4 h-12 w-12 text-primary opacity-50" />
+                                <p className="mb-2 text-lg font-bold text-foreground">This is a premium restricted report.</p>
+                                <p className="text-muted-foreground">Please log in with an institutional account to view full findings.</p>
                             </div>
                         )}
                     </main>
 
-                    <aside style={{ width: '250px' }}>
-                        <div style={{ position: 'sticky', top: '20px' }}>
-                            <button
+                    <aside className="space-y-8">
+                        <div className="sticky top-8">
+                            <Button
+                                className="mb-8 w-full font-bold h-auto py-4"
                                 onClick={() => alert('PDF download will be available soon. For now, you can print this page as PDF.')}
-                                style={{ width: '100%', padding: '15px', background: '#052962', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer', marginBottom: '20px' }}
                             >
-                                <Download size={20} /> Download PDF
-                            </button>
+                                <Download className="mr-2 h-5 w-5" /> Download PDF
+                            </Button>
 
-                            <div style={{ background: '#f5f5f5', padding: '20px', borderRadius: '8px' }}>
-                                <h4 style={{ fontSize: '14px', textTransform: 'uppercase', color: '#666', marginBottom: '15px' }}>Report Specs</h4>
-                                <ul style={{ listStyle: 'none', fontSize: '14px', color: '#333' }}>
-                                    <li style={{ marginBottom: '10px' }}><strong>Words:</strong> {report.content ? Math.round(report.content.split(' ').length / 250) * 250 : 'N/A'}</li>
-                                    <li style={{ marginBottom: '10px' }}><strong>Read Time:</strong> {report.reading_time_minutes || 10} min</li>
-                                    <li style={{ marginBottom: '10px' }}><strong>Data Source:</strong> BoA Intelligence</li>
-                                    <li><strong>License:</strong> Institutional</li>
-                                </ul>
-                            </div>
+                            <Card className="border-border bg-muted/30">
+                                <CardContent className="p-6">
+                                    <h4 className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Report Specs</h4>
+                                    <ul className="space-y-3 text-sm font-medium text-muted-foreground">
+                                        <li className="flex justify-between">
+                                            <span>Words:</span>
+                                            <span className="text-foreground font-bold">{report.content ? Math.round(report.content.split(' ').length / 250) * 250 : 'N/A'}</span>
+                                        </li>
+                                        <li className="flex justify-between">
+                                            <span>Read Time:</span>
+                                            <span className="text-foreground font-bold">{report.reading_time_minutes || 10} min</span>
+                                        </li>
+                                        <li className="flex justify-between">
+                                            <span>Data Source:</span>
+                                            <span className="text-foreground font-bold">BoA Intelligence</span>
+                                        </li>
+                                        <li className="flex justify-between">
+                                            <span>License:</span>
+                                            <span className="text-foreground font-bold">Institutional</span>
+                                        </li>
+                                    </ul>
+                                </CardContent>
+                            </Card>
                         </div>
                     </aside>
                 </div>

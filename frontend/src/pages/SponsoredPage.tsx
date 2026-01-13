@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
-import { Network, Star, Target, ArrowRight, CheckCircle, Loader } from 'lucide-react';
+import { Network, Star, Target, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
@@ -22,76 +24,85 @@ export const SponsoredPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className="container" style={{ padding: '80px 20px', maxWidth: '1000px' }}>
-                <div style={{ marginBottom: '60px', borderBottom: '1px solid #e2e8f0', paddingBottom: '40px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                        <div style={{ background: '#0f172a', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                            Partnership Division
-                        </div>
+            <div className="container py-20 max-w-5xl">
+                <header className="mb-16 border-b border-border pb-12 text-center md:text-left">
+                    <div className="mb-6 inline-flex items-center rounded-md bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
+                        Partnership Division
                     </div>
-                    <h1 style={{ fontSize: '56px', fontWeight: 800, color: '#0f172a', lineHeight: '1', margin: '0 0 20px 0', letterSpacing: '-1.5px' }}>
-                        Strategic <span style={{ color: '#052962' }}>Alignment</span>
+                    <h1 className="mb-6 text-5xl font-black leading-none tracking-tighter text-foreground md:text-7xl">
+                        Strategic <span className="text-primary">Alignment</span>
                     </h1>
-                    <p style={{ fontSize: '20px', color: '#64748b', maxWidth: '800px', lineHeight: '1.6', fontWeight: 400 }}>
-                        Collaborate with <strong style={{ color: '#0f172a' }}>Best of Africa</strong> to position your organization within the continent's critical decision-making narratives.
+                    <p className="max-w-3xl text-xl leading-relaxed text-muted-foreground">
+                        Collaborate with <strong className="text-foreground">Best of Africa</strong> to position your organization within the continent's critical decision-making narratives.
                     </p>
-                </div>
+                </header>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) 1fr', gap: '60px' }}>
-                    <div>
-                        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <Target size={24} color="#052962" /> Engagement Vectors
-                        </h2>
+                <div className="grid gap-16 lg:grid-cols-[1.5fr_1fr]">
+                    <div className="space-y-12">
+                        <div>
+                            <h2 className="mb-8 flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground">
+                                <Target className="h-6 w-6 text-primary" /> Engagement Vectors
+                            </h2>
 
-                        <div style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ background: 'white', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '8px', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                                <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '6px', color: '#1e40af' }}>
-                                    <Network size={20} />
-                                </div>
-                                <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Thinking Leadership</h3>
-                                    <p style={{ fontSize: '15px', color: '#64748b', margin: 0, lineHeight: '1.5' }}>Position your executives as primary sources in sector-specific intelligence briefings.</p>
-                                </div>
-                            </div>
+                            <div className="grid gap-6">
+                                <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
+                                    <CardContent className="flex gap-6 p-6">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                            <Network className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="mb-2 text-lg font-bold text-foreground">Thought Leadership</h3>
+                                            <p className="text-sm leading-relaxed text-muted-foreground">Position your executives as primary sources in sector-specific intelligence briefings.</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
 
-                            <div style={{ background: 'white', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '8px', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                                <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '6px', color: '#166534' }}>
-                                    <Star size={20} />
-                                </div>
-                                <div>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>Brand Influence</h3>
-                                    <p style={{ fontSize: '15px', color: '#64748b', margin: 0, lineHeight: '1.5' }}>Integrate your narrative into our "National Branding Strategy" frameworks.</p>
-                                </div>
+                                <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
+                                    <CardContent className="flex gap-6 p-6">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                            <Star className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="mb-2 text-lg font-bold text-foreground">Brand Influence</h3>
+                                            <p className="text-sm leading-relaxed text-muted-foreground">Integrate your narrative into our "National Branding Strategy" frameworks.</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '40px' }}>
-                            <a href="mailto:partnerships@bestofafrica.com" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#0f172a', color: 'white', padding: '16px 32px', borderRadius: '6px', textDecoration: 'none', fontWeight: 700, fontSize: '15px' }}>
-                                Contact Relations Desk <ArrowRight size={16} />
-                            </a>
+                        <div>
+                            <Button asChild size="lg" className="h-auto px-8 py-4 text-base font-bold">
+                                <a href="mailto:partnerships@bestofafrica.com" className="flex items-center gap-2">
+                                    Contact Relations Desk <ArrowRight className="h-5 w-5" />
+                                </a>
+                            </Button>
                         </div>
                     </div>
 
-                    <div style={{ background: '#f8fafc', padding: '40px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '25px', letterSpacing: '0.5px' }}>Audience Profile</div>
+                    <div className="rounded-xl border border-border bg-muted/20 p-8 shadow-inner">
+                        <div className="mb-8 text-xs font-bold uppercase tracking-widest text-muted-foreground">Audience Profile</div>
 
                         {stats ? (
-                            <>
-                                <div style={{ marginBottom: '30px' }}>
-                                    <div style={{ fontSize: '48px', fontWeight: 800, color: '#052962', lineHeight: '1', marginBottom: '5px' }}>{Math.round(stats.monthly_readers / 1000)}k+</div>
-                                    <div style={{ fontSize: '15px', color: '#475569', fontWeight: 500 }}>Monthly Institutional Readers</div>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="mb-8 border-b border-border pb-8">
+                                    <div className="mb-1 text-6xl font-black tracking-tighter text-primary">{Math.round(stats.monthly_readers / 1000)}k+</div>
+                                    <div className="text-sm font-bold text-muted-foreground">Monthly Institutional Readers</div>
                                 </div>
 
-                                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '15px' }}>
+                                <ul className="space-y-4">
                                     {stats.audience_breakdown.map(item => (
-                                        <li key={item.segment} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#334155' }}>
-                                            <CheckCircle size={16} color="#10B981" /> {item.percentage}% {item.segment}
+                                        <li key={item.segment} className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+                                            <CheckCircle className="h-5 w-5 text-primary" />
+                                            <span className="font-bold">{item.percentage}%</span> {item.segment}
                                         </li>
                                     ))}
                                 </ul>
-                            </>
+                            </div>
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '20px' }}><Loader className="animate-spin" /></div>
+                            <div className="flex h-40 items-center justify-center text-muted-foreground">
+                                <Loader2 className="h-8 w-8 animate-spin" />
+                            </div>
                         )}
                     </div>
                 </div>

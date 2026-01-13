@@ -4,7 +4,12 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Sector, ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
-import { Globe, Activity, Zap, Layers } from 'lucide-react';
+import { Globe, Activity, Zap, Layers, ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 interface SectorDetailData {
     sector: Sector;
@@ -25,6 +30,7 @@ export const SectorDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (id) {
+            // setLoading(true); // Redundant if initial state is true
             Promise.all([
                 api.getSector(id),
                 fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/market-intel/sector/${id}/analytics`).then(r => r.ok ? r.json() : null)
@@ -38,116 +44,134 @@ export const SectorDetailPage: React.FC = () => {
         }
     }, [id]);
 
-    if (loading) return <Layout><div className="container">Loading Sector Profile...</div></Layout>;
-    if (!data) return <Layout><div className="container">Sector Intel Unavailable</div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+    if (!data) return <Layout><div className="container py-20 text-center text-xl text-muted-foreground">Sector Intel Unavailable</div></Layout>;
 
     const { sector, by_region, recent_articles, top_performers } = data;
 
     return (
         <Layout>
-            {/* Sector Profile Header (Industrial/Dark) */}
-            <header style={{ background: '#1e293b', color: 'white', padding: '60px 0', marginBottom: '60px', borderBottom: '4px solid #052962' }}>
+            {/* Sector Profile Header */}
+            <header className="mb-12 border-b-4 border-primary bg-card py-16 text-card-foreground">
                 <div className="container">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-                            <div style={{ fontSize: '80px', lineHeight: '1', filter: 'drop-shadow(0 0 20px rgba(5, 41, 98, 0.8))' }}>{sector.icon}</div>
+                    <div className="flex flex-col justify-between gap-8 md:flex-row md:items-start">
+                        <div className="flex items-center gap-8">
+                            <div className="text-8xl drop-shadow-md animate-in zoom-in duration-500 text-primary">{sector.icon}</div>
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Activity size={14} /> MONITORING
+                                <div className="mb-2 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-primary">
+                                    <Activity className="h-3 w-3" /> MONITORING
                                 </div>
-                                <h1 style={{ fontSize: '64px', fontWeight: 900, color: 'white', margin: 0, lineHeight: '1', letterSpacing: '-2px' }}>{sector.name}</h1>
-                                <p style={{ fontSize: '20px', color: '#94a3b8', marginTop: '15px', maxWidth: '600px', lineHeight: '1.6', fontFamily: 'monospace' }}>
+                                <h1 className="mb-4 text-6xl font-black leading-none tracking-tighter text-foreground">{sector.name}</h1>
+                                <p className="max-w-xl text-xl font-mono leading-relaxed text-muted-foreground">
                                     {sector.description}
                                 </p>
                             </div>
                         </div>
-                        <div style={{ textAlign: 'right', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '5px' }}>Volatility Index</div>
-                            <div style={{ fontSize: '48px', fontWeight: 900, color: analytics?.volatility_index === 'HIGH' ? '#C70000' : analytics?.volatility_index === 'MODERATE' ? '#F59E0B' : '#10B981', fontFamily: 'monospace', lineHeight: 1 }}>{analytics?.volatility_index || 'HIGH'}</div>
-                            <div style={{ fontSize: '12px', color: analytics?.volatility_index === 'HIGH' ? '#C70000' : '#10B981', marginTop: '5px' }}>{analytics?.volatility_index === 'HIGH' ? 'ACTION REQUIRED' : 'MONITORING'}</div>
+                        <div className="rounded-lg border border-border bg-background/50 p-6 backdrop-blur-sm">
+                            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Volatility Index</div>
+                            <div className={cn("font-mono text-5xl font-black leading-none", analytics?.volatility_index === 'HIGH' ? 'text-destructive' : analytics?.volatility_index === 'MODERATE' ? 'text-secondary-foreground' : 'text-primary')}>
+                                {analytics?.volatility_index || 'HIGH'}
+                            </div>
+                            <div className={cn("mt-2 text-xs font-bold", analytics?.volatility_index === 'HIGH' ? 'text-destructive' : 'text-primary')}>
+                                {analytics?.volatility_index === 'HIGH' ? 'ACTION REQUIRED' : 'MONITORING'}
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <div className="container">
+            <div className="container py-8">
                 {/* Critical Path Visualization (Supply Chain Logic) */}
-                <div style={{ marginBottom: '80px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Layers size={16} /> Supply Chain Monitor
+                <div className="mb-16">
+                    <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                        <Layers className="h-4 w-4" /> Supply Chain Monitor
                     </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', background: '#e2e8f0', border: '1px solid #e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div className="grid overflow-hidden rounded-lg bg-border gap-[1px] md:grid-cols-3">
                         {/* Upstream */}
-                        <div style={{ background: 'white', padding: '30px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Upstream (Raw Material)</div>
-                            <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '5px' }}>{analytics?.supply_chain?.upstream || 'Stable'}</div>
-                            <div style={{ height: '4px', width: '100%', background: analytics?.supply_chain?.upstream === 'Stable' ? '#10B981' : analytics?.supply_chain?.upstream === 'Strain' ? '#F59E0B' : '#C70000', borderRadius: '2px' }}></div>
+                        <div className="bg-card p-8">
+                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Upstream (Raw Material)</div>
+                            <div className="mb-2 text-2xl font-black text-foreground">{analytics?.supply_chain?.upstream || 'Stable'}</div>
+                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.upstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.upstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
                         </div>
                         {/* Midstream */}
-                        <div style={{ background: 'white', padding: '30px', position: 'relative' }}>
-                            <div style={{ position: 'absolute', left: 0, top: '50%', width: '4px', height: '20px', background: '#e2e8f0', transform: 'translateY(-50%)' }}></div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Midstream (Processing)</div>
-                            <div style={{ fontSize: '24px', fontWeight: 800, color: analytics?.supply_chain?.midstream === 'Stable' ? '#0f172a' : '#F59E0B', marginBottom: '5px' }}>{analytics?.supply_chain?.midstream || 'Strain'}</div>
-                            <div style={{ height: '4px', width: '100%', background: analytics?.supply_chain?.midstream === 'Stable' ? '#10B981' : analytics?.supply_chain?.midstream === 'Strain' ? '#F59E0B' : '#C70000', borderRadius: '2px' }}></div>
+                        <div className="relative bg-card p-8">
+                            <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 bg-border hidden md:block"></div>
+                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Midstream (Processing)</div>
+                            <div className={cn("mb-2 text-2xl font-black", analytics?.supply_chain?.midstream === 'Stable' ? 'text-foreground' : 'text-secondary-foreground')}>
+                                {analytics?.supply_chain?.midstream || 'Strain'}
+                            </div>
+                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.midstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.midstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
                         </div>
                         {/* Downstream */}
-                        <div style={{ background: 'white', padding: '30px' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Downstream (Distribution)</div>
-                            <div style={{ fontSize: '24px', fontWeight: 800, color: analytics?.supply_chain?.downstream === 'Blockage' ? '#C70000' : analytics?.supply_chain?.downstream === 'Strain' ? '#F59E0B' : '#0f172a', marginBottom: '5px' }}>{analytics?.supply_chain?.downstream || 'Blockage'}</div>
-                            <div style={{ height: '4px', width: '100%', background: analytics?.supply_chain?.downstream === 'Stable' ? '#10B981' : analytics?.supply_chain?.downstream === 'Strain' ? '#F59E0B' : '#C70000', borderRadius: '2px' }}></div>
+                        <div className="bg-card p-8">
+                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Downstream (Distribution)</div>
+                            <div className={cn("mb-2 text-2xl font-black", analytics?.supply_chain?.downstream === 'Blockage' ? 'text-destructive' : analytics?.supply_chain?.downstream === 'Strain' ? 'text-secondary-foreground' : 'text-foreground')}>
+                                {analytics?.supply_chain?.downstream || 'Blockage'}
+                            </div>
+                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.downstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.downstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
                         </div>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '50px' }}>
+                <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
                     <section>
-                        <h2 style={{ fontSize: '18px', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #052962', paddingBottom: '10px', color: '#111' }}>
-                            <Zap size={18} color="#052962" /> Live Intelligence Feed
+                        <h2 className="mb-8 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
+                            <Zap className="h-5 w-5 text-primary" /> Live Intelligence Feed
                         </h2>
-                        <div style={{ display: 'grid', gap: '20px' }}>
+                        <div className="grid gap-6">
                             {recent_articles.map(article => (
                                 <ArticleCard key={article.id} article={article} />
                             ))}
                         </div>
                     </section>
 
-                    <aside>
+                    <aside className="space-y-8">
                         {/* Regional Cluster (Heatmap) */}
-                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '30px', marginBottom: '40px' }}>
-                            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Globe size={16} /> Regional Weighting
-                            </h3>
-                            <div style={{ display: 'grid', gap: '15px' }}>
-                                {by_region.map(r => (
-                                    <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                        <div style={{ width: '100px', fontSize: '13px', fontWeight: 600, color: '#334155' }}>{r.name}</div>
-                                        <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                                            <div style={{ width: `${Math.min(r.count * 2, 100)}%`, height: '100%', background: r.count > 20 ? '#052962' : '#94a3b8' }}></div>
+                        <Card className="border-border bg-card">
+                            <CardContent className="p-6">
+                                <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                                    <Globe className="h-4 w-4" /> Regional Weighting
+                                </h3>
+                                <div className="space-y-4">
+                                    {by_region.map(r => (
+                                        <div key={r.name} className="flex items-center gap-4">
+                                            <div className="w-24 text-xs font-bold text-muted-foreground">{r.name}</div>
+                                            <Progress
+                                                value={Math.min(r.count * 2, 100)}
+                                                className="h-2"
+                                                indicatorClassName={r.count > 20 ? 'bg-primary' : 'bg-muted'}
+                                            />
+                                            <div className="text-xs font-black text-foreground">{r.count}</div>
                                         </div>
-                                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>{r.count}</div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="rounded-xl bg-card border border-border shadow-lg">
+                            <CardContent className="p-6">
+                                <h3 className="mb-4 border-b border-border pb-4 text-lg font-bold uppercase tracking-wide text-foreground">
+                                    Strategic Briefing
+                                </h3>
+                                {top_performers.map(article => (
+                                    <div key={article.id} className="mb-4 border-b border-border pb-4 last:border-0 last:mb-0 last:pb-0">
+                                        <Link to={`/articles/${article.slug}`} className="mb-2 block text-sm font-bold leading-snug text-foreground hover:text-primary hover:underline">
+                                            {article.title}
+                                        </Link>
+                                        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                            {article.country_name} • <span className="text-primary">High Priority</span>
+                                        </div>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-
-                        <div style={{ background: '#0f172a', color: 'white', padding: '30px', borderRadius: '8px', marginBottom: '30px' }}>
-                            <h3 style={{ fontSize: '18px', marginBottom: '20px', fontWeight: 700, color: 'white', textTransform: 'uppercase', borderBottom: '1px solid #334155', paddingBottom: '15px' }}>
-                                Strategic Briefing
-                            </h3>
-                            {top_performers.map(article => (
-                                <div key={article.id} style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid #334155' }}>
-                                    <Link to={`/articles/${article.slug}`} style={{ fontWeight: 600, fontSize: '15px', lineHeight: '1.4', marginBottom: '8px', display: 'block', color: '#e2e8f0', textDecoration: 'none' }}>
-                                        {article.title}
+                            </CardContent>
+                            <div className="p-6 border-t border-border bg-muted/20">
+                                <Button asChild className="w-full font-bold">
+                                    <Link to={`/market-intel/sectors/${id}/trends`}>
+                                        Access Forecast Data <ArrowRight className="ml-2 h-4 w-4" />
                                     </Link>
-                                    <div style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase' }}>
-                                        {article.country_name} • <span style={{ color: '#10B981' }}>High Priority</span>
-                                    </div>
-                                </div>
-                            ))}
-                            <Link to={`/market-intel/sectors/${id}/trends`} style={{ display: 'block', width: '100%', padding: '15px', background: '#fff', color: '#0f172a', textAlign: 'center', textDecoration: 'none', borderRadius: '4px', fontWeight: 700, marginTop: '20px', fontSize: '14px', textTransform: 'uppercase' }}>
-                                Access Forecast Data →
-                            </Link>
-                        </div>
+                                </Button>
+                            </div>
+                        </Card>
                     </aside>
                 </div>
             </div>

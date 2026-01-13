@@ -1,10 +1,13 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Country, ArticleListItem } from '../types';
-import { Target, MessageSquare, BarChart2, ShieldCheck, ArrowRight, Layers } from 'lucide-react';
+import { Target, MessageSquare, BarChart2, ShieldCheck, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface NarrativeData {
     country: Country;
@@ -43,85 +46,86 @@ export const CountryNarrativePage: React.FC = () => {
         }
     }, [code]);
 
-    if (loading) return <Layout><div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}><div className="kinetic-loader"></div><div style={{ marginTop: '20px', fontFamily: 'monospace', color: '#052962' }}>Analyzing Narrative Framework...</div></div></Layout>;
-    if (!data) return <Layout><div className="container">Narrative data not available</div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+    if (!data) return <Layout><div className="container py-20 text-center text-xl text-muted-foreground">Narrative data not available</div></Layout>;
 
     const { country, narratives, aligned_articles, sector_coverage } = data;
 
     return (
         <Layout>
-            <div className="container" style={{ paddingBottom: '120px' }}>
-                <header style={{ marginBottom: '60px', borderBottom: '1px solid #e2e8f0', padding: '60px 0 40px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+            <div className="container pb-32">
+                <header className="mb-12 border-b border-border py-16">
+                    <div className="flex justify-between items-start">
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                                <div style={{ background: '#052962', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                    STRATEGIC COMMUNICATIONS
-                                </div>
-                            </div>
-                            <h1 style={{ fontSize: '64px', fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: '0.9', letterSpacing: '-2px' }}>
-                                {country.name} <span style={{ color: '#64748b', fontWeight: 300 }}>Framework</span>
+                            <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-[10px]">Strategic Communications</Badge>
+                            <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter leading-none">
+                                {country.name} <span className="font-light text-muted-foreground">Framework</span>
                             </h1>
-                            <p style={{ fontSize: '18px', color: '#64748b', marginTop: '20px', maxWidth: '600px', lineHeight: '1.6' }}>
+                            <p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
                                 Analysis of key national themes and verified media alignment.
                             </p>
                         </div>
-                        <div style={{ fontSize: '96px', lineHeight: '1', opacity: 0.2, filter: 'grayscale(100%)' }}>{country.flag_emoji}</div>
+                        <div className="text-9xl opacity-20 grayscale select-none filter">{country.flag_emoji}</div>
                     </div>
                 </header>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '60px' }}>
+                <div className="grid lg:grid-cols-[2fr_1fr] gap-16">
                     <main>
                         {/* STRATEGIC PILLARS */}
-                        <section style={{ marginBottom: '80px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px' }}>
-                                <Layers size={24} color="#052962" /> Strategic Pillars
+                        <section className="mb-16">
+                            <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
+                                <Layers className="h-6 w-6 text-primary" /> Strategic Pillars
                             </h2>
 
-                            <div style={{ display: 'grid', gap: '25px' }}>
+                            <div className="grid gap-6">
                                 {narratives.map(narrative => (
-                                    <div key={narrative.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)' }}>
-                                        <div style={{ background: '#f8fafc', padding: '20px 25px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0 }}>{narrative.narrative_theme}</h3>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
-                                                <Target size={14} /> {narrative.target_audience}
-                                            </div>
-                                        </div>
-                                        <div style={{ padding: '25px' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '15px', letterSpacing: '0.5px' }}>Key Messages</div>
-                                            <div style={{ display: 'grid', gap: '10px' }}>
+                                    <Card key={narrative.id} className="border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                        <CardHeader className="bg-muted/10 border-b border-border flex flex-row items-center justify-between space-y-0 py-4 px-6">
+                                            <CardTitle className="text-lg font-bold text-foreground">
+                                                {narrative.narrative_theme}
+                                            </CardTitle>
+                                            <Badge variant="outline" className="border-border text-muted-foreground font-semibold gap-1">
+                                                <Target className="h-3 w-3" /> {narrative.target_audience}
+                                            </Badge>
+                                        </CardHeader>
+                                        <CardContent className="p-6">
+                                            <div className="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Key Messages</div>
+                                            <div className="space-y-3">
                                                 {narrative.key_messages.map((msg, i) => (
-                                                    <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                                        <div style={{ width: '6px', height: '6px', background: '#052962', borderRadius: '50%', marginTop: '8px', flexShrink: 0 }}></div>
-                                                        <p style={{ margin: 0, fontSize: '15px', color: '#334155', lineHeight: '1.5' }}>{msg}</p>
+                                                    <div key={i} className="flex gap-3 items-start">
+                                                        <div className="mt-2 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0"></div>
+                                                        <p className="text-sm text-muted-foreground leading-relaxed">{msg}</p>
                                                     </div>
                                                 ))}
                                             </div>
-                                        </div>
-                                    </div>
+                                        </CardContent>
+                                    </Card>
                                 ))}
                             </div>
                         </section>
 
                         {/* SIGNAL VERIFICATION */}
                         <section>
-                            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px' }}>
-                                <ShieldCheck size={24} color="#10B981" /> Media Alignment
+                            <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
+                                <ShieldCheck className="h-6 w-6 text-primary" /> Media Alignment
                             </h2>
-                            <div style={{ display: 'grid', gap: '15px' }}>
+                            <div className="grid gap-4">
                                 {aligned_articles.map(article => (
-                                    <Link to={`/articles/${article.slug}`} key={article.id} style={{ display: 'flex', gap: '25px', padding: '25px', background: 'white', border: '1px solid #e2e8f0', textDecoration: 'none', color: 'inherit', borderRadius: '8px', transition: 'all 0.2s', alignItems: 'center' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                    <Link
+                                        to={`/articles/${article.slug}`}
+                                        key={article.id}
+                                        className="group block rounded-xl border border-border bg-card p-6 transition-all hover:border-primary hover:-translate-y-0.5 hover:shadow-lg"
                                     >
-                                        <div style={{ width: '40px', height: '40px', background: '#ecfdf5', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669', flexShrink: 0 }}>
-                                            <CheckCircleIcon size={20} />
+                                        <div className="flex gap-6 items-center">
+                                            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                <CheckCircle2 className="h-6 w-6" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">Verified Alignment</div>
+                                                <h4 className="text-lg font-bold text-foreground group-hover:text-primary">{article.title}</h4>
+                                            </div>
+                                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                                         </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: '11px', color: '#059669', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Verified Alignment</div>
-                                            <h4 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '6px', color: '#0f172a' }}>{article.title}</h4>
-                                        </div>
-                                        <ArrowRight size={18} color="#94a3b8" />
                                     </Link>
                                 ))}
                             </div>
@@ -129,33 +133,35 @@ export const CountryNarrativePage: React.FC = () => {
                     </main>
 
                     <aside>
-                        <div style={{ position: 'sticky', top: '40px' }}>
-                            <div style={{ background: 'white', border: '1px solid #e2e8f0', padding: '30px', borderRadius: '12px', marginBottom: '30px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px', color: '#64748b' }}>
-                                    <MessageSquare size={20} />
-                                    <h3 style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', margin: 0, letterSpacing: '0.5px' }}>Narrative Index</h3>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                                    <div style={{ fontSize: '64px', fontWeight: 800, color: '#052962', lineHeight: '1' }}>{narrativeIndex?.narrative_index || 78}</div>
-                                    <div style={{ fontSize: '24px', color: '#94a3b8', fontWeight: 300 }}>/100</div>
-                                </div>
-                                <div style={{ fontSize: '14px', color: '#64748b', marginTop: '10px' }}>{narrativeIndex?.assessment || 'Strong alignment with global investment themes.'}</div>
-                            </div>
+                        <div className="sticky top-8 space-y-8">
+                            <Card className="border-border shadow-sm">
+                                <CardContent className="p-8">
+                                    <div className="mb-4 flex items-center gap-2 text-muted-foreground">
+                                        <MessageSquare className="h-5 w-5" />
+                                        <h3 className="text-xs font-bold uppercase tracking-widest">Narrative Index</h3>
+                                    </div>
+                                    <div className="flex items-baseline gap-2 mb-4">
+                                        <span className="text-7xl font-black text-primary leading-none">{narrativeIndex?.narrative_index || 78}</span>
+                                        <span className="text-xl font-light text-muted-foreground">/100</span>
+                                    </div>
+                                    <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                                        {narrativeIndex?.assessment || 'Strong alignment with global investment themes.'}
+                                    </p>
+                                </CardContent>
+                            </Card>
 
-                            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '30px', borderRadius: '12px' }}>
-                                <h3 style={{ fontSize: '13px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <BarChart2 size={16} /> Sector Weighting
+                            <div className="rounded-xl border border-border bg-muted/20 p-8">
+                                <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                                    <BarChart2 className="h-4 w-4" /> Sector Weighting
                                 </h3>
-                                <div style={{ display: 'grid', gap: '20px' }}>
+                                <div className="space-y-5">
                                     {sector_coverage.map(sector => (
                                         <div key={sector.id}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#334155', fontWeight: 500 }}>
+                                            <div className="flex justify-between mb-2 text-sm font-medium text-foreground">
                                                 <span>{sector.name}</span>
-                                                <span style={{ fontWeight: 700 }}>{Math.round((sector.article_count / 50) * 100)}%</span>
+                                                <span className="font-bold">{Math.round((sector.article_count / 50) * 100)}%</span>
                                             </div>
-                                            <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${Math.min(sector.article_count * 5, 100)}%`, height: '100%', background: '#052962', borderRadius: '3px' }} />
-                                            </div>
+                                            <Progress value={Math.min(sector.article_count * 5, 100)} className="h-1.5" indicatorClassName="bg-primary" />
                                         </div>
                                     ))}
                                 </div>
@@ -163,17 +169,7 @@ export const CountryNarrativePage: React.FC = () => {
                         </div>
                     </aside>
                 </div>
-            </div>
-            <style>{`
-                .kinetic-loader { width: 40px; height: 40px; border: 4px solid #052962; border-top-color: transparent; borderRadius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-            `}</style>
-        </Layout>
+            </div >
+        </Layout >
     );
 };
-
-const CheckCircleIcon = ({ size }: { size: number }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-    </svg>
-);

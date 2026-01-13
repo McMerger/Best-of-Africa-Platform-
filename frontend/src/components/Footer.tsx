@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Activity, ShieldCheck, Server } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 export const Footer: React.FC = () => {
     const [status, setStatus] = useState<{ version: string; node: string } | null>(null);
@@ -15,77 +16,73 @@ export const Footer: React.FC = () => {
     }, []);
 
     return (
-        <footer style={{ background: '#111', color: '#666', padding: '80px 0 40px', marginTop: '80px', borderTop: '4px solid #052962' }}>
+        <footer className="mt-20 border-t-4 border-primary bg-primary pt-20 pb-10 text-primary-foreground/80">
             <div className="container">
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) 1fr 1fr 1fr', gap: '60px', marginBottom: '80px' }}>
+                <div className="mb-20 grid gap-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
 
                     {/* Brand / Mission Column */}
                     <div>
-                        <div style={{ fontSize: '24px', fontWeight: 900, color: 'white', letterSpacing: '-1px', marginBottom: '20px' }}>
-                            BEST OF AFRICA<span style={{ color: '#052962' }}>.</span>
+                        <div className="mb-5 font-serif text-2xl font-black tracking-tighter text-primary-foreground pl-1">
+                            BEST OF AFRICA<span className="text-accent">.</span>
                         </div>
-                        <p style={{ fontSize: '14px', lineHeight: '1.6', maxWidth: '300px', marginBottom: '30px', color: '#888' }}>
+                        <p className="mb-8 max-w-[300px] text-sm leading-relaxed text-primary-foreground/70">
                             The sovereign unified narrative engine. Monitoring 54 markets, synthesizing millions of signals, driving narrative sovereignty.
                         </p>
-                        <div style={{ display: 'flex', gap: '15px' }}>
+                        <div className="flex gap-4">
                             {/* Status Indicators */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#052962', background: '#051b3b', padding: '6px 12px', borderRadius: '4px' }}>
+                            <Badge variant="outline" className="border-primary-foreground/30 bg-primary-foreground/10 text-[11px] font-bold uppercase text-primary-foreground gap-2 px-3 py-1.5 rounded">
                                 <Activity size={14} /> System Operational
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', color: '#10B981', background: '#064e3b', padding: '6px 12px', borderRadius: '4px' }}>
+                            </Badge>
+                            <Badge variant="outline" className="border-accent/50 bg-accent/10 text-[11px] font-bold uppercase text-accent gap-2 px-3 py-1.5 rounded">
                                 <ShieldCheck size={14} /> Secure
-                            </div>
+                            </Badge>
                         </div>
                     </div>
 
-                    {/* Navigation Columns - Clean & Monospaced */}
-                    <div>
-                        <h4 style={{ color: 'white', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '25px' }}>Intelligence</h4>
-                        <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '15px' }}>
-                            <li><Link to="/dashboards" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Regional Command</Link></li>
-                            <li><Link to="/market-intel" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Sector Watch</Link></li>
-                            <li><Link to="/reports" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">The Vault</Link></li>
+                    {/* Navigation Columns */}
+                    <div className="space-y-6">
+                        <h4 className="text-xs font-bold uppercase tracking-[2px] text-primary-foreground">Intelligence</h4>
+                        <ul className="space-y-4 text-sm">
+                            <li><Link to="/dashboards" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Regional Command</Link></li>
+                            <li><Link to="/market-intel" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Sector Watch</Link></li>
+                            <li><Link to="/reports" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">The Vault</Link></li>
                         </ul>
                     </div>
 
-                    <div>
-                        <h4 style={{ color: 'white', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '25px' }}>Diplomacy</h4>
-                        <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '15px' }}>
-                            <li><Link to="/narratives" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Narrative Strategy</Link></li>
-                            <li><Link to="/countries" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Member States</Link></li>
-                            <li><Link to="/market-intel/audience" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Sentiment Analysis</Link></li>
+                    <div className="space-y-6">
+                        <h4 className="text-xs font-bold uppercase tracking-[2px] text-primary-foreground">Diplomacy</h4>
+                        <ul className="space-y-4 text-sm">
+                            <li><Link to="/narratives" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Narrative Strategy</Link></li>
+                            <li><Link to="/countries" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Member States</Link></li>
+                            <li><Link to="/market-intel/audience" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Sentiment Analysis</Link></li>
                         </ul>
                     </div>
 
-                    <div>
-                        <h4 style={{ color: 'white', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '25px' }}>System</h4>
-                        <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '15px' }}>
-                            <li><Link to="/login" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Secure Login</Link></li>
-                            <li><Link to="/contact" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">Contact Support</Link></li>
-                            <li><a href="/api/v1/status" target="_blank" style={{ fontSize: '14px', transition: 'color 0.2s', display: 'block' }} className="footer-link">API Status</a></li>
+                    <div className="space-y-6">
+                        <h4 className="text-xs font-bold uppercase tracking-[2px] text-primary-foreground">System</h4>
+                        <ul className="space-y-4 text-sm">
+                            <li><Link to="/login" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Secure Login</Link></li>
+                            <li><Link to="/contact" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Contact Support</Link></li>
+                            <li><a href="/api/v1/status" target="_blank" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">API Status</a></li>
                         </ul>
                     </div>
                 </div>
 
                 {/* Sub-Footer: Technical details */}
-                <div style={{ borderTop: '1px solid #222', paddingTop: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', fontFamily: 'monospace' }}>
-                    <div style={{ display: 'flex', gap: '30px' }}>
+                <div className="flex flex-col items-center justify-between gap-4 border-t border-primary-foreground/20 pt-8 font-mono text-xs md:flex-row text-primary-foreground/60">
+                    <div className="flex gap-8">
                         <span>© {new Date().getFullYear()} BOA INTELLIGENCE BUREAU</span>
-                        <Link to="/privacy">PRIVACY POLICY</Link>
-                        <Link to="/terms">TERMS OF SERVICE</Link>
+                        <Link to="/privacy" className="hover:text-primary-foreground">PRIVACY POLICY</Link>
+                        <Link to="/terms" className="hover:text-primary-foreground">TERMS OF SERVICE</Link>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Server size={14} color="#333" />
+                    <div className="flex items-center gap-3">
+                        <Server size={14} className="text-accent" />
                         <span>VER: {status?.version || '2.4.0'}</span>
-                        <span style={{ color: '#333' }}>|</span>
+                        <span className="text-accent/50">|</span>
                         <span>NODE: {status?.node || 'NAIROBI-1'}</span>
                     </div>
                 </div>
             </div>
-            <style>{`
-                .footer-link { color: #888; }
-                .footer-link:hover { color: white; text-decoration: underline; text-decoration-color: #052962; text-underline-offset: 4px; }
-            `}</style>
         </footer>
     );
 };

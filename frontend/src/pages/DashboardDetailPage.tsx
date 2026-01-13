@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { CinematicLoader } from '../components/CinematicLoader';
+// import { CinematicLoader } from '../components/CinematicLoader';
 import { api } from '../services/api';
 import type { Dashboard, ArticleListItem, TrendingCountry, SectorBreakdown } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
-import { BarChart2, TrendingUp, Globe } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import {
+    BarChart2,
+    TrendingUp,
+    Globe,
+    Activity,
+    ArrowUp,
+    ArrowDown
+} from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 export const DashboardDetailPage: React.FC = () => {
     const { region } = useParams<{ region: string }>();
@@ -57,107 +68,116 @@ export const DashboardDetailPage: React.FC = () => {
         }
     }, [region, isContinental]);
 
-    if (loading) return <Layout><CinematicLoader text="LOADING CONTINENTAL DATA..." /></Layout>;
+    // ... (in component)
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
 
     // CONTINENTAL VIEW
     if (isContinental && continentalData) {
         return (
             <Layout>
-                <div className="container">
+                <div className="container py-10">
                     {/* Command Center Header */}
-                    <header style={{ marginBottom: '40px', paddingBottom: '20px', borderBottom: '1px solid #e5e7eb' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '20px' }}>
+                    <header className="mb-10 border-b border-border pb-8">
+                        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
                             <div>
-                                <div style={{ textTransform: 'uppercase', color: '#052962', fontWeight: 700, fontSize: '13px', letterSpacing: '1px', marginBottom: '10px' }}>
+                                <div className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
                                     Pan-African Intelligence
                                 </div>
-                                <h1 style={{ fontSize: '42px', lineHeight: '1', margin: 0, fontWeight: 700 }}>Continental Overview</h1>
+                                <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground md:text-5xl">Continental Overview</h1>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '12px', color: '#666', fontWeight: 600, textTransform: 'uppercase' }}>Platform Status</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontWeight: 700 }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 5px #10B981' }}></div>
+                            <div className="text-right">
+                                <div className="text-xs font-bold uppercase text-muted-foreground">Platform Status</div>
+                                <div className="flex items-center justify-end gap-2 text-sm font-bold text-primary">
+                                    <div className="h-2 w-2 animate-pulse rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)]"></div>
                                     LIVE
                                 </div>
                             </div>
                         </div>
 
                         {/* Situation Report (AI Summary & Stability Index) */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) 1fr', gap: '20px', alignItems: 'stretch' }}>
-                            {/* Executive Summary (Trend #23: Kinetic Typography) */}
-                            <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '25px', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                                    <div style={{ background: '#052962', color: 'white', padding: '5px 10px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', borderRadius: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div style={{ width: '6px', height: '6px', background: '#fff', borderRadius: '50%', animation: 'blink 1s infinite' }}></div>
-                                        Market Updates
+                        <div className="grid gap-6 md:grid-cols-[3fr_1fr]">
+                            {/* Executive Summary */}
+                            <Card className="relative overflow-hidden border-border shadow-sm">
+                                <CardContent className="p-6">
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <span className="flex items-center gap-2 rounded bg-primary px-2 py-1 text-[11px] font-bold uppercase text-primary-foreground">
+                                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-foreground"></span>
+                                            Market Updates
+                                        </span>
+                                        <span className="font-mono text-xs text-muted-foreground">
+                                            SOURCE: ANALYTICS BUREAU
+                                        </span>
                                     </div>
-                                    <div style={{ fontFamily: 'monospace', color: '#64748b', fontSize: '12px' }}>
-                                        SOURCE: ANALYTICS BUREAU
-                                    </div>
-                                </div>
-                                <p style={{ margin: 0, fontSize: '18px', color: '#1e293b', lineHeight: '1.6', fontFamily: 'monospace' }}>
-                                    <strong>"{analytics?.market_summary?.split('.')[0] || 'Market Activity High'}."</strong> {analytics?.market_summary?.split('.').slice(1).join('.') || 'Cross-border trade narratives are dominating coverage.'}
-                                </p>
-                                <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #052962, transparent)' }}></div>
-                            </div>
+                                    <p className="font-mono text-lg leading-relaxed text-foreground">
+                                        <strong>"{analytics?.market_summary?.split('.')[0] || 'Market Activity High'}."</strong> {analytics?.market_summary?.split('.').slice(1).join('.') || 'Cross-border trade narratives are dominating coverage.'}
+                                    </p>
+                                    <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary to-transparent"></div>
+                                </CardContent>
+                            </Card>
 
-                            {/* Stability Index (Industrial Indicator) */}
-                            <div style={{ background: '#0f172a', color: 'white', padding: '20px', borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '1px solid #1e293b' }}>
-                                <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', color: '#94a3b8', marginBottom: '10px' }}>Stability Index</div>
-                                <div style={{ fontSize: '48px', fontWeight: 900, color: '#10B981', lineHeight: '1', textShadow: '0 0 20px rgba(16, 185, 129, 0.4)' }}>
-                                    {analytics?.stability_index || 'HIGH'}
-                                </div>
-                                <div style={{ fontSize: '12px', fontWeight: 600, color: '#10B981', marginTop: '5px' }}>STABLE / POSITIVE</div>
-                            </div>
+                            {/* Stability Index */}
+                            <Card className="flex flex-col items-center justify-center border-border bg-muted/50 text-foreground shadow-lg">
+                                <CardContent className="flex flex-col items-center p-6">
+                                    <div className="mb-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Stability Index</div>
+                                    <div className="text-5xl font-black leading-none text-primary drop-shadow-sm">
+                                        {analytics?.stability_index || 'HIGH'}
+                                    </div>
+                                    <div className="mt-2 text-xs font-bold text-primary">STABLE / POSITIVE</div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </header>
 
-                    {/* Metrics Ticker (Monochromatic) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: '#e5e7eb', border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden', marginBottom: '50px' }}>
-                        <div style={{ background: 'white', padding: '20px' }}>
-                            <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '5px' }}>Active Markets</div>
-                            <div style={{ fontSize: '28px', fontWeight: 700, color: '#052962' }}>{continentalData.overview.countries_covered} <span style={{ fontSize: '14px', color: '#999', fontWeight: 400 }}>/ 54</span></div>
-                        </div>
-                        <div style={{ background: 'white', padding: '20px' }}>
-                            <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '5px' }}>Intel Reports</div>
-                            <div style={{ fontSize: '28px', fontWeight: 700, color: '#052962' }}>{continentalData.overview.total_articles_30d}</div>
-                        </div>
-                        <div style={{ background: 'white', padding: '20px' }}>
-                            <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '5px' }}>Regions Live</div>
-                            <div style={{ fontSize: '28px', fontWeight: 700, color: '#052962' }}>{continentalData.overview.regions}</div>
-                        </div>
-                        <div style={{ background: 'white', padding: '20px' }}>
-                            <div style={{ fontSize: '12px', color: '#666', textTransform: 'uppercase', fontWeight: 600, marginBottom: '5px' }}>Sentiment</div>
-                            <div style={{ fontSize: '28px', fontWeight: 700, color: '#052962' }}>{analytics?.sentiment_pct || 68}% <span style={{ fontSize: '14px', color: analytics?.sentiment_trend === 'up' ? '#10B981' : '#ef4444', fontWeight: 600 }}>{analytics?.sentiment_trend === 'up' ? '↑' : '↓'}</span></div>
+                    {/* Metrics Ticker */}
+                    <div className="mb-12 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                        <div className="grid grid-cols-2 divide-x divide-border md:grid-cols-4">
+                            <div className="p-6">
+                                <div className="mb-1 text-xs font-bold uppercase text-muted-foreground">Active Markets</div>
+                                <div className="text-3xl font-bold text-foreground">{continentalData.overview.countries_covered} <span className="text-sm font-normal text-muted-foreground">/ 54</span></div>
+                            </div>
+                            <div className="p-6">
+                                <div className="mb-1 text-xs font-bold uppercase text-muted-foreground">Intel Reports</div>
+                                <div className="text-3xl font-bold text-foreground">{continentalData.overview.total_articles_30d}</div>
+                            </div>
+                            <div className="p-6">
+                                <div className="mb-1 text-xs font-bold uppercase text-muted-foreground">Regions Live</div>
+                                <div className="text-3xl font-bold text-foreground">{continentalData.overview.regions}</div>
+                            </div>
+                            <div className="p-6">
+                                <div className="mb-1 text-xs font-bold uppercase text-muted-foreground">Sentiment</div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl font-bold text-foreground">{analytics?.sentiment_pct || 68}%</span>
+                                    <span className={cn("text-sm font-bold", analytics?.sentiment_trend === 'up' ? 'text-primary' : 'text-destructive')}>
+                                        {analytics?.sentiment_trend === 'up' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '40px', marginBottom: '60px' }}>
+                    <div className="mb-16 grid gap-12 lg:grid-cols-[2fr_1fr]">
                         {/* High-Density Market Heatmap */}
                         <div>
-                            <h2 style={{ fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #052962', paddingBottom: '10px' }}>
-                                <Globe size={18} /> Market Performance Heatmap
+                            <h2 className="mb-6 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
+                                <Globe className="h-5 w-5" /> Market Performance Heatmap
                             </h2>
-                            <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px' }}>
+                            <div className="rounded-lg border border-border bg-card">
                                 {continentalData.top_countries.map((c, i) => (
-                                    <div key={c.code} style={{ display: 'flex', alignItems: 'center', padding: '12px 20px', borderBottom: '1px solid #f3f4f6', background: i % 2 === 0 ? 'white' : '#fcfcfc' }}>
-                                        <div style={{ width: '40px', fontWeight: 600, color: '#999', fontSize: '12px' }}>#{i + 1}</div>
-                                        <div style={{ width: '200px', fontWeight: 600, color: '#052962', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            {c.flag_emoji} {c.name}
+                                    <div key={c.code} className="flex items-center border-b border-border px-5 py-3 last:border-0 hover:bg-muted/50 even:bg-muted/10">
+                                        <div className="w-10 text-xs font-bold text-muted-foreground">#{i + 1}</div>
+                                        <div className="flex w-48 items-center gap-2 font-semibold text-primary">
+                                            <span className="text-lg">{c.flag_emoji}</span> {c.name}
                                         </div>
 
-                                        {/* Performance Bar */}
-                                        <div style={{ flex: 1, padding: '0 20px' }}>
-                                            <div style={{ height: '6px', width: '100%', background: '#eee', borderRadius: '3px', position: 'relative' }}>
-                                                <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${(c.articles / 50) * 100}%`, background: '#052962', borderRadius: '3px' }}></div>
-                                            </div>
+                                        <div className="flex-1 px-5">
+                                            <Progress value={(c.articles / 50) * 100} className="h-1.5" />
                                         </div>
 
-                                        <div style={{ width: '100px', textAlign: 'right', fontWeight: 700, fontSize: '14px' }}>
-                                            {c.articles} <span style={{ fontSize: '10px', color: '#999', fontWeight: 400 }}>REPORTS</span>
+                                        <div className="w-24 text-right text-sm font-bold text-foreground">
+                                            {c.articles} <span className="text-[10px] font-normal text-muted-foreground">REPORTS</span>
                                         </div>
-                                        <div style={{ width: '100px', textAlign: 'right', fontFamily: 'monospace', color: '#666' }}>
+                                        <div className="hidden w-24 text-right font-mono text-sm text-muted-foreground md:block">
                                             {c.views.toLocaleString()}
                                         </div>
                                     </div>
@@ -167,32 +187,38 @@ export const DashboardDetailPage: React.FC = () => {
 
                         {/* Sector Intelligence */}
                         <div>
-                            <h2 style={{ fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #052962', paddingBottom: '10px' }}>
-                                <BarChart2 size={18} /> Sector Watch
+                            <h2 className="mb-6 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
+                                <BarChart2 className="h-5 w-5" /> Sector Watch
                             </h2>
-                            <div style={{ display: 'grid', gap: '10px' }}>
+                            <div className="grid gap-3">
                                 {continentalData.top_sectors.map(s => (
-                                    <Link to={`/market-intel/sectors/${s.id}`} key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px', background: 'white', border: '1px solid #e5e7eb', borderRadius: '4px', textDecoration: 'none', color: 'inherit', transition: 'border-color 0.2s' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span style={{ fontSize: '20px', width: '30px', textAlign: 'center' }}>{s.icon}</span>
+                                    <Link
+                                        to={`/market-intel/sectors/${s.id}`}
+                                        key={s.id}
+                                        className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-xl">{s.icon}</span>
                                             <div>
-                                                <div style={{ fontWeight: 700, fontSize: '14px', color: '#333' }}>{s.name}</div>
-                                                <div style={{ fontSize: '11px', color: '#999', textTransform: 'uppercase', fontWeight: 600 }}>Trend: {analytics?.sector_trends?.find(t => t.id === s.id)?.trend || 'Stable'}</div>
+                                                <div className="text-sm font-bold text-foreground">{s.name}</div>
+                                                <div className="text-[10px] uppercase font-bold text-muted-foreground">
+                                                    Trend: {analytics?.sector_trends?.find(t => t.id === s.id)?.trend || 'Stable'}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#052962' }}>{s.count}</div>
+                                        <div className="text-lg font-bold text-primary">{s.count}</div>
                                     </Link>
                                 ))}
                             </div>
                         </div>
                     </div>
 
-                    <h2 style={{ fontSize: '24px', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <TrendingUp size={24} color="#052962" /> Intelligence Feed
+                    <h2 className="mb-8 flex items-center gap-2 text-2xl font-bold text-foreground">
+                        <Activity className="h-6 w-6 text-primary" /> Intelligence Feed
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {continentalData.highlights.map(article => (
-                            <div key={article.id} style={{ borderTop: '4px solid #052962', paddingTop: '10px' }}>
+                            <div key={article.id} className="border-t-4 border-primary pt-2">
                                 <ArticleCard article={article} />
                             </div>
                         ))}
@@ -203,56 +229,66 @@ export const DashboardDetailPage: React.FC = () => {
     }
 
     // REGIONAL VIEW (Fallback)
-    if (!data) return <Layout><div className="container">Dashboard not found</div></Layout>;
+    if (!data) return <Layout><div className="flex h-[50vh] items-center justify-center text-muted-foreground">Dashboard not found</div></Layout>;
 
     const { dashboard, featured_articles, trending_countries, sector_breakdown } = data;
 
     return (
         <Layout>
-            <div className="container">
-                <header style={{ marginBottom: '40px', borderBottom: '1px solid #ddd', paddingBottom: '20px' }}>
-                    <div style={{ textTransform: 'uppercase', color: '#C70000', fontWeight: 700, fontSize: '14px', marginBottom: '10px' }}>
+            <div className="container py-10">
+                <header className="mb-10 border-b border-border pb-8">
+                    <div className="mb-2 text-sm font-bold uppercase tracking-wider text-destructive">
                         Regional Intelligence
                     </div>
-                    <h1 style={{ fontSize: '48px', marginBottom: '15px' }}>{dashboard.title}</h1>
-                    <p style={{ fontSize: '20px', maxWidth: '800px', color: '#555', lineHeight: '1.5' }}>
+                    <h1 className="mb-4 text-5xl font-bold tracking-tight text-foreground">{dashboard.title}</h1>
+                    <p className="max-w-3xl text-xl leading-relaxed text-muted-foreground">
                         {dashboard.summary}
                     </p>
-                    <div style={{ fontSize: '12px', color: '#999', marginTop: '15px' }}>
+                    <div className="mt-4 text-xs font-medium text-muted-foreground">
                         Last updated: {new Date(dashboard.generated_at).toLocaleString()}
                     </div>
                 </header>
 
                 {/* Key Metrics Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '50px' }}>
-                    <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '4px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#052962', marginBottom: '5px' }}>New Articles (24h)</div>
-                        <div style={{ fontSize: '32px', fontWeight: 700 }}>{dashboard.key_metrics.articles_24h}</div>
-                    </div>
-                    <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '4px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#052962', marginBottom: '5px' }}>Total Views</div>
-                        <div style={{ fontSize: '32px', fontWeight: 700 }}>{dashboard.key_metrics.total_views.toLocaleString()}</div>
-                    </div>
-                    <div style={{ background: '#f0f0f0', padding: '20px', borderRadius: '4px', gridColumn: 'span 2' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 600, color: '#052962', marginBottom: '10px' }}>Trending Topics</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {dashboard.trending_topics.map(topic => (
-                                <Link to={`/search?q=${encodeURIComponent(topic)}`} key={topic} style={{ background: '#fff', padding: '4px 8px', fontSize: '14px', borderRadius: '15px', border: '1px solid #ddd', textDecoration: 'none', color: '#333' }}>
-                                    #{topic}
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
+                <div className="mb-12 grid gap-6 md:grid-cols-4">
+                    <Card className="border-none bg-muted/40 shadow-none">
+                        <CardContent className="p-6">
+                            <div className="mb-1 text-sm font-bold uppercase text-primary">New Articles (24h)</div>
+                            <div className="text-3xl font-bold text-foreground">{dashboard.key_metrics.articles_24h}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-none bg-muted/40 shadow-none">
+                        <CardContent className="p-6">
+                            <div className="mb-1 text-sm font-bold uppercase text-primary">Total Views</div>
+                            <div className="text-3xl font-bold text-foreground">{dashboard.key_metrics.total_views.toLocaleString()}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-none bg-muted/40 shadow-none md:col-span-2">
+                        <CardContent className="p-6">
+                            <div className="mb-3 text-sm font-bold uppercase text-primary">Trending Topics</div>
+                            <div className="flex flex-wrap gap-2">
+                                {dashboard.trending_topics.map(topic => (
+                                    <Link
+                                        to={`/search?q=${encodeURIComponent(topic)}`}
+                                        key={topic}
+                                        className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                                    >
+                                        #{topic}
+                                    </Link>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px' }}>
+                <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
                     {/* Main Content Area */}
                     <div>
-                        <section style={{ marginBottom: '60px' }}>
-                            <h2 style={{ fontSize: '24px', borderTop: '2px solid #052962', paddingTop: '10px', marginBottom: '20px' }}>
+                        <section className="mb-16">
+                            <h2 className="mb-8 border-t-2 border-primary pt-4 text-2xl font-bold text-foreground">
                                 Featured Analysis
                             </h2>
-                            <div style={{ display: 'grid', gap: '30px' }}>
+                            <div className="grid gap-8">
                                 {featured_articles.map(article => (
                                     <ArticleCard key={article.id} article={article} />
                                 ))}
@@ -261,17 +297,17 @@ export const DashboardDetailPage: React.FC = () => {
                     </div>
 
                     {/* Sidebar */}
-                    <aside>
-                        <div style={{ background: '#f9f9f9', padding: '20px', marginBottom: '30px', borderTop: '4px solid #C70000' }}>
-                            <h3 style={{ fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <TrendingUp size={18} /> Market Movers
+                    <aside className="space-y-8">
+                        <div className="rounded-lg border-t-4 border-destructive bg-card p-6 border border-border">
+                            <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
+                                <TrendingUp className="h-5 w-5" /> Market Movers
                             </h3>
-                            <ul style={{ listStyle: 'none' }}>
+                            <ul className="space-y-4">
                                 {trending_countries.map((c) => (
-                                    <li key={c.code} style={{ marginBottom: '15px', paddingBottom: '15px', borderBottom: '1px solid #eee' }}>
-                                        <Link to={`/countries/${c.code}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '16px', fontWeight: 500 }}>{c.flag_emoji} {c.name}</span>
-                                            <span style={{ background: '#e1f5fe', color: '#0288d1', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>
+                                    <li key={c.code} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                                        <Link to={`/countries/${c.code}`} className="flex items-center justify-between hover:text-primary">
+                                            <span className="font-medium text-foreground">{c.flag_emoji} {c.name}</span>
+                                            <span className="rounded bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">
                                                 {c.article_count} stories
                                             </span>
                                         </Link>
@@ -280,15 +316,15 @@ export const DashboardDetailPage: React.FC = () => {
                             </ul>
                         </div>
 
-                        <div style={{ background: '#f9f9f9', padding: '20px', borderTop: '4px solid #ffe500' }}>
-                            <h3 style={{ fontSize: '18px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <BarChart2 size={18} /> Sector Breakdown
+                        <div className="rounded-lg border-t-4 border-primary bg-card p-6 border border-border">
+                            <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
+                                <BarChart2 className="h-5 w-5" /> Sector Breakdown
                             </h3>
-                            <ul style={{ listStyle: 'none' }}>
+                            <ul className="space-y-3">
                                 {sector_breakdown.map((s) => (
-                                    <li key={s.id} style={{ marginBottom: '12px', fontSize: '14px', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span>{s.icon} {s.name}</span>
-                                        <span style={{ fontWeight: 600 }}>{s.count}%</span>
+                                    <li key={s.id} className="flex justify-between text-sm">
+                                        <span className="text-muted-foreground">{s.icon} {s.name}</span>
+                                        <span className="font-bold text-foreground">{s.count}%</span>
                                     </li>
                                 ))}
                             </ul>

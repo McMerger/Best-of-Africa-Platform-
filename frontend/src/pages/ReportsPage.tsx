@@ -1,10 +1,11 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { Lock, ChevronRight, Archive, Shield, Filter, Database } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { useParams } from 'react-router-dom';
 
 export const ReportsPage: React.FC = () => {
@@ -19,6 +20,7 @@ export const ReportsPage: React.FC = () => {
         : reports.filter(r => r.sector_name?.toLowerCase().includes(filterSector.toLowerCase()));
 
     useEffect(() => {
+        setLoading(true);
         const fetcher = sectorId ? api.getReportsBySector(sectorId) : api.getReports();
         fetcher
             .then(res => setReports(res.data))
@@ -30,115 +32,104 @@ export const ReportsPage: React.FC = () => {
     const userTier = localStorage.getItem('boa_client_tier') || 'free';
     const isLocked = (index: number) => {
         // Free users: only first 2 reports
-        // Basic tier: first 5 reports
-        // Premium/Enterprise: all reports
         if (userTier === 'enterprise' || userTier === 'premium') return false;
         if (userTier === 'basic') return index > 4;
         return index > 1; // free
     };
 
-    if (loading) return <Layout><div className="container" style={{ paddingTop: '100px', textAlign: 'center' }}><div className="kinetic-loader"></div><div style={{ marginTop: '20px', fontFamily: 'monospace', color: '#052962' }}>Loading Archive...</div></div></Layout>;
+    if (loading) return (
+        <Layout>
+            <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 py-20">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                <div className="font-mono text-sm font-bold text-primary">Loading Archive...</div>
+            </div>
+        </Layout>
+    );
 
     return (
         <Layout>
-            <div className="container" style={{ paddingBottom: '120px' }}>
-                <header style={{ marginBottom: '60px', paddingTop: '60px', borderBottom: '1px solid #e2e8f0', paddingBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div className="container py-20 pb-40">
+                <header className="mb-16 flex flex-col justify-between gap-8 border-b border-border pb-8 lg:flex-row lg:items-end">
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                            <div style={{ background: '#0f172a', color: 'white', padding: '4px 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <Archive size={12} /> PREMIUM CONTENT
-                            </div>
+                        <div className="mb-4 inline-flex items-center gap-2 rounded bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
+                            <Archive className="h-3 w-3" /> PREMIUM CONTENT
                         </div>
-                        <h1 style={{ fontSize: '56px', fontWeight: 900, color: '#0f172a', margin: 0, lineHeight: '0.9', letterSpacing: '-2px' }}>
-                            Intelligence <span style={{ color: '#64748b' }}>Archive</span>
+                        <h1 className="mb-4 text-5xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
+                            Intelligence <span className="text-muted-foreground">Archive</span>
                         </h1>
-                        <p style={{ fontSize: '16px', color: '#64748b', marginTop: '15px', maxWidth: '500px' }}>
+                        <p className="max-w-lg text-lg text-muted-foreground">
                             Long-form strategic analysis and sector deep dives.
                         </p>
                     </div>
 
                     {/* Industrial Filter */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: '#f8fafc', padding: '10px 15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <Filter size={16} color="#64748b" />
-                        <select
-                            value={filterSector}
-                            onChange={(e) => setFilterSector(e.target.value)}
-                            style={{ padding: '8px', borderRadius: '4px', border: 'none', fontSize: '14px', background: 'transparent', fontWeight: 600, color: '#334155', cursor: 'pointer', outline: 'none' }}
-                        >
-                            <option value="all">ALL CLASSIFICATIONS</option>
-                            <option value="energy">ENERGY & INFRA.</option>
-                            <option value="finance">FINANCE & BANKING</option>
-                            <option value="tech">CYBER & TECH</option>
-                        </select>
+                    <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-3">
+                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <Select value={filterSector} onValueChange={setFilterSector}>
+                            <SelectTrigger className="w-[200px] border-none bg-transparent text-sm font-bold text-foreground shadow-none focus:ring-0">
+                                <SelectValue placeholder="ALL CLASSIFICATIONS" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">ALL CLASSIFICATIONS</SelectItem>
+                                <SelectItem value="energy">ENERGY & INFRA.</SelectItem>
+                                <SelectItem value="finance">FINANCE & BANKING</SelectItem>
+                                <SelectItem value="tech">CYBER & TECH</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </header>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '30px' }}>
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     {filteredReports.length > 0 ? filteredReports.map((report, i) => (
                         <Link
                             to={`/market-intel/reports/${report.id}`}
                             key={report.id}
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                background: 'white',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '12px',
-                                textDecoration: 'none',
-                                transition: 'all 0.2s',
-                                position: 'relative',
-                                overflow: 'hidden',
-                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)',
-                                opacity: isLocked(i) ? 0.8 : 1
-                            }}
-                            className="vault-card"
+                            className="group relative h-full"
                         >
-                            {/* Card Header (Stripe) */}
-                            <div style={{ height: '6px', background: isLocked(i) ? '#cbd5e1' : '#052962', width: '100%' }}></div>
+                            <Card className={`h-full overflow-hidden transition-all hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg ${isLocked(i) ? 'border-border opacity-80' : 'border-border'}`}>
+                                {/* Card Header (Stripe) */}
+                                <div className={`h-1.5 w-full ${isLocked(i) ? 'bg-muted' : 'bg-primary'}`}></div>
 
-                            <div style={{ padding: '30px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                                    <div style={{ background: isLocked(i) ? '#f1f5f9' : '#eff6ff', color: isLocked(i) ? '#64748b' : '#1e40af', padding: '6px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                        {report.sector_name || 'General Intel'}
+                                <CardContent className="flex flex-1 flex-col p-8">
+                                    <div className="mb-6 flex items-start justify-between">
+                                        <div className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isLocked(i) ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
+                                            {report.sector_name || 'General Intel'}
+                                        </div>
+                                        {isLocked(i) ? <Lock className="h-5 w-5 text-muted-foreground" /> : <Shield className="h-5 w-5 text-primary" />}
                                     </div>
-                                    {isLocked(i) ? <Lock size={20} color="#94a3b8" /> : <Shield size={20} color="#052962" />}
-                                </div>
 
-                                <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '10px', lineHeight: '1.3' }}>
-                                    {report.title}
-                                </h3>
-                                <p style={{ fontSize: '15px', color: '#64748b', lineHeight: '1.6', flex: 1, marginBottom: '25px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                    {report.summary}
-                                </p>
+                                    <h3 className="mb-4 text-xl font-bold leading-tight text-foreground group-hover:text-primary">
+                                        {report.title}
+                                    </h3>
+                                    <p className="mb-8 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                                        {report.summary}
+                                    </p>
 
-                                <div style={{ paddingTop: '20px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: 600, color: '#052962' }}>
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#64748b' }}>
-                                        <Database size={14} /> {new Date(report.published_at).toLocaleDateString()}
-                                    </span>
-                                    {isLocked(i) ? (
-                                        <span style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>LOCKED <Lock size={14} /></span>
-                                    ) : (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>ACCESS <ChevronRight size={14} /></span>
-                                    )}
-                                </div>
-                            </div>
-                            {isLocked(i) && (
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)', pointerEvents: 'none' }}></div>
-                            )}
+                                    <div className="flex items-center justify-between border-t border-border pt-6 text-xs font-bold text-primary">
+                                        <span className="flex items-center gap-2 text-muted-foreground">
+                                            <Database className="h-3 w-3" /> {new Date(report.published_at).toLocaleDateString()}
+                                        </span>
+                                        {isLocked(i) ? (
+                                            <span className="flex items-center gap-1 text-muted-foreground">LOCKED <Lock className="h-3 w-3" /></span>
+                                        ) : (
+                                            <span className="flex items-center gap-1 group-hover:underline">ACCESS <ChevronRight className="h-3 w-3" /></span>
+                                        )}
+                                    </div>
+                                </CardContent>
+                                {isLocked(i) && (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-background/40 to-transparent pointer-events-none"></div>
+                                )}
+                            </Card>
                         </Link>
                     )) : (
-                        <div style={{ gridColumn: '1 / -1', padding: '100px', textAlign: 'center', background: '#f8fafc', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
-                            <Lock size={48} color="#cbd5e1" style={{ marginBottom: '20px' }} />
-                            <h3 style={{ color: '#1e293b', fontWeight: 700, fontSize: '18px', marginBottom: '10px' }}>No Reports Found</h3>
-                            <p style={{ color: '#64748b' }}>No intelligence reports match your current clearance filters.</p>
+                        <div className="col-span-full flex flex-col items-center justify-center rounded-2xl bg-muted/30 py-24 text-center border-2 border-dashed border-border">
+                            <Lock className="mb-6 h-12 w-12 text-muted-foreground/50" />
+                            <h3 className="mb-2 text-lg font-bold text-foreground">No Reports Found</h3>
+                            <p className="text-muted-foreground">No intelligence reports match your current clearance filters.</p>
                         </div>
                     )}
                 </div>
             </div>
-            <style>{`
-                .vault-card:hover { transform: translateY(-4px) !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important; border-color: #cbd5e1 !important; }
-                .kinetic-loader { width: 40px; height: 40px; border: 4px solid #052962; border-top-color: transparent; borderRadius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-            `}</style>
         </Layout>
     );
 };

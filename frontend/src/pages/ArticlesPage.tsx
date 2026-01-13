@@ -4,6 +4,9 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const ArticlesPage: React.FC = () => {
     const [articles, setArticles] = useState<ArticleListItem[]>([]);
@@ -22,7 +25,7 @@ export const ArticlesPage: React.FC = () => {
         if (sector) filters.sector = sector;
         if (region) filters.region = region;
 
-        setLoading(true);
+
         api.getArticles(filters)
             .then(res => {
                 setArticles(res.data);
@@ -43,39 +46,51 @@ export const ArticlesPage: React.FC = () => {
         const params = new URLSearchParams(searchParams);
         params.set('page', page.toString());
         setSearchParams(params);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
         <Layout>
-            <div className="container">
-                <h1 style={{ fontSize: '42px', marginBottom: '40px', fontFamily: 'var(--font-serif)' }}>News</h1>
+            <div className="container py-10">
+                <header className="mb-10 text-center">
+                    <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+                        News & Intelligence
+                    </h1>
+                </header>
 
                 {loading ? (
-                    <div>Loading...</div>
+                    <div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div>
                 ) : (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
+                        <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {articles.map(article => (
                                 <ArticleCard key={article.id} article={article} />
                             ))}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', alignItems: 'center' }}>
-                            <button
-                                onClick={() => goToPage(currentPage - 1)}
-                                disabled={currentPage <= 1}
-                                style={{ padding: '10px 20px', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', opacity: currentPage <= 1 ? 0.5 : 1, background: '#052962', color: 'white', border: 'none', borderRadius: '4px' }}
-                            >
-                                Previous
-                            </button>
-                            <span style={{ padding: '10px', fontWeight: 600 }}>Page {currentPage} of {totalPages}</span>
-                            <button
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage >= totalPages}
-                                style={{ padding: '10px 20px', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', opacity: currentPage >= totalPages ? 0.5 : 1, background: '#052962', color: 'white', border: 'none', borderRadius: '4px' }}
-                            >
-                                Next
-                            </button>
-                        </div>
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-4 border-t border-border pt-8">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage <= 1}
+                                >
+                                    <ChevronLeft className="mr-2 h-4 w-4" />
+                                    Previous
+                                </Button>
+                                <span className="text-sm font-medium text-muted-foreground">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage >= totalPages}
+                                >
+                                    Next
+                                    <ChevronRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
                     </>
                 )}
             </div>

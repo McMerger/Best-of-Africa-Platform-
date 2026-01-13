@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Lock, Fingerprint, Shield, Eye, Scan, ChevronRight } from 'lucide-react';
-
+import { Lock, Fingerprint, Shield, Eye, Scan, ChevronRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 
 export const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -41,136 +44,113 @@ export const LoginPage: React.FC = () => {
                 setError(data.message || 'Authentication failed');
                 setStatus('ERROR');
                 // Reset to IDLE after showing error
-                setTimeout(() => setStatus('IDLE'), 200);
+                setTimeout(() => setStatus('IDLE'), 2000);
             }
         } catch (_err) {
             setError('Network error. Please try again.');
             setStatus('ERROR');
-            setTimeout(() => setStatus('IDLE'), 200);
+            setTimeout(() => setStatus('IDLE'), 2000);
         }
     };
 
+    // ... rest of component
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value);
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value);
 
     return (
         <Layout>
-            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', position: 'relative', overflow: 'hidden' }}>
-                {/* Background Grid - Industrial/Surveillance Aesthetic */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'radial-gradient(circle at 50% 50%, rgba(5, 41, 98, 0.3) 0%, rgba(15, 23, 42, 1) 70%)', zIndex: 0 }}></div>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)', backgroundSize: '40px 40px', zIndex: 1, pointerEvents: 'none' }}></div>
+            <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-background px-4 md:px-0">
+                {/* ... (background code) ... */}
+                <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1)_0%,hsl(var(--background))_70%)]"></div>
+                <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(hsl(var(--muted-foreground)/0.03)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--muted-foreground)/0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
-                <div style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '420px' }}>
-
-                    {/* Security Badge Header */}
-                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <div style={{
-                            width: '80px', height: '80px', margin: '0 auto 20px',
-                            background: '#052962', borderRadius: '50%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            boxShadow: '0 0 30px rgba(5, 41, 98, 0.5)'
-                        }}>
+                <div className="relative z-10 w-full max-w-[420px]">
+                    {/* ... (Badge Header code) ... */}
+                    <div className="mb-10 text-center">
+                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-[0_0_30px_rgba(var(--primary),0.2)]">
                             {status === 'SCANNING' ? (
-                                <Scan color="#10B981" size={36} className="scan-animation" />
+                                <Scan className="h-9 w-9 animate-pulse text-primary" />
                             ) : status === 'VERIFIED' ? (
-                                <Shield color="#10B981" size={36} />
+                                <Shield className="h-9 w-9 text-primary" />
                             ) : (
-                                <Lock color="#ffffff" size={32} />
+                                <Lock className="h-8 w-8 text-foreground" />
                             )}
                         </div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 200, color: 'white', letterSpacing: '4px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                        <h1 className="mb-2 text-2xl font-extralight uppercase tracking-[0.2em] text-foreground">
                             Client Portal
                         </h1>
-                        <p style={{ color: '#64748b', fontSize: '13px', fontFamily: 'monospace' }}>
+                        <p className="font-mono text-xs text-muted-foreground">
                             SECURE LOGIN
                         </p>
                     </div>
 
                     {/* Industrial Login Form */}
-                    <div style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '40px' }}>
-                        {status === 'VERIFIED' ? (
-                            <div style={{ textAlign: 'center', padding: '40px 0', animation: 'fadeIn 0.5s' }}>
-                                <div style={{ fontSize: '16px', color: '#10B981', fontWeight: 700, letterSpacing: '1px', marginBottom: '10px' }}>LOGIN SUCCESSFUL</div>
-                                <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '30px' }}>Redirecting to Dashboard...</p>
-                                <div style={{ width: '40px', height: '40px', border: '2px solid #10B981', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto', animation: 'spin 1s linear infinite' }}></div>
-                            </div>
-                        ) : (
-                            <form onSubmit={handleLogin}>
-                                <div style={{ marginBottom: '25px', position: 'relative' }}>
-                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Client ID / Email</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Fingerprint color="#475569" size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            style={{
-                                                width: '100%', padding: '15px 15px 15px 45px',
-                                                background: '#0f172a', border: '1px solid #334155',
-                                                color: 'white', fontSize: '15px',
-                                                borderRadius: '2px', outline: 'none',
-                                                fontFamily: 'monospace'
-                                            }}
-                                            placeholder="name@organization.com"
-                                            required
-                                        />
-                                    </div>
+                    <Card className="border-border bg-card/70 backdrop-blur-md">
+                        <CardContent className="p-8">
+                            {status === 'VERIFIED' ? (
+                                <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">
+                                    <div className="mb-2 text-base font-bold tracking-widest text-primary">LOGIN SUCCESSFUL</div>
+                                    <p className="mb-8 text-sm text-muted-foreground">Redirecting to Dashboard...</p>
+                                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
                                 </div>
-                                <div style={{ marginBottom: '30px', position: 'relative' }}>
-                                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Password</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <Eye color="#475569" size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)' }} />
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={e => setPassword(e.target.value)}
-                                            style={{
-                                                width: '100%', padding: '15px 15px 15px 45px',
-                                                background: '#0f172a', border: '1px solid #334155',
-                                                color: 'white', fontSize: '15px',
-                                                borderRadius: '2px', outline: 'none',
-                                                fontFamily: 'monospace'
-                                            }}
-                                            placeholder="••••••••••••"
-                                            required
-                                        />
+                            ) : (
+                                <form onSubmit={handleLogin} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Client ID / Email</Label>
+                                        <div className="relative">
+                                            <Fingerprint className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                value={email}
+                                                onChange={handleEmailChange}
+                                                className="border-border bg-background pl-10 font-mono text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                                                placeholder="name@organization.com"
+                                                required
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                {error && (
-                                    <div style={{
-                                        marginBottom: '20px',
-                                        padding: '12px',
-                                        background: 'rgba(239, 68, 68, 0.1)',
-                                        border: '1px solid rgba(239, 68, 68, 0.3)',
-                                        borderRadius: '2px',
-                                        color: '#ef4444',
-                                        fontSize: '13px',
-                                        textAlign: 'center'
-                                    }}>
-                                        {error}
+                                    <div className="space-y-2">
+                                        <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
+                                        <div className="relative">
+                                            <Eye className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <Input
+                                                id="password"
+                                                type="password"
+                                                value={password}
+                                                onChange={handlePasswordChange}
+                                                className="border-border bg-background pl-10 font-mono text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                                                placeholder="••••••••••••"
+                                                required
+                                            />
+                                        </div>
                                     </div>
-                                )}
-                                <button
-                                    type="submit"
-                                    disabled={status === 'SCANNING'}
-                                    style={{
-                                        width: '100%', padding: '16px',
-                                        background: status === 'SCANNING' ? '#0f172a' : '#052962',
-                                        color: 'white', border: status === 'SCANNING' ? '1px solid #334155' : '1px solid #1e3a8a',
-                                        borderRadius: '2px', fontSize: '13px', fontWeight: 700,
-                                        cursor: status === 'SCANNING' ? 'wait' : 'pointer',
-                                        textTransform: 'uppercase', letterSpacing: '2px',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    {status === 'SCANNING' ? 'Verifying...' : <>Sign In <ChevronRight size={16} /></>}
-                                </button>
-                            </form>
-                        )}
-                    </div>
 
-                    <div style={{ marginTop: '30px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                        <button
+                                    {error && (
+                                        <div className="rounded border border-destructive/30 bg-destructive/10 p-3 text-center text-xs text-destructive">
+                                            {error}
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        type="submit"
+                                        disabled={status === 'SCANNING'}
+                                        className="w-full font-bold uppercase tracking-widest"
+                                    >
+                                        {status === 'SCANNING' ? (
+                                            <>Verifying...</>
+                                        ) : (
+                                            <>Sign In <ChevronRight className="ml-2 h-4 w-4" /></>
+                                        )}
+                                    </Button>
+                                </form>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <div className="mt-8 flex justify-center gap-6 text-center">
+                        <Button
+                            variant="link"
                             onClick={() => {
                                 const resetEmail = prompt('Enter your email for password reset:');
                                 if (resetEmail) {
@@ -184,25 +164,20 @@ export const LoginPage: React.FC = () => {
                                         .catch(() => alert('Error requesting password reset'));
                                 }
                             }}
-                            style={{ fontSize: '12px', color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}
+                            className="h-auto p-0 text-xs text-muted-foreground uppercase tracking-widest hover:text-foreground"
                         >
                             Forgot Password?
-                        </button>
-                        <Link to="/sponsored" style={{ fontSize: '12px', color: '#10B981', fontWeight: 700, textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px' }}>Request Access</Link>
+                        </Button>
+                        <Link to="/sponsored" className="text-xs font-bold uppercase tracking-widest text-primary hover:text-primary/80">Request Access</Link>
                     </div>
 
                     {/* System Footer */}
-                    <div style={{ position: 'absolute', bottom: '-80px', left: 0, right: 0, textAlign: 'center', opacity: 0.5 }}>
-                        <div style={{ fontSize: '10px', color: '#475569', fontFamily: 'monospace' }}>SECURE CONNECTION: TLS 1.3</div>
+                    <div className="absolute -bottom-20 left-0 right-0 text-center opacity-50">
+                        <div className="font-mono text-[10px] text-muted-foreground">SECURE CONNECTION: TLS 1.3</div>
                     </div>
 
                 </div>
             </div>
-            <style>{`
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-                .scan-animation { animation: pulse-green 1.5s infinite; }
-            `}</style>
         </Layout>
     );
 };

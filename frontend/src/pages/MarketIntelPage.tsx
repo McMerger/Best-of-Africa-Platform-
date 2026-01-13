@@ -4,6 +4,11 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Sector } from '../types';
 import { Lock, AlertCircle, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 
 interface SectorPerformance {
     sector_id: string;
@@ -24,9 +29,10 @@ export const MarketIntelPage: React.FC = () => {
     const [performance, setPerformance] = useState<SectorPerformance[]>([]);
     const [leadingSector, setLeadingSector] = useState<LeadingSector | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string>('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch all data in parallel
+
         Promise.all([
             api.getSectors(),
             api.getSectorPerformance(),
@@ -39,7 +45,8 @@ export const MarketIntelPage: React.FC = () => {
                 const date = new Date(perfRes.updated_at);
                 setLastUpdated(date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }));
             }
-        }).catch(console.error);
+        }).catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
 
     // Get performance for a sector from API data
@@ -48,79 +55,87 @@ export const MarketIntelPage: React.FC = () => {
         return perf ? { growth: perf.growth_yoy, vol: perf.volatility } : { growth: 5, vol: 'Med' };
     };
 
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+
     return (
         <Layout>
-            <div className="container">
+            <div className="container py-12">
                 {/* Command Header with Ticker */}
-                <header style={{ marginBottom: '60px', padding: '50px 0', borderBottom: '1px solid #e5e7eb' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: '40px', alignItems: 'flex-end' }}>
+                <header className="mb-16 border-b border-border pb-12">
+                    <div className="grid gap-8 md:grid-cols-[1fr_300px] md:items-end">
                         <div>
-                            <div style={{ fontSize: '11px', fontWeight: 800, color: '#C70000', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ position: 'relative', display: 'flex', height: '8px', width: '8px' }}>
-                                    <span style={{ position: 'absolute', display: 'inline-flex', height: '100%', width: '100%', borderRadius: '50%', background: '#C70000', opacity: 0.75, animation: 'ping 1s cubic-bezier(0, 0, 0.2, 1) infinite' }}></span>
-                                    <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', height: '8px', width: '8px', background: '#C70000' }}></span>
+                            <div className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-destructive">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive"></span>
                                 </span>
                                 Market Status
                             </div>
-                            <h1 style={{ fontSize: '64px', fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: '0.95', letterSpacing: '-2px' }}>
-                                Market <br /><span style={{ color: '#052962' }}>Overview.</span>
+                            <h1 className="text-6xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
+                                Market <br /><span className="text-primary">Overview.</span>
                             </h1>
                         </div>
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: '10px' }}>Leading Sector (24h)</div>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-                                <span style={{ fontSize: '24px', fontWeight: 800, color: '#10B981' }}>{leadingSector?.name || 'Loading...'}</span>
-                                <span style={{ fontSize: '16px', fontWeight: 600, color: '#10B981' }}>+{leadingSector?.growth?.toFixed(1) || '0'}%</span>
+                        <div className="rounded border border-border bg-card p-6">
+                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Leading Sector (24h)</div>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-black text-primary">{leadingSector?.name || 'Loading...'}</span>
+                                <span className="text-lg font-bold text-primary">+{leadingSector?.growth?.toFixed(1) || '0'}%</span>
                             </div>
-                            <div style={{ height: '4px', width: '100%', background: '#e2e8f0', marginTop: '10px', borderRadius: '2px', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${Math.min((leadingSector?.growth || 0) * 5, 100)}%`, background: '#10B981' }}></div>
-                            </div>
+                            <Progress
+                                value={Math.min((leadingSector?.growth || 0) * 5, 100)}
+                                className="mt-3 h-1"
+                                indicatorClassName="bg-primary transition-all duration-1000"
+                            />
                         </div>
                     </div>
                 </header>
 
                 {/* Performance Cards Grid */}
-                <section style={{ marginBottom: '80px' }} aria-label="Sector Performance Grid">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '30px', borderBottom: '2px solid #052962', paddingBottom: '10px' }}>
-                        <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#052962', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+                <section className="mb-20" aria-label="Sector Performance Grid">
+                    <div className="mb-8 flex items-baseline justify-between border-b-2 border-primary pb-2">
+                        <h2 className="text-xl font-bold uppercase tracking-tight text-primary">
                             Sector Performance
                         </h2>
-                        <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }} aria-label="Last updated time">Updated: {lastUpdated || 'Loading...'}</span>
+                        <span className="text-sm font-bold text-muted-foreground" aria-label="Last updated time">Updated: {lastUpdated || 'Loading...'}</span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }} role="list">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6" role="list">
                         {sectors.map(sector => {
                             const { growth, vol } = getPerformance(sector.id);
                             return (
                                 <Link
                                     to={`/market-intel/sectors/${sector.id}`}
                                     key={sector.id}
-                                    style={{ display: 'flex', flexDirection: 'column', padding: '25px', background: 'white', border: '1px solid #e2e8f0', textDecoration: 'none', transition: 'all 0.2s', position: 'relative', overflow: 'hidden' }}
-                                    className="sector-card"
+                                    className="group"
                                     aria-label={`${sector.name} Sector. Growth up ${growth.toFixed(1)} percent. Volatility ${vol}. Click for full analysis.`}
                                     role="listitem"
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-                                        <div style={{ fontSize: '32px', filter: 'grayscale(100%)' }} aria-hidden="true">{sector.icon}</div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontSize: '18px', fontWeight: 700, color: growth > 10 ? '#10B981' : '#052962' }}>+{growth.toFixed(1)}%</div>
-                                            <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>YoY Growth</div>
-                                        </div>
-                                    </div>
+                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-lg">
+                                        <CardContent className="flex flex-col p-6">
+                                            <div className="mb-6 flex justify-between">
+                                                <div className="text-4xl text-foreground grayscale transition-all group-hover:grayscale-0" aria-hidden="true">{sector.icon}</div>
+                                                <div className="text-right">
+                                                    <div className={cn("text-xl font-bold", growth > 10 ? 'text-primary' : 'text-foreground')}>+{growth.toFixed(1)}%</div>
+                                                    <div className="text-[10px] font-bold uppercase text-muted-foreground">YoY Growth</div>
+                                                </div>
+                                            </div>
 
-                                    <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', marginBottom: '5px', lineHeight: '1.2' }}>{sector.name}</h3>
-                                    <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', display: 'flex', gap: '15px' }}>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }} aria-label={`Volatility: ${vol}`}>
-                                            <AlertCircle size={12} aria-hidden="true" /> Vol: {vol}
-                                        </span>
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }} aria-label="Market Cap: Large">
-                                            <BarChart3 size={12} aria-hidden="true" /> Cap: Large
-                                        </span>
-                                    </div>
+                                            <h3 className="mb-2 text-2xl font-black leading-tight text-foreground">{sector.name}</h3>
 
-                                    <div style={{ marginTop: 'auto', paddingTop: '15px', borderTop: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#052962', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase' }} aria-hidden="true">
-                                        Full Analysis <ArrowUpRight size={14} />
-                                    </div>
+                                            <div className="mb-6 flex gap-4 text-xs font-medium text-muted-foreground">
+                                                <span className="flex items-center gap-1.5" aria-label={`Volatility: ${vol}`}>
+                                                    <AlertCircle className="h-3 w-3" aria-hidden="true" /> Vol: {vol}
+                                                </span>
+                                                <span className="flex items-center gap-1.5" aria-label="Market Cap: Large">
+                                                    <BarChart3 className="h-3 w-3" aria-hidden="true" /> Cap: Large
+                                                </span>
+                                            </div>
+
+                                            <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-xs font-bold uppercase text-primary group-hover:text-primary/80" aria-hidden="true">
+                                                Full Analysis <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                            </div>
+                                        </CardContent>
+                                    </Card>
                                 </Link>
                             );
                         })}
@@ -128,48 +143,47 @@ export const MarketIntelPage: React.FC = () => {
                 </section>
 
                 {/* Redacted Premium Teaser */}
-                <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '50px', background: '#0f172a', padding: '60px', borderRadius: '0', position: 'relative', overflow: 'hidden', color: 'white' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.1, backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
+                {/* Redacted Premium Teaser */}
+                <Card className="relative overflow-hidden border-border bg-card text-card-foreground">
+                    <CardContent className="p-8 md:p-16">
+                        <div className="absolute left-0 top-0 h-full w-full opacity-10 bg-[radial-gradient(circle_at_2px_2px,_hsl(var(--muted-foreground))_1px,_transparent_0)] bg-[size:32px_32px]"></div>
 
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                            <Lock size={10} style={{ display: 'inline', marginRight: '5px' }} /> Premium Content
-                        </div>
-                        <h2 style={{ fontSize: '36px', fontWeight: 800, marginBottom: '20px', lineHeight: '1.1' }}>Institutional Intelligence. <br />Unredacted.</h2>
-                        <p style={{ fontSize: '18px', color: '#94a3b8', marginBottom: '40px', maxWidth: '500px', lineHeight: '1.6' }}>
-                            Gain a decisive information advantage with deep-tier regulatory mappings, risk forecasts, and direct analyst access.
-                        </p>
+                        <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
+                            <div className="relative z-10">
+                                <div className="mb-6 inline-flex items-center gap-2 rounded border border-primary/20 bg-primary/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-primary backdrop-blur-sm">
+                                    <Lock className="h-3 w-3" /> Premium Content
+                                </div>
+                                <h2 className="mb-6 text-4xl font-black leading-tight md:text-5xl">Institutional Intelligence. <br />Unredacted.</h2>
+                                <p className="mb-10 max-w-lg text-lg leading-relaxed text-muted-foreground">
+                                    Gain a decisive information advantage with deep-tier regulatory mappings, risk forecasts, and direct analyst access.
+                                </p>
 
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <Link to="/sponsored" style={{ padding: '15px 30px', background: '#C70000', color: 'white', textDecoration: 'none', fontWeight: 700, borderRadius: '2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                Subscribe Now
-                            </Link>
-                            <Link to="/market-intel/reports" style={{ padding: '15px 30px', background: 'transparent', border: '1px solid #475569', color: 'white', textDecoration: 'none', fontWeight: 600, borderRadius: '2px' }}>
-                                View Sample
-                            </Link>
-                        </div>
-                    </div>
+                                <div className="flex flex-col gap-4 sm:flex-row">
+                                    <Button asChild size="lg" className="text-base font-bold uppercase tracking-wide">
+                                        <Link to="/sponsored">Subscribe Now</Link>
+                                    </Button>
+                                    <Button asChild variant="outline" size="lg" className="bg-transparent text-base font-bold hover:bg-muted/10">
+                                        <Link to="/market-intel/reports">View Sample</Link>
+                                    </Button>
+                                </div>
+                            </div>
 
-                    <div style={{ position: 'relative', background: 'white', padding: '30px', transform: 'rotate(-2deg)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)', borderRadius: '2px' }}>
-                        <div style={{ filter: 'blur(4px)', userSelect: 'none', opacity: 0.7 }}>
-                            <h3 style={{ color: 'black', fontSize: '24px', marginBottom: '15px' }}>Sector Outlook: Energy 2026</h3>
-                            <p style={{ color: '#444', fontSize: '14px', lineHeight: '1.8' }}>
-                                The strategic realignment of the Sahelian energy corridor presents a unique arbitrage opportunity for early-stage infrastructure deployment. Our analysts project a 340% increase in renewable capacity...
-                            </p>
-                            <div style={{ marginTop: '20px', height: '150px', background: '#f0f0f0' }}></div>
+                            <div className="relative -rotate-2 transform rounded bg-background p-8 text-foreground shadow-2xl transition-transform hover:rotate-0 border border-border">
+                                <div className="select-none opacity-50 blur-[3px]">
+                                    <h3 className="mb-4 text-2xl font-bold text-foreground">Sector Outlook: Energy 2026</h3>
+                                    <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
+                                        The strategic realignment of the Sahelian energy corridor presents a unique arbitrage opportunity for early-stage infrastructure deployment. Our analysts project a 340% increase in renewable capacity...
+                                    </p>
+                                    <div className="h-32 w-full rounded bg-muted/20"></div>
+                                </div>
+                                <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded border border-border bg-background px-4 py-2 text-sm font-bold text-muted-foreground shadow-lg">
+                                    <Lock className="h-3.5 w-3.5" /> Subscriber Access Only
+                                </div>
+                            </div>
                         </div>
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#fff', border: '1px solid #ddd', padding: '10px 20px', color: '#666', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                            <Lock size={14} /> Subscriber Access Only
-                        </div>
-                    </div>
-                </section>
+                    </CardContent>
+                </Card>
             </div>
-            <style>{`
-                @keyframes ping {
-                    75%, 100% { transform: scale(2); opacity: 0; }
-                }
-                .sector-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #052962 !important; }
-            `}</style>
         </Layout>
     );
 };

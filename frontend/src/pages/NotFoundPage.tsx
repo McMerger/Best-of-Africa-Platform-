@@ -1,22 +1,24 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const NotFoundPage: React.FC = () => {
     return (
         <Layout>
-            <div className="container" style={{ textAlign: 'center', padding: '100px 20px', minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <AlertTriangle size={64} color="#C70000" style={{ marginBottom: '20px' }} />
-                <h1 style={{ fontSize: '48px', marginBottom: '20px', color: '#052962' }}>404</h1>
-                <h2 style={{ fontSize: '24px', marginBottom: '30px', color: '#555' }}>Page Not Found</h2>
-                <p style={{ maxWidth: '500px', marginBottom: '40px', lineHeight: '1.6', color: '#666' }}>
+            <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+                <div className="mb-6 rounded-full bg-destructive/10 p-6">
+                    <AlertTriangle className="h-16 w-16 text-destructive" />
+                </div>
+                <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter">404</h1>
+                <h2 className="mb-8 text-2xl font-bold text-muted-foreground uppercase tracking-wide">Page Not Found</h2>
+                <p className="mb-10 max-w-md text-lg leading-relaxed text-muted-foreground">
                     The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
                 </p>
-                <Link to="/" style={{ background: '#052962', color: 'white', padding: '12px 30px', borderRadius: '4px', textDecoration: 'none', fontWeight: 600 }}>
-                    Return Home
-                </Link>
+                <Button asChild size="lg" className="font-bold">
+                    <Link to="/">Return Home</Link>
+                </Button>
             </div>
         </Layout>
     );
