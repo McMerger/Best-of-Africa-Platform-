@@ -26,7 +26,14 @@ router.get('/', async (c) => {
             END
     `).all();
 
-    return c.json({ data: dashboards.results || [] });
+    const formattedDashboards = (dashboards.results || []).map((d: any) => ({
+        ...d,
+        key_metrics: d.key_metrics ? JSON.parse(d.key_metrics) : null,
+        trending_topics: d.trending_topics ? JSON.parse(d.trending_topics) : [],
+        featured_articles: d.featured_articles ? JSON.parse(d.featured_articles) : [],
+    }));
+
+    return c.json({ data: formattedDashboards });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

@@ -205,4 +205,15 @@ export const api = {
         countries: { country_code: string; country_name: string; reality_score: number; perception_score: number; gap: number }[];
         updated_at: string;
     }>('/market-intel/sentiment-divergence'),
+
+    getPlatformAnalytics: () => request<{
+        market_summary: string;
+        stability_index: string;
+        stability_score: number;
+        sentiment_pct: number;
+        sentiment_trend: 'up' | 'down';
+        sector_trends: { id: string; name: string; trend: string; article_count: number }[];
+        total_articles_7d: number;
+        updated_at: string;
+    }>('/dashboards/analytics/summary'),
 };

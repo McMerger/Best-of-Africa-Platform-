@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, AnalyticsEvent } from '../types';
 import { trackEvent } from '../lib/analytics';
 import { requireAuth } from '../lib/auth';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -79,75 +80,85 @@ router.get('/live/:metric', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /analytics/dashboard - Admin dashboard metrics (requires auth)
+// GET /analytics/dashboard - Admin dashboard metrics (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/dashboard', requireAuth, async (c) => {
     const { period = '7d' } = c.req.query();
 
-    // Calculate date range
-    const periodDays = period === '30d' ? 30 : period === '24h' ? 1 : 7;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - periodDays);
-    const startDateStr = startDate.toISOString().split('T')[0];
+    // Cache dashboard data for 2 minutes - doesn't need real-time updates
+    const dashboardData = await getCached(
+        c.env,
+        CACHE_KEYS.analyticsDashboard(period),
+        async () => {
+            // Calculate date range
+            const periodDays = period === '30d' ? 30 : period === '24h' ? 1 : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - periodDays);
+            const startDateStr = startDate.toISOString().split('T')[0];
 
-    // Get overview stats
-    const [
-        totalArticles,
-        publishedArticles,
-        totalViews,
-        recentArticles,
-        topCountries,
-        topSectors,
-        engagementTrend,
-    ] = await Promise.all([
-        c.env.DB.prepare('SELECT COUNT(*) as total FROM articles').first<{ total: number }>(),
-        c.env.DB.prepare("SELECT COUNT(*) as total FROM articles WHERE status = 'published'").first<{ total: number }>(),
-        c.env.DB.prepare('SELECT SUM(view_count) as total FROM articles').first<{ total: number }>(),
-        c.env.DB.prepare(`
-      SELECT id, slug, title, status, view_count, published_at, created_at
-      FROM articles
-      ORDER BY created_at DESC
-      LIMIT 10
-    `).all(),
-        c.env.DB.prepare(`
-      SELECT c.code, c.name, c.flag_emoji, COUNT(a.id) as article_count, SUM(a.view_count) as total_views
-      FROM countries c
-      LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
-      GROUP BY c.code
-      ORDER BY total_views DESC
-      LIMIT 10
-    `).all(),
-        c.env.DB.prepare(`
-      SELECT s.id, s.name, s.icon, COUNT(a.id) as article_count, SUM(a.view_count) as total_views
-      FROM sectors s
-      LEFT JOIN articles a ON a.sector_id = s.id AND a.status = 'published'
-      GROUP BY s.id
-      ORDER BY total_views DESC
-    `).all(),
-        c.env.DB.prepare(`
-      SELECT 
-        DATE(published_at) as date,
-        COUNT(*) as articles,
-        SUM(view_count) as views
-      FROM articles
-      WHERE published_at >= ? AND status = 'published'
-      GROUP BY date
-      ORDER BY date ASC
-    `).bind(startDateStr).all(),
-    ]);
+            // Get overview stats
+            const [
+                totalArticles,
+                publishedArticles,
+                totalViews,
+                recentArticles,
+                topCountries,
+                topSectors,
+                engagementTrend,
+            ] = await Promise.all([
+                c.env.DB.prepare('SELECT COUNT(*) as total FROM articles').first<{ total: number }>(),
+                c.env.DB.prepare("SELECT COUNT(*) as total FROM articles WHERE status = 'published'").first<{ total: number }>(),
+                c.env.DB.prepare('SELECT SUM(view_count) as total FROM articles').first<{ total: number }>(),
+                c.env.DB.prepare(`
+                    SELECT id, slug, title, status, view_count, published_at, created_at
+                    FROM articles
+                    ORDER BY created_at DESC
+                    LIMIT 10
+                `).all(),
+                c.env.DB.prepare(`
+                    SELECT c.code, c.name, c.flag_emoji, COUNT(a.id) as article_count, SUM(a.view_count) as total_views
+                    FROM countries c
+                    LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    GROUP BY c.code
+                    ORDER BY total_views DESC
+                    LIMIT 10
+                `).all(),
+                c.env.DB.prepare(`
+                    SELECT s.id, s.name, s.icon, COUNT(a.id) as article_count, SUM(a.view_count) as total_views
+                    FROM sectors s
+                    LEFT JOIN articles a ON a.sector_id = s.id AND a.status = 'published'
+                    GROUP BY s.id
+                    ORDER BY total_views DESC
+                `).all(),
+                c.env.DB.prepare(`
+                    SELECT 
+                        DATE(published_at) as date,
+                        COUNT(*) as articles,
+                        SUM(view_count) as views
+                    FROM articles
+                    WHERE published_at >= ? AND status = 'published'
+                    GROUP BY date
+                    ORDER BY date ASC
+                `).bind(startDateStr).all(),
+            ]);
 
-    return c.json({
-        overview: {
-            total_articles: totalArticles?.total || 0,
-            published_articles: publishedArticles?.total || 0,
-            total_views: totalViews?.total || 0,
-            period,
+            return {
+                overview: {
+                    total_articles: totalArticles?.total || 0,
+                    published_articles: publishedArticles?.total || 0,
+                    total_views: totalViews?.total || 0,
+                    period,
+                },
+                recent_articles: recentArticles.results || [],
+                top_countries: topCountries.results || [],
+                top_sectors: topSectors.results || [],
+                engagement_trend: engagementTrend.results || [],
+            };
         },
-        recent_articles: recentArticles.results || [],
-        top_countries: topCountries.results || [],
-        top_sectors: topSectors.results || [],
-        engagement_trend: engagementTrend.results || [],
-    });
+        { ttl: CACHE_TTL.DYNAMIC } // 2 minutes
+    );
+
+    return c.json(dashboardData);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

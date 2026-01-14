@@ -167,18 +167,19 @@ export const NavBar: React.FC = () => {
                         <NavigationMenuList>
                             {navLinks.map((link) => (
                                 <NavigationMenuItem key={link.href}>
-                                    <Link to={link.href} legacyBehavior passHref>
-                                        <NavigationMenuLink
-                                            className={cn(
-                                                navigationMenuTriggerStyle(),
-                                                "bg-transparent hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-                                                location.pathname === link.href && "text-primary font-bold",
-                                                link.highlight && "text-primary"
-                                            )}
-                                        >
+                                    <NavigationMenuLink
+                                        asChild
+                                        className={cn(
+                                            navigationMenuTriggerStyle(),
+                                            "bg-transparent hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+                                            location.pathname === link.href && "text-primary font-bold",
+                                            link.highlight && "text-primary"
+                                        )}
+                                    >
+                                        <Link to={link.href}>
                                             {link.label}
-                                        </NavigationMenuLink>
-                                    </Link>
+                                        </Link>
+                                    </NavigationMenuLink>
                                 </NavigationMenuItem>
                             ))}
                         </NavigationMenuList>

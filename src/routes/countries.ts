@@ -5,28 +5,57 @@
 
 import { Hono } from 'hono';
 import type { Env, Country } from '../types';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /countries - List all countries
+// GET /countries - List all countries (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/', async (c) => {
     const { region } = c.req.query();
 
-    let query = 'SELECT * FROM countries';
-    const params: string[] = [];
+    // Use cache for unfiltered list (most common case)
+    if (!region) {
+        const cachedResult = await getCached(
+            c.env,
+            CACHE_KEYS.COUNTRIES_LIST,
+            async () => {
+                const result = await c.env.DB.prepare('SELECT * FROM countries ORDER BY name ASC').all<Country>();
+                return processCountries(result.results || []);
+            },
+            { ttl: CACHE_TTL.STATIC }
+        );
 
-    if (region) {
-        query += ' WHERE region = ?';
-        params.push(region);
+        // Group by region
+        const grouped: Record<string, typeof cachedResult> = {
+            North: [],
+            West: [],
+            East: [],
+            Central: [],
+            Southern: [],
+        };
+
+        for (const country of cachedResult) {
+            if (grouped[country.region]) {
+                grouped[country.region].push(country);
+            }
+        }
+
+        return c.json({
+            data: cachedResult,
+            by_region: grouped,
+            total: cachedResult.length,
+        });
     }
 
-    query += ' ORDER BY name ASC';
+    // Filtered query - no cache (less frequent)
+    const result = await c.env.DB.prepare('SELECT * FROM countries WHERE region = ? ORDER BY name ASC').bind(region).all<Country>();
+    return c.json({ data: processCountries(result.results || []) });
+});
 
-    const result = await c.env.DB.prepare(query).bind(...params).all<Country>();
-
-    // Parse JSON fields
+// Helper to process country JSON fields
+function processCountries(countries: Country[]) {
     const parseJsonField = (val: unknown): string[] => {
         if (!val) return [];
         if (typeof val === 'string') {
@@ -35,7 +64,7 @@ router.get('/', async (c) => {
         return Array.isArray(val) ? val : [];
     };
 
-    const countries = (result.results || []).map(country => ({
+    return countries.map(country => ({
         ...country,
         languages: parseJsonField(country.languages),
         investment_highlights: parseJsonField(country.investment_highlights),
@@ -43,32 +72,7 @@ router.get('/', async (c) => {
         diplomacy_score: country.diplomacy_score ?? 0.5,
         image_strength_score: country.image_strength_score ?? 0.5,
     }));
-
-    // Group by region if no filter
-    if (!region) {
-        const grouped: Record<string, typeof countries> = {
-            North: [],
-            West: [],
-            East: [],
-            Central: [],
-            Southern: [],
-        };
-
-        for (const country of countries) {
-            if (grouped[country.region]) {
-                grouped[country.region].push(country);
-            }
-        }
-
-        return c.json({
-            data: countries,
-            by_region: grouped,
-            total: countries.length,
-        });
-    }
-
-    return c.json({ data: countries });
-});
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /countries/regions - List regions with country counts
@@ -108,11 +112,12 @@ router.get('/stats', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /countries/:code - Single country details
+// GET /countries/:code - Single country details (OPTIMIZED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/:code', async (c) => {
     const code = c.req.param('code').toUpperCase();
 
+    // First, get the country (quick lookup)
     const country = await c.env.DB.prepare(
         'SELECT * FROM countries WHERE code = ?'
     ).bind(code).first<Country>();
@@ -121,37 +126,52 @@ router.get('/:code', async (c) => {
         return c.json({ error: 'not_found', message: 'Country not found' }, 404);
     }
 
-    // Get article count and recent articles
-    const [articleCount, recentArticles, sectorBreakdown] = await Promise.all([
-        c.env.DB.prepare(
-            "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
-        ).bind(code).first<{ total: number }>(),
-        c.env.DB.prepare(`
-      SELECT id, slug, title, summary, sector_id, published_at
-      FROM articles
-      WHERE country_code = ? AND status = 'published'
-      ORDER BY published_at DESC
-      LIMIT 5
-    `).bind(code).all(),
-        c.env.DB.prepare(`
-      SELECT s.id, s.name, s.icon, COUNT(a.id) as article_count
-      FROM sectors s
-      LEFT JOIN articles a ON a.sector_id = s.id AND a.country_code = ? AND a.status = 'published'
-      GROUP BY s.id
-      ORDER BY article_count DESC
-    `).bind(code).all(),
-    ]);
+    // Cache the country stats (article count, sector breakdown, recent articles)
+    const stats = await getCached(
+        c.env,
+        CACHE_KEYS.countryStats(code),
+        async () => {
+            // Combined query: get article count, sector breakdown, and recent articles in parallel
+            const [articleCount, recentArticles, sectorBreakdown] = await Promise.all([
+                c.env.DB.prepare(
+                    "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
+                ).bind(code).first<{ total: number }>(),
+                c.env.DB.prepare(`
+                    SELECT id, slug, title, summary, sector_id, published_at
+                    FROM articles
+                    WHERE country_code = ? AND status = 'published'
+                    ORDER BY published_at DESC
+                    LIMIT 5
+                `).bind(code).all(),
+                c.env.DB.prepare(`
+                    SELECT s.id, s.name, s.icon, COUNT(a.id) as article_count
+                    FROM sectors s
+                    LEFT JOIN articles a ON a.sector_id = s.id AND a.country_code = ? AND a.status = 'published'
+                    GROUP BY s.id
+                    HAVING article_count > 0
+                    ORDER BY article_count DESC
+                `).bind(code).all(),
+            ]);
+
+            return {
+                article_count: articleCount?.total || 0,
+                top_sectors: (sectorBreakdown.results || []).map((s: any) => ({
+                    sector: { name: s.name },
+                    count: s.article_count
+                })),
+                recent_articles: recentArticles.results || [],
+            };
+        },
+        { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
+    );
 
     return c.json({
-        country: country,
+        country: processCountries([country])[0],
         stats: {
-            article_count: articleCount?.total || 0,
-            top_sectors: (sectorBreakdown.results || []).map((s: any) => ({
-                sector: { name: s.name },
-                count: s.article_count
-            })),
+            article_count: stats.article_count,
+            top_sectors: stats.top_sectors,
         },
-        recent_articles: recentArticles.results || [],
+        recent_articles: stats.recent_articles,
     });
 });
 

@@ -82,8 +82,6 @@
 }
 
 @layer utilities {
-
-
   .fade-in-up {
     animation: fadeInUp 0.5s ease-out forwards;
   }
@@ -98,5 +96,22 @@
       opacity: 1;
       transform: translate3d(0, 0, 0);
     }
+  }
+
+  /* Audio Waveform Animation for Multimodal Player */
+  @keyframes waveform {
+
+    0%,
+    100% {
+      height: 20%;
+    }
+
+    50% {
+      height: 100%;
+    }
+  }
+
+  .animate-waveform {
+    animation: waveform 0.8s ease-in-out infinite;
   }
 }

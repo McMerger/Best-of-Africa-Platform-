@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Article, ArticleListItem, PaginatedResponse } from '../types';
 import { trackEvent } from '../lib/analytics';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -89,53 +90,71 @@ router.get('/', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /articles/featured - Get featured/trending articles
+// GET /articles/featured - Get featured/trending articles (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/featured', async (c) => {
     const { limit = '6' } = c.req.query();
     const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
 
-    const articles = await c.env.DB.prepare(`
-    SELECT 
-      a.id, a.slug, a.title, a.subtitle, a.summary,
-      a.country_code, c.name as country_name, c.flag_emoji,
-      a.sector_id, s.name as sector_name,
-      a.hero_image_url, a.reading_time_minutes,
-      a.published_at, a.engagement_score
-    FROM articles a
-    LEFT JOIN countries c ON a.country_code = c.code
-    LEFT JOIN sectors s ON a.sector_id = s.id
-    WHERE a.status = 'published'
-    ORDER BY a.engagement_score DESC, a.published_at DESC
-    LIMIT ?
-  `).bind(limitNum).all();
+    // Cache featured articles for 5 minutes
+    const articles = await getCached(
+        c.env,
+        `${CACHE_KEYS.ARTICLES_FEATURED}:${limitNum}`,
+        async () => {
+            const result = await c.env.DB.prepare(`
+                SELECT 
+                  a.id, a.slug, a.title, a.subtitle, a.summary,
+                  a.country_code, c.name as country_name, c.flag_emoji,
+                  a.sector_id, s.name as sector_name,
+                  a.hero_image_url, a.reading_time_minutes,
+                  a.published_at, a.engagement_score
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.status = 'published'
+                ORDER BY a.engagement_score DESC, a.published_at DESC
+                LIMIT ?
+            `).bind(limitNum).all();
+            return result.results || [];
+        },
+        { ttl: CACHE_TTL.FREQUENT }
+    );
 
-    return c.json({ data: articles.results || [] });
+    return c.json({ data: articles });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /articles/latest - Get latest articles
+// GET /articles/latest - Get latest articles (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/latest', async (c) => {
     const { limit = '10' } = c.req.query();
     const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
 
-    const articles = await c.env.DB.prepare(`
-    SELECT 
-      a.id, a.slug, a.title, a.subtitle, a.summary,
-      a.country_code, c.name as country_name, c.flag_emoji,
-      a.sector_id, s.name as sector_name,
-      a.hero_image_url, a.reading_time_minutes,
-      a.published_at
-    FROM articles a
-    LEFT JOIN countries c ON a.country_code = c.code
-    LEFT JOIN sectors s ON a.sector_id = s.id
-    WHERE a.status = 'published'
-    ORDER BY a.published_at DESC
-    LIMIT ?
-  `).bind(limitNum).all();
+    // Cache latest articles for 2 minutes
+    const articles = await getCached(
+        c.env,
+        `${CACHE_KEYS.ARTICLES_LATEST}:${limitNum}`,
+        async () => {
+            const result = await c.env.DB.prepare(`
+                SELECT 
+                  a.id, a.slug, a.title, a.subtitle, a.summary,
+                  a.country_code, c.name as country_name, c.flag_emoji,
+                  a.sector_id, s.name as sector_name,
+                  a.hero_image_url, a.reading_time_minutes,
+                  a.published_at
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.status = 'published'
+                ORDER BY a.published_at DESC
+                LIMIT ?
+            `).bind(limitNum).all();
+            return result.results || [];
+        },
+        { ttl: CACHE_TTL.DYNAMIC }
+    );
 
-    return c.json({ data: articles.results || [] });
+    return c.json({ data: articles });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -247,7 +266,7 @@ router.get('/sector/:id', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /articles/:slug - Single article by slug
+// GET /articles/:slug - Single article by slug (OPTIMIZED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/:slug', async (c) => {
     const slug = c.req.param('slug');
@@ -284,20 +303,28 @@ router.get('/:slug', async (c) => {
         })
     );
 
-    // Get related articles
-    const related = await c.env.DB.prepare(`
-    SELECT id, slug, title, summary, hero_image_url, reading_time_minutes
-    FROM articles
-    WHERE status = 'published'
-      AND id != ?
-      AND (country_code = ? OR sector_id = ?)
-    ORDER BY engagement_score DESC
-    LIMIT 4
-  `).bind(article.id, article.country_code, article.sector_id).all();
+    // Get related articles (CACHED by article ID)
+    const related = await getCached(
+        c.env,
+        CACHE_KEYS.articleRelated(article.id),
+        async () => {
+            const result = await c.env.DB.prepare(`
+                SELECT id, slug, title, summary, hero_image_url, reading_time_minutes
+                FROM articles
+                WHERE status = 'published'
+                  AND id != ?
+                  AND (country_code = ? OR sector_id = ?)
+                ORDER BY engagement_score DESC
+                LIMIT 4
+            `).bind(article.id, article.country_code, article.sector_id).all();
+            return result.results || [];
+        },
+        { ttl: CACHE_TTL.FREQUENT } // 5 minutes
+    );
 
     return c.json({
         article,
-        related: related.results || [],
+        related,
     });
 });
 

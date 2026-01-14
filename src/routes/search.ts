@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { trackEvent } from '../lib/analytics';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -140,42 +141,46 @@ router.get('/', async (c) => {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // RAG: Generate AI summary from top results using Workers AI
+        // RAG: Generate AI summary from top results using Workers AI (CACHED)
         // ═══════════════════════════════════════════════════════════════════════════
-        let aiSummary: string | null = null;
         const topResults = merged.slice(0, 5);
+        let aiSummary: string | null = null;
 
         if (topResults.length > 0) {
-            try {
-                // Extract summaries/titles from top results for context
-                const briefsContext = topResults.map((item: any, i: number) => {
-                    const title = item.title || 'Untitled';
-                    const summary = item.summary || '';
-                    return `${i + 1}. "${title}": ${summary.slice(0, 200)}...`;
-                }).join('\n');
+            // Cache AI summaries for 10 minutes to avoid repeated expensive calls
+            aiSummary = await getCached(
+                c.env,
+                CACHE_KEYS.searchAiSummary(q),
+                async () => {
+                    try {
+                        const briefsContext = topResults.map((item: any, i: number) => {
+                            const title = item.title || 'Untitled';
+                            const summary = item.summary || '';
+                            return `${i + 1}. "${title}": ${summary.slice(0, 200)}...`;
+                        }).join('\n');
 
-                // Generate synthesis using Workers AI Llama model
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are a concise market intelligence analyst. Provide a 2-sentence synthesis of information. Be direct and factual.'
-                        },
-                        {
-                            role: 'user',
-                            content: `Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`
-                        }
-                    ],
-                    max_tokens: 150
-                });
+                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are a concise market intelligence analyst. Provide a 2-sentence synthesis of information. Be direct and factual.'
+                                },
+                                {
+                                    role: 'user',
+                                    content: `Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`
+                                }
+                            ],
+                            max_tokens: 150
+                        });
 
-                if (aiResponse?.response) {
-                    aiSummary = aiResponse.response;
-                }
-            } catch (aiError) {
-                console.error('AI summary generation failed:', aiError);
-                // Continue without summary - non-blocking
-            }
+                        return aiResponse?.response || null;
+                    } catch (aiError) {
+                        console.error('AI summary generation failed:', aiError);
+                        return null;
+                    }
+                },
+                { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
+            );
         }
 
         // Transform results to match frontend SearchResult type
@@ -313,7 +318,7 @@ router.get('/similar/:id', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /search/suggest - Autocomplete suggestions
+// GET /search/suggest - Autocomplete suggestions (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/suggest', async (c) => {
     const { q } = c.req.query();
@@ -322,37 +327,46 @@ router.get('/suggest', async (c) => {
         return c.json({ suggestions: [] });
     }
 
-    // Get title suggestions
-    const articles = await c.env.DB.prepare(`
-    SELECT DISTINCT title
-    FROM articles
-    WHERE status = 'published' AND title LIKE ?
-    LIMIT 5
-  `).bind(`${q}%`).all<{ title: string }>();
+    // Cache suggestions for 5 minutes - most queries repeat frequently
+    const suggestions = await getCached(
+        c.env,
+        CACHE_KEYS.searchSuggest(q),
+        async () => {
+            // Get title suggestions
+            const articles = await c.env.DB.prepare(`
+                SELECT DISTINCT title
+                FROM articles
+                WHERE status = 'published' AND title LIKE ?
+                LIMIT 5
+            `).bind(`${q}%`).all<{ title: string }>();
 
-    // Get country suggestions
-    const countries = await c.env.DB.prepare(`
-    SELECT name, code
-    FROM countries
-    WHERE name LIKE ?
-    LIMIT 3
-  `).bind(`${q}%`).all<{ name: string; code: string }>();
+            // Get country suggestions
+            const countries = await c.env.DB.prepare(`
+                SELECT name, code
+                FROM countries
+                WHERE name LIKE ?
+                LIMIT 3
+            `).bind(`${q}%`).all<{ name: string; code: string }>();
 
-    // Get sector suggestions
-    const sectors = await c.env.DB.prepare(`
-    SELECT name, id
-    FROM sectors
-    WHERE name LIKE ?
-    LIMIT 3
-  `).bind(`%${q}%`).all<{ name: string; id: string }>();
+            // Get sector suggestions
+            const sectors = await c.env.DB.prepare(`
+                SELECT name, id
+                FROM sectors
+                WHERE name LIKE ?
+                LIMIT 3
+            `).bind(`%${q}%`).all<{ name: string; id: string }>();
 
-    return c.json({
-        suggestions: [
-            ...(articles.results || []).map(a => ({ type: 'article', text: a.title })),
-            ...(countries.results || []).map(c => ({ type: 'country', text: c.name, code: c.code })),
-            ...(sectors.results || []).map(s => ({ type: 'sector', text: s.name, id: s.id })),
-        ],
-    });
+            return [
+                ...(articles.results || []).map(a => ({ type: 'article', text: a.title })),
+                ...(countries.results || []).map(c => ({ type: 'country', text: c.name, code: c.code })),
+                ...(sectors.results || []).map(s => ({ type: 'sector', text: s.name, id: s.id })),
+            ];
+        },
+        { ttl: CACHE_TTL.FREQUENT } // 5 minutes
+    );
+
+    return c.json({ suggestions });
 });
+
 
 export { router as searchRouter };

@@ -11,7 +11,32 @@ export const HomePage: React.FC = () => {
     const [featured, setFeatured] = useState<ArticleListItem[]>([]);
     const [latest, setLatest] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<'narrative' | 'intelligence'>('narrative');
+
+    // Adaptive State Initialization
+    const [viewMode, setViewMode] = useState<'narrative' | 'intelligence'>(() => {
+        // 1. Check user override
+        const saved = localStorage.getItem('boa_view_mode') as 'narrative' | 'intelligence' | null;
+        if (saved) return saved;
+
+        // 2. Fallback to Time-based Adaptive Logic
+        const hour = new Date().getHours();
+        const isBusinessHours = hour >= 9 && hour < 18; // 9 AM - 6 PM
+        return isBusinessHours ? 'intelligence' : 'narrative';
+    });
+
+    // Persist user choice only if they explicitly interact (handled in toggle handlers)
+    // We don't auto-save the time-based default to allow it to be dynamic
+
+    const handleModeSwitch = (mode: 'narrative' | 'intelligence') => {
+        setViewMode(mode);
+        localStorage.setItem('boa_view_mode', mode);
+
+        // Track user preference override for "Continuous Optimization" (Trend #14)
+        // This helps us learn if our default time-based logic is correct
+        // Track user preference override for "Continuous Optimization" (Trend #14)
+        // This helps us learn if our default time-based logic is correct
+        console.log('View mode switched:', mode);
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,34 +62,39 @@ export const HomePage: React.FC = () => {
     return (
         <Layout>
             <div className="container py-8">
-                {/* Mode Toggle - The "Lens" */}
-                {/* Floating Action Button style toggle */}
-                <div className="fixed bottom-8 right-8 z-50 flex gap-2 rounded-full border bg-background/80 p-1.5 shadow-xl backdrop-blur-md">
+                {/* Mode Toggle - The "Lens" (Adaptive & Animated) */}
+                <div className="fixed bottom-8 right-8 z-50 flex gap-1 rounded-full border bg-background/90 p-1.5 shadow-2xl backdrop-blur-xl transition-all hover:scale-105">
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setViewMode('narrative')}
+                        onClick={() => handleModeSwitch('narrative')}
                         className={cn(
-                            "rounded-full px-4 text-xs font-bold uppercase transition-all",
+                            "relative z-10 rounded-full px-6 text-xs font-bold uppercase transition-all duration-500",
                             viewMode === 'narrative'
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "text-muted-foreground hover:bg-transparent hover:text-foreground"
+                                ? "text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         Narrative
+                        {viewMode === 'narrative' && (
+                            <span className="absolute inset-0 -z-10 rounded-full bg-primary shadow-lg transition-all duration-500 animate-in fade-in zoom-in" />
+                        )}
                     </Button>
                     <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setViewMode('intelligence')}
+                        onClick={() => handleModeSwitch('intelligence')}
                         className={cn(
-                            "rounded-full px-4 text-xs font-bold uppercase transition-all",
+                            "relative z-10 rounded-full px-6 text-xs font-bold uppercase transition-all duration-500",
                             viewMode === 'intelligence'
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "text-muted-foreground hover:bg-transparent hover:text-foreground"
+                                ? "text-primary-foreground"
+                                : "text-muted-foreground hover:text-foreground"
                         )}
                     >
                         Intelligence
+                        {viewMode === 'intelligence' && (
+                            <span className="absolute inset-0 -z-10 rounded-full bg-primary shadow-lg transition-all duration-500 animate-in fade-in zoom-in" />
+                        )}
                     </Button>
                 </div>
 

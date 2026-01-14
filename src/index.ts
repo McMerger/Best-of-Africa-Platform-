@@ -9,7 +9,7 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { prettyJSON } from 'hono/pretty-json';
 
-import type { Env } from './types';
+import type { Env, Variables } from './types';
 import { articlesRouter } from './routes/articles';
 import { countriesRouter } from './routes/countries';
 import { searchRouter } from './routes/search';
@@ -26,7 +26,7 @@ import { LiveCounter } from './durable-objects/live-counter';
 // ───────────────────────────────────────────────────────────────────────────────
 // App Initialization
 // ───────────────────────────────────────────────────────────────────────────────
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Global Middleware
@@ -43,10 +43,18 @@ app.use('*', cors({
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Session-ID'],
-    exposeHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining'],
+    exposeHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining', 'X-Request-ID'],
     maxAge: 86400,
     credentials: true,
 }));
+
+// Request ID middleware for tracing
+app.use('*', async (c, next) => {
+    const requestId = c.req.header('X-Request-ID') || crypto.randomUUID();
+    c.set('requestId', requestId);
+    c.header('X-Request-ID', requestId);
+    await next();
+});
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Health Check
@@ -246,14 +254,35 @@ app.notFound((c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Error Handler
+// Error Handler (with Analytics Engine logging)
 // ───────────────────────────────────────────────────────────────────────────────
 app.onError((err, c) => {
-    console.error('Unhandled error:', err);
+    const requestId = c.get('requestId') || 'unknown';
+    const route = `${c.req.method} ${c.req.path}`;
+
+    console.error(`[${requestId}] Unhandled error on ${route}:`, err);
+
+    // Send structured error to Analytics Engine
+    try {
+        c.env.ANALYTICS.writeDataPoint({
+            blobs: [
+                'error',              // event_type
+                route,                // route
+                err.message || 'Unknown error',
+                requestId,
+            ],
+            doubles: [500],           // status_code
+            indexes: ['error'],       // for filtering
+        });
+    } catch (analyticsErr) {
+        console.error('Failed to log error to Analytics:', analyticsErr);
+    }
+
     return c.json({
         error: 'internal_error',
         message: c.env.ENVIRONMENT === 'development' ? err.message : 'An internal error occurred',
         status: 500,
+        request_id: requestId,
     }, 500);
 });
 

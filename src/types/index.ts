@@ -44,6 +44,7 @@ export interface Variables {
     clientId: string;
     clientTier: string;
     rateLimit: number;
+    requestId: string;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -125,6 +126,19 @@ export interface ArticleListItem {
     reading_time_minutes: number | null;
     published_at: string | null;
     engagement_score: number;
+}
+
+/**
+ * Minimal article representation for cards (related, featured)
+ * ~50% smaller payload than ArticleListItem
+ */
+export interface ArticleCardDTO {
+    id: string;
+    slug: string;
+    title: string;
+    summary: string | null;
+    hero_image_url: string | null;
+    reading_time_minutes: number | null;
 }
 
 export interface Source {

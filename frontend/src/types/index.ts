@@ -112,3 +112,14 @@ export interface SearchResult {
     score: number;
     highlights: string[];
 }
+
+export interface PlatformAnalytics {
+    market_summary: string;
+    stability_index: string;
+    stability_score: number;
+    sentiment_pct: number;
+    sentiment_trend: 'up' | 'down';
+    sector_trends: { id: string; name: string; trend: string; article_count: number }[];
+    total_articles_7d: number;
+    updated_at: string;
+}
