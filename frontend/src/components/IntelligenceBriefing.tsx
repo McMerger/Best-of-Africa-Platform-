@@ -2,9 +2,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { ArrowUpRight, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { ArrowTopRightIcon } from '@radix-ui/react-icons';
 
-import { AudioBriefingPlayer } from './AudioBriefingPlayer';
+
 
 interface IntelligenceBriefingProps {
     region: string;
@@ -25,46 +25,40 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
     const isStable = stabilityScore > 60;
     const isVolatile = stabilityScore < 40;
 
-    // Status config
+    // Status config (Neutral/SaaS Style)
     const statusConfig = isStable
-        ? { color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: TrendingUp, text: "Stable" }
+        ? { color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", text: "Stable Analysis" }
         : isVolatile
-            ? { color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20", icon: Activity, text: "Volatile" }
-            : { color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: TrendingDown, text: "Moderate" };
-
-    const StatusIcon = statusConfig.icon;
-
-    const briefingText = `The ${region} market is ${statusConfig.text.toLowerCase()} today, driven by dynamic shifts in ${topSector}. Our systems have analyzed ${articleCount} new reports in the last 24 hours. The primary narrative thread is ${trendingTopics[0]}, which is currently outpacing broader regional currents.`;
+            ? { color: "text-foreground", bg: "bg-muted", border: "border-border", text: "Watchlist" }
+            : { color: "text-muted-foreground", bg: "bg-muted/50", border: "border-border/50", text: "Developing" };
 
     return (
         <Card className="relative overflow-hidden border-border/50 bg-background/60 backdrop-blur-xl transition-all duration-500 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5">
-            {/* Animated Gradient Background Blob */}
-            <div className="absolute -right-20 -top-20 h-64 w-64 animate-pulse rounded-full bg-primary/10 blur-3xl duration-10000" />
+            {/* SaaS Background (No blobs) */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
             <CardHeader className="relative z-10 pb-2">
                 <div className="flex items-center justify-between mb-4">
-                    <Badge variant="outline" className="animate-in fade-in slide-in-from-left-4 duration-700 bg-background/50 backdrop-blur border-primary/20">
-                        {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    <Badge variant="outline" className="font-bold uppercase tracking-widest text-[10px] border-primary/20 text-primary">
+                        MARKET CONTEXT
                     </Badge>
-                    <AudioBriefingPlayer text={briefingText} />
                 </div>
 
                 <div className="flex items-center justify-between">
-                    <div className={cn("flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-right-4 duration-700 delay-100", statusConfig.bg, statusConfig.color, statusConfig.border, "border")}>
-                        <StatusIcon className="h-3 w-3" />
-                        {statusConfig.text} Market
+                    <div className={cn("flex items-center gap-2 rounded-sm px-3 py-1 text-xs font-bold uppercase tracking-wider bg-muted border border-border text-foreground")}>
+                        {statusConfig.text}
                     </div>
                 </div>
 
-                <CardTitle className="mt-4 font-serif text-3xl font-medium leading-tight tracking-tight md:text-4xl animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-200">
-                    The {region} market is <span className={cn("italic", statusConfig.color)}>{statusConfig.text.toLowerCase()}</span> today, driven by dynamic shifts in <span className="text-foreground underline decoration-primary/30 underline-offset-4">{topSector}</span>.
+                <CardTitle className="mt-4 text-3xl font-bold leading-tight tracking-tight md:text-3xl text-foreground">
+                    The {region} market is <span className="text-primary">{statusConfig.text.toLowerCase()}</span> today, driven by dynamic shifts in <span className="underline decoration-dotted underline-offset-4">{topSector}</span>.
                 </CardTitle>
             </CardHeader>
 
             <CardContent className="relative z-10">
-                <div className="space-y-6 text-lg text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+                <div className="space-y-6 text-lg text-muted-foreground">
                     <p>
-                        Our systems have analyzed <strong className="text-foreground">{articleCount} new reports</strong> in the last 24 hours.
+                        Our analysts have analyzed <strong className="text-foreground">{articleCount} new reports</strong> in the last 24 hours.
                         The primary narrative thread is <strong className="text-foreground">{trendingTopics[0]}</strong>, which is currently outpacing broader regional currents.
                     </p>
 
@@ -86,7 +80,7 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {trendingTopics.slice(0, 3).map(topic => (
                                     <span key={topic} className="inline-flex items-center rounded-md bg-secondary/50 px-2 py-1 text-xs font-medium text-secondary-foreground transition-colors group-hover:bg-secondary">
-                                        {topic} <ArrowUpRight className="ml-1 h-3 w-3 opacity-50" />
+                                        {topic} <ArrowTopRightIcon className="ml-1 h-3 w-3 opacity-50" />
                                     </span>
                                 ))}
                             </div>

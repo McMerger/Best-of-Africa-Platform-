@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '../components/Layout';
-import { Network, Star, Target, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
+import { GlobeIcon, StarIcon, TargetIcon, ArrowRightIcon, CheckCircledIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -41,14 +41,14 @@ export const SponsoredPage: React.FC = () => {
                     <div className="space-y-12">
                         <div>
                             <h2 className="mb-8 flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground">
-                                <Target className="h-6 w-6 text-primary" /> Engagement Vectors
+                                <TargetIcon className="h-6 w-6 text-primary" /> Engagement Vectors
                             </h2>
 
                             <div className="grid gap-6">
                                 <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
                                     <CardContent className="flex gap-6 p-6">
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                            <Network className="h-6 w-6" />
+                                            <GlobeIcon className="h-6 w-6" />
                                         </div>
                                         <div>
                                             <h3 className="mb-2 text-lg font-bold text-foreground">Thought Leadership</h3>
@@ -60,7 +60,7 @@ export const SponsoredPage: React.FC = () => {
                                 <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
                                     <CardContent className="flex gap-6 p-6">
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                            <Star className="h-6 w-6" />
+                                            <StarIcon className="h-6 w-6" />
                                         </div>
                                         <div>
                                             <h3 className="mb-2 text-lg font-bold text-foreground">Brand Influence</h3>
@@ -74,7 +74,7 @@ export const SponsoredPage: React.FC = () => {
                         <div>
                             <Button asChild size="lg" className="h-auto px-8 py-4 text-base font-bold">
                                 <a href="mailto:partnerships@bestofafrica.com" className="flex items-center gap-2">
-                                    Contact Relations Desk <ArrowRight className="h-5 w-5" />
+                                    Contact Relations Desk <ArrowRightIcon className="h-5 w-5" />
                                 </a>
                             </Button>
                         </div>
@@ -93,7 +93,7 @@ export const SponsoredPage: React.FC = () => {
                                 <ul className="space-y-4">
                                     {stats.audience_breakdown.map(item => (
                                         <li key={item.segment} className="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-                                            <CheckCircle className="h-5 w-5 text-primary" />
+                                            <CheckCircledIcon className="h-5 w-5 text-primary" />
                                             <span className="font-bold">{item.percentage}%</span> {item.segment}
                                         </li>
                                     ))}
@@ -101,7 +101,7 @@ export const SponsoredPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="flex h-40 items-center justify-center text-muted-foreground">
-                                <Loader2 className="h-8 w-8 animate-spin" />
+                                <UpdateIcon className="h-8 w-8 animate-spin" />
                             </div>
                         )}
                     </div>

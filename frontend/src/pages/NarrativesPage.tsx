@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
-import { Filter, ChevronRight, Zap } from 'lucide-react';
+import { MixerHorizontalIcon, ChevronRightIcon, LightningBoltIcon } from '@radix-ui/react-icons';
 import type { Country } from '../types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -93,7 +93,7 @@ export const NarrativesPage: React.FC = () => {
                     <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end mb-8">
                         <div>
                             <div className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary">
-                                <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
+                                <LightningBoltIcon className="h-4 w-4" />
                                 Strategic Operations
                             </div>
                             <h1 className="text-5xl font-bold tracking-tight text-foreground">Narrative Strategy Board</h1>
@@ -109,7 +109,7 @@ export const NarrativesPage: React.FC = () => {
                         <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-start">
                             <div>
                                 <h2 className="mb-2 flex items-center gap-2 text-lg font-bold uppercase tracking-wide">
-                                    <Zap className="h-5 w-5 text-primary" /> Sentiment Divergence Index
+                                    <LightningBoltIcon className="h-5 w-5 text-primary" /> Sentiment Divergence Index
                                 </h2>
                                 <p className="max-w-xl text-sm text-muted-foreground">
                                     Visualizing the arbitrage gap between <strong className="text-foreground">Market Reality</strong> (Fundamentals) and <strong className="text-foreground">Global Perception</strong> (Sentiment). High divergence signals strategic opportunity.
@@ -159,7 +159,7 @@ export const NarrativesPage: React.FC = () => {
                 {/* Filters Bar */}
                 <div className="mb-12 flex flex-col gap-4 rounded-lg bg-muted/30 p-4 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mr-2">
-                        <Filter className="h-4 w-4" /> Strategy Filter:
+                        <MixerHorizontalIcon className="h-4 w-4" /> Strategy Filter:
                     </div>
 
                     <Select value={selectedAudience} onValueChange={setSelectedAudience}>
@@ -286,7 +286,7 @@ const StrategyCard: React.FC<{ narrative: NarrativeStrategy; borderColor?: strin
 
                 <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-xs font-bold text-primary">
                     <span>View Framework</span>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRightIcon className="h-4 w-4" />
                 </div>
             </CardContent>
         </Card>

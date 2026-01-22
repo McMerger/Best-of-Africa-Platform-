@@ -7,14 +7,15 @@ import type { Dashboard, ArticleListItem, TrendingCountry, SectorBreakdown } fro
 import { ArticleCard } from '../components/ArticleCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { getSectorIcon } from '@/lib/icons';
 import {
-    BarChart2,
-    TrendingUp,
-    Globe,
-    Activity,
-    ArrowUp,
-    ArrowDown
-} from 'lucide-react';
+    BarChartIcon,
+    ArrowTopRightIcon,
+    GlobeIcon,
+    ActivityLogIcon,
+    ArrowUpIcon,
+    ArrowDownIcon
+} from '@radix-ui/react-icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 
@@ -86,10 +87,9 @@ export const DashboardDetailPage: React.FC = () => {
                                 <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground md:text-5xl">Continental Overview</h1>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs font-bold uppercase text-muted-foreground">Platform Status</div>
-                                <div className="flex items-center justify-end gap-2 text-sm font-bold text-primary">
-                                    <div className="h-2 w-2 animate-pulse rounded-full bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)]"></div>
-                                    LIVE
+                                <div className="text-xs font-bold uppercase text-muted-foreground">Last Updated</div>
+                                <div className="text-sm font-bold text-foreground">
+                                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             </div>
                         </div>
@@ -148,7 +148,7 @@ export const DashboardDetailPage: React.FC = () => {
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-3xl font-bold text-foreground">{analytics?.sentiment_pct || 68}%</span>
                                     <span className={cn("text-sm font-bold", analytics?.sentiment_trend === 'up' ? 'text-primary' : 'text-destructive')}>
-                                        {analytics?.sentiment_trend === 'up' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                                        {analytics?.sentiment_trend === 'up' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
                                     </span>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@ export const DashboardDetailPage: React.FC = () => {
                         {/* High-Density Market Heatmap */}
                         <div>
                             <h2 className="mb-6 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
-                                <Globe className="h-5 w-5" /> Market Performance Heatmap
+                                <GlobeIcon className="h-5 w-5" /> Market Performance Heatmap
                             </h2>
                             <div className="rounded-lg border border-border bg-card">
                                 {continentalData.top_countries.map((c, i) => (
@@ -188,7 +188,7 @@ export const DashboardDetailPage: React.FC = () => {
                         {/* Sector Intelligence */}
                         <div>
                             <h2 className="mb-6 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
-                                <BarChart2 className="h-5 w-5" /> Sector Watch
+                                <BarChartIcon className="h-5 w-5" /> Sector Watch
                             </h2>
                             <div className="grid gap-3">
                                 {continentalData.top_sectors.map(s => (
@@ -198,7 +198,7 @@ export const DashboardDetailPage: React.FC = () => {
                                         className="flex items-center justify-between rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-sm"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xl">{s.icon}</span>
+                                            <span className="text-primary">{getSectorIcon(s.id, "h-8 w-8")}</span>
                                             <div>
                                                 <div className="text-sm font-bold text-foreground">{s.name}</div>
                                                 <div className="text-[10px] uppercase font-bold text-muted-foreground">
@@ -214,7 +214,7 @@ export const DashboardDetailPage: React.FC = () => {
                     </div>
 
                     <h2 className="mb-8 flex items-center gap-2 text-2xl font-bold text-foreground">
-                        <Activity className="h-6 w-6 text-primary" /> Intelligence Feed
+                        <ActivityLogIcon className="h-6 w-6 text-primary" /> Intelligence Feed
                     </h2>
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                         {continentalData.highlights.map(article => (
@@ -323,7 +323,9 @@ export const DashboardDetailPage: React.FC = () => {
                             <ul className="space-y-3">
                                 {sector_breakdown.map((s) => (
                                     <li key={s.id} className="flex justify-between text-sm">
-                                        <span className="text-muted-foreground">{s.icon} {s.name}</span>
+                                        <span className="text-muted-foreground flex items-center gap-2">
+                                            {getSectorIcon(s.id, "h-4 w-4")} {s.name}
+                                        </span>
                                         <span className="font-bold text-foreground">{s.count}%</span>
                                     </li>
                                 ))}

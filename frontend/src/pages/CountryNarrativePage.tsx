@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Country, ArticleListItem } from '../types';
-import { Target, MessageSquare, BarChart2, ShieldCheck, ArrowRight, Layers, CheckCircle2 } from 'lucide-react';
+import { TargetIcon, ChatBubbleIcon, BarChartIcon, CheckCircledIcon, ArrowRightIcon, StackIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -74,7 +74,7 @@ export const CountryNarrativePage: React.FC = () => {
                         {/* STRATEGIC PILLARS */}
                         <section className="mb-16">
                             <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
-                                <Layers className="h-6 w-6 text-primary" /> Strategic Pillars
+                                <StackIcon className="h-6 w-6 text-primary" /> Strategic Pillars
                             </h2>
 
                             <div className="grid gap-6">
@@ -85,7 +85,7 @@ export const CountryNarrativePage: React.FC = () => {
                                                 {narrative.narrative_theme}
                                             </CardTitle>
                                             <Badge variant="outline" className="border-border text-muted-foreground font-semibold gap-1">
-                                                <Target className="h-3 w-3" /> {narrative.target_audience}
+                                                <TargetIcon className="h-3 w-3" /> {narrative.target_audience}
                                             </Badge>
                                         </CardHeader>
                                         <CardContent className="p-6">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { HomeIcon } from '@radix-ui/react-icons';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -25,7 +25,7 @@ export const Breadcrumbs: React.FC = () => {
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
                             <Link to="/" className="flex items-center">
-                                <Home size={14} className="mr-1" /> Home
+                                <HomeIcon className="mr-1 h-3.5 w-3.5" /> Home
                             </Link>
                         </BreadcrumbLink>
                     </BreadcrumbItem>

@@ -20,6 +20,9 @@ import { AudienceInsightsPage } from './pages/AudienceInsightsPage';
 import { PremiumCountryAnalysisPage } from './pages/PremiumCountryAnalysisPage';
 import { PremiumSectorTrendsPage } from './pages/PremiumSectorTrendsPage';
 import { PersonalizedFeedPage } from './pages/PersonalizedFeedPage';
+import { EditorialGuidelinesPage } from './pages/EditorialGuidelinesPage';
+import { StrategicServicesPage } from './pages/StrategicServicesPage';
+import { BusinessTravelPage } from './pages/BusinessTravelPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
@@ -28,13 +31,19 @@ import { PrivacyPage } from './pages/PrivacyPage';
 import { TermsPage } from './pages/TermsPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { EventsPage } from './pages/EventsPage';
+import { MembershipPage } from './pages/MembershipPage';
+import { AboutPage } from './pages/AboutPage';
+import { AiConsultantPage } from './pages/AiConsultantPage';
+import { ImpactPage } from './pages/ImpactPage';
+import { LibraryPage } from './pages/LibraryPage';
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/news" element={<ArticlesPage />} />
+        <Route path="/intelligence-briefings" element={<ArticlesPage />} />
         <Route path="/articles/:slug" element={<ArticleDetailPage />} />
         <Route path="/countries" element={<CountriesPage />} />
         <Route path="/countries/:code" element={<CountryDetailPage />} />
@@ -59,6 +68,15 @@ function App() {
         <Route path="/market-intel/reports/sector/:sectorId" element={<ReportsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/guidelines" element={<EditorialGuidelinesPage />} />
+        <Route path="/strategic-services" element={<StrategicServicesPage />} />
+        <Route path="/travel" element={<BusinessTravelPage />} />
+        <Route path="/events" element={<EventsPage />} />
+        <Route path="/membership" element={<MembershipPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/ask-ai" element={<AiConsultantPage />} />
+        <Route path="/impact" element={<ImpactPage />} />
+        <Route path="/library" element={<LibraryPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

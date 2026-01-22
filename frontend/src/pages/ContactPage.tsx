@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
-import { Mail, MessageSquare, Send, Loader2 } from 'lucide-react';
+import { EnvelopeClosedIcon, ChatBubbleIcon, PaperPlaneIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { toast } from "sonner"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,7 +61,7 @@ export const ContactPage: React.FC = () => {
                     <Card className="border-primary/20 bg-primary/5 text-center text-foreground shadow-sm">
                         <CardContent className="flex flex-col items-center py-12">
                             <div className="mb-6 rounded-full bg-primary/10 p-4">
-                                <Send className="h-12 w-12 text-primary" />
+                                <PaperPlaneIcon className="h-12 w-12 text-primary" />
                             </div>
                             <h2 className="mb-2 text-2xl font-bold">Message Sent</h2>
                             <p className="mb-8 text-muted-foreground">Thank you for reaching out. We will review your inquiry shortly.</p>
@@ -163,11 +163,11 @@ export const ContactPage: React.FC = () => {
                                 >
                                     {status === 'submitting' ? (
                                         <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+                                            <UpdateIcon className="mr-2 h-4 w-4 animate-spin" /> Sending...
                                         </>
                                     ) : (
                                         <>
-                                            <Mail className="mr-2 h-4 w-4" /> Send Message
+                                            <PaperPlaneIcon className="mr-2 h-4 w-4" /> Send Message
                                         </>
                                     )}
                                 </Button>
@@ -178,12 +178,12 @@ export const ContactPage: React.FC = () => {
 
                 <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="flex flex-col items-center rounded-lg bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
-                        <MessageSquare className="mb-4 h-8 w-8 text-primary" />
+                        <ChatBubbleIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">Press Inquiries</h3>
                         <p className="text-sm text-muted-foreground font-medium">press@bestofafrica.com</p>
                     </div>
                     <div className="flex flex-col items-center rounded-lg bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
-                        <Mail className="mb-4 h-8 w-8 text-primary" />
+                        <EnvelopeClosedIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">General Support</h3>
                         <p className="text-sm text-muted-foreground font-medium">support@bestofafrica.com</p>
                     </div>

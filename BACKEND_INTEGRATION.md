@@ -1,73 +1,94 @@
-# Backend Integration Plan: "The Rational Upgrade"
+# Backend Integration Plan: "The Rational Ecosystem"
 
-**Version:** 2.0 (Alignment with "Rational Intelligence" Frontend)
-**Target:** Match the "Industrial Luxury" UI with "Institutional Grade" Data.
-
----
-
-## 1. Executive Summary: The Gap
-
-The Frontend currently presents a **"Geopolitical Terminal"** experience (`Deep Financial Data`, `Generative Summaries`, `Biometric-style Auth`).
-The Backend currently provides a **"Media Monitor"** experience (`Article Counts`, `View Stats`).
-
-**Objective:** Upgrade the backend from "News Aggregation" to "Market Intelligence".
+**Version:** 3.0 (The Complete Platform)
+**Target:** Transform the frontend into a fully persistent, data-driven intelligence platform.
 
 ---
 
-## 2. Database Schema Updates (SQL)
+## 1. Executive Summary
 
-We must introduce financial and scoring rigidity to the database.
+We have successfully established the frontend aesthetic ("Industrial Luxury") and basic connectivity. The next phase is **Deep Integration**, ensuring every interactive element—from "Book Concierge" to "Narrative Analysis"—is backed by a robust, scalable schema.
 
-### A. Market Intelligence (The "Finance" Layer)
+**Current State:**
 
-**Gap:** Frontend `PremiumSectorTrends` page expects hard financial data, not just news volume.
+* Auth: Basic JWT (Implemented)
+* Market Data: Seeded (0003)
+* Bookmarks: Session-based (0004)
 
-```sql
--- [NEW] Market Metrics Table
-CREATE TABLE market_metrics (
-    id TEXT PRIMARY KEY, -- metric_sector_year (e.g., "energy_2026")
-    sector_id TEXT REFERENCES sectors(id),
-    year INTEGER NOT NULL,
-    market_size_usd BIGINT,      -- Frontend: "market_size"
-    growth_rate DECIMAL(5,2),    -- Frontend: "growth_rate"
-    investment_volume_usd BIGINT, -- Frontend: "investment_volume"
-    regulatory_outlook TEXT,     -- Frontend: "regulatory_outlook" (Enum: Positive, Stable, Volatile)
-    top_companies_json TEXT,     -- JSON Array of names
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+**Missing Links (The Gaps):**
 
-### B. Country Scoring (The "Intelligence" Layer)
+1. **Narrative Engine:** Structured storage for "Narrative Themes" (not just articles).
+2. **Corporate Booking:** A dedicated referral/concierge request system.
+3. **Diplomatic Summits:** Event management and registration.
+4. **Advanced Vector Search:** Integrating `Cloudflare Vectorize` for semantic RAG.
 
-**Gap:** Frontend `CountryOutlook` displays calculated scores like "Investment Readiness" and "Narrative Strength".
+---
 
-```sql
--- [NEW] Country Scores Table (Historical Tracking)
-CREATE TABLE country_scores (
-    id TEXT PRIMARY KEY, -- iso_date (e.g., "ng_2026-01-12")
-    country_code TEXT REFERENCES countries(code),
-    date DATE NOT NULL,
-    diplomacy_score INTEGER,      -- 0-100
-    investment_readiness INTEGER, -- 0-100
-    security_rating INTEGER,      -- 0-100 (The "Stability Index")
-    narrative_control INTEGER,    -- 0-100 (The "Media Alignment" Score)
-    calculated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-```
+## 2. Database Schema Expansion (SQL)
 
-### C. Authentication (The "Security" Layer)
+We need a new migration (`0005_ecosystem.sql`) to handle the specialized features.
 
-**Gap:** Frontend simulates "Biometric Scan". Backend needs real secure tokens.
+### A. Narrative Architecture (The "Strategy" Layer)
+
+**Objective:** Store high-level narrative themes (e.g., "Kenya Tech Hub") separately from news articles, allowing them to be tracked, scored, and managed as strategic assets.
 
 ```sql
--- [NEW] API Keys / Users
-CREATE TABLE api_clients (
+CREATE TABLE narratives (
     id TEXT PRIMARY KEY,
-    org_name TEXT,
-    tier TEXT DEFAULT 'basic', -- basic, premium, sovereign
-    api_key_hash TEXT,
-    is_active BOOLEAN DEFAULT 1,
+    country_code TEXT REFERENCES countries(code),
+    sector_id TEXT REFERENCES sectors(id),
+    title TEXT NOT NULL,         -- e.g. "Silicon Savannah"
+    description TEXT,
+    tone TEXT DEFAULT 'Neutral', -- e.g. 'Optimistic', 'Critical'
+    status TEXT DEFAULT 'Active',
+    priority_score INTEGER,      -- 1-100
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Link Articles to Narratives (Many-to-Many)
+CREATE TABLE narrative_articles (
+    narrative_id TEXT REFERENCES narratives(id),
+    article_id TEXT REFERENCES articles(id),
+    relevance_score REAL,        -- 0.0 to 1.0 (Vector Distance)
+    PRIMARY KEY (narrative_id, article_id)
+);
+```
+
+### B. Corporate Services (The "Utility" Layer)
+
+**Objective:** Handle high-value user intents like travel bookings and summit registrations.
+
+```sql
+-- Booking Requests (Concierge)
+CREATE TABLE booking_requests (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES clients(id), -- Optional (can be guest)
+    service_type TEXT, -- 'Hotel', 'Flight', 'Concierge', 'Visa'
+    destination_country TEXT REFERENCES countries(code),
+    dates_json TEXT,   -- { start, end }
+    requirements TEXT, -- e.g. "Executive Suite, Security Detail"
+    status TEXT DEFAULT 'New', -- New, Processing, Confirmed, Closed
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Events & Summits
+CREATE TABLE events (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    date DATETIME NOT NULL,
+    location TEXT,
+    capacity INTEGER,
+    is_exclusive BOOLEAN DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Event Registrations
+CREATE TABLE event_registrations (
+    id TEXT PRIMARY KEY,
+    event_id TEXT REFERENCES events(id),
+    user_email TEXT NOT NULL,
+    ticket_type TEXT DEFAULT 'Standard',
+    status TEXT DEFAULT 'Pending'
 );
 ```
 
@@ -75,75 +96,84 @@ CREATE TABLE api_clients (
 
 ## 3. API Specification Updates
 
-### A. Search & Briefings (`Briefing Mode`)
+### A. Narrative Intelligence
 
-**Endpoint:** `GET /api/v1/search`
-**Upgrade:** Implement **RAG (Retrieval Augmented Generation)** using Workers AI.
+**Endpoint:** `GET /api/v1/narratives/:country_code`
+**Logic:**
 
-* **Current:** Returns list of articles.
-* **New Field:** `summary` (string) - A 2-sentence synthesis of the top 5 results.
-* **Logic:**
-    1. Vector Search -> Top 5 Articles.
-    2. Prompt Llama-3: *"Summarize the investment outlook for [Query] based on these 5 briefs: [...]"*
-    3. Return generated text.
+1. Fetch active `narratives` for the country.
+2. Join with `narrative_articles` to get article counts and average sentiment.
+3. Return a structured "Strategic Brief" object.
 
-### B. Sector Trends
+### B. Booking & Concierge
 
-**Endpoint:** `GET /api/v1/intel/sector/:id/trends`
-**Upgrade:** Join with `market_metrics` table.
-
-* **Current:** Returns `{ monthly_trend: [{ count: 10 }] }`
-* **New Response:**
+**Endpoint:** `POST /api/v1/services/booking`
+**Request:**
 
 ```json
 {
-  "sector": { ... },
-  "trends": [
-    {
-      "year": 2025,
-      "market_size": 45000000000,
-      "growth_rate": 5.2,
-      "investment_volume": 1200000000,
-      "regulatory_outlook": "Stable"
-    }
-  ],
-  "top_companies": ["Dangote", "MTN", "Axios"]
+  "service": "Concierge",
+  "destination": "KE",
+  "requirements": "Need armored transport from NBO to CBD."
 }
 ```
 
-### C. Authentication
+**Logic:**
 
-**Endpoint:** `POST /api/v1/auth/login` (NEW)
-**Request:** `{ "client_id": "...", "secret": "..." }`
-**Response:** `{ "token": "jwt_...", "tier": "premium", "access_level": "High" }`
-**Frontend Impact:** Update `LoginPage.tsx` to replace `setTimeout` mock with this real call.
+1. Store in `booking_requests`.
+2. Trigger **Email Notification** (via Cloudflare Email Routing or Resend) to `concierge@bestofafrica.com`.
+3. Return `request_id` to frontend for tracking.
 
-### D. Real-Time Security Feed
+### C. Vector Search (RAG)
 
-**Endpoint:** `GET /api/v1/live/stream` (WebSocket)
-**Function:** Powers the "Live" green dots and "Platform Status" indicators.
+**Endpoint:** `GET /api/v1/search/semantic`
+**Logic:**
 
-* **Logic:** Connect to `LiveCounter` Durable Object.
-* **Events:** `{"type": "visitor_count", "count": 142}`, `{"type": "threat_level", "level": "LOW"}`
+1. Generate Embedding for User Query (using `bge-base-en-v1.5` on Workers AI).
+2. Query `Vectorize` index for nearest article chunks.
+3. Retrieve full article metadata from D1.
+4. (Optional) Pass chunks to LLM for summary generation.
 
 ---
 
-## 4. Implementation Checklist
+## 4. Implementation Constraints & Standards
 
-### Phase 1: Foundation (Schema & Auth)
+1. **Strict Typing:** All Cloudflare Worker routes must leverage the `Hono` Zod validator to ensure type safety matching the frontend `types/index.ts`.
+2. **Edge Caching:** Public GET endpoints (Sectors, Countries) must cache for 60 seconds (`Cache-Control: public, max-age=60`).
+3. **Error Handling:** structured JSON errors `{ success: false, error: "..." }`, never raw HTML traces.
+4. **Icons vs Emojis:** The backend must **NEVER** return emoji strings for status or icons. It should return status enums (`critical`, `stable`) which the frontend maps to Radix Icons. `flag_emoji` is the ONLY exception.
 
-* [x] Run SQL migration for `market_metrics` and `country_scores`.
-* [x] Create `auth.ts` router with robust JWT issuance.
-* [x] Update `LoginPage.tsx` to consume real auth.
+---
 
-### Phase 2: Intelligence (AI & Finance)
+## 5. Implementation Status
 
-* [x] Implement `Workers AI` binding in `search.ts`.
-* [x] Update `market-intel.ts` to fetch from new `market_metrics` table.
-* [x] Write a script to seed initial financial data (mock or researched).
+### ✓ Completed
 
-### Phase 3: Real-Time (WebSockets)
+1. [x] Migration `migrations/0006_ecosystem.sql` exists with all required schemas
+2. [x] Router `src/routes/narratives.ts` fully implemented with CRUD endpoints
+3. [x] Router `src/routes/services.ts` fully implemented with booking and events endpoints
+4. [x] `servicesRouter` registered in `src/index.ts` at `/api/v1/services`
+5. [x] Type definitions for `BookingRequest`, `Event`, and `EventRegistration` added to `src/types/index.ts`
+6. [x] Vector Search (RAG) endpoint `GET /api/v1/search/semantic` implemented in `src/routes/search.ts`
+   * Uses `bge-base-en-v1.5` for embeddings via Workers AI
+   * Queries Cloudflare Vectorize for semantic search
+   * Generates AI summary via `llama-3.1-8b-instruct` (cached 10 min)
 
-* [x] Expose `LiveCounter` DO via WebSocket upgrade endpoint.
+### 🔄 Deployment Required
 
-* [ ] Connect `NavBar` "Live" indicator to WS feed.
+1. [ ] Apply migration `0006_ecosystem.sql` to production D1 database
+
+   ```bash
+   npx wrangler d1 migrations apply <database-name> --remote
+   ```
+
+### 📋 Future Enhancements
+
+1. [ ] Implement email notifications for booking requests (see TODO in `services.ts:68`)
+2. [ ] Build frontend components to consume new endpoints
+3. [ ] Implement vector search integration for narrative-article linking
+4. [ ] Add edge caching to public GET endpoints for performance
+
+### 📚 API Documentation
+
+See [walkthrough.md](file:///C:/Users/hp/.gemini/antigravity/brain/fad965b6-77ac-4442-aa9a-af52f46a4eee/walkthrough.md) for complete endpoint documentation and integration guide.

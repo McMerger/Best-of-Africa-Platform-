@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Lock, Fingerprint, Shield, Eye, Scan, ChevronRight, Loader2 } from 'lucide-react';
+import { LockClosedIcon, PersonIcon, CheckCircledIcon, EyeOpenIcon, UpdateIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,18 +69,18 @@ export const LoginPage: React.FC = () => {
                     <div className="mb-10 text-center">
                         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-[0_0_30px_rgba(var(--primary),0.2)]">
                             {status === 'SCANNING' ? (
-                                <Scan className="h-9 w-9 animate-pulse text-primary" />
+                                <UpdateIcon className="h-9 w-9 animate-spin text-primary" />
                             ) : status === 'VERIFIED' ? (
-                                <Shield className="h-9 w-9 text-primary" />
+                                <CheckCircledIcon className="h-9 w-9 text-primary" />
                             ) : (
-                                <Lock className="h-8 w-8 text-foreground" />
+                                <LockClosedIcon className="h-8 w-8 text-foreground" />
                             )}
                         </div>
                         <h1 className="mb-2 text-2xl font-extralight uppercase tracking-[0.2em] text-foreground">
                             Client Portal
                         </h1>
                         <p className="font-mono text-xs text-muted-foreground">
-                            SECURE LOGIN
+                            MEMBER SIGN IN
                         </p>
                     </div>
 
@@ -91,14 +91,14 @@ export const LoginPage: React.FC = () => {
                                 <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">
                                     <div className="mb-2 text-base font-bold tracking-widest text-primary">LOGIN SUCCESSFUL</div>
                                     <p className="mb-8 text-sm text-muted-foreground">Redirecting to Dashboard...</p>
-                                    <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+                                    <UpdateIcon className="mx-auto h-10 w-10 animate-spin text-primary" />
                                 </div>
                             ) : (
                                 <form onSubmit={handleLogin} className="space-y-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Client ID / Email</Label>
                                         <div className="relative">
-                                            <Fingerprint className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <PersonIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input
                                                 id="email"
                                                 type="email"
@@ -113,7 +113,7 @@ export const LoginPage: React.FC = () => {
                                     <div className="space-y-2">
                                         <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Password</Label>
                                         <div className="relative">
-                                            <Eye className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <EyeOpenIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                             <Input
                                                 id="password"
                                                 type="password"
@@ -140,7 +140,7 @@ export const LoginPage: React.FC = () => {
                                         {status === 'SCANNING' ? (
                                             <>Verifying...</>
                                         ) : (
-                                            <>Sign In <ChevronRight className="ml-2 h-4 w-4" /></>
+                                            <>Sign In <ChevronRightIcon className="ml-2 h-4 w-4" /></>
                                         )}
                                     </Button>
                                 </form>

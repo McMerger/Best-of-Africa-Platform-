@@ -12,7 +12,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             <NavBar />
             <Breadcrumbs />
-            <main className="flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700 pt-10">
+            <main className="flex-1 pt-10">
                 {children}
             </main>
             <Footer />

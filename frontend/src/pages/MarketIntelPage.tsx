@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Sector } from '../types';
-import { Lock, AlertCircle, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { LockClosedIcon, ExclamationTriangleIcon, ArrowTopRightIcon, BarChartIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
-
+import { getSectorIcon } from '@/lib/icons';
 interface SectorPerformance {
     sector_id: string;
     sector_name: string;
@@ -18,16 +17,9 @@ interface SectorPerformance {
     article_count: number;
 }
 
-interface LeadingSector {
-    name: string;
-    growth: number;
-    trend: string;
-}
-
 export const MarketIntelPage: React.FC = () => {
     const [sectors, setSectors] = useState<Sector[]>([]);
     const [performance, setPerformance] = useState<SectorPerformance[]>([]);
-    const [leadingSector, setLeadingSector] = useState<LeadingSector | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
@@ -35,12 +27,11 @@ export const MarketIntelPage: React.FC = () => {
 
         Promise.all([
             api.getSectors(),
-            api.getSectorPerformance(),
-            api.getLeadingSector()
-        ]).then(([sectorsRes, perfRes, leadingRes]) => {
+            api.getSectorPerformance()
+        ]).then(([sectorsRes, perfRes]) => {
             setSectors(sectorsRes.data);
             setPerformance(perfRes.data);
-            setLeadingSector(leadingRes);
+            // leadingRes is used for featured logic but not state storage currently
             if (perfRes.updated_at) {
                 const date = new Date(perfRes.updated_at);
                 setLastUpdated(date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' }));
@@ -64,28 +55,14 @@ export const MarketIntelPage: React.FC = () => {
                 <header className="mb-16 border-b border-border pb-12">
                     <div className="grid gap-8 md:grid-cols-[1fr_300px] md:items-end">
                         <div>
-                            <div className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-destructive">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive opacity-75"></span>
-                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-destructive"></span>
-                                </span>
-                                Market Status
+                            <div>
+                                <Badge variant="outline" className="mb-4 border-primary/20 bg-primary/5 text-primary">
+                                    Strategic Analysis
+                                </Badge>
+                                <h1 className="text-6xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
+                                    Market <br /><span className="text-primary">Intelligence.</span>
+                                </h1>
                             </div>
-                            <h1 className="text-6xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
-                                Market <br /><span className="text-primary">Overview.</span>
-                            </h1>
-                        </div>
-                        <div className="rounded border border-border bg-card p-6">
-                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Leading Sector (24h)</div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-black text-primary">{leadingSector?.name || 'Loading...'}</span>
-                                <span className="text-lg font-bold text-primary">+{leadingSector?.growth?.toFixed(1) || '0'}%</span>
-                            </div>
-                            <Progress
-                                value={Math.min((leadingSector?.growth || 0) * 5, 100)}
-                                className="mt-3 h-1"
-                                indicatorClassName="bg-primary transition-all duration-1000"
-                            />
                         </div>
                     </div>
                 </header>
@@ -113,7 +90,9 @@ export const MarketIntelPage: React.FC = () => {
                                     <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-lg">
                                         <CardContent className="flex flex-col p-6">
                                             <div className="mb-6 flex justify-between">
-                                                <div className="text-4xl text-foreground grayscale transition-all group-hover:grayscale-0" aria-hidden="true">{sector.icon}</div>
+                                                <div className="text-primary transition-all group-hover:scale-110" aria-hidden="true">
+                                                    {getSectorIcon(sector.id, "h-10 w-10")}
+                                                </div>
                                                 <div className="text-right">
                                                     <div className={cn("text-xl font-bold", growth > 10 ? 'text-primary' : 'text-foreground')}>+{growth.toFixed(1)}%</div>
                                                     <div className="text-[10px] font-bold uppercase text-muted-foreground">YoY Growth</div>
@@ -139,6 +118,57 @@ export const MarketIntelPage: React.FC = () => {
                                 </Link>
                             );
                         })}
+                    </div>
+                </section>
+
+                {/* STRATEGIC MATRIX (The Core Doc Requirement) */}
+                <section className="mb-20">
+                    <div className="mb-8 flex items-end justify-between border-b border-border pb-6">
+                        <div>
+                            <h2 className="text-3xl font-bold tracking-tight text-foreground">Strategic Opportunity Matrix</h2>
+                            <p className="text-muted-foreground">High-growth intersections of Sector × Country.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {/* Mining x Mozambique */}
+                        <Link to="/market-intel/sectors/energy" className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-[#D4AF37] hover:shadow-md">
+                            <div className="mb-4 flex items-center justify-between">
+                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">Energy & Mining</Badge>
+                                <span className="text-xs font-bold text-muted-foreground">MOZAMBIQUE</span>
+                            </div>
+                            <h3 className="mb-2 text-xl font-bold text-foreground">LNG & Graphite Corridors</h3>
+                            <p className="text-sm text-muted-foreground">Strategic alignment with EU critical mineral supply chains.</p>
+                            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-[#D4AF37]">
+                                <ArrowUpRight className="h-4 w-4" /> High Priority
+                            </div>
+                        </Link>
+
+                        {/* Tech x Kenya */}
+                        <Link to="/market-intel/sectors/tech" className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-[#D4AF37] hover:shadow-md">
+                            <div className="mb-4 flex items-center justify-between">
+                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">Technology</Badge>
+                                <span className="text-xs font-bold text-muted-foreground">KENYA</span>
+                            </div>
+                            <h3 className="mb-2 text-xl font-bold text-foreground">Silicon Savannah Fintech</h3>
+                            <p className="text-sm text-muted-foreground">Mobile money integration and cross-border payment rails.</p>
+                            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-[#D4AF37]">
+                                <ArrowUpRight className="h-4 w-4" /> Moderate Growth
+                            </div>
+                        </Link>
+
+                        {/* Agri x Ghana */}
+                        <Link to="/market-intel/sectors/agri" className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-[#D4AF37] hover:shadow-md">
+                            <div className="mb-4 flex items-center justify-between">
+                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">Agriculture</Badge>
+                                <span className="text-xs font-bold text-muted-foreground">GHANA</span>
+                            </div>
+                            <h3 className="mb-2 text-xl font-bold text-foreground">Cocoa Value Addition</h3>
+                            <p className="text-sm text-muted-foreground">Processing incentives and supply chain digitization.</p>
+                            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-[#D4AF37]">
+                                <ArrowUpRight className="h-4 w-4" /> Emerging
+                            </div>
+                        </Link>
                     </div>
                 </section>
 
@@ -183,7 +213,7 @@ export const MarketIntelPage: React.FC = () => {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-        </Layout>
+            </div >
+        </Layout >
     );
 };

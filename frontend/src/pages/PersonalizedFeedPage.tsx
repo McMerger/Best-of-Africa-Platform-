@@ -3,7 +3,7 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
-import { Sliders, Clock, ShieldCheck, Bookmark, BookmarkCheck, ChevronRight } from 'lucide-react';
+import { MixerHorizontalIcon, ClockIcon, BookmarkIcon, BookmarkFilledIcon, ChevronRightIcon, LightningBoltIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -62,8 +62,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                 <header className="mb-12 flex flex-col items-start justify-between gap-6 border-b-4 border-primary py-16 md:flex-row md:items-end">
                     <div>
                         <div className="mb-4 flex gap-4 font-mono text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" /> {today}</span>
-                            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> CLEARANCE: ALPHA-1</span>
+                            <span className="flex items-center gap-1.5"><ClockIcon className="h-3.5 w-3.5" /> {today}</span>
                         </div>
                         <h1 className="text-5xl font-black uppercase leading-[0.9] tracking-tighter text-foreground md:text-6xl">
                             Daily <span className="text-primary">Intelligence</span> Briefing
@@ -72,7 +71,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                     <div>
                         <Button variant="outline" asChild className="uppercase tracking-wider">
                             <Link to="/settings">
-                                <Sliders className="mr-2 h-4 w-4" /> Calibrate Vectors
+                                <MixerHorizontalIcon className="mr-2 h-4 w-4" /> Calibrate Vectors
                             </Link>
                         </Button>
                     </div>
@@ -80,7 +79,7 @@ export const PersonalizedFeedPage: React.FC = () => {
 
                 {context && (
                     <div className="mb-10 flex items-center gap-2 border-l-4 border-muted-foreground bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
-                        <span className="font-bold uppercase text-foreground">Briefing Logic:</span>
+                        <span className="font-bold uppercase text-foreground">Briefing Context:</span>
                         <span>Based on recent monitoring of <strong className="text-primary">{context.countries.join(', ')}</strong> and <strong className="text-primary">{context.sectors.join(', ')}</strong>.</span>
                     </div>
                 )}
@@ -91,7 +90,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                         {priorityIntel && (
                             <section className="mb-16">
                                 <div className="mb-5 flex items-center gap-2.5">
-                                    <div className="h-3 w-3 animate-pulse rounded-full bg-destructive" />
+                                    <LightningBoltIcon className="h-4 w-4 text-destructive" />
                                     <h2 className="text-sm font-extrabold uppercase tracking-widest text-destructive">Priority Intelligence Requirement (PIR-1)</h2>
                                 </div>
                                 <Card className="overflow-hidden border-border bg-card shadow-xl">
@@ -108,7 +107,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                                             <div className="flex items-center gap-5">
                                                 <Button asChild size="lg" className="font-semibold">
                                                     <Link to={`/articles/${priorityIntel.slug}`}>
-                                                        Read Briefing <ChevronRight className="ml-2 h-4 w-4" />
+                                                        Read Briefing <ChevronRightIcon className="ml-2 h-4 w-4" />
                                                     </Link>
                                                 </Button>
                                                 <Button
@@ -118,7 +117,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                                                         bookmarked.has(priorityIntel.id) ? "text-primary hover:text-primary/80 hover:bg-primary/10" : "text-muted-foreground"
                                                     )}
                                                 >
-                                                    {bookmarked.has(priorityIntel.id) ? <BookmarkCheck className="mr-2 h-4 w-4" /> : <Bookmark className="mr-2 h-4 w-4" />}
+                                                    {bookmarked.has(priorityIntel.id) ? <BookmarkFilledIcon className="mr-2 h-4 w-4" /> : <BookmarkIcon className="mr-2 h-4 w-4" />}
                                                     {bookmarked.has(priorityIntel.id) ? 'Saved' : 'Save for Later'}
                                                 </Button>
                                             </div>

@@ -6,179 +6,20 @@ import { ArticleCard } from '../components/ArticleCard';
 import { Badge } from '@/components/ui/badge';
 import type { Country, ArticleListItem, CountryStats } from '../types';
 import { cn } from '@/lib/utils';
-import { TrendingUp, Users, DollarSign, Info } from 'lucide-react';
+import { ArrowRightIcon, PersonIcon, InfoCircledIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
 import { IntelligenceBriefing } from '../components/IntelligenceBriefing';
+import { BookingWidget } from '../components/booking/BookingWidget';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Interactive Influence Graph (Trend: Direct Manipulation)
-// ═══════════════════════════════════════════════════════════════════════════════
 
-interface InfluenceGraphProps {
-    countryName: string;
-    relationships: { id: string; label: string; weight: number; color: string }[];
-    onSelectNode?: (nodeId: string | null) => void;
-    selectedNodeId?: string | null;
-}
-
-const InfluenceGraph: React.FC<InfluenceGraphProps> = ({ countryName, relationships, onSelectNode, selectedNodeId }) => {
-    // Layout Config
-    const center = { x: 200, y: 200 };
-    const radius = 120; // Distance from center
-
-    // Calculate positions in a circle
-    const count = relationships.length || 5;
-    const nodes = [
-        // Center Node (The Country)
-        { id: 'focus', label: countryName, x: center.x, y: center.y, r: 40, color: '#052962', weight: 0 },
-        // Satellite Nodes
-        ...(relationships.length > 0 ? relationships : [
-            { id: 'cn', label: 'China', weight: 4, color: '#C70000', details: 'Major Infrastructure Partner' },
-            { id: 'us', label: 'USA', weight: 2, color: '#2563eb', details: 'Security Cooperation' },
-            { id: 'eu', label: 'EU', weight: 3, color: '#059669', details: 'Trade Agreements' },
-            { id: 'ru', label: 'Russia', weight: 1, color: '#7c3aed', details: 'Energy Sector' },
-            { id: 'in', label: 'India', weight: 2, color: '#d97706', details: 'Tech Investment' }
-        ]).map((rel, i) => {
-            const angle = (i * 2 * Math.PI) / count - Math.PI / 2; // Start from top
-            return {
-                ...rel,
-                x: center.x + radius * Math.cos(angle),
-                y: center.y + radius * Math.sin(angle),
-                r: 20 + rel.weight * 4
-            };
-        })
-    ];
-
-    const handleNodeClick = (id: string) => {
-        if (onSelectNode) {
-            onSelectNode(id === selectedNodeId ? null : id);
-        }
-    };
-
-    return (
-        <svg width="100%" height="100%" viewBox="0 0 400 400" className="drop-shadow-sm select-none">
-            <defs>
-                <marker id="arrow" markerWidth="10" markerHeight="10" refX="20" refY="3" orient="auto" markerUnits="strokeWidth">
-                    <path d="M0,0 L0,6 L9,3 z" fill="currentColor" className="text-muted-foreground/50" />
-                </marker>
-                {/* Glow Filter for Active Nodes */}
-                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-                    <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
-            {/* Connecting Lines (Liquid Flow) */}
-            {nodes.filter(n => n.id !== 'focus').map(node => {
-                const isSelected = selectedNodeId === node.id;
-                const isDimmed = selectedNodeId && !isSelected && selectedNodeId !== 'focus';
-
-                return (
-                    <g key={`link-${node.id}`} className={cn("transition-opacity duration-500", isDimmed ? "opacity-20" : "opacity-100")}>
-                        <line
-                            x1={node.x} y1={node.y}
-                            x2={center.x} y2={center.y}
-                            stroke={node.color}
-                            strokeWidth={node.weight}
-                            strokeOpacity={isSelected ? 0.8 : 0.2}
-                            strokeDasharray={isSelected ? "0" : "4 4"}
-                            className="transition-all duration-500"
-                        />
-                        {/* Animated Flow Particle if Selected */}
-                        {isSelected && (
-                            <circle r={node.weight} fill={node.color}>
-                                <animateMotion dur="2s" repeatCount="indefinite" path={`M${node.x},${node.y} L${center.x},${center.y}`} />
-                            </circle>
-                        )}
-                    </g>
-                );
-            })}
-
-            {/* Nodes */}
-            {nodes.map(node => {
-                const isSelected = selectedNodeId === node.id;
-                const isCenter = node.id === 'focus';
-                const isDimmed = selectedNodeId && !isSelected && !isCenter;
-
-                return (
-                    <g
-                        key={node.id}
-                        onClick={() => handleNodeClick(node.id)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleNodeClick(node.id);
-                            }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`Select ${node.label} relationship`}
-                        aria-pressed={isSelected}
-                        style={{ cursor: 'pointer' }}
-                        className={cn(
-                            "transition-all duration-500 focus:outline-none",
-                            isDimmed ? "opacity-30 grayscale" : "opacity-100",
-                            isSelected ? "scale-110" : "scale-100 hover:scale-105"
-                        )}
-                    >
-                        {/* Pulse Effect for Center Node or Selected Node */}
-                        {(isCenter || isSelected) && (
-                            <circle cx={node.x} cy={node.y} r={node.r + 15} fill="none" stroke={node.color} strokeOpacity="0.2" strokeWidth="2">
-                                <animate attributeName="r" values={`${node.r};${node.r + 20};${node.r}`} dur="3s" repeatCount="indefinite" />
-                                <animate attributeName="stroke-opacity" values="0.4;0;0.4" dur="3s" repeatCount="indefinite" />
-                            </circle>
-                        )}
-
-                        {/* Main Node Circle */}
-                        <circle
-                            cx={node.x} cy={node.y} r={node.r}
-                            fill={isCenter ? node.color : "white"}
-                            stroke={node.color}
-                            strokeWidth={isSelected ? 4 : 2}
-                            filter={isSelected ? "url(#glow)" : ""}
-                            className="transition-all duration-300"
-                        />
-
-                        {/* Label */}
-                        <text
-                            x={node.x} y={node.y} dy="4"
-                            textAnchor="middle"
-                            fill={isCenter ? "white" : node.color}
-                            fontWeight="800"
-                            fontSize={isCenter ? '14' : '12'}
-                            style={{ textTransform: 'uppercase', pointerEvents: 'none' }}
-                        >
-                            {isCenter ? 'Target' : node.label.substring(0, 2)}
-                        </text>
-
-                        {/* External Label */}
-                        <text
-                            x={node.x} y={node.y + node.r + 20}
-                            textAnchor="middle"
-                            fill="currentColor"
-                            className="text-xs font-bold uppercase tracking-wider text-muted-foreground fill-current"
-                        >
-                            {node.label}
-                        </text>
-                    </g>
-                );
-            })}
-        </svg>
-    );
-};
 
 export const CountryDetailPage: React.FC = () => {
     const { code } = useParams<{ code: string }>();
     const [data, setData] = useState<{ country: Country; stats: CountryStats } | null>(null);
     const [articles, setArticles] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -217,9 +58,9 @@ export const CountryDetailPage: React.FC = () => {
     if (!data) {
         return (
             <Layout>
-                <div className="container py-12">
+                <div className="container py-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
                     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center text-muted-foreground">
-                        <Info className="mb-4 h-12 w-12 opacity-20" />
+                        <InfoCircledIcon className="mb-4 h-12 w-12 opacity-20" />
                         <h2 className="text-xl font-bold">Country Not Found</h2>
                         <p className="mb-6">We couldn't retrieve intelligence data for code: {code}</p>
                         <Button asChild>
@@ -233,42 +74,42 @@ export const CountryDetailPage: React.FC = () => {
 
     const { country, stats } = data;
 
-    const relationships = [
-        { id: 'cn', label: 'China', weight: 4, color: '#C70000' },
-        { id: 'us', label: 'USA', weight: 2, color: '#2563eb' },
-        { id: 'eu', label: 'EU', weight: 3, color: '#059669' },
-        { id: 'ru', label: 'Russia', weight: 1, color: '#7c3aed' },
-        { id: 'in', label: 'India', weight: 2, color: '#d97706' }
-    ];
-
-
-
-    // Mock details for relationship context (in production this would come from API)
-    const getRelationshipDetails = (id: string | null) => {
-        if (!id) return null;
-        const rels: Record<string, { title: string; desc: string }> = {
-            'cn': { title: 'Infrastructure Financing', desc: 'Major partner in railway and port development projects (BRI initiatives).' },
-            'us': { title: 'Security & Aide', desc: 'Key strategic ally in regional counter-terrorism and health funding.' },
-            'eu': { title: 'Trade Agreements', desc: 'Primary export market for agricultural goods under EPA terms.' },
-            'ru': { title: 'Energy Cooperation', desc: 'Emerging partner in nuclear energy discussions and grain imports.' },
-            'in': { title: 'Tech Transfer', desc: 'Growing collaboration in digital public infrastructure and pharmaceuticals.' }
-        };
-        return rels[id] || { title: 'Strategic Partnership', desc: 'Active diplomatic and economic cooperation channel.' };
-    };
-
-    const activeRel = getRelationshipDetails(selectedNode);
-
     return (
         <Layout>
-            {/* Hero Section: Country Situation Room */}
+            {/* Hero Section: Strategic Context */}
             <div className="bg-muted/10 border-b border-border">
                 <div className="container py-12">
-                    <div className="mb-4 flex items-center gap-2">
-                        <Link to="/countries" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                            Countries
-                        </Link>
-                        <span className="text-muted-foreground">/</span>
-                        <span className="text-sm font-medium text-foreground">{country.name}</span>
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8">
+                        <div>
+                            <div className="mb-4 flex items-center gap-2">
+                                <Link to="/countries" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                                    Countries
+                                </Link>
+                                <span className="text-muted-foreground">/</span>
+                                <span className="text-sm font-medium text-foreground">{country.name}</span>
+                            </div>
+                            <h1 className="text-5xl font-black tracking-tighter text-foreground">{country.name}</h1>
+                        </div>
+
+                        {/* Macro HUD */}
+                        <div className="flex gap-4 md:gap-8 bg-background border border-border p-4 rounded-xl shadow-sm">
+                            <div>
+                                <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Real GDP Growth</div>
+                                <div className="text-xl font-black text-green-600 flex items-center gap-1">
+                                    <ArrowTopRightIcon className="h-4 w-4" /> +3.4%
+                                </div>
+                            </div>
+                            <div className="w-px h-10 bg-border"></div>
+                            <div>
+                                <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Risk Rating</div>
+                                <div className="text-xl font-black text-foreground">B+ (Stable)</div>
+                            </div>
+                            <div className="w-px h-10 bg-border"></div>
+                            <div>
+                                <div className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider">Forex Volatility</div>
+                                <div className="text-xl font-black text-orange-500">Moderate</div>
+                            </div>
+                        </div>
                     </div>
 
                     <IntelligenceBriefing
@@ -283,121 +124,192 @@ export const CountryDetailPage: React.FC = () => {
 
             <div className="container py-12">
                 {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                {/* BENTO GRID COMMAND CENTER (UI Trend #1)                                         */}
+                {/* SECTOR OPPORTUNITIES (Strategic Context - PRIMARY FOCUS)                        */}
                 {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                <div className="mb-16 grid grid-cols-1 gap-4 md:grid-cols-4 md:auto-rows-[180px]">
-
-                    {/* A. Strategic Influence Map (Hero Block: 2x2) */}
-                    <Card className="md:col-span-2 md:row-span-2 relative overflow-hidden neo-brutalist border-primary/20 bg-muted/5 group">
-                        <div className="absolute left-4 top-4 z-10 flex items-center gap-2">
-                            <Badge variant="outline" className="bg-background/80 backdrop-blur font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                                Live Intelligence
-                            </Badge>
-                            <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                <section className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground mb-6">Sector Opportunities</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Mock Sector Opportunities */}
+                            {[
+                                { name: "Energy & Mining", slug: "energy-mining", status: "High Growth", trend: "Primary", growth: "+14%", desc: "New graphite reserves discovered in northern province." },
+                                { name: "Infrastructure", slug: "infrastructure", status: "Stable", trend: "Active", growth: "+5%", desc: "Port expansion project open for FDI bids." },
+                                { name: "Technology", slug: "technology", status: "Emerging", trend: "Focus", growth: "+22%", desc: "Fintech sandbox legislation passed." },
+                                { name: "Agriculture", slug: "agriculture", status: "Moderate", trend: "Stable", growth: "+3%", desc: "Export incentives for processed cashew." }
+                            ].map((sector, i) => (
+                                <Link key={i} to={`/market-intel/sectors/${sector.slug}`}>
+                                    <Card className="border-l-4 border-l-primary bg-card hover:bg-muted/5 transition-colors cursor-pointer group h-full shadow-sm">
+                                        <CardContent className="p-5">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <h3 className="font-bold text-foreground group-hover:text-primary transition-colors underline decoration-transparent group-hover:decoration-primary underline-offset-4">{sector.name}</h3>
+                                                <Badge variant="outline" className={cn("text-[10px] font-bold uppercase", sector.status === 'High Growth' ? 'bg-primary/5 text-primary border-primary/20' : 'bg-muted text-muted-foreground border-border')}>
+                                                    {sector.status}
+                                                </Badge>
+                                            </div>
+                                            <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-600">
+                                                <TrendingUp className="h-3 w-3" />
+                                                {sector.growth} <span className="text-muted-foreground font-medium">YoY Projection</span>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                                {sector.desc}
+                                            </p>
+                                            <div className="flex items-center justify-between text-xs font-medium">
+                                                <span className="text-muted-foreground">Market Status</span>
+                                                <span className="text-foreground font-bold">{sector.trend}</span>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                            ))}
                         </div>
-                        <InfluenceGraph
-                            countryName={country.name}
-                            relationships={relationships}
-                            selectedNodeId={selectedNode}
-                            onSelectNode={setSelectedNode}
-                        />
-                        <div className="absolute bottom-4 left-4 right-4 text-center">
-                            <p className="text-xs font-medium text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-                                Click nodes to analyze relationships
-                            </p>
-                        </div>
-                    </Card>
+                    </div>
 
-                    {/* B. Stability Score (Wide Block: 2x1) */}
-                    <Card className="md:col-span-2 neo-brutalist bg-card relative overflow-hidden flex flex-col justify-center p-6">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Stability Score</h3>
-                                <div className="flex items-baseline gap-2">
-                                    <span className="text-5xl font-black tracking-tighter text-foreground">{country.image_strength_score || 78}</span>
-                                    <span className="text-sm font-bold text-muted-foreground">/ 100</span>
+                    <div className="rounded-xl bg-card border border-border p-6 shadow-sm">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Info className="h-5 w-5 text-primary" /> Market Considerations
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Key narrative themes currently influencing market perception:
+                        </p>
+                        <div className="space-y-4">
+                            <div className="flex gap-3 items-start">
+                                <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
+                                <div>
+                                    <div className="text-sm font-bold text-foreground">Currency Fluctuation</div>
+                                    <p className="text-xs text-muted-foreground">Forex volatility expected pending IMF review.</p>
                                 </div>
                             </div>
-                            <div className={`h-12 w-12 rounded-full flex items-center justify-center border-2 ${(country.image_strength_score || 78) > 70 ? 'border-green-500 text-green-500' : 'border-yellow-500 text-yellow-500'
-                                }`}>
-                                <TrendingUp className="h-6 w-6" />
+                            <div className="flex gap-3 items-start">
+                                <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
+                                <div>
+                                    <div className="text-sm font-bold text-foreground">Rainy Season Logistics</div>
+                                    <p className="text-xs text-muted-foreground">Potential delays in northern corridor transport.</p>
+                                </div>
                             </div>
                         </div>
-                        <Progress
-                            value={country.image_strength_score || 78}
-                            className="mt-4 h-2"
-                            indicatorClassName={(country.image_strength_score || 78) > 70 ? "bg-green-500" : "bg-yellow-500"}
-                        />
-                    </Card>
+                        <Button variant="outline" className="w-full mt-6 border-primary/20 hover:bg-primary/5 text-primary font-bold uppercase text-xs tracking-wider">
+                            View Risk Analysis
+                        </Button>
+                    </div>
+                </section>
 
+                <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* C. GDP (Standard Block: 1x1) */}
-                    <Card className="md:col-span-1 neo-brutalist flex flex-col justify-center p-6 bg-card transition-colors hover:bg-muted/50">
+                    {/* C. GDP (Premium Block: 1x1 with Sparkline) */}
+                    <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
+                        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
                         <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                             <DollarSign className="h-4 w-4" /> GDP (USD)
                         </div>
-                        <div className="text-2xl font-black text-foreground">
+                        <div className="text-3xl font-black text-foreground tracking-tight">
                             ${(country.gdp_usd / 1000000000).toFixed(1)}B
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">Est. 2025</div>
+                        <div className="mt-3 flex items-center justify-between">
+                            <div className="text-xs font-bold text-muted-foreground">Est. 2025 Prediction</div>
+                            {/* CSS Sparkline */}
+                            <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M0 25 C20 25, 30 15, 50 15 S 80 5, 100 2" />
+                            </svg>
+                        </div>
                     </Card>
 
                     {/* D. Population (Standard Block: 1x1) */}
-                    <Card className="md:col-span-1 neo-brutalist flex flex-col justify-center p-6 bg-card transition-colors hover:bg-muted/50">
+                    <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
+                        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
                         <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
                             <Users className="h-4 w-4" /> Population
                         </div>
-                        <div className="text-2xl font-black text-foreground">
+                        <div className="text-3xl font-black text-foreground tracking-tight">
                             {(country.population / 1000000).toFixed(1)}M
                         </div>
-                        <div className="mt-1 text-xs text-green-600 font-bold flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" /> +2.4%
+                        <div className="mt-3 flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-xs font-bold text-primary">
+                                <Users className="h-3 w-3" /> Growth: +2.4%
+                            </div>
+                            {/* CSS Sparkline */}
+                            <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M0 28 L20 25 L40 22 L60 18 L80 12 L100 5" />
+                            </svg>
                         </div>
                     </Card>
 
-                    {/* E. Dynamic Context Area (Wide Block: 4xVariable) */}
-                    {/* Expands when a node is selected, functioning as the "Detail View" */}
-                    <Card className={cn(
-                        "md:col-span-4 neo-brutalist transition-all duration-500 overflow-hidden",
-                        selectedNode ? "bg-primary/5 border-primary/50 ring-1 ring-primary/20" : "bg-muted/5"
-                    )}>
-                        <CardContent className="p-6">
-                            <div className="flex flex-col md:flex-row gap-6 md:items-center">
-                                <div className="flex-1">
-                                    <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                        <Info className="h-4 w-4" />
-                                        {selectedNode ? 'Active Relationship Channel' : 'Strategic Context'}
-                                    </h3>
-
-                                    {selectedNode && activeRel ? (
-                                        <div className="animate-in fade-in slide-in-from-left-2 duration-300">
-                                            <h4 className="text-xl font-bold text-foreground mb-1">{activeRel.title}</h4>
-                                            <p className="text-muted-foreground">{activeRel.desc}</p>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            <h4 className="text-xl font-bold text-foreground mb-1">Regional Powerhouse</h4>
-                                            <p className="text-muted-foreground">
-                                                Select a node in the map above to view specific diplomatic and economic trade channels.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Quick Actions */}
-                                <div className="flex gap-3 border-t md:border-t-0 md:border-l border-border pt-4 md:pt-0 md:pl-6">
-                                    <Button variant="outline" className="flex-1 md:flex-none">View Trade Data</Button>
-                                    <Button className="flex-1 md:flex-none">Full Report</Button>
-                                </div>
+                    {/* E. FDI (New Density Metric) */}
+                    <Card className="col-span-1 md:col-span-2 relative overflow-hidden flex flex-col justify-center p-6 bg-primary/5 transition-all duration-300 hover:shadow-lg border border-primary/20 group">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                                <ArrowRight className="h-4 w-4" /> Foreign Direct Investment
                             </div>
-                        </CardContent>
+                            <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">Strong Inflow</Badge>
+                        </div>
+
+                        <div className="flex items-end gap-4">
+                            <div className="text-3xl font-black text-foreground tracking-tight">
+                                $2.8B <span className="text-lg font-bold text-muted-foreground">/ yr</span>
+                            </div>
+                            <div className="text-sm font-medium text-muted-foreground mb-1">
+                                Focusing on Energy & Infra
+                            </div>
+                        </div>
+                        {/* Abstract Projection Bar */}
+                        <div className="mt-4 flex gap-1 h-1.5 w-full">
+                            <div className="h-full w-[40%] bg-primary rounded-full opacity-40"></div>
+                            <div className="h-full w-[30%] bg-primary rounded-full opacity-60"></div>
+                            <div className="h-full w-[20%] bg-primary rounded-full opacity-80"></div>
+                            <div className="h-full w-[10%] bg-primary rounded-full"></div>
+                        </div>
                     </Card>
                 </div>
 
 
-                {/* Latest News */}
+                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
+                {/* BUSINESS TRAVEL RESOURCES (Booking Integration)                                  */}
+                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
+                <section className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="space-y-4">
+                            <h2 className="text-3xl font-bold tracking-tight text-foreground">Business Travel Resources</h2>
+                            <p className="text-lg text-muted-foreground leading-relaxed text-balance">
+                                For business travelers, we strictly recommend properties that guarantee high-speed connectivity, generator backups, and executive security standards.
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 p-6 flex gap-4">
+                            <div className="shrink-0 rounded-full bg-[#D4AF37]/20 p-2 text-[#D4AF37] h-fit">
+                                <Info className="w-5 h-5" />
+                            </div>
+                            <div className="space-y-1">
+                                <h4 className="font-bold text-sm text-primary uppercase tracking-widest">Logistics Advisory: {country.name}</h4>
+                                <p className="text-sm text-foreground/80">
+                                    "When visiting {country.name}, avoiding the morning traffic into the CBD is critical.
+                                    The properties listed here are strategically located to minimize commute times to major government ministries and financial districts."
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* List of recommended hotels (static for now) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {['Polana Serena', 'Radisson Blu', 'Southern Sun', 'Hotel Avenida'].map((hotel) => (
+                                <div key={hotel} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer group">
+                                    <div className="h-12 w-12 rounded bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">IMG</div>
+                                    <div>
+                                        <div className="font-bold">{hotel}</div>
+                                        <div className="text-xs text-muted-foreground group-hover:text-primary">View Rates &rarr;</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute -inset-1 bg-gradient-to-b from-primary/20 to-transparent blur-xl opacity-50" />
+                        <BookingWidget propertyName={`Top Hotel in ${country.name}`} />
+                    </div>
+                </section>
+
+                {/* Sector-Driven Editorial (Was News) */}
                 <section>
                     <div className="mb-8 flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
-                        <h2 className="text-3xl font-bold tracking-tight text-foreground">Latest from {country.name}</h2>
+                        <h2 className="text-3xl font-bold tracking-tight text-foreground">Sector-Driven Editorial</h2>
                         <div className="flex flex-wrap gap-2">
                             <Button variant="outline" asChild size="sm" className="border-primary text-primary hover:bg-primary/10">
                                 <Link to={`/market-intel/country/${country.code}`}>Investment Outlook</Link>
@@ -406,7 +318,7 @@ export const CountryDetailPage: React.FC = () => {
                                 <Link to={`/narratives/country/${country.code}`}>Narrative Strategy</Link>
                             </Button>
                             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                                <Link to={`/articles?country=${country.code}`}>View All News</Link>
+                                <Link to={`/articles?country=${country.code}`}>View All Intel</Link>
                             </Button>
                         </div>
                     </div>
@@ -419,7 +331,7 @@ export const CountryDetailPage: React.FC = () => {
                         ) : (
                             <div className="col-span-full flex flex-col items-center justify-center rounded-xl bg-muted/20 py-12 text-muted-foreground border border-dashed border-border">
                                 <Info className="h-10 w-10 mb-2 opacity-50" />
-                                <p>No recent articles found for {country.name}.</p>
+                                <p>No recent intelligence briefings for {country.name}.</p>
                             </div>
                         )}
                     </div>

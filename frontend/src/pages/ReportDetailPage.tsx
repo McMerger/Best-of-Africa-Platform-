@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Article, ArticleListItem } from '../types';
-import { Calendar, Clock, Download, Lock } from 'lucide-react';
+import { CalendarIcon, ClockIcon, DownloadIcon, LockClosedIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,7 +15,7 @@ export const ReportDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (id) {
-            setLoading(true);
+            // Loading is true by default, no need to set it here
             api.getReport(id)
                 .then(res => setData(res))
                 .catch(console.error)
@@ -41,10 +41,10 @@ export const ReportDetailPage: React.FC = () => {
 
                     <div className="mt-8 flex items-center gap-6 text-sm font-bold text-muted-foreground">
                         <span className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" /> {new Date(report.published_at).toLocaleDateString()}
+                            <CalendarIcon className="h-4 w-4" /> {new Date(report.published_at).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" /> {report.reading_time_minutes} min read
+                            <ClockIcon className="h-4 w-4" /> {report.reading_time_minutes} min read
                         </span>
                     </div>
                 </header>
@@ -55,7 +55,7 @@ export const ReportDetailPage: React.FC = () => {
                             <div dangerouslySetInnerHTML={{ __html: report.content.replace(/\n/g, '<br/>') }} />
                         ) : (
                             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/30 p-16 text-center">
-                                <Lock className="mb-4 h-12 w-12 text-primary opacity-50" />
+                                <LockClosedIcon className="mb-4 h-12 w-12 text-primary opacity-50" />
                                 <p className="mb-2 text-lg font-bold text-foreground">This is a premium restricted report.</p>
                                 <p className="text-muted-foreground">Please log in with an institutional account to view full findings.</p>
                             </div>
@@ -68,7 +68,7 @@ export const ReportDetailPage: React.FC = () => {
                                 className="mb-8 w-full font-bold h-auto py-4"
                                 onClick={() => alert('PDF download will be available soon. For now, you can print this page as PDF.')}
                             >
-                                <Download className="mr-2 h-5 w-5" /> Download PDF
+                                <DownloadIcon className="mr-2 h-5 w-5" /> Download PDF
                             </Button>
 
                             <Card className="border-border bg-muted/30">

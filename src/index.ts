@@ -18,6 +18,7 @@ import { intelligenceRouter } from './routes/intelligence';
 import { adminRouter } from './routes/admin';
 import { dashboardsRouter } from './routes/dashboards';
 import { narrativesRouter } from './routes/narratives';
+import { servicesRouter } from './routes/services';
 import { marketIntelRouter } from './routes/market-intel';
 import { personalizationRouter } from './routes/personalization';
 import { authRouter } from './routes/auth-router';
@@ -88,6 +89,7 @@ api.route('/admin', adminRouter);
 // Vision-aligned routes (narrative diplomacy & intelligence)
 api.route('/dashboards', dashboardsRouter);
 api.route('/narratives', narrativesRouter);
+api.route('/services', servicesRouter);
 api.route('/market-intel', marketIntelRouter);
 api.route('/personalization', personalizationRouter);
 api.route('/auth', authRouter);

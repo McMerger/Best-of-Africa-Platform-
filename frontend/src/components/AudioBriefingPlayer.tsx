@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume2, StopCircle } from "lucide-react";
+import { PlayIcon, PauseIcon, SpeakerLoudIcon, StopIcon } from '@radix-ui/react-icons';
 import { cn } from "@/lib/utils";
 
 interface AudioBriefingPlayerProps {
@@ -83,12 +83,12 @@ export const AudioBriefingPlayer: React.FC<AudioBriefingPlayerProps> = ({ text, 
                 className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={togglePlay}
             >
-                {isPlaying && !isPaused ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                {isPlaying && !isPaused ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4 ml-0.5" />}
             </Button>
 
             {isPlaying && (
                 <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={stopPlayback}>
-                    <StopCircle className="h-4 w-4" />
+                    <StopIcon className="h-4 w-4" />
                 </Button>
             )}
 
@@ -115,7 +115,7 @@ export const AudioBriefingPlayer: React.FC<AudioBriefingPlayerProps> = ({ text, 
             )}
 
             {(!isPlaying && !isPaused) && (
-                <Volume2 className="ml-2 h-4 w-4 text-muted-foreground opacity-50" />
+                <SpeakerLoudIcon className="ml-2 h-4 w-4 text-muted-foreground opacity-50" />
             )}
         </div>
     );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
-import { User, Bell, Shield, LogOut, CreditCard, Mail } from 'lucide-react';
+import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, CreditCardIcon, EnvelopeClosedIcon, LightningBoltIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,7 +50,7 @@ export const SettingsPage: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                        <User className="h-5 w-5" />
+                                        <PersonIcon className="h-5 w-5" />
                                     </div>
                                     <div>
                                         <CardTitle className="text-lg font-bold text-foreground">Profile Details</CardTitle>
@@ -115,7 +115,7 @@ export const SettingsPage: React.FC = () => {
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                    <Bell className="h-5 w-5" />
+                                    <BellIcon className="h-5 w-5" />
                                 </div>
                                 <div>
                                     <CardTitle className="text-lg font-bold text-foreground">Notifications</CardTitle>
@@ -125,9 +125,9 @@ export const SettingsPage: React.FC = () => {
                         </CardHeader>
                         <CardContent className="grid gap-4">
                             {[
-                                { key: 'email', label: 'Email Digest', desc: 'Daily summary of tracked markets.', icon: Mail },
-                                { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: Zap },
-                                { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: CreditCard },
+                                { key: 'email', label: 'Email Digest', desc: 'Daily summary of tracked markets.', icon: EnvelopeClosedIcon },
+                                { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: LightningBoltIcon },
+                                { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: CreditCardIcon },
                             ].map((item) => (
                                 <div key={item.key} className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">
@@ -153,7 +153,7 @@ export const SettingsPage: React.FC = () => {
                         <Card className="border-border shadow-sm">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
-                                    <Shield className="h-5 w-5 text-primary" />
+                                    <LockClosedIcon className="h-5 w-5 text-primary" />
                                     <CardTitle className="text-base font-bold text-foreground">Security</CardTitle>
                                 </div>
                             </CardHeader>
@@ -170,7 +170,7 @@ export const SettingsPage: React.FC = () => {
                         <Card className="border-destructive/20 bg-destructive/5 shadow-sm">
                             <CardHeader>
                                 <div className="flex items-center gap-2">
-                                    <LogOut className="h-5 w-5 text-destructive" />
+                                    <ExitIcon className="h-5 w-5 text-destructive" />
                                     <CardTitle className="text-base font-bold text-destructive">Session</CardTitle>
                                 </div>
                             </CardHeader>
@@ -188,22 +188,5 @@ export const SettingsPage: React.FC = () => {
     );
 };
 
-// Mock Icon for Zap
-function Zap(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-        </svg>
-    )
-}
+// Mock Icon removed
+

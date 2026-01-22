@@ -409,3 +409,71 @@ export interface ContentRefinementMessage {
     trigger_reason: ContentRefinement['trigger_reason'];
 }
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Corporate Services Models (Booking & Events)
+// ───────────────────────────────────────────────────────────────────────────────
+
+export interface BookingRequest {
+    id: string;
+    user_id: string | null;
+    guest_email: string | null;
+    guest_name: string | null;
+    guest_organization: string | null;
+    service_type: 'Hotel' | 'Flight' | 'Concierge' | 'Visa' | 'Security';
+    destination_country: string | null;
+    dates_json: string | null;
+    requirements: string | null;
+    budget_range: 'Standard' | 'Premium' | 'Luxury';
+    urgency: 'Normal' | 'Urgent' | 'Critical';
+    status: 'New' | 'Processing' | 'Confirmed' | 'Closed' | 'Cancelled';
+    assigned_to: string | null;
+    notes: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Event {
+    id: string;
+    title: string;
+    slug: string;
+    description: string | null;
+    event_type: 'Summit' | 'Forum' | 'Conference' | 'Roundtable' | 'Webinar';
+    date: string;
+    end_date: string | null;
+    location: string | null;
+    country_code: string | null;
+    venue_name: string | null;
+    capacity: number | null;
+    registration_deadline: string | null;
+    is_exclusive: boolean;
+    is_virtual: boolean;
+    virtual_link: string | null;
+    hero_image_url: string | null;
+    agenda_json: string | null;
+    speakers_json: string | null;
+    sponsors_json: string | null;
+    status: 'Upcoming' | 'Open' | 'Sold Out' | 'Completed' | 'Cancelled';
+    created_at: string;
+    updated_at: string;
+}
+
+export interface EventRegistration {
+    id: string;
+    event_id: string;
+    user_id: string | null;
+    user_email: string;
+    user_name: string | null;
+    user_organization: string | null;
+    user_title: string | null;
+    ticket_type: 'Standard' | 'VIP' | 'Executive' | 'Media' | 'Speaker';
+    dietary_requirements: string | null;
+    special_requests: string | null;
+    status: 'Pending' | 'Confirmed' | 'Waitlist' | 'Cancelled' | 'Attended';
+    payment_status: 'Unpaid' | 'Paid' | 'Refunded' | 'Complimentary';
+    confirmation_code: string | null;
+    registered_at: string;
+    confirmed_at: string | null;
+    checked_in_at: string | null;
+}
+
+

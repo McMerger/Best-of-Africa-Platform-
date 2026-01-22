@@ -255,6 +255,151 @@ router.get('/', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// GET /search/semantic - Dedicated semantic search endpoint (RAG)
+// As per BACKEND_INTEGRATION.md section 3.C
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/semantic', async (c) => {
+    const { q, limit = '10' } = c.req.query();
+
+    if (!q || q.length < 2) {
+        return c.json({
+            success: false,
+            error: 'bad_request',
+            message: 'Query must be at least 2 characters'
+        }, 400);
+    }
+
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+
+    // Track search event
+    c.executionCtx.waitUntil(
+        trackEvent(c.env, { type: 'search', search_query: q })
+    );
+
+    try {
+        // 1. Generate Embedding for User Query (bge-base-en-v1.5 on Workers AI)
+        const embeddingResponse = await (c.env.AI as any).run('@cf/baai/bge-base-en-v1.5', {
+            text: q,
+        });
+        const queryVector = (embeddingResponse as any).data[0];
+
+        // 2. Query Vectorize index for nearest article chunks
+        const vectorResults = await c.env.VECTORS.query(queryVector, {
+            topK: limitNum,
+            returnMetadata: 'all',
+        });
+
+        const articleIds = vectorResults.matches.map(m => m.id);
+
+        if (articleIds.length === 0) {
+            return c.json({
+                success: true,
+                results: [],
+                ai_summary: null,
+                query: q
+            });
+        }
+
+        // 3. Retrieve full article metadata from D1
+        const placeholders = articleIds.map(() => '?').join(',');
+        const articles = await c.env.DB.prepare(`
+            SELECT 
+                a.id, a.slug, a.title, a.summary, a.content,
+                a.country_code, c.name as country_name, c.flag_emoji,
+                a.sector_id, s.name as sector_name,
+                a.hero_image_url, a.reading_time_minutes, a.published_at
+            FROM articles a
+            LEFT JOIN countries c ON a.country_code = c.code
+            LEFT JOIN sectors s ON a.sector_id = s.id
+            WHERE a.id IN (${placeholders}) AND a.status = 'published'
+        `).bind(...articleIds).all();
+
+        // Sort by vector similarity
+        const scoreMap = new Map(vectorResults.matches.map(m => [m.id, m.score]));
+        const sorted = (articles.results || []).sort(
+            (a: any, b: any) => (scoreMap.get(b.id) || 0) - (scoreMap.get(a.id) || 0)
+        );
+
+        // 4. (Optional) Pass chunks to LLM for summary generation
+        let aiSummary: string | null = null;
+        const topResults = sorted.slice(0, 5);
+
+        if (topResults.length > 0) {
+            aiSummary = await getCached(
+                c.env,
+                CACHE_KEYS.searchAiSummary(q),
+                async () => {
+                    try {
+                        const contextChunks = topResults.map((item: any, i: number) => {
+                            const title = item.title || 'Untitled';
+                            const summary = item.summary || '';
+                            const country = item.country_name || 'Africa';
+                            return `[${i + 1}] "${title}" (${country}): ${summary.slice(0, 300)}`;
+                        }).join('\n\n');
+
+                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: `You are a concise African market intelligence analyst for Best of Africa. 
+                                    Synthesize the provided article excerpts into a 3-4 sentence executive brief.
+                                    Focus on investment implications, strategic opportunities, and key market dynamics.
+                                    Be direct, factual, and avoid generic statements.`
+                                },
+                                {
+                                    role: 'user',
+                                    content: `User Query: "${q}"\n\nRelevant Intelligence Briefs:\n${contextChunks}\n\nProvide a synthesis:`
+                                }
+                            ],
+                            max_tokens: 200
+                        });
+
+                        return aiResponse?.response || null;
+                    } catch (aiError) {
+                        console.error('RAG summary generation failed:', aiError);
+                        return null;
+                    }
+                },
+                { ttl: CACHE_TTL.DASHBOARD }
+            );
+        }
+
+        // Transform results
+        const results = sorted.map((article: any) => ({
+            id: article.id,
+            slug: article.slug,
+            title: article.title,
+            summary: article.summary,
+            country_code: article.country_code,
+            country_name: article.country_name,
+            flag_emoji: article.flag_emoji,
+            sector_id: article.sector_id,
+            sector_name: article.sector_name,
+            hero_image_url: article.hero_image_url,
+            reading_time_minutes: article.reading_time_minutes || 5,
+            published_at: article.published_at,
+            relevance_score: scoreMap.get(article.id) || 0,
+        }));
+
+        return c.json({
+            success: true,
+            results,
+            ai_summary: aiSummary,
+            query: q,
+            result_count: results.length,
+        });
+
+    } catch (error) {
+        console.error('Semantic search error:', error);
+        return c.json({
+            success: false,
+            error: 'search_error',
+            message: 'An error occurred during semantic search'
+        }, 500);
+    }
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
 // GET /search/similar/:id - Find similar articles
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/similar/:id', async (c) => {

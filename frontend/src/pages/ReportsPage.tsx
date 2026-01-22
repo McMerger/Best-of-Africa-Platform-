@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
-import { Lock, ChevronRight, Archive, Shield, Filter, Database } from 'lucide-react';
+import { LockClosedIcon, ChevronRightIcon, ArchiveIcon, StarFilledIcon, MixerHorizontalIcon, StackIcon } from '@radix-ui/react-icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useParams } from 'react-router-dom';
@@ -20,7 +20,7 @@ export const ReportsPage: React.FC = () => {
         : reports.filter(r => r.sector_name?.toLowerCase().includes(filterSector.toLowerCase()));
 
     useEffect(() => {
-        setLoading(true);
+        // Initial load is handled by default state
         const fetcher = sectorId ? api.getReportsBySector(sectorId) : api.getReports();
         fetcher
             .then(res => setReports(res.data))
@@ -52,7 +52,7 @@ export const ReportsPage: React.FC = () => {
                 <header className="mb-16 flex flex-col justify-between gap-8 border-b border-border pb-8 lg:flex-row lg:items-end">
                     <div>
                         <div className="mb-4 inline-flex items-center gap-2 rounded bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
-                            <Archive className="h-3 w-3" /> PREMIUM CONTENT
+                            <ArchiveIcon className="h-3 w-3" /> PREMIUM CONTENT
                         </div>
                         <h1 className="mb-4 text-5xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
                             Intelligence <span className="text-muted-foreground">Archive</span>
@@ -64,7 +64,7 @@ export const ReportsPage: React.FC = () => {
 
                     {/* Industrial Filter */}
                     <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-3">
-                        <Filter className="h-4 w-4 text-muted-foreground" />
+                        <MixerHorizontalIcon className="h-4 w-4 text-muted-foreground" />
                         <Select value={filterSector} onValueChange={setFilterSector}>
                             <SelectTrigger className="w-[200px] border-none bg-transparent text-sm font-bold text-foreground shadow-none focus:ring-0">
                                 <SelectValue placeholder="ALL CLASSIFICATIONS" />
@@ -95,7 +95,7 @@ export const ReportsPage: React.FC = () => {
                                         <div className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isLocked(i) ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
                                             {report.sector_name || 'General Intel'}
                                         </div>
-                                        {isLocked(i) ? <Lock className="h-5 w-5 text-muted-foreground" /> : <Shield className="h-5 w-5 text-primary" />}
+                                        {isLocked(i) ? <LockClosedIcon className="h-5 w-5 text-muted-foreground" /> : <StarFilledIcon className="h-5 w-5 text-primary" />}
                                     </div>
 
                                     <h3 className="mb-4 text-xl font-bold leading-tight text-foreground group-hover:text-primary">
@@ -106,13 +106,18 @@ export const ReportsPage: React.FC = () => {
                                     </p>
 
                                     <div className="flex items-center justify-between border-t border-border pt-6 text-xs font-bold text-primary">
-                                        <span className="flex items-center gap-2 text-muted-foreground">
-                                            <Database className="h-3 w-3" /> {new Date(report.published_at).toLocaleDateString()}
-                                        </span>
+                                        <div className="flex gap-4">
+                                            <span className="flex items-center gap-1.5 text-muted-foreground">
+                                                <StackIcon className="h-3 w-3 opacity-70" /> {new Date(report.published_at).toLocaleDateString()}
+                                            </span>
+                                            <span className="flex items-center gap-1.5 text-muted-foreground" title="High Impact Research">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span> 98% Relevance
+                                            </span>
+                                        </div>
                                         {isLocked(i) ? (
-                                            <span className="flex items-center gap-1 text-muted-foreground">LOCKED <Lock className="h-3 w-3" /></span>
+                                            <span className="flex items-center gap-1 text-muted-foreground">LOCKED <LockClosedIcon className="h-3 w-3" /></span>
                                         ) : (
-                                            <span className="flex items-center gap-1 group-hover:underline">ACCESS <ChevronRight className="h-3 w-3" /></span>
+                                            <span className="flex items-center gap-1 group-hover:underline">ACCESS <ChevronRightIcon className="h-3 w-3" /></span>
                                         )}
                                     </div>
                                 </CardContent>
@@ -123,7 +128,7 @@ export const ReportsPage: React.FC = () => {
                         </Link>
                     )) : (
                         <div className="col-span-full flex flex-col items-center justify-center rounded-2xl bg-muted/30 py-24 text-center border-2 border-dashed border-border">
-                            <Lock className="mb-6 h-12 w-12 text-muted-foreground/50" />
+                            <LockClosedIcon className="mb-6 h-12 w-12 text-muted-foreground/50" />
                             <h3 className="mb-2 text-lg font-bold text-foreground">No Reports Found</h3>
                             <p className="text-muted-foreground">No intelligence reports match your current clearance filters.</p>
                         </div>

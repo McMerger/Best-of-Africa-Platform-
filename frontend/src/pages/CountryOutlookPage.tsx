@@ -6,7 +6,7 @@ import type { Country } from '../types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Lock } from 'lucide-react';
+import { LockClosedIcon } from '@radix-ui/react-icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link } from 'react-router-dom';
 
@@ -154,7 +154,7 @@ export const CountryOutlookPage: React.FC = () => {
                         </div>
                         <Button asChild size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-bold border-none">
                             <Link to={`/market-intel/country/${country.code}/premium`}>
-                                <Lock className="mr-2 h-4 w-4" /> Unlock Full Report
+                                <LockClosedIcon className="mr-2 h-4 w-4" /> Unlock Full Report
                             </Link>
                         </Button>
                     </div>

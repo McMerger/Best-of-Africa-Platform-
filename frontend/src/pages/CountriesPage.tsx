@@ -39,7 +39,7 @@ export const CountriesPage: React.FC = () => {
                 <header className="mb-16 flex flex-col items-center justify-between gap-12 border-b border-border pb-12 lg:flex-row">
                     <div className="flex-1">
                         <div className="mb-4 flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-primary">
-                            <div className="h-2 w-2 animate-pulse rounded-full bg-primary"></div>
+                            <div className="h-2 w-2 rounded-full bg-primary/50"></div>
                             Geospatial Intelligence
                         </div>
                         <h1 className="mb-4 text-5xl font-black leading-none tracking-tighter text-foreground lg:text-6xl text-left">Continental Atlas</h1>

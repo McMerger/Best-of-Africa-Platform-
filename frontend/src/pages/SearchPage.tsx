@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { SearchResult } from '../types';
-import { Search as SearchIcon, Clock, Sparkles, FileText, ArrowRight, Database } from 'lucide-react';
+import { MagnifyingGlassIcon, ClockIcon, StarIcon, FileTextIcon, ArrowRightIcon, StackIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -64,7 +64,7 @@ export const SearchPage: React.FC = () => {
                 <Card className="mx-auto mb-16 max-w-3xl border-border shadow-xl overflow-visible">
                     <CardContent className="p-4">
                         <form onSubmit={handleSearch} className="relative flex items-center">
-                            <SearchIcon className="absolute left-4 h-6 w-6 text-muted-foreground" />
+                            <MagnifyingGlassIcon className="absolute left-4 h-6 w-6 text-muted-foreground" />
                             <Input
                                 type="text"
                                 value={searchInput}
@@ -82,7 +82,7 @@ export const SearchPage: React.FC = () => {
                                 className="w-full border-none bg-transparent py-6 pl-14 pr-4 text-xl font-medium placeholder:text-muted-foreground/50 focus-visible:ring-0 shadow-none h-auto"
                             />
                             <Button type="submit" size="lg" className="ml-2 font-bold">
-                                <Sparkles className="mr-2 h-4 w-4" /> Generate Brief
+                                <StarIcon className="mr-2 h-4 w-4" /> Generate Brief
                             </Button>
                         </form>
 
@@ -121,7 +121,7 @@ export const SearchPage: React.FC = () => {
                                 <main>
                                     <div className="mb-12">
                                         <h3 className="mb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
-                                            <Sparkles className="h-4 w-4" /> AI Summary
+                                            <StarIcon className="h-4 w-4" /> AI Summary
                                         </h3>
                                         <div className="text-lg leading-loose text-foreground">
                                             {aiSummary ? (
@@ -152,7 +152,7 @@ export const SearchPage: React.FC = () => {
 
                                     <div>
                                         <h3 className="mb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-muted-foreground">
-                                            <Database className="h-4 w-4" /> Source Material
+                                            <StackIcon className="h-4 w-4" /> Source Material
                                         </h3>
                                         <div className="space-y-6">
                                             {results.map((item, index) => (
@@ -176,7 +176,7 @@ export const SearchPage: React.FC = () => {
                                                     <p className="mb-4 text-sm leading-relaxed text-muted-foreground">{item.article.summary}</p>
                                                     <div className="flex justify-end border-t border-border pt-4">
                                                         <Link to={`/articles/${item.article.slug}`} className="flex items-center gap-1 text-xs font-bold text-primary hover:underline">
-                                                            View Full Report <ArrowRight className="h-3 w-3" />
+                                                            View Full Report <ArrowRightIcon className="h-3 w-3" />
                                                         </Link>
                                                     </div>
                                                 </div>
@@ -202,7 +202,7 @@ export const SearchPage: React.FC = () => {
                                         <Card className="border-border shadow-sm">
                                             <CardContent className="p-6">
                                                 <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                                    <Clock className="h-4 w-4" /> Timeline
+                                                    <ClockIcon className="h-4 w-4" /> Timeline
                                                 </h3>
                                                 <div className="space-y-4">
                                                     {[2024, 2025, 2026].map(year => (
@@ -220,7 +220,7 @@ export const SearchPage: React.FC = () => {
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center rounded-2xl bg-muted/20 py-24 text-center border border-dashed border-border">
-                                <FileText className="mb-6 h-12 w-12 text-muted-foreground" />
+                                <FileTextIcon className="mb-6 h-12 w-12 text-muted-foreground" />
                                 <h3 className="mb-2 text-xl font-bold text-foreground">No Relevancy Found</h3>
                                 <p className="max-w-md text-muted-foreground">
                                     The query returned no actionable intelligence. Try broadening your strategic parameters.

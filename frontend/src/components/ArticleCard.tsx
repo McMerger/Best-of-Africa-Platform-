@@ -1,24 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { ArticleListItem } from '../types';
-import { Clock } from 'lucide-react';
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolean }> = ({ article, featured }) => {
     return (
-        <Card className="flex h-full flex-col overflow-hidden transition-all hover:shadow-md">
-            <Link to={`/articles/${article.slug}`} className="relative block aspect-video w-full overflow-hidden">
-                <img
-                    src={article.hero_image_url || 'https://via.placeholder.com/800x400'}
-                    alt={article.title}
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                />
-            </Link>
+        <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/60 bg-card/50 backdrop-blur-sm">
+            <div className="hidden md:block w-1.5 bg-primary/10 shrink-0 group-hover:bg-primary transition-colors duration-300" />
             <CardContent className="flex flex-1 flex-col p-5">
                 <div className="mb-3 flex items-center justify-between">
                     <div className="flex gap-2 text-[11px] font-bold uppercase tracking-wider">
-                        <span className="text-destructive">{article.country_name || 'Africa'}</span>
+                        <span className="text-primary">{article.country_name || 'AFRICA'}</span>
                         <span className="text-muted-foreground">/</span>
                         <span className="text-primary">{article.sector_name || 'General'}</span>
                     </div>
@@ -29,22 +22,34 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                     )}
                 </div>
 
-                <h3 className={`mb-3 font-serif font-bold leading-tight tracking-tight text-foreground ${featured ? 'text-2xl' : 'text-lg'}`}>
+                <h3 className={`mb-3 font-bold leading-tight tracking-tight text-foreground ${featured ? 'text-xl' : 'text-lg'}`}>
                     <Link to={`/articles/${article.slug}`} className="hover:text-primary">
                         {article.title}
                     </Link>
                 </h3>
 
-                <p className={`mb-4 flex-1 text-sm leading-relaxed text-muted-foreground line-clamp-${featured ? '4' : '3'}`}>
+                <p className={`mb-4 flex-1 text-sm leading-relaxed text-muted-foreground`}>
                     {article.summary}
                 </p>
-            </CardContent>
-            <CardFooter className="border-t p-4 text-xs font-medium text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    <span>{article.reading_time_minutes} min read</span>
+
+                <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3">
+                    <div className="flex items-center gap-3">
+                        {/* Visual Sentiment Bar (Fake Data for Aesthetic) */}
+                        <div className="flex items-center gap-1.5" title="Market Sentiment: Positive">
+                            <div className="flex gap-0.5">
+                                <div className="h-2 w-1 rounded-sm bg-primary/80"></div>
+                                <div className="h-2 w-1 rounded-sm bg-primary/60"></div>
+                                <div className="h-2 w-1 rounded-sm bg-primary/40"></div>
+                                <div className="h-2 w-1 rounded-sm bg-muted"></div>
+                            </div>
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Signal Strength</span>
+                        </div>
+                    </div>
+                    <div className="text-[10px] font-medium text-muted-foreground">
+                        {Math.floor(article.title.length / 5)} min read
+                    </div>
                 </div>
-            </CardFooter>
+            </CardContent>
         </Card>
     );
 };

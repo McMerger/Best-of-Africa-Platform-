@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Country, ArticleListItem, Sector } from '../types';
-import { AlertTriangle, Lightbulb, Zap, Radio, Anchor, Target, ArrowRight } from 'lucide-react';
+import { LightningBoltIcon, TargetIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -68,7 +68,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                         {/* DISTORTION FIELD VISUALIZER */}
                         <section className="mb-16">
                             <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
-                                <Zap className="h-6 w-6 text-primary" /> Sentiment Divergence Analysis
+                                <LightningBoltIcon className="h-6 w-6 text-primary" /> Sentiment Divergence Analysis
                             </h2>
                             <div className="relative overflow-hidden rounded-xl bg-secondary p-8 text-secondary-foreground shadow-xl">
                                 <div className="mb-10 flex items-center justify-between">
@@ -87,7 +87,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                                 </div>
 
                                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
-                                    <Target className={`h-10 w-10 ${isUndervalued ? 'text-primary' : 'text-destructive'}`} />
+                                    <TargetIcon className={`h-10 w-10 ${isUndervalued ? 'text-primary' : 'text-destructive'}`} />
                                     <div>
                                         <div className="mb-1 text-lg font-bold">
                                             {isUndervalued ? 'Undervaluation Signal' : 'Market Overvaluation'}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { AlertTriangle } from 'lucide-react';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 
 export const NotFoundPage: React.FC = () => {
@@ -9,7 +9,7 @@ export const NotFoundPage: React.FC = () => {
         <Layout>
             <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
                 <div className="mb-6 rounded-full bg-destructive/10 p-6">
-                    <AlertTriangle className="h-16 w-16 text-destructive" />
+                    <ExclamationTriangleIcon className="h-16 w-16 text-destructive" />
                 </div>
                 <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter">404</h1>
                 <h2 className="mb-8 text-2xl font-bold text-muted-foreground uppercase tracking-wide">Page Not Found</h2>

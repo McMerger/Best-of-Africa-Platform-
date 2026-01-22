@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
-import { Eye, TrendingUp, TrendingDown, Globe, Users } from 'lucide-react';
+import { EyeOpenIcon, ArrowTopRightIcon, ArrowBottomRightIcon, GlobeIcon, PersonIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -61,9 +61,9 @@ export const AudienceInsightsPage: React.FC = () => {
                             <div className="text-5xl font-black text-secondary-foreground flex items-center justify-end gap-2">
                                 {reach?.reach_display || '2.4M'}
                                 {reach?.trend === 'up' ? (
-                                    <TrendingUp className="h-6 w-6 text-primary" />
+                                    <ArrowTopRightIcon className="h-6 w-6 text-primary" />
                                 ) : (
-                                    <TrendingDown className="h-6 w-6 text-destructive" />
+                                    <ArrowBottomRightIcon className="h-6 w-6 text-destructive" />
                                 )}
                             </div>
                         </div>
@@ -78,7 +78,7 @@ export const AudienceInsightsPage: React.FC = () => {
                     <Card className="border-border shadow-sm overflow-hidden">
                         <CardHeader className="bg-muted/30 border-b border-border flex flex-row items-center justify-between space-y-0 p-6">
                             <CardTitle className="text-base font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
-                                <Globe className="h-5 w-5 text-primary" /> Geographic Penetration
+                                <GlobeIcon className="h-5 w-5 text-primary" /> Geographic Penetration
                             </CardTitle>
                             <Badge variant="secondary" className="bg-primary text-primary-foreground hover:bg-primary/90">HIGH ACCURACY</Badge>
                         </CardHeader>
@@ -103,7 +103,7 @@ export const AudienceInsightsPage: React.FC = () => {
                     <Card className="border-border shadow-sm overflow-hidden h-full">
                         <CardHeader className="border-b border-border bg-muted/30 pb-4">
                             <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                                <Users className="h-4 w-4 text-primary" /> Target Demographics
+                                <PersonIcon className="h-4 w-4 text-primary" /> Target Demographics
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-8 space-y-4">
@@ -125,7 +125,7 @@ export const AudienceInsightsPage: React.FC = () => {
                     <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px', backgroundPosition: '-1px -1px' }}></div>
                     <div className="relative z-10">
                         <h3 className="mb-8 flex items-center gap-3 text-xl font-bold uppercase tracking-widest">
-                            <Eye className="h-6 w-6 text-primary" /> Engagement Topics (Active)
+                            <EyeOpenIcon className="h-6 w-6 text-primary" /> Engagement Topics (Active)
                         </h3>
                         <div className="flex flex-wrap gap-4">
                             {data.interests.map((topic, i) => (

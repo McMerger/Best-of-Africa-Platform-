@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { api } from '@/services/api';
-import { Search, Loader2, ArrowRight, Hash, Globe, FileText, Command } from 'lucide-react';
+import { MagnifyingGlassIcon, UpdateIcon, ArrowRightIcon, GridIcon, GlobeIcon, FileTextIcon } from '@radix-ui/react-icons';
 
 import { cn } from "@/lib/utils";
 
@@ -91,32 +91,52 @@ export const CommandMenu = () => {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="p-0 overflow-hidden max-w-2xl border-none shadow-2xl bg-zinc-950/90 backdrop-blur-xl text-zinc-50">
-                <div className="flex items-center border-b border-white/10 px-4 py-2">
-                    <Search className="mr-2 h-5 w-5 shrink-0 opacity-50" />
+            <DialogContent className="p-0 overflow-hidden max-w-2xl border-none shadow-2xl bg-background/95 backdrop-blur-xl text-foreground">
+                <div className="flex items-center border-b border-border px-4 py-2">
+                    <MagnifyingGlassIcon className="mr-2 h-5 w-5 shrink-0 opacity-50" />
                     <Input
-                        className="flex h-12 w-full rouned-md bg-transparent py-3 text-lg outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 shadow-none text-white"
+                        className="flex h-12 w-full rouned-md bg-transparent py-3 text-lg outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 shadow-none text-foreground"
                         placeholder="Search Intelligence... (Countries, Sectors, Reports)"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
                     />
-                    {loading && <Loader2 className="h-4 w-4 animate-spin opacity-50" />}
-                    {!loading && <div className="hidden sm:flex items-center gap-1 opacity-50 text-xs font-mono ml-2 border border-white/20 px-1.5 py-0.5 rounded">
-                        <span className="text-[10px]">ESC</span>
+                    {loading && <UpdateIcon className="h-4 w-4 animate-spin opacity-50" />}
+                    {!loading && <div className="hidden sm:flex items-center gap-1 opacity-50 text-xs ml-2 border border-border px-1.5 py-0.5 rounded bg-muted">
+                        <span className="text-[10px] font-bold">ESC</span>
                     </div>}
                 </div>
 
                 {/* Results List */}
                 <div className="max-h-[500px] overflow-y-auto p-2">
                     {results.length === 0 && query.length === 0 && (
-                        <div className="py-14 text-center text-sm text-muted-foreground">
-                            <Command className="mx-auto h-10 w-10 mb-4 opacity-20" />
-                            <p>Press <span className="font-mono text-xs bg-white/10 px-1 rounded">Cmd+K</span> to search anytime.</p>
-                            <div className="mt-8 flex justify-center gap-4 text-xs opacity-50">
-                                <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> Countries</span>
-                                <span className="flex items-center gap-1"><Hash className="h-3 w-3" /> Sectors</span>
-                                <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> Reports</span>
+                        <div className="py-8 px-4">
+                            <div className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                </span>
+                                Live Intelligence Signals
+                            </div>
+                            <div className="grid gap-2">
+                                {[
+                                    { label: "MOZAMBIQUE: LNG Export Delay Confirmed", type: "RISK", time: "2m ago" },
+                                    { label: "KENYA: Tech Visa Quota Increased", type: "OPPORTUNITY", time: "14m ago" },
+                                    { label: "NIGERIA: Central Bank Rate Decision", type: "EVENT", time: "1h ago" },
+                                ].map((signal, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-muted/40 cursor-default transition-all group">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border",
+                                                signal.type === 'RISK' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                    signal.type === 'OPPORTUNITY' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                                                        'bg-blue-500/10 text-blue-500 border-blue-500/20')}>
+                                                {signal.type}
+                                            </div>
+                                            <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{signal.label}</span>
+                                        </div>
+                                        <span className="text-[10px] text-muted-foreground font-mono">{signal.time}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -133,27 +153,27 @@ export const CommandMenu = () => {
                             onClick={() => handleSelect(item)}
                             className={cn(
                                 "relative flex cursor-default select-none items-center rounded-md px-4 py-3 text-sm outline-none transition-colors",
-                                index === selectedIndex ? "bg-white/10 text-white" : "text-zinc-400 hover:bg-white/5 hover:text-zinc-50"
+                                index === selectedIndex ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
                             )}
                         >
-                            <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/40">
-                                {item.type === 'country' && <Globe className="h-4 w-4 text-blue-400" />}
-                                {item.type === 'sector' && <Hash className="h-4 w-4 text-green-400" />}
-                                {item.type === 'article' && <FileText className="h-4 w-4 text-zinc-400" />}
+                            <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-primary/20 bg-primary/20 text-primary")}>
+                                {item.type === 'country' && <GlobeIcon className="h-4 w-4" />}
+                                {item.type === 'sector' && <GridIcon className="h-4 w-4" />}
+                                {item.type === 'article' && <FileTextIcon className="h-4 w-4" />}
                             </div>
                             <div className="flex-1">
-                                <div className="font-medium">{item.text}</div>
+                                <div className="font-bold">{item.text}</div>
                                 {item.type === 'country' && <div className="text-xs opacity-50">Country Intelligence</div>}
                                 {item.type === 'sector' && <div className="text-xs opacity-50">Market Sector</div>}
                             </div>
                             {index === selectedIndex && (
-                                <ArrowRight className="ml-auto h-4 w-4 opacity-50" />
+                                <ArrowRightIcon className="ml-auto h-4 w-4 opacity-50" />
                             )}
                         </div>
                     ))}
                 </div>
 
-                <div className="border-t border-white/5 bg-black/40 px-4 py-2 text-[10px] text-zinc-500 flex justify-between">
+                <div className="border-t border-border bg-muted/50 px-4 py-2 text-[10px] text-muted-foreground flex justify-between font-medium">
                     <span>Pro Mode Active</span>
                     <div className="flex gap-2">
                         <span>Select <kbd className="font-sans">↓↑</kbd></span>

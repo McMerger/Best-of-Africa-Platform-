@@ -6,6 +6,10 @@
 import type { Env, ContentGenerationMessage } from '../types';
 import { generateArticle as generateArticleContent, identifyCountry, identifySector } from '../lib/ai';
 import { indexArticle } from '../lib/vectorize';
+import { autoTranslateArticle } from '../lib/translate';
+import { onArticlePublished } from '../lib/alerts';
+import { autoPostArticle } from '../lib/social';
+
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Main Generation Function (Queue Consumer)
@@ -132,6 +136,53 @@ export async function generateArticleFromQueue(
     `).bind(articleId, message.ingested_item_id).run();
 
         console.log(`Successfully generated article: ${articleId} (${generated.title})`);
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // POST-PUBLISH AUTOMATION
+        // These run asynchronously to not block the queue
+        // ═══════════════════════════════════════════════════════════════════════
+
+        // 1. Auto-translate to relevant languages (French, Arabic, Portuguese)
+        try {
+            await autoTranslateArticle(env, articleId, {
+                title: generated.title,
+                subtitle: generated.subtitle,
+                summary: generated.summary,
+                content: generated.content,
+                country_code: countryCode,
+            });
+        } catch (err) {
+            console.error('Auto-translation failed:', err);
+        }
+
+        // 2. Broadcast real-time alert to connected WebSocket clients
+        try {
+            await onArticlePublished(env, {
+                id: articleId,
+                slug,
+                title: generated.title,
+                summary: generated.summary,
+                country_code: countryCode,
+                sector_id: sectorId,
+                hero_image_url: null,
+            });
+        } catch (err) {
+            console.error('Alert broadcast failed:', err);
+        }
+
+        // 3. Auto-post to social media (Twitter/X)
+        try {
+            await autoPostArticle(env, {
+                id: articleId,
+                title: generated.title,
+                summary: generated.summary,
+                country_code: countryCode,
+                sector_name: sectorName,
+                slug,
+            });
+        } catch (err) {
+            console.error('Social post failed:', err);
+        }
 
     } catch (error) {
         console.error('Article generation failed:', error);

@@ -4,12 +4,13 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Sector, ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
-import { Globe, Activity, Zap, Layers, ArrowRight } from 'lucide-react';
+import { GlobeIcon, LightningBoltIcon, StackIcon, ArrowRightIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import { getSectorIcon } from '@/lib/icons';
 
 interface SectorDetailData {
     sector: Sector;
@@ -23,21 +24,12 @@ export const SectorDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [data, setData] = useState<SectorDetailData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [analytics, setAnalytics] = useState<{
-        volatility_index: string;
-        supply_chain: { upstream: string; midstream: string; downstream: string };
-    } | null>(null);
 
     useEffect(() => {
         if (id) {
-            // setLoading(true); // Redundant if initial state is true
-            Promise.all([
-                api.getSector(id),
-                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/market-intel/sector/${id}/analytics`).then(r => r.ok ? r.json() : null)
-            ])
-                .then(([sectorRes, analyticsRes]) => {
+            api.getSector(id)
+                .then(sectorRes => {
                     setData(sectorRes);
-                    setAnalytics(analyticsRes);
                 })
                 .catch(console.error)
                 .finally(() => setLoading(false));
@@ -52,28 +44,50 @@ export const SectorDetailPage: React.FC = () => {
     return (
         <Layout>
             {/* Sector Profile Header */}
-            <header className="mb-12 border-b-4 border-primary bg-card py-16 text-card-foreground">
+            <header className="mb-12 border-b-4 border-primary bg-card py-16 text-card-foreground animate-in fade-in slide-in-from-bottom-8 duration-700">
                 <div className="container">
                     <div className="flex flex-col justify-between gap-8 md:flex-row md:items-start">
                         <div className="flex items-center gap-8">
-                            <div className="text-8xl drop-shadow-md animate-in zoom-in duration-500 text-primary">{sector.icon}</div>
+                            <div className="animate-in zoom-in duration-500 text-primary">
+                                {getSectorIcon(sector.id, "h-24 w-24 drop-shadow-md")}
+                            </div>
                             <div>
                                 <div className="mb-2 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-primary">
-                                    <Activity className="h-3 w-3" /> MONITORING
+                                    <StackIcon className="h-3 w-3" /> SECTOR OVERVIEW
                                 </div>
                                 <h1 className="mb-4 text-6xl font-black leading-none tracking-tighter text-foreground">{sector.name}</h1>
-                                <p className="max-w-xl text-xl font-mono leading-relaxed text-muted-foreground">
+                                <p className="max-w-xl text-xl font-medium leading-relaxed text-muted-foreground">
                                     {sector.description}
                                 </p>
                             </div>
                         </div>
-                        <div className="rounded-lg border border-border bg-background/50 p-6 backdrop-blur-sm">
-                            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">Volatility Index</div>
-                            <div className={cn("font-mono text-5xl font-black leading-none", analytics?.volatility_index === 'HIGH' ? 'text-destructive' : analytics?.volatility_index === 'MODERATE' ? 'text-secondary-foreground' : 'text-primary')}>
-                                {analytics?.volatility_index || 'HIGH'}
+                        {/* Sector Velocity Dashboard (HUD) */}
+                        <div className="rounded-xl border border-border bg-background/50 p-6 backdrop-blur-sm shadow-sm min-w-[320px]">
+                            <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
+                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sector Velocity</div>
+                                <div className="flex h-2 w-2 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </div>
                             </div>
-                            <div className={cn("mt-2 text-xs font-bold", analytics?.volatility_index === 'HIGH' ? 'text-destructive' : 'text-primary')}>
-                                {analytics?.volatility_index === 'HIGH' ? 'ACTION REQUIRED' : 'MONITORING'}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div className="text-[10px] font-bold text-muted-foreground uppercase">5-Year CAGR</div>
+                                    <div className="text-2xl font-black text-foreground">+12.8%</div>
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Deal Flow</div>
+                                    <div className="text-2xl font-black text-foreground">$4.2B</div>
+                                </div>
+                                <div className="col-span-2">
+                                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-1">
+                                        <span>Active Projects</span>
+                                        <span className="text-primary">84 Live</span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                                        <div className="h-full bg-primary w-[70%] rounded-full animate-pulse"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -81,34 +95,26 @@ export const SectorDetailPage: React.FC = () => {
             </header>
 
             <div className="container py-8">
-                {/* Critical Path Visualization (Supply Chain Logic) */}
-                <div className="mb-16">
-                    <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                        <Layers className="h-4 w-4" /> Supply Chain Monitor
-                    </h3>
-                    <div className="grid overflow-hidden rounded-lg bg-border gap-[1px] md:grid-cols-3">
-                        {/* Upstream */}
-                        <div className="bg-card p-8">
-                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Upstream (Raw Material)</div>
-                            <div className="mb-2 text-2xl font-black text-foreground">{analytics?.supply_chain?.upstream || 'Stable'}</div>
-                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.upstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.upstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
+                {/* Strategic Overview instead of Supply Chain (No Bloomberg) */}
+                <div className="mb-12">
+                    <h2 className="mb-8 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
+                        <StackIcon className="h-5 w-5 text-primary" /> Sector Overview
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100 fill-mode-both">
+                        <div className="relative overflow-hidden p-6 rounded-lg bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
+                            <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
+                            <h3 className="text-lg font-bold mb-2 text-primary">Investment Potential</h3>
+                            <p className="text-sm text-muted-foreground">High growth projected over the next 5 years driven by policy reforms.</p>
                         </div>
-                        {/* Midstream */}
-                        <div className="relative bg-card p-8">
-                            <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 bg-border hidden md:block"></div>
-                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Midstream (Processing)</div>
-                            <div className={cn("mb-2 text-2xl font-black", analytics?.supply_chain?.midstream === 'Stable' ? 'text-foreground' : 'text-secondary-foreground')}>
-                                {analytics?.supply_chain?.midstream || 'Strain'}
-                            </div>
-                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.midstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.midstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
+                        <div className="relative overflow-hidden p-6 rounded-lg bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
+                            <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
+                            <h3 className="text-lg font-bold mb-2 text-primary">Key Markets</h3>
+                            <p className="text-sm text-muted-foreground">Concentrated activity in East and Southern Africa.</p>
                         </div>
-                        {/* Downstream */}
-                        <div className="bg-card p-8">
-                            <div className="mb-2 text-xs font-bold uppercase text-muted-foreground">Downstream (Distribution)</div>
-                            <div className={cn("mb-2 text-2xl font-black", analytics?.supply_chain?.downstream === 'Blockage' ? 'text-destructive' : analytics?.supply_chain?.downstream === 'Strain' ? 'text-secondary-foreground' : 'text-foreground')}>
-                                {analytics?.supply_chain?.downstream || 'Blockage'}
-                            </div>
-                            <div className={cn("h-1.5 w-full rounded-full", analytics?.supply_chain?.downstream === 'Stable' ? 'bg-primary' : analytics?.supply_chain?.downstream === 'Strain' ? 'bg-secondary' : 'bg-destructive')}></div>
+                        <div className="relative overflow-hidden p-6 rounded-lg bg-card border border-border transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group">
+                            <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
+                            <h3 className="text-lg font-bold mb-2 text-primary">Risk Profile</h3>
+                            <p className="text-sm text-muted-foreground">Stable regulatory environment with incentives for new entrants.</p>
                         </div>
                     </div>
                 </div>
@@ -116,7 +122,7 @@ export const SectorDetailPage: React.FC = () => {
                 <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
                     <section>
                         <h2 className="mb-8 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
-                            <Zap className="h-5 w-5 text-primary" /> Live Intelligence Feed
+                            <Zap className="h-5 w-5 text-primary" /> Recent Sector Analysis
                         </h2>
                         <div className="grid gap-6">
                             {recent_articles.map(article => (
@@ -125,28 +131,67 @@ export const SectorDetailPage: React.FC = () => {
                         </div>
                     </section>
 
-                    <aside className="space-y-8">
+                    <aside className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-1000 delay-200 fill-mode-both">
                         {/* Regional Cluster (Heatmap) */}
-                        <Card className="border-border bg-card">
+                        <Card className="border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50">
                             <CardContent className="p-6">
                                 <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
                                     <Globe className="h-4 w-4" /> Regional Weighting
                                 </h3>
-                                <div className="space-y-4">
-                                    {by_region.map(r => (
-                                        <div key={r.name} className="flex items-center gap-4">
-                                            <div className="w-24 text-xs font-bold text-muted-foreground">{r.name}</div>
-                                            <Progress
-                                                value={Math.min(r.count * 2, 100)}
-                                                className="h-2"
-                                                indicatorClassName={r.count > 20 ? 'bg-primary' : 'bg-muted'}
-                                            />
-                                            <div className="text-xs font-black text-foreground">{r.count}</div>
+                                <div className="space-y-5">
+                                    {by_region.map((r, i) => (
+                                        <div key={r.name} className="flex flex-col gap-1">
+                                            <div className="flex justify-between text-xs mb-1">
+                                                <span className="font-bold text-muted-foreground">{r.name}</span>
+                                                <span className={cn("font-bold", i === 0 ? "text-green-500" : "text-muted-foreground")}>
+                                                    {i === 0 ? "▲ +12.4%" : "• Stable"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <Progress
+                                                    value={Math.min(r.count * 2, 100)}
+                                                    className="h-1.5 flex-1"
+                                                    indicatorClassName={r.count > 20 ? 'bg-primary' : 'bg-muted'}
+                                                />
+                                                <div className="w-8 text-right text-xs font-black text-foreground">{r.count}</div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </CardContent>
                         </Card>
+
+                        {/* Top Markets (Country Matrix) */}
+                        <Card className="border-border bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50">
+                            <CardContent className="p-6">
+                                <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                                    <Globe className="h-4 w-4" /> Top Markets
+                                </h3>
+                                {data.by_country && data.by_country.length > 0 ? (
+                                    data.by_country.map((c) => (
+                                        <Link key={c.code} to={`/countries/${c.code}`} className="flex items-center justify-between group p-2 -mx-2 rounded hover:bg-muted/50 transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-xl grayscale group-hover:grayscale-0 transition-all">{c.flag_emoji}</span>
+                                                <div>
+                                                    <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{c.name}</div>
+                                                    <div className="h-0.5 w-12 bg-primary/20 mt-1 rounded-full overflow-hidden">
+                                                        {/* Deterministic width based on name length to avoid Math.random() hydration errors */}
+                                                        <div className="h-full bg-primary" style={{ width: `${(c.name.length * 7) % 40 + 60}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs font-bold text-foreground">{c.count} Signals</div>
+                                                <div className="text-[10px] text-green-500 font-medium">High Activity</div>
+                                            </div>
+                                        </Link>
+                                    ))
+                                ) : (
+                                    <div className="text-sm text-muted-foreground italic">No market data available.</div>
+                                )}
+                            </CardContent>
+                        </Card>
+
 
                         <Card className="rounded-xl bg-card border border-border shadow-lg">
                             <CardContent className="p-6">

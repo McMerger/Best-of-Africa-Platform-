@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Article, ArticleListItem, Country, Sector } from '../types';
-import { Clock, Calendar, Share2, ArrowRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,134 +43,159 @@ export const ArticleDetailPage: React.FC = () => {
         <Layout>
             <div className="container py-12">
                 <div className="grid gap-12 lg:grid-cols-[2fr_350px]">
-                    <article>
-                        <header className="mb-8">
-                            <div className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-destructive">
-                                <Link to={`/countries/${country?.code}`} className="hover:text-destructive/80 hover:underline">{country?.name}</Link>
-                                <span className="text-muted-foreground">/</span>
-                                <Link to={`/market-intel/sectors/${sector?.id}`} className="text-primary hover:text-primary/80 hover:underline">{sector?.name}</Link>
+                    <article className="border border-border bg-card rounded-lg overflow-hidden shadow-sm">
+                        {/* Intelligence Briefing Header */}
+                        <div className="bg-muted/10 border-b border-border p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary rounded-none uppercase tracking-widest text-[10px] font-bold">
+                                    Sector Analysis
+                                </Badge>
+                                <span className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold">
+                                    {article.published_at ? new Date(article.published_at).toLocaleDateString() : 'Pending Release'}
+                                </span>
                             </div>
 
-                            <h1 className="mb-4 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">{article.title}</h1>
-                            <h2 className="mb-6 text-xl leading-relaxed text-muted-foreground font-normal">{article.subtitle}</h2>
+                            <h1 className="mb-4 text-3xl font-black uppercase tracking-tight text-foreground md:text-4xl">
+                                {article.title}
+                            </h1>
 
-                            <div className="flex items-center justify-between border-y border-border py-4">
-                                <div className="flex gap-6 text-sm font-medium text-muted-foreground">
-                                    <span className="flex items-center gap-2">
-                                        <Calendar className="h-4 w-4" /> {new Date(article.published_at).toLocaleDateString()}
-                                    </span>
-                                    <span className="flex items-center gap-2">
-                                        <Clock className="h-4 w-4" /> {article.reading_time_minutes} min read
-                                    </span>
+                            <div className="flex flex-col gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-4 mt-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <div className="text-[10px] opacity-70 uppercase tracking-wider mb-1">Sector Vertical</div>
+                                        <div className="text-foreground">{sector?.name || 'General'}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] opacity-70 uppercase tracking-wider mb-1">Key Market</div>
+                                        <div className="text-foreground">{country?.name || 'Pan-Africa'}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] opacity-70 uppercase tracking-wider mb-1">Classification</div>
+                                        <div className="text-primary">Strategic Analysis</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] opacity-70 uppercase tracking-wider mb-1">Clearance</div>
+                                        <div className="text-primary">Public</div>
+                                    </div>
                                 </div>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-primary hover:bg-primary/10 hover:text-primary font-bold"
-                                    onClick={() => {
-                                        if (navigator.share) {
-                                            navigator.share({ title: article.title, text: article.summary, url: window.location.href });
-                                        } else {
-                                            navigator.clipboard.writeText(window.location.href);
-                                            alert('Link copied to clipboard!');
-                                        }
-                                    }}
-                                >
-                                    <Share2 className="mr-2 h-4 w-4" /> Share Analysis
-                                </Button>
                             </div>
-                        </header>
-
-                        <img
-                            src={article.hero_image_url}
-                            alt={article.title}
-                            className="mb-10 aspect-video w-full rounded-lg object-cover shadow-md"
-                        />
-
-                        <div className="prose prose-lg prose-headings:font-bold prose-headings:text-foreground prose-a:text-primary max-w-none text-muted-foreground dark:prose-invert">
-                            {/* In real app, use ReactMarkdown */}
-                            <div dangerouslySetInnerHTML={{ __html: article.content.replace(/\n/g, '<br/>') }} />
                         </div>
 
-                        {article.tags && (
-                            <div className="mt-12 border-t border-border pt-6">
-                                <strong className="mr-3 text-sm text-muted-foreground">Topics: </strong>
-                                {article.tags.map(tag => (
-                                    <Link
-                                        to={`/search?q=${encodeURIComponent(tag)}`}
-                                        key={tag}
-                                        className="mb-2 mr-2 inline-block rounded-full border border-border bg-secondary px-3 py-1 text-xs font-semibold text-secondary-foreground transition-colors hover:border-primary/50 hover:text-primary"
-                                    >
-                                        #{tag}
-                                    </Link>
-                                ))}
+                        {/* Executive Summary - High Visibility Box */}
+                        <div className="bg-[#D4AF37]/10 border-l-4 border-[#D4AF37] p-8">
+                            <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                                Executive Summary
+                            </h3>
+                            <p className="text-lg font-bold leading-relaxed text-foreground">
+                                {article.summary}
+                            </p>
+                        </div>
+
+                        {/* Main Analysis Body */}
+                        <div className="p-8 leading-relaxed text-foreground">
+                            <div className="prose prose-lg prose-headings:font-bold prose-headings:font-sans prose-headings:uppercase prose-headings:tracking-tight prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary max-w-none dark:prose-invert">
+                                {/* In real app, use ReactMarkdown */}
+                                <div dangerouslySetInnerHTML={{ __html: article.content.replace(/\n/g, '<br/>') }} />
                             </div>
-                        )}
+                        </div>
                     </article>
 
                     <aside className="space-y-8 lg:sticky lg:top-24 lg:h-fit">
                         {/* Intelligence Sidebar */}
-                        <Card className="border-border bg-card">
-                            <CardContent className="p-6">
-                                <h3 className="mb-6 flex items-center gap-2 border-b border-primary pb-2 text-xs font-bold uppercase tracking-widest text-primary">
-                                    Context
-                                </h3>
-
-                                {country && (
-                                    <div className="mb-8">
-                                        <div className="mb-4 flex items-center gap-3">
-                                            <span className="text-3xl">{country.flag_emoji}</span>
-                                            <div>
-                                                <div className="font-bold text-foreground">{country.name}</div>
-                                                <div className="text-xs text-muted-foreground">Regional Hub</div>
-                                            </div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-3 mb-4">
-                                            <div className="rounded border border-border bg-background p-3">
-                                                <div className="mb-1 text-[10px] text-muted-foreground uppercase">GDP Growth</div>
-                                                <div className="font-bold text-primary">{economics?.gdp_growth || 'N/A'}</div>
-                                            </div>
-                                            <div className="rounded border border-border bg-background p-3">
-                                                <div className="mb-1 text-[10px] text-muted-foreground uppercase">Stability</div>
-                                                <div className="font-bold text-primary">{economics?.stability || 'N/A'}</div>
-                                            </div>
-                                        </div>
-                                        <Link to={`/countries/${country.code}`} className="flex items-center text-xs font-bold text-primary hover:text-primary/80 hover:underline">
-                                            View Country Dashboard <ArrowRight className="ml-1 h-3 w-3" />
-                                        </Link>
+                        {/* Intelligence Sidebar */}
+                        <div className="space-y-6">
+                            {/* Analyst Profile (New) */}
+                            <Card className="border-border bg-card">
+                                <CardContent className="p-6 flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                        JD
                                     </div>
-                                )}
-
-                                {sector && (
-                                    <div className="mb-8 border-t border-border pt-6">
-                                        <div className="mb-4 flex items-center gap-3">
-                                            <div className="text-2xl opacity-80">{sector.icon}</div>
-                                            <div>
-                                                <div className="font-bold text-foreground">{sector.name}</div>
-                                                <div className="text-xs text-muted-foreground">Sector Outlook</div>
-                                            </div>
-                                        </div>
-                                        <div className="mb-4 rounded bg-primary/10 p-4 text-center text-primary">
-                                            <div className="mb-1 text-[10px] opacity-70 uppercase">Market Sentiment</div>
-                                            <div className="text-lg font-bold">Bullish Trend</div>
-                                        </div>
-                                        <Link to={`/market-intel/sectors/${sector.id}`} className="flex items-center text-xs font-bold text-primary hover:text-primary/80 hover:underline">
-                                            View Sector Analysis <ArrowRight className="ml-1 h-3 w-3" />
-                                        </Link>
+                                    <div>
+                                        <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Lead Analyst</div>
+                                        <div className="font-bold text-foreground">J. Doe</div>
+                                        <div className="text-xs text-primary">Senior Sector Specialist</div>
                                     </div>
-                                )}
+                                </CardContent>
+                            </Card>
 
-                                <div className="rounded border border-primary/50 bg-primary/10 p-5 text-center shadow-sm">
-                                    <h4 className="mb-2 text-sm font-bold text-foreground">Need deeper data?</h4>
-                                    <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
-                                        Access full premium reports and raw datasets for this region.
-                                    </p>
-                                    <Button asChild className="w-full font-bold uppercase text-xs">
-                                        <Link to="/contact">Request Briefing</Link>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
+                            <Card className="border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/50">
+                                <CardContent className="p-6">
+                                    <h3 className="mb-6 flex items-center gap-2 border-b border-primary pb-2 text-xs font-bold uppercase tracking-widest text-primary">
+                                        Operational Context
+                                    </h3>
+
+                                    {/* Sentiment Signal (New) */}
+                                    <div className="mb-8 p-4 bg-muted/30 rounded border border-border">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold uppercase text-muted-foreground">Market Sentiment</span>
+                                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">BULLISH</Badge>
+                                        </div>
+                                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                            <div className="h-full bg-green-500 w-[75%]" />
+                                        </div>
+                                        <div className="flex justify-between mt-1 text-[10px] text-muted-foreground font-mono">
+                                            <span>Bearish</span>
+                                            <span>Neutral</span>
+                                            <span>Bullish</span>
+                                        </div>
+                                    </div>
+
+                                    {country && (
+                                        <div className="mb-8">
+                                            <div className="mb-4 flex items-center gap-3">
+                                                <span className="text-3xl">{country.flag_emoji}</span>
+                                                <div>
+                                                    <div className="font-bold text-foreground">{country.name}</div>
+                                                    <div className="text-xs text-muted-foreground">Regional Hub</div>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 mb-4">
+                                                <div className="rounded border border-border bg-background p-3">
+                                                    <div className="mb-1 text-[10px] text-muted-foreground uppercase">GDP Growth</div>
+                                                    <div className="font-bold text-primary">{economics?.gdp_growth || 'N/A'}</div>
+                                                </div>
+                                                <div className="rounded border border-border bg-background p-3">
+                                                    <div className="mb-1 text-[10px] text-muted-foreground uppercase">Stability</div>
+                                                    <div className="font-bold text-primary">{economics?.stability || 'N/A'}</div>
+                                                </div>
+                                            </div>
+                                            <Link to={`/countries/${country.code}`} className="flex items-center text-xs font-bold text-primary hover:text-primary/80 hover:underline">
+                                                View Country Dashboard <ArrowRight className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </div>
+                                    )}
+
+                                    {sector && (
+                                        <div className="mb-8 border-t border-border pt-6">
+                                            <div className="mb-4 flex items-center gap-3">
+                                                <div className="text-2xl opacity-80">{sector.icon}</div>
+                                                <div>
+                                                    <div className="font-bold text-foreground">{sector.name}</div>
+                                                    <div className="text-xs text-muted-foreground">Sector Outlook</div>
+                                                </div>
+                                            </div>
+                                            <div className="mb-4 rounded bg-primary/10 p-4 text-center text-primary">
+                                                <div className="mb-1 text-[10px] opacity-70 uppercase">Market Outlook</div>
+                                                <div className="text-lg font-bold">Positive</div>
+                                            </div>
+                                            <Link to={`/market-intel/sectors/${sector.id}`} className="flex items-center text-xs font-bold text-primary hover:text-primary/80 hover:underline">
+                                                View Sector Analysis <ArrowRight className="ml-1 h-3 w-3" />
+                                            </Link>
+                                        </div>
+                                    )}
+
+                                    <div className="rounded border border-primary/50 bg-primary/10 p-5 text-center shadow-sm">
+                                        <h4 className="mb-2 text-sm font-bold text-foreground">Need deeper data?</h4>
+                                        <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
+                                            Access full premium reports and raw datasets for this region.
+                                        </p>
+                                        <Button asChild className="w-full font-bold uppercase text-xs">
+                                            <Link to="/contact">Request Briefing</Link>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </aside>
                 </div>
 

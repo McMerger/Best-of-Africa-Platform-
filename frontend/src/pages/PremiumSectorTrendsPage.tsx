@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 // import { api } from '../services/api';
 import type { Sector } from '../types';
-import { TrendingUp, Clock, AlertTriangle, ArrowRight, BarChart2 } from 'lucide-react';
+import { ArrowTopRightIcon, ClockIcon, ExclamationTriangleIcon, ArrowRightIcon, BarChartIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,7 +54,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                 <header className="mb-12 border-b border-border py-16">
                     <div className="flex justify-between items-start">
                         <div>
-                            <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-[10px]">Sector Alpha</Badge>
+                            <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-[10px]">Investment Signal</Badge>
                             <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter leading-none">
                                 {sector.name} <span className="font-light text-muted-foreground">Outlook</span>
                             </h1>
@@ -82,7 +82,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                         <div className="mb-12 rounded-xl border border-border bg-card p-6 shadow-sm">
                             <div className="mb-6 flex items-center justify-between">
                                 <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                                    <BarChart2 className="h-4 w-4" /> Predictive Evaluation Model
+                                    <BarChartIcon className="h-4 w-4" /> Predictive Evaluation Model
                                 </h3>
                                 <div className="flex gap-2">
                                     <Tabs value={timeframe} onValueChange={(v) => setTimeframe(v as '6m' | '1y' | '3y')} className="w-[200px]">

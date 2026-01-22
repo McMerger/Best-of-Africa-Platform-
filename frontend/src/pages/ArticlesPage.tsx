@@ -6,7 +6,7 @@ import type { ArticleListItem } from '../types';
 import { ArticleCard } from '../components/ArticleCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 
 export const ArticlesPage: React.FC = () => {
     const [articles, setArticles] = useState<ArticleListItem[]>([]);
@@ -75,7 +75,7 @@ export const ArticlesPage: React.FC = () => {
                                     onClick={() => goToPage(currentPage - 1)}
                                     disabled={currentPage <= 1}
                                 >
-                                    <ChevronLeft className="mr-2 h-4 w-4" />
+                                    <ChevronLeftIcon className="mr-2 h-4 w-4" />
                                     Previous
                                 </Button>
                                 <span className="text-sm font-medium text-muted-foreground">
@@ -87,7 +87,7 @@ export const ArticlesPage: React.FC = () => {
                                     disabled={currentPage >= totalPages}
                                 >
                                     Next
-                                    <ChevronRight className="ml-2 h-4 w-4" />
+                                    <ChevronRightIcon className="ml-2 h-4 w-4" />
                                 </Button>
                             </div>
                         )}

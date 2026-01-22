@@ -1,0 +1,368 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// DIGEST WORKER
+// Generates and sends AI-powered email digests
+// Daily executive briefings and weekly sector roundups
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import type { Env } from '../types';
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Types
+// ───────────────────────────────────────────────────────────────────────────────
+interface DigestSubscription {
+    id: string;
+    email: string;
+    frequency: 'daily' | 'weekly';
+    regions: string[] | null;
+    sectors: string[] | null;
+    language: 'en' | 'fr' | 'ar' | 'pt';
+}
+
+interface DigestArticle {
+    id: string;
+    slug: string;
+    title: string;
+    summary: string;
+    country_name: string;
+    sector_name: string;
+    published_at: string;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Generate Daily Digest Content
+// ───────────────────────────────────────────────────────────────────────────────
+export async function generateDailyDigest(
+    env: Env,
+    subscription: DigestSubscription
+): Promise<{ subject: string; html: string; text: string }> {
+
+    // Get top articles from last 24 hours
+    let query = `
+        SELECT 
+            a.id, a.slug, a.title, a.summary,
+            c.name as country_name, s.name as sector_name,
+            a.published_at
+        FROM articles a
+        LEFT JOIN countries c ON a.country_code = c.code
+        LEFT JOIN sectors s ON a.sector_id = s.id
+        WHERE a.status = 'published'
+          AND a.published_at > datetime('now', '-1 day')
+    `;
+
+    // Filter by regions if specified
+    if (subscription.regions && subscription.regions.length > 0) {
+        const regionPlaceholders = subscription.regions.map(() => '?').join(',');
+        query += ` AND c.region IN (${regionPlaceholders})`;
+    }
+
+    // Filter by sectors if specified
+    if (subscription.sectors && subscription.sectors.length > 0) {
+        const sectorPlaceholders = subscription.sectors.map(() => '?').join(',');
+        query += ` AND a.sector_id IN (${sectorPlaceholders})`;
+    }
+
+    query += ` ORDER BY a.engagement_score DESC LIMIT 10`;
+
+    const bindings: string[] = [];
+    if (subscription.regions) bindings.push(...subscription.regions);
+    if (subscription.sectors) bindings.push(...subscription.sectors);
+
+    const articles = await env.DB.prepare(query).bind(...bindings).all<DigestArticle>();
+    const articleList = articles.results || [];
+
+    if (articleList.length === 0) {
+        return {
+            subject: 'No new articles today',
+            html: '<p>No new articles matching your preferences were published today.</p>',
+            text: 'No new articles matching your preferences were published today.',
+        };
+    }
+
+    // Generate AI summary of the day's news
+    let aiSummary = '';
+    try {
+        const briefContext = articleList.slice(0, 5).map((a, i) =>
+            `${i + 1}. "${a.title}" (${a.country_name}): ${a.summary?.slice(0, 150) || ''}`
+        ).join('\n');
+
+        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are an executive briefing writer for African market intelligence. Write a 3-4 sentence synthesis of today\'s top stories. Be direct and focus on investment/business implications.'
+                },
+                {
+                    role: 'user',
+                    content: `Summarize today's key developments:\n${briefContext}`
+                }
+            ],
+            max_tokens: 200
+        });
+
+        aiSummary = response?.response || '';
+    } catch (error) {
+        console.error('Failed to generate AI summary for digest:', error);
+    }
+
+    // Generate HTML email
+    const html = generateDigestHTML(articleList, aiSummary, 'daily');
+    const text = generateDigestText(articleList, aiSummary, 'daily');
+
+    return {
+        subject: `Africa Intelligence Daily: ${articleList.length} stories | ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        html,
+        text,
+    };
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Generate Weekly Digest Content
+// ───────────────────────────────────────────────────────────────────────────────
+export async function generateWeeklyDigest(
+    env: Env,
+    subscription: DigestSubscription
+): Promise<{ subject: string; html: string; text: string }> {
+
+    // Get top articles from last 7 days
+    const articles = await env.DB.prepare(`
+        SELECT 
+            a.id, a.slug, a.title, a.summary,
+            c.name as country_name, s.name as sector_name,
+            a.published_at
+        FROM articles a
+        LEFT JOIN countries c ON a.country_code = c.code
+        LEFT JOIN sectors s ON a.sector_id = s.id
+        WHERE a.status = 'published'
+          AND a.published_at > datetime('now', '-7 days')
+        ORDER BY a.engagement_score DESC
+        LIMIT 20
+    `).all<DigestArticle>();
+
+    const articleList = articles.results || [];
+
+    // Group by sector
+    const bySector: Record<string, DigestArticle[]> = {};
+    for (const article of articleList) {
+        const sector = article.sector_name || 'General';
+        if (!bySector[sector]) bySector[sector] = [];
+        bySector[sector].push(article);
+    }
+
+    // Generate AI weekly summary
+    let aiSummary = '';
+    try {
+        const sectorSummaries = Object.entries(bySector).map(([sector, arts]) =>
+            `${sector}: ${arts.length} articles, top story: "${arts[0].title}"`
+        ).join('\n');
+
+        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a strategic analyst writing a weekly Africa market briefing. Provide a 4-5 sentence overview of the week\'s key themes and what investors should watch.'
+                },
+                {
+                    role: 'user',
+                    content: `This week's coverage by sector:\n${sectorSummaries}`
+                }
+            ],
+            max_tokens: 250
+        });
+
+        aiSummary = response?.response || '';
+    } catch (error) {
+        console.error('Failed to generate AI summary for weekly digest:', error);
+    }
+
+    const html = generateWeeklyDigestHTML(bySector, aiSummary);
+    const text = generateDigestText(articleList, aiSummary, 'weekly');
+
+    return {
+        subject: `Africa Intelligence Weekly: Week of ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        html,
+        text,
+    };
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Send Digest Email (via Resend or Email Workers)
+// ───────────────────────────────────────────────────────────────────────────────
+export async function sendDigestEmail(
+    env: Env,
+    to: string,
+    subject: string,
+    html: string,
+    text: string
+): Promise<boolean> {
+    // Check for Resend API key
+    const resendKey = (env as any).RESEND_API_KEY;
+
+    if (resendKey) {
+        try {
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendKey}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: 'Best of Africa <digest@bestofafrica.com>',
+                    to: [to],
+                    subject,
+                    html,
+                    text,
+                }),
+            });
+
+            if (!response.ok) {
+                console.error('Resend API error:', await response.text());
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Failed to send email via Resend:', error);
+            return false;
+        }
+    }
+
+    // Fallback: Log the email (would be sent via Email Workers in production)
+    console.log(`[EMAIL] To: ${to}, Subject: ${subject}`);
+    return true;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Process All Subscriptions (Scheduled)
+// ───────────────────────────────────────────────────────────────────────────────
+export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): Promise<void> {
+    console.log(`Processing ${frequency} digests...`);
+
+    const subscriptions = await env.DB.prepare(`
+        SELECT id, email, frequency, regions, sectors, language
+        FROM digest_subscriptions
+        WHERE frequency = ? AND is_active = 1
+    `).bind(frequency).all<DigestSubscription>();
+
+    for (const sub of subscriptions.results || []) {
+        try {
+            const digest = frequency === 'daily'
+                ? await generateDailyDigest(env, sub)
+                : await generateWeeklyDigest(env, sub);
+
+            await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
+            console.log(`Sent ${frequency} digest to ${sub.email}`);
+        } catch (error) {
+            console.error(`Failed to send digest to ${sub.email}:`, error);
+        }
+    }
+
+    console.log(`Completed ${frequency} digest processing`);
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// HTML Templates
+// ───────────────────────────────────────────────────────────────────────────────
+function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: string): string {
+    const articleItems = articles.map(a => `
+        <tr>
+            <td style="padding: 16px 0; border-bottom: 1px solid #e5e5e5;">
+                <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                    ${a.title}
+                </a>
+                <div style="color: #666; font-size: 14px; margin-top: 4px;">
+                    ${a.country_name || 'Africa'} • ${a.sector_name || 'General'}
+                </div>
+                <p style="color: #333; margin: 8px 0 0 0; font-size: 14px;">
+                    ${a.summary?.slice(0, 150) || ''}...
+                </p>
+            </td>
+        </tr>
+    `).join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 24px; text-align: center;">
+            <h1 style="color: #d4af37; margin: 0; font-size: 24px;">Best of Africa</h1>
+            <p style="color: #fff; margin: 8px 0 0 0; opacity: 0.8;">${type === 'daily' ? 'Daily' : 'Weekly'} Intelligence Digest</p>
+        </div>
+        
+        ${aiSummary ? `
+        <div style="background: #f8f9fa; padding: 20px; border-left: 4px solid #d4af37;">
+            <h3 style="margin: 0 0 8px 0; color: #1a1a2e;">Executive Summary</h3>
+            <p style="margin: 0; color: #333; line-height: 1.6;">${aiSummary}</p>
+        </div>
+        ` : ''}
+        
+        <div style="padding: 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+                ${articleItems}
+            </table>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #666;">
+            <a href="https://bestofafrica.com" style="color: #0d6efd;">Visit Best of Africa</a> |
+            <a href="https://bestofafrica.com/unsubscribe" style="color: #0d6efd;">Unsubscribe</a>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+}
+
+function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiSummary: string): string {
+    const sectorSections = Object.entries(bySector).map(([sector, articles]) => `
+        <div style="margin: 20px 0;">
+            <h3 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 8px;">${sector}</h3>
+            ${articles.slice(0, 3).map(a => `
+                <div style="margin: 12px 0;">
+                    <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                        ${a.title}
+                    </a>
+                    <span style="color: #666; font-size: 12px;"> • ${a.country_name || 'Africa'}</span>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 24px; text-align: center;">
+            <h1 style="color: #d4af37; margin: 0;">Best of Africa Weekly</h1>
+        </div>
+        
+        ${aiSummary ? `
+        <div style="background: #f8f9fa; padding: 20px; border-left: 4px solid #d4af37;">
+            <h3 style="margin: 0 0 8px 0;">Week in Review</h3>
+            <p style="margin: 0; line-height: 1.6;">${aiSummary}</p>
+        </div>
+        ` : ''}
+        
+        <div style="padding: 20px;">
+            ${sectorSections}
+        </div>
+    </div>
+</body>
+</html>
+    `;
+}
+
+function generateDigestText(articles: DigestArticle[], aiSummary: string, type: string): string {
+    const header = `BEST OF AFRICA ${type.toUpperCase()} DIGEST\n${'='.repeat(40)}\n\n`;
+    const summary = aiSummary ? `EXECUTIVE SUMMARY:\n${aiSummary}\n\n` : '';
+    const articleList = articles.map((a, i) =>
+        `${i + 1}. ${a.title}\n   ${a.country_name || 'Africa'} | ${a.sector_name || 'General'}\n   ${a.summary?.slice(0, 100) || ''}...\n`
+    ).join('\n');
+
+    return header + summary + 'TOP STORIES:\n' + articleList;
+}
