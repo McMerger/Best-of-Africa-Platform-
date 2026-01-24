@@ -4,10 +4,13 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
-import type { Env, Variables, NarrativeStrategy } from '../types';
+import type { Env, Variables, NarrativeStrategy, Country } from '../types';
 import { requireAdmin } from '../lib/auth';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+import { processCountries } from './countries';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /narratives - List all active narrative strategies
@@ -95,19 +98,50 @@ router.get('/country/:code', async (c) => {
 
     const countryData = country as any;
 
+    // AI Narrative Synthesis (The "Story So Far")
+    const narrativeArc = await getCached(
+        c.env,
+        CACHE_KEYS.narrativeSynthesis(code),
+        async () => {
+            if (!articles.results || articles.results.length === 0) return "No narrative data available yet.";
+
+            const context = (articles.results as any[]).map(a => `- ${a.title} (Tone: ${a.tone})`).join('\n');
+
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-70b-instruct', {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a Strategic Communications Director. 
+                            Synthesize these headlines into a single, powerful "Narrative Arc" paragraph (3 sentences max).
+                            Explain the cohesive story forming around ${countryData.name}.`
+                        },
+                        { role: 'user', content: context }
+                    ]
+                });
+                return aiResponse?.response?.trim() || "Narrative synthesis unavailable.";
+            } catch (e) {
+                return "Narrative synthesis unavailable.";
+            }
+        },
+        { ttl: CACHE_TTL.DASHBOARD }
+    );
+
+    const gapAnalysis = "Gap analysis module pending update.";
+
     return c.json({
         country: {
             ...countryData,
-            key_narratives: countryData.key_narratives ? JSON.parse(countryData.key_narratives) : [],
-            investment_highlights: countryData.investment_highlights ? JSON.parse(countryData.investment_highlights) : [],
-            tourism_highlights: countryData.tourism_highlights ? JSON.parse(countryData.tourism_highlights) : [],
+            ...processCountries([country as unknown as Country])[0],
+            narrative_arc: narrativeArc // AI-Synthesized Story
         },
-        narratives: (narratives.results || []).map((n: any) => ({
+        active_strategies: (narratives.results || []).map((n: any) => ({
             ...n,
             key_messages: n.key_messages ? JSON.parse(n.key_messages) : [],
         })),
         aligned_articles: articles.results || [],
         sector_coverage: sectorCoverage.results || [],
+        ai_gap_analysis: gapAnalysis // The Refinement
     });
 });
 

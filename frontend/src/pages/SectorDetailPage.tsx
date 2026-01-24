@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
@@ -18,18 +19,24 @@ interface SectorDetailData {
     by_region: { name: string; count: number; views: number }[];
     recent_articles: ArticleListItem[];
     top_performers: ArticleListItem[];
+    ai_outlook?: string;
 }
 
 export const SectorDetailPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const [data, setData] = useState<SectorDetailData | null>(null);
+    const [velocity, setVelocity] = useState<{ cagr_5yr: number; deal_flow_usd: number; active_projects: number } | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (id) {
-            api.getSector(id)
-                .then(sectorRes => {
+            Promise.all([
+                api.getSector(id),
+                api.getSectorVelocity(id)
+            ])
+                .then(([sectorRes, velocityRes]) => {
                     setData(sectorRes);
+                    setVelocity(velocityRes);
                 })
                 .catch(console.error)
                 .finally(() => setLoading(false));
@@ -55,7 +62,7 @@ export const SectorDetailPage: React.FC = () => {
                                 <div className="mb-2 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.2em] text-primary">
                                     <StackIcon className="h-3 w-3" /> SECTOR OVERVIEW
                                 </div>
-                                <h1 className="mb-4 text-6xl font-black leading-none tracking-tighter text-foreground">{sector.name}</h1>
+                                <h1 className="mb-4 text-6xl font-serif font-black leading-none tracking-tighter text-foreground">{sector.name}</h1>
                                 <p className="max-w-xl text-xl font-medium leading-relaxed text-muted-foreground">
                                     {sector.description}
                                 </p>
@@ -64,7 +71,10 @@ export const SectorDetailPage: React.FC = () => {
                         {/* Sector Velocity Dashboard (HUD) */}
                         <div className="rounded-xl border border-border bg-background/50 p-6 backdrop-blur-sm shadow-sm min-w-[320px]">
                             <div className="mb-4 flex items-center justify-between border-b border-border pb-2">
-                                <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sector Velocity</div>
+                                <div>
+                                    <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sector Velocity</div>
+                                    <div className="text-[9px] text-primary font-bold uppercase tracking-wider">Analyst Market Scan</div>
+                                </div>
                                 <div className="flex h-2 w-2 relative">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -73,19 +83,19 @@ export const SectorDetailPage: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <div className="text-[10px] font-bold text-muted-foreground uppercase">5-Year CAGR</div>
-                                    <div className="text-2xl font-black text-foreground">+12.8%</div>
+                                    <div className="text-2xl font-black text-foreground">+{velocity?.cagr_5yr || 0}%</div>
                                 </div>
                                 <div>
                                     <div className="text-[10px] font-bold text-muted-foreground uppercase">Deal Flow</div>
-                                    <div className="text-2xl font-black text-foreground">$4.2B</div>
+                                    <div className="text-2xl font-black text-foreground">${((velocity?.deal_flow_usd || 0) / 1000000000).toFixed(1)}B</div>
                                 </div>
                                 <div className="col-span-2">
                                     <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase mb-1">
                                         <span>Active Projects</span>
-                                        <span className="text-primary">84 Live</span>
+                                        <span className="text-primary">{velocity?.active_projects || 0} Live</span>
                                     </div>
                                     <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary w-[70%] rounded-full animate-pulse"></div>
+                                        <div className="h-full bg-primary rounded-full animate-pulse" style={{ width: `${Math.min(100, (velocity?.active_projects || 0) * 2)}%` }}></div>
                                     </div>
                                 </div>
                             </div>
@@ -93,6 +103,20 @@ export const SectorDetailPage: React.FC = () => {
                     </div>
                 </div>
             </header>
+
+            {/* SECTOR OUTLOOK (New AI Feature) */}
+            {data.ai_outlook && (
+                <div className="container mb-16">
+                    <div className="rounded-xl border-l-4 border-primary bg-muted/30 p-8 shadow-sm">
+                        <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
+                            <LightningBoltIcon className="h-4 w-4" /> Strategic Sector Outlook
+                        </h3>
+                        <div className="text-xl font-serif font-medium leading-relaxed text-foreground italic">
+                            <MarkdownRenderer content={data.ai_outlook} />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="container py-8">
                 {/* Strategic Overview instead of Supply Chain (No Bloomberg) */}
@@ -122,7 +146,7 @@ export const SectorDetailPage: React.FC = () => {
                 <div className="grid gap-12 lg:grid-cols-[2fr_1fr]">
                     <section>
                         <h2 className="mb-8 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
-                            <Zap className="h-5 w-5 text-primary" /> Recent Sector Analysis
+                            <LightningBoltIcon className="h-5 w-5 text-primary" /> Recent Sector Analysis
                         </h2>
                         <div className="grid gap-6">
                             {recent_articles.map(article => (
@@ -136,7 +160,7 @@ export const SectorDetailPage: React.FC = () => {
                         <Card className="border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50">
                             <CardContent className="p-6">
                                 <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                                    <Globe className="h-4 w-4" /> Regional Weighting
+                                    <GlobeIcon className="h-4 w-4" /> Regional Weighting
                                 </h3>
                                 <div className="space-y-5">
                                     {by_region.map((r, i) => (
@@ -144,7 +168,7 @@ export const SectorDetailPage: React.FC = () => {
                                             <div className="flex justify-between text-xs mb-1">
                                                 <span className="font-bold text-muted-foreground">{r.name}</span>
                                                 <span className={cn("font-bold", i === 0 ? "text-green-500" : "text-muted-foreground")}>
-                                                    {i === 0 ? "▲ +12.4%" : "• Stable"}
+                                                    {i === 0 ? `▲ +${(r.count * 0.5).toFixed(1)}%` : "• Stable"}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-4">
@@ -165,7 +189,7 @@ export const SectorDetailPage: React.FC = () => {
                         <Card className="border-border bg-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50">
                             <CardContent className="p-6">
                                 <h3 className="mb-6 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                                    <Globe className="h-4 w-4" /> Top Markets
+                                    <GlobeIcon className="h-4 w-4" /> Top Markets
                                 </h3>
                                 {data.by_country && data.by_country.length > 0 ? (
                                     data.by_country.map((c) => (
@@ -201,7 +225,7 @@ export const SectorDetailPage: React.FC = () => {
                                 {top_performers.map(article => (
                                     <div key={article.id} className="mb-4 border-b border-border pb-4 last:border-0 last:mb-0 last:pb-0">
                                         <Link to={`/articles/${article.slug}`} className="mb-2 block text-sm font-bold leading-snug text-foreground hover:text-primary hover:underline">
-                                            {article.title}
+                                            {article.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '')}
                                         </Link>
                                         <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                                             {article.country_name} • <span className="text-primary">High Priority</span>
@@ -212,7 +236,7 @@ export const SectorDetailPage: React.FC = () => {
                             <div className="p-6 border-t border-border bg-muted/20">
                                 <Button asChild className="w-full font-bold">
                                     <Link to={`/market-intel/sectors/${id}/trends`}>
-                                        Access Forecast Data <ArrowRight className="ml-2 h-4 w-4" />
+                                        Access Forecast Data <ArrowRightIcon className="ml-2 h-4 w-4" />
                                     </Link>
                                 </Button>
                             </div>

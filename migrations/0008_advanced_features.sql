@@ -6,20 +6,20 @@
 -- Sentiment tracking on articles
 -- ───────────────────────────────────────────────────────────────────────────────
 ALTER TABLE articles
-ADD COLUMN IF NOT EXISTS sentiment_score TEXT;
+ADD COLUMN sentiment_score TEXT;
 -- 'positive', 'neutral', 'negative'
 ALTER TABLE articles
-ADD COLUMN IF NOT EXISTS sentiment_confidence REAL;
+ADD COLUMN sentiment_confidence REAL;
 ALTER TABLE articles
-ADD COLUMN IF NOT EXISTS sentiment_signals TEXT;
+ADD COLUMN sentiment_signals TEXT;
 -- JSON
 -- ───────────────────────────────────────────────────────────────────────────────
 -- Audio narration tracking
 -- ───────────────────────────────────────────────────────────────────────────────
 ALTER TABLE articles
-ADD COLUMN IF NOT EXISTS audio_url TEXT;
+ADD COLUMN audio_url TEXT;
 ALTER TABLE articles
-ADD COLUMN IF NOT EXISTS audio_duration_seconds INTEGER;
+ADD COLUMN audio_duration_seconds INTEGER;
 -- ───────────────────────────────────────────────────────────────────────────────
 -- Usage tracking for tier limits
 -- ───────────────────────────────────────────────────────────────────────────────
@@ -97,9 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_reports_type ON generated_reports(type, created_a
 -- User subscription tiers
 -- ───────────────────────────────────────────────────────────────────────────────
 ALTER TABLE clients
-ADD COLUMN IF NOT EXISTS subscription_tier TEXT DEFAULT 'free';
+ADD COLUMN subscription_tier TEXT DEFAULT 'free';
 ALTER TABLE clients
-ADD COLUMN IF NOT EXISTS subscription_expires_at DATETIME;
+ADD COLUMN subscription_expires_at DATETIME;
 -- ───────────────────────────────────────────────────────────────────────────────
 -- Trend snapshots
 -- ───────────────────────────────────────────────────────────────────────────────

@@ -67,6 +67,8 @@ export interface Country {
     hero_image_url: string | null;
     diplomacy_score: number | null;
     image_strength_score: number | null;
+    fdi_inflow_usd: number | null;
+    fdi_yoy_growth: number | null;
     created_at: string;
     updated_at: string;
 }

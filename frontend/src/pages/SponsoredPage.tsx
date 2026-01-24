@@ -29,7 +29,7 @@ export const SponsoredPage: React.FC = () => {
                     <div className="mb-6 inline-flex items-center rounded-md bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
                         Partnership Division
                     </div>
-                    <h1 className="mb-6 text-5xl font-black leading-none tracking-tighter text-foreground md:text-7xl">
+                    <h1 className="mb-6 text-5xl font-serif font-black leading-none tracking-tighter text-foreground md:text-7xl">
                         Strategic <span className="text-primary">Alignment</span>
                     </h1>
                     <p className="max-w-3xl text-xl leading-relaxed text-muted-foreground">
@@ -40,7 +40,7 @@ export const SponsoredPage: React.FC = () => {
                 <div className="grid gap-16 lg:grid-cols-[1.5fr_1fr]">
                     <div className="space-y-12">
                         <div>
-                            <h2 className="mb-8 flex items-center gap-3 text-2xl font-bold tracking-tight text-foreground">
+                            <h2 className="mb-8 flex items-center gap-3 text-2xl font-serif font-bold tracking-tight text-foreground">
                                 <TargetIcon className="h-6 w-6 text-primary" /> Engagement Vectors
                             </h2>
 

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Country, ArticleListItem, Sector } from '../types';
-import { LightningBoltIcon, TargetIcon } from '@radix-ui/react-icons';
+import { LightningBoltIcon, TargetIcon, ExclamationTriangleIcon, SpeakerLoudIcon, Link2Icon, ArrowRightIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -52,7 +52,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-[10px]">Intelligence Report</Badge>
-                            <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter leading-none">
+                            <h1 className="mb-4 text-6xl font-serif font-black text-foreground tracking-tighter leading-none">
                                 {country.name} <span className="font-light text-muted-foreground">Pulse</span>
                             </h1>
                             <p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
@@ -102,9 +102,9 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                         </section>
 
                         <section className="mb-16">
-                            <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
-                                <Lightbulb className="h-6 w-6 text-primary" /> Strategic Recommendations
-                            </h2>
+                            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
+                                <Link2Icon className="h-4 w-4" /> Recommendation Engine
+                            </h3>
                             <div className="space-y-6">
                                 {recommendations.map((rec, i) => (
                                     <Card key={i} className="border-border transition-all hover:shadow-md hover:-translate-y-1">
@@ -124,12 +124,12 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
 
                         <section>
                             <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
-                                <AlertTriangle className="h-6 w-6 text-destructive" /> Coverage Gaps
+                                <ExclamationTriangleIcon className="h-6 w-6 text-destructive" /> Coverage Gaps
                             </h2>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 {narrative_gaps.map((gap, i) => (
                                     <Alert key={i} variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
-                                        <Radio className="h-4 w-4" />
+                                        <SpeakerLoudIcon className="h-4 w-4" />
                                         <AlertTitle className="text-xs font-bold uppercase tracking-wider mb-2">Coverage Gap</AlertTitle>
                                         <AlertDescription className="text-sm font-semibold">
                                             "{gap}" coverage is critically low.
@@ -145,7 +145,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                             <Card className="border-border shadow-sm">
                                 <CardHeader className="bg-muted/10 border-b border-border pb-4">
                                     <CardTitle className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                        <Anchor className="h-4 w-4" /> Asset Classes
+                                        <Link2Icon className="h-4 w-4" /> Asset Classes
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-6 space-y-4">
@@ -168,10 +168,10 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                                 <div className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Cross-Reference</div>
                                 <div className="space-y-3">
                                     <Link to={`/market-intel/country/${country.code}`} className="flex items-center justify-between rounded-lg bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
-                                        Investment Data <ArrowRight className="h-4 w-4" />
+                                        Investment Data <ArrowRightIcon className="h-4 w-4" />
                                     </Link>
                                     <Link to={`/narratives/country/${country.code}`} className="flex items-center justify-between rounded-lg bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
-                                        Narrative Strategy <ArrowRight className="h-4 w-4" />
+                                        Narrative Strategy <ArrowRightIcon className="h-4 w-4" />
                                     </Link>
                                 </div>
                             </div>

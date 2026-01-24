@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import type { Country, ArticleListItem } from '../types';
-import { TargetIcon, ChatBubbleIcon, BarChartIcon, CheckCircledIcon, ArrowRightIcon, StackIcon } from '@radix-ui/react-icons';
+import { TargetIcon, ChatBubbleIcon, BarChartIcon, CheckCircledIcon, ArrowRightIcon, StackIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -23,6 +23,7 @@ interface NarrativeData {
     }[];
     aligned_articles: ArticleListItem[];
     sector_coverage: { id: string; name: string; article_count: number; }[];
+    ai_gap_analysis?: string;
 }
 
 export const CountryNarrativePage: React.FC = () => {
@@ -58,7 +59,7 @@ export const CountryNarrativePage: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary/90 uppercase tracking-widest text-[10px]">Strategic Communications</Badge>
-                            <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter leading-none">
+                            <h1 className="mb-4 text-6xl font-serif font-black text-foreground tracking-tighter leading-none">
                                 {country.name} <span className="font-light text-muted-foreground">Framework</span>
                             </h1>
                             <p className="max-w-2xl text-lg text-muted-foreground leading-relaxed">
@@ -71,6 +72,27 @@ export const CountryNarrativePage: React.FC = () => {
 
                 <div className="grid lg:grid-cols-[2fr_1fr] gap-16">
                     <main>
+                        {/* GAP ANALYSIS (New AI Feature) */}
+                        {data.ai_gap_analysis && (
+                            <section className="mb-16">
+                                <h2 className="mb-6 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
+                                    <ExclamationTriangleIcon className="h-6 w-6 text-yellow-600" /> Strategic Alignment Gap
+                                </h2>
+                                <Card className="border-l-4 border-yellow-500 bg-yellow-500/5 shadow-sm">
+                                    <CardContent className="p-8">
+                                        <div className="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Framework vs. Reality Analysis</div>
+                                        <p className="text-lg font-medium leading-relaxed text-foreground italic">
+                                            "{data.ai_gap_analysis}"
+                                        </p>
+                                        <div className="mt-4 flex items-center gap-2 text-xs font-bold text-yellow-700">
+                                            <span className="h-2 w-2 rounded-full bg-yellow-600 animate-pulse"></span>
+                                            Active Narrative Risk
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </section>
+                        )}
+
                         {/* STRATEGIC PILLARS */}
                         <section className="mb-16">
                             <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
@@ -107,7 +129,7 @@ export const CountryNarrativePage: React.FC = () => {
                         {/* SIGNAL VERIFICATION */}
                         <section>
                             <h2 className="mb-8 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">
-                                <ShieldCheck className="h-6 w-6 text-primary" /> Media Alignment
+                                <CheckCircledIcon className="h-6 w-6 text-primary" /> Media Alignment
                             </h2>
                             <div className="grid gap-4">
                                 {aligned_articles.map(article => (
@@ -118,13 +140,13 @@ export const CountryNarrativePage: React.FC = () => {
                                     >
                                         <div className="flex gap-6 items-center">
                                             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                                <CheckCircle2 className="h-6 w-6" />
+                                                <CheckCircledIcon className="h-6 w-6" />
                                             </div>
                                             <div className="flex-1">
                                                 <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">Verified Alignment</div>
                                                 <h4 className="text-lg font-bold text-foreground group-hover:text-primary">{article.title}</h4>
                                             </div>
-                                            <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
+                                            <ArrowRightIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                                         </div>
                                     </Link>
                                 ))}
@@ -137,22 +159,22 @@ export const CountryNarrativePage: React.FC = () => {
                             <Card className="border-border shadow-sm">
                                 <CardContent className="p-8">
                                     <div className="mb-4 flex items-center gap-2 text-muted-foreground">
-                                        <MessageSquare className="h-5 w-5" />
+                                        <ChatBubbleIcon className="h-5 w-5" />
                                         <h3 className="text-xs font-bold uppercase tracking-widest">Narrative Index</h3>
                                     </div>
                                     <div className="flex items-baseline gap-2 mb-4">
-                                        <span className="text-7xl font-black text-primary leading-none">{narrativeIndex?.narrative_index || 78}</span>
+                                        <span className="text-7xl font-black text-primary leading-none">{narrativeIndex ? narrativeIndex.narrative_index : '--'}</span>
                                         <span className="text-xl font-light text-muted-foreground">/100</span>
                                     </div>
                                     <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                                        {narrativeIndex?.assessment || 'Strong alignment with global investment themes.'}
+                                        {narrativeIndex?.assessment || 'Calculating narrative alignment...'}
                                     </p>
                                 </CardContent>
                             </Card>
 
                             <div className="rounded-xl border border-border bg-muted/20 p-8">
                                 <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                    <BarChart2 className="h-4 w-4" /> Sector Weighting
+                                    <BarChartIcon className="h-4 w-4" /> Sector Weighting
                                 </h3>
                                 <div className="space-y-5">
                                     {sector_coverage.map(sector => (

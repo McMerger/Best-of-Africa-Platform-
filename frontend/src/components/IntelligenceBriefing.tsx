@@ -50,8 +50,8 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
                     </div>
                 </div>
 
-                <CardTitle className="mt-4 text-3xl font-bold leading-tight tracking-tight md:text-3xl text-foreground">
-                    The {region} market is <span className="text-primary">{statusConfig.text.toLowerCase()}</span> today, driven by dynamic shifts in <span className="underline decoration-dotted underline-offset-4">{topSector}</span>.
+                <CardTitle className="mt-4 font-serif text-3xl font-normal leading-tight tracking-tight md:text-4xl text-foreground">
+                    The {region} market is <span className={cn("italic", isStable ? "text-emerald-600" : isVolatile ? "text-red-500" : "text-primary")}>{statusConfig.text.toLowerCase()}</span> today, driven by dynamic shifts in <span className="border-b-2 border-foreground/20 decoration-skip-ink-none">{topSector}</span>.
                 </CardTitle>
             </CardHeader>
 

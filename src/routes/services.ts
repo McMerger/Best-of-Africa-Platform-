@@ -5,6 +5,7 @@
 
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
+import { getCached, CACHE_KEYS } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -42,6 +43,30 @@ router.post('/booking', async (c) => {
         }, 400);
     }
 
+    // Generate Preliminary AI Intelligence Brief (Instant Value)
+    let preliminaryNote = null;
+    try {
+        // Quick RAG-lite
+        const keywords = `${service_type} ${destination_country || ''} ${budget_range}`.trim();
+        const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [keywords] });
+        const vector = (embedding as any).data[0];
+
+        const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
+        const context = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+
+        if (context) {
+            const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                messages: [
+                    { role: 'system', content: 'You are a Concierge Director. Write a 1-sentence "Preliminary Note" connecting the user request to recent platform news.' },
+                    { role: 'user', content: `Request: ${keywords}. News: ${context}` }
+                ]
+            });
+            preliminaryNote = aiResponse?.response?.trim();
+        }
+    } catch (e) {
+        console.error('AI Concierge Brief Failed', e);
+    }
+
     const id = crypto.randomUUID();
     const userId = c.get('clientId') || null;
 
@@ -49,8 +74,8 @@ router.post('/booking', async (c) => {
         INSERT INTO booking_requests (
             id, user_id, guest_email, guest_name, guest_organization,
             service_type, destination_country, dates_json, requirements,
-            budget_range, urgency, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', datetime('now'))
+            budget_range, urgency, status, created_at, ai_concierge_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New', datetime('now'), ?)
     `).bind(
         id,
         userId,
@@ -62,16 +87,15 @@ router.post('/booking', async (c) => {
         dates ? JSON.stringify(dates) : null,
         requirements || null,
         budget_range || 'Standard',
-        urgency || 'Normal'
+        urgency || 'Normal',
+        preliminaryNote // Save the AI Brief
     ).run();
-
-    // TODO: Trigger email notification via Cloudflare Email Workers
-    // await sendConciergeNotification(c.env, { id, service_type, destination_country, guest_email });
 
     return c.json({
         success: true,
         id,
-        message: 'Your request has been received. Our concierge team will contact you within 24 hours.'
+        message: 'Your request has been received. Our concierge team will contact you within 24 hours.',
+        preliminary_brief: preliminaryNote // Instant intelligence
     }, 201);
 });
 
@@ -123,7 +147,7 @@ router.get('/events', async (c) => {
     const params: string[] = [];
 
     if (type) {
-        query += ' AND e.event_type = ?';
+        query += ' AND e.category = ?';
         params.push(type);
     }
 
@@ -133,14 +157,12 @@ router.get('/events', async (c) => {
     }
 
     if (status) {
-        query += ' AND e.status = ?';
+        query += ' AND LOWER(e.status) = LOWER(?)';
         params.push(status);
-    } else {
-        // Default to upcoming/open events
-        query += " AND e.status IN ('Upcoming', 'Open')";
     }
+    // No default status filter - show all events
 
-    query += ' ORDER BY e.date ASC';
+    query += ' ORDER BY e.date_start ASC';
 
     if (limit) {
         query += ' LIMIT ?';
@@ -155,12 +177,8 @@ router.get('/events', async (c) => {
         success: true,
         data: (events.results || []).map((event: Record<string, unknown>) => ({
             ...event,
-            agenda: event.agenda_json ? JSON.parse(event.agenda_json as string) : [],
-            speakers: event.speakers_json ? JSON.parse(event.speakers_json as string) : [],
-            sponsors: event.sponsors_json ? JSON.parse(event.sponsors_json as string) : [],
-            spots_remaining: event.capacity
-                ? Math.max(0, (event.capacity as number) - (event.registered_count as number || 0))
-                : null,
+            date: event.date_start, // Alias for frontend compatibility
+            event_type: event.category, // Alias for frontend compatibility
         }))
     });
 });
@@ -177,8 +195,8 @@ router.get('/events/:id', async (c) => {
                (SELECT COUNT(*) FROM event_registrations er WHERE er.event_id = e.id AND er.status != 'Cancelled') as registered_count
         FROM events e
         LEFT JOIN countries c ON e.country_code = c.code
-        WHERE e.id = ? OR e.slug = ?
-    `).bind(id, id).first();
+        WHERE e.id = ?
+    `).bind(id).first();
 
     if (!event) {
         return c.json({
@@ -194,12 +212,32 @@ router.get('/events/:id', async (c) => {
         success: true,
         data: {
             ...data,
-            agenda: data.agenda_json ? JSON.parse(data.agenda_json as string) : [],
-            speakers: data.speakers_json ? JSON.parse(data.speakers_json as string) : [],
-            sponsors: data.sponsors_json ? JSON.parse(data.sponsors_json as string) : [],
-            spots_remaining: data.capacity
-                ? Math.max(0, (data.capacity as number) - (data.registered_count as number || 0))
-                : null,
+            date: data.date_start, // Alias for frontend
+            event_type: data.category, // Alias for frontend
+            ai_context_brief: await getCached(
+                c.env,
+                `event:${id}:context`,
+                async () => {
+                    const topic = `${data.title} ${data.country_name || ''} business`;
+                    try {
+                        const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [topic] });
+                        const vector = (embedding as any).data[0];
+                        const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
+                        const context = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+
+                        if (!context) return "Connecting event to regional trends...";
+
+                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                            messages: [
+                                { role: 'system', content: 'Explain why this event matters given current news. 1-2 sentences.' },
+                                { role: 'user', content: `Event: ${data.title}. News: ${context}` }
+                            ]
+                        });
+                        return aiResponse?.response?.trim();
+                    } catch (e) { return null; }
+                },
+                { ttl: 3600 }
+            )
         }
     });
 });

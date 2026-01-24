@@ -85,18 +85,28 @@ export async function generateDailyDigest(
             `${i + 1}. "${a.title}" (${a.country_name}): ${a.summary?.slice(0, 150) || ''}`
         ).join('\n');
 
+        // RAG: Get Global Context
+        let globalContext = '';
+        try {
+            const query = "Africa business headlines global market trends today";
+            const embedding = await (env.AI as any).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as any).data[0];
+            const relevant = await env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
+            globalContext = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+        } catch (e) { }
+
         const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are an executive briefing writer for African market intelligence. Write a 3-4 sentence synthesis of today\'s top stories. Be direct and focus on investment/business implications.'
+                    content: 'You are an executive briefing writer. Synthesize internal articles with global context.'
                 },
                 {
                     role: 'user',
-                    content: `Summarize today's key developments:\n${briefContext}`
+                    content: `Global Context: ${globalContext}\n\nInternal Coverage:\n${briefContext}\n\nWrite a 3-4 sentence Executive Summary connecting our stories to the global picture.`
                 }
             ],
-            max_tokens: 200
+            max_tokens: 250
         });
 
         aiSummary = response?.response || '';
@@ -155,18 +165,28 @@ export async function generateWeeklyDigest(
             `${sector}: ${arts.length} articles, top story: "${arts[0].title}"`
         ).join('\n');
 
+        // RAG: Get Weekly Global Context
+        let globalContext = '';
+        try {
+            const query = "Africa business headlines major events this week";
+            const embedding = await (env.AI as any).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as any).data[0];
+            const relevant = await env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+            globalContext = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+        } catch (e) { }
+
         const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a strategic analyst writing a weekly Africa market briefing. Provide a 4-5 sentence overview of the week\'s key themes and what investors should watch.'
+                    content: 'You are a strategic analyst. Write a weekly briefing connecting our coverage to major external events.'
                 },
                 {
                     role: 'user',
-                    content: `This week's coverage by sector:\n${sectorSummaries}`
+                    content: `Major External Events: ${globalContext}\n\nOur Sector Coverage:\n${sectorSummaries}\n\nWrite a 5-sentence "Week in Review" analyzing how our coverage reflects or misses these broader trends.`
                 }
             ],
-            max_tokens: 250
+            max_tokens: 300
         });
 
         aiSummary = response?.response || '';

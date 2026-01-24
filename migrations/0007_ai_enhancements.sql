@@ -86,7 +86,7 @@ CREATE INDEX IF NOT EXISTS idx_econ_country ON economic_indicators(country_code)
 -- Update countries table to track language preference
 -- ───────────────────────────────────────────────────────────────────────────────
 ALTER TABLE countries
-ADD COLUMN IF NOT EXISTS primary_language TEXT DEFAULT 'en';
+ADD COLUMN primary_language TEXT DEFAULT 'en';
 -- Set primary languages for key countries
 UPDATE countries
 SET primary_language = 'fr'

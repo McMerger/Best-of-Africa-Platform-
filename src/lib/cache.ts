@@ -137,6 +137,19 @@ export const CACHE_KEYS = {
     intelCountryReport: (code: string) => `intel:country:${code}:report`,
     intelSectorTrends: (id: string) => `intel:sector:${id}:trends`,
     intelAudienceReach: () => 'intel:audience:reach',
+    countryOutlook: (code: string) => `country:${code}:outlook`,
+    articleContext: (id: string) => `article:${id}:ai_context`,
+    narrativeSynthesis: (code: string) => `narrative:synthesis:${code}`,
+    sectorOutlook: (id: string) => `sector:${id}:outlook`,
+    countryRelationships: (code: string) => `country:${code}:relationships`,
+    countrySituation: (code: string) => `country:${code}:situation`,
+    globalBriefing: 'home:global-briefing',
+    intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis`,
+    adminContentRecs: 'admin:content-recommendations',
+    analyticsContentStrategy: 'analytics:content-strategy',
+    marketSentiment: (code: string) => `market:sentiment:${code}`,
+    sectorSupplyChain: (id: string) => `market:supply-chain:${id}`,
+
 } as const;
 
 export const CACHE_TTL = {

@@ -10,11 +10,12 @@ import { cn } from '@/lib/utils';
 import { getSectorIcon } from '@/lib/icons';
 import {
     BarChartIcon,
-    ArrowTopRightIcon,
     GlobeIcon,
     ActivityLogIcon,
     ArrowUpIcon,
-    ArrowDownIcon
+    ArrowDownIcon,
+    PieChartIcon,
+    RocketIcon
 } from '@radix-ui/react-icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
@@ -84,7 +85,7 @@ export const DashboardDetailPage: React.FC = () => {
                                 <div className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
                                     Pan-African Intelligence
                                 </div>
-                                <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-foreground md:text-5xl">Continental Overview</h1>
+                                <h1 className="text-4xl font-serif font-extrabold leading-tight tracking-tight text-foreground md:text-5xl">Continental Overview</h1>
                             </div>
                             <div className="text-right">
                                 <div className="text-xs font-bold uppercase text-muted-foreground">Last Updated</div>
@@ -105,11 +106,11 @@ export const DashboardDetailPage: React.FC = () => {
                                             Market Updates
                                         </span>
                                         <span className="font-mono text-xs text-muted-foreground">
-                                            SOURCE: ANALYTICS BUREAU
+                                            SOURCE: INTELLIGENCE BUREAU
                                         </span>
                                     </div>
                                     <p className="font-mono text-lg leading-relaxed text-foreground">
-                                        <strong>"{analytics?.market_summary?.split('.')[0] || 'Market Activity High'}."</strong> {analytics?.market_summary?.split('.').slice(1).join('.') || 'Cross-border trade narratives are dominating coverage.'}
+                                        <strong>"{analytics?.market_summary?.split('.')[0] || 'Market Updates Pending'}."</strong> {analytics?.market_summary?.split('.').slice(1).join('.') || 'Analyzing latest regional data streams.'}
                                     </p>
                                     <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary to-transparent"></div>
                                 </CardContent>
@@ -146,7 +147,7 @@ export const DashboardDetailPage: React.FC = () => {
                             <div className="p-6">
                                 <div className="mb-1 text-xs font-bold uppercase text-muted-foreground">Sentiment</div>
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-3xl font-bold text-foreground">{analytics?.sentiment_pct || 68}%</span>
+                                    <span className="text-3xl font-bold text-foreground">{analytics?.sentiment_pct || '--'}%</span>
                                     <span className={cn("text-sm font-bold", analytics?.sentiment_trend === 'up' ? 'text-primary' : 'text-destructive')}>
                                         {analytics?.sentiment_trend === 'up' ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />}
                                     </span>
@@ -240,7 +241,7 @@ export const DashboardDetailPage: React.FC = () => {
                     <div className="mb-2 text-sm font-bold uppercase tracking-wider text-destructive">
                         Regional Intelligence
                     </div>
-                    <h1 className="mb-4 text-5xl font-bold tracking-tight text-foreground">{dashboard.title}</h1>
+                    <h1 className="mb-4 text-5xl font-serif font-bold tracking-tight text-foreground">{dashboard.title}</h1>
                     <p className="max-w-3xl text-xl leading-relaxed text-muted-foreground">
                         {dashboard.summary}
                     </p>
@@ -254,20 +255,20 @@ export const DashboardDetailPage: React.FC = () => {
                     <Card className="border-none bg-muted/40 shadow-none">
                         <CardContent className="p-6">
                             <div className="mb-1 text-sm font-bold uppercase text-primary">New Articles (24h)</div>
-                            <div className="text-3xl font-bold text-foreground">{dashboard.key_metrics.articles_24h}</div>
+                            <div className="text-3xl font-bold text-foreground">{dashboard.key_metrics?.articles_24h || 0}</div>
                         </CardContent>
                     </Card>
                     <Card className="border-none bg-muted/40 shadow-none">
                         <CardContent className="p-6">
                             <div className="mb-1 text-sm font-bold uppercase text-primary">Total Views</div>
-                            <div className="text-3xl font-bold text-foreground">{dashboard.key_metrics.total_views.toLocaleString()}</div>
+                            <div className="text-3xl font-bold text-foreground">{(dashboard.key_metrics?.total_views || 0).toLocaleString()}</div>
                         </CardContent>
                     </Card>
                     <Card className="border-none bg-muted/40 shadow-none md:col-span-2">
                         <CardContent className="p-6">
                             <div className="mb-3 text-sm font-bold uppercase text-primary">Trending Topics</div>
                             <div className="flex flex-wrap gap-2">
-                                {dashboard.trending_topics.map(topic => (
+                                {(dashboard.trending_topics || []).map(topic => (
                                     <Link
                                         to={`/search?q=${encodeURIComponent(topic)}`}
                                         key={topic}
@@ -289,7 +290,7 @@ export const DashboardDetailPage: React.FC = () => {
                                 Featured Analysis
                             </h2>
                             <div className="grid gap-8">
-                                {featured_articles.map(article => (
+                                {(featured_articles || []).map(article => (
                                     <ArticleCard key={article.id} article={article} />
                                 ))}
                             </div>
@@ -300,10 +301,10 @@ export const DashboardDetailPage: React.FC = () => {
                     <aside className="space-y-8">
                         <div className="rounded-lg border-t-4 border-destructive bg-card p-6 border border-border">
                             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
-                                <TrendingUp className="h-5 w-5" /> Market Movers
+                                <RocketIcon className="h-5 w-5" /> Market Movers
                             </h3>
                             <ul className="space-y-4">
-                                {trending_countries.map((c) => (
+                                {(trending_countries || []).map((c) => (
                                     <li key={c.code} className="border-b border-border pb-4 last:border-0 last:pb-0">
                                         <Link to={`/countries/${c.code}`} className="flex items-center justify-between hover:text-primary">
                                             <span className="font-medium text-foreground">{c.flag_emoji} {c.name}</span>
@@ -318,10 +319,10 @@ export const DashboardDetailPage: React.FC = () => {
 
                         <div className="rounded-lg border-t-4 border-primary bg-card p-6 border border-border">
                             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
-                                <BarChart2 className="h-5 w-5" /> Sector Breakdown
+                                <PieChartIcon className="h-5 w-5" /> Sector Breakdown
                             </h3>
                             <ul className="space-y-3">
-                                {sector_breakdown.map((s) => (
+                                {(sector_breakdown || []).map((s) => (
                                     <li key={s.id} className="flex justify-between text-sm">
                                         <span className="text-muted-foreground flex items-center gap-2">
                                             {getSectorIcon(s.id, "h-4 w-4")} {s.name}

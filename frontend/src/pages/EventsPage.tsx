@@ -1,38 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CalendarIcon, SewingPinFilledIcon as MapPinIcon, ArrowRightIcon, StarIcon } from '@radix-ui/react-icons';
-import { Link } from 'react-router-dom';
+
+interface Event {
+    id: string;
+    title: string;
+    date: string;
+    end_date?: string;
+    location: string;
+    event_type: string;
+    status: string;
+    is_exclusive: boolean;
+}
 
 export const EventsPage: React.FC = () => {
-    const events = [
-        {
-            title: "Africa Investment Forum 2026",
-            date: "Nov 12-14, 2026",
-            location: "Johannesburg, South Africa",
-            category: "Investment",
-            status: "Registration Open",
-            isVip: true
-        },
-        {
-            title: "Mining Indaba",
-            date: "Feb 05-08, 2027",
-            location: "Cape Town, South Africa",
-            category: "Resources",
-            status: "Waitlist",
-            isVip: false
-        },
-        {
-            title: "Africa Energy Week",
-            date: "Oct 22-26, 2026",
-            location: "Lagos, Nigeria",
-            category: "Energy",
-            status: "Registration Open",
-            isVip: false
-        }
-    ];
+    const [events, setEvents] = useState<Event[]>([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/services/events`)
+            .then(res => res.json())
+            .then(data => setEvents(data.data || []))
+            .catch(console.error);
+    }, []);
 
     return (
         <Layout>
@@ -41,7 +35,7 @@ export const EventsPage: React.FC = () => {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000005_1px,transparent_1px),linear-gradient(to_bottom,#00000005_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
                 <div className="container relative py-20 text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
                     <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase bg-background text-primary border-primary/20 px-4 py-1">Global Summits</Badge>
-                    <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight text-foreground">
+                    <h1 className="text-5xl md:text-7xl font-serif font-black mb-6 tracking-tight text-foreground">
                         Where Decisions <br /> Are Made.
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium text-balance">
@@ -57,44 +51,54 @@ export const EventsPage: React.FC = () => {
                     <div className="space-y-6">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Calendar className="h-6 w-6 text-primary" /> Upcoming Summits
+                                <CalendarIcon className="h-6 w-6 text-primary" /> Upcoming Summits
                             </h2>
                             <Button variant="outline" size="sm">Download Calendar</Button>
                         </div>
 
-                        {events.map((event, index) => (
-                            <Card key={index} className="group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
-                                <CardContent className="p-0">
-                                    <div className="flex flex-col md:flex-row">
-                                        <div className="w-full md:w-32 bg-muted/30 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-border">
-                                            <span className="text-3xl font-black text-foreground">{event.date.split(' ')[1].split('-')[0]}</span>
-                                            <span className="text-xs font-bold uppercase text-muted-foreground">{event.date.split(' ')[0]}</span>
-                                        </div>
-                                        <div className="p-6 flex-1 flex flex-col justify-center">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider">{event.category}</Badge>
-                                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{event.title}</h3>
+                        {events.length === 0 ? (
+                            <div className="text-center py-12 border rounded-lg bg-muted/20">
+                                <p className="text-muted-foreground">Loading events...</p>
+                            </div>
+                        ) : (
+                            events.map((event, index) => (
+                                <Card
+                                    key={index}
+                                    className="group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+                                    onClick={() => navigate(`/events/${event.id}`)}
+                                >
+                                    <CardContent className="p-0">
+                                        <div className="flex flex-col md:flex-row">
+                                            <div className="w-full md:w-32 bg-muted/30 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-border">
+                                                <span className="text-3xl font-black text-foreground">{new Date(event.date).getDate()}</span>
+                                                <span className="text-xs font-bold uppercase text-muted-foreground">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
+                                            </div>
+                                            <div className="p-6 flex-1 flex flex-col justify-center">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider">{event.event_type}</Badge>
+                                                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{event.title}</h3>
+                                                    </div>
+                                                    {event.is_exclusive && (
+                                                        <Badge className="bg-primary text-primary-foreground">VIP Access</Badge>
+                                                    )}
                                                 </div>
-                                                {event.isVip && (
-                                                    <Badge className="bg-primary text-primary-foreground">VIP Access</Badge>
-                                                )}
+                                                <div className="flex items-center text-sm text-muted-foreground gap-4">
+                                                    <span className="flex items-center gap-1"><MapPinIcon className="h-4 w-4" /> {event.location}</span>
+                                                    <span className="w-1 h-1 bg-muted-foreground/30 rounded-full"></span>
+                                                    <span>{event.status}</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center text-sm text-muted-foreground gap-4">
-                                                <span className="flex items-center gap-1"><MapPin className="h-4 w-4" /> {event.location}</span>
-                                                <span className="w-1 h-1 bg-muted-foreground/30 rounded-full"></span>
-                                                <span>{event.status}</span>
+                                            <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-border bg-muted/5">
+                                                <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform">
+                                                    Details <ArrowRightIcon className="ml-2 h-4 w-4" />
+                                                </Button>
                                             </div>
                                         </div>
-                                        <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-border bg-muted/5">
-                                            <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform">
-                                                Details <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                     </div>
 
                     {/* Copilot Sidebar (Davos & Delegations) */}
@@ -104,14 +108,18 @@ export const EventsPage: React.FC = () => {
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10"></div>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Star className="h-5 w-5 fill-current" /> Davos 2026
+                                    <StarIcon className="h-5 w-5 fill-current" /> Davos 2026
                                 </CardTitle>
                                 <CardDescription className="text-primary-foreground/80">
                                     Strategic debrief and Africa-focused takeaways from the World Economic Forum.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Button variant="secondary" className="w-full font-bold text-primary bg-white hover:bg-white/90">
+                                <Button
+                                    variant="secondary"
+                                    className="w-full font-bold text-primary bg-white hover:bg-white/90"
+                                    onClick={() => navigate('/search?q=Davos')}
+                                >
                                     Access Briefing
                                 </Button>
                             </CardContent>
@@ -126,7 +134,11 @@ export const EventsPage: React.FC = () => {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <Button variant="outline" className="w-full font-bold">
+                                <Button
+                                    variant="outline"
+                                    className="w-full font-bold"
+                                    onClick={() => navigate('/request-consultation')}
+                                >
                                     Request Access
                                 </Button>
                             </CardContent>

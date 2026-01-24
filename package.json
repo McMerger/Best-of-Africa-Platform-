@@ -1,20 +1,26 @@
 {
-    "name": "best-of-africa-backend",
+    "name": "best-of-africa",
     "version": "1.0.0",
     "description": "Pan-African narrative diplomacy and market intelligence platform - autonomous AI backend for strengthening Africa's global image",
     "type": "module",
     "scripts": {
-        "dev": "wrangler dev",
+        "dev": "concurrently -n \"backend,frontend\" -c \"cyan,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "dev:backend": "wrangler dev",
+        "dev:frontend": "cd frontend && npm run dev",
+        "build": "npm run build:frontend",
+        "build:frontend": "cd frontend && npm run build",
         "deploy": "wrangler deploy",
         "db:migrate": "wrangler d1 migrations apply best-of-africa-db --local",
         "db:migrate:prod": "wrangler d1 migrations apply best-of-africa-db --remote",
-        "tail": "wrangler tail"
+        "tail": "wrangler tail",
+        "install:all": "npm install && cd frontend && npm install"
     },
     "dependencies": {
         "hono": "^4.6.0"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20241127.0",
+        "concurrently": "^9.1.0",
         "typescript": "^5.7.0",
         "wrangler": "^4.59.1"
     }

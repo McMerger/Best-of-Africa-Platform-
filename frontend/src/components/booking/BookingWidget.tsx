@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,12 @@ interface BookingWidgetProps {
 }
 
 export const BookingWidget: React.FC<BookingWidgetProps> = ({
-    propertyName = "Polana Serena Hotel",
+    // propertyName = "Polana Serena Hotel",
     baseRate = 350,
     vipRate = 320,
     affiliateUrl = "#"
 }) => {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    // const [date, setDate] = useState<Date | undefined>(new Date());
 
     const handleVipRequest = (e: React.FormEvent) => {
         e.preventDefault();
@@ -131,7 +131,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold">${baseRate}</span>
-                                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                                    <ArrowTopRightIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                                 </div>
                             </a>
 
@@ -145,14 +145,14 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="font-bold">${baseRate}</span>
-                                    <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                                    <ArrowTopRightIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                                 </div>
                             </a>
                         </div>
 
                         <div className="rounded-md bg-muted p-4 text-xs text-muted-foreground">
                             <div className="flex gap-2">
-                                <ShieldCheck className="w-4 h-4 shrink-0" />
+                                <LockClosedIcon className="w-4 h-4 shrink-0" />
                                 <p>We earn a small commission when you book through these links at no extra cost to you.</p>
                             </div>
                         </div>
@@ -169,16 +169,16 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
 
                         <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="flex items-center gap-2 p-2 rounded bg-muted/40">
-                                <Check className="w-3 h-3 text-primary" /> Multi-city flights
+                                <CheckIcon className="w-3 h-3 text-primary" /> Multi-city flights
                             </div>
                             <div className="flex items-center gap-2 p-2 rounded bg-muted/40">
-                                <Check className="w-3 h-3 text-primary" /> Private transfers
+                                <CheckIcon className="w-3 h-3 text-primary" /> Private transfers
                             </div>
                             <div className="flex items-center gap-2 p-2 rounded bg-muted/40">
-                                <Check className="w-3 h-3 text-primary" /> Visa assistance
+                                <CheckIcon className="w-3 h-3 text-primary" /> Visa assistance
                             </div>
                             <div className="flex items-center gap-2 p-2 rounded bg-muted/40">
-                                <Check className="w-3 h-3 text-primary" /> Translator services
+                                <CheckIcon className="w-3 h-3 text-primary" /> Translator services
                             </div>
                         </div>
 

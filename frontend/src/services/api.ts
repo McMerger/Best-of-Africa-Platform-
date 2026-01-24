@@ -16,7 +16,7 @@ const getSessionId = () => {
 const getAuthToken = () => localStorage.getItem('boa_auth_token');
 
 // Request helper
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = getAuthToken();
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ export const api = {
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest'),
 
     // Countries
-    getCountries: () => request<{ data: Country[]; by_region: Record<string, Country[]> }>('/countries'),
+    getCountries: () => request<{ data: Country[]; by_region: Record<string, { countries: Country[]; ai_insight: string }> }>('/countries'),
     getPlatformStats: () => request<{ total_countries: number; total_articles: number; total_views: number; regions: number }>('/countries/stats'),
     getCountry: (code: string) => request<{ country: Country; stats: CountryStats }>(`/countries/${code}`),
 
@@ -78,7 +78,7 @@ export const api = {
     }>('/dashboards/continental/overview'),
 
     // Search
-    search: (query: string) => request<{ results: SearchResult[]; suggestions: string[]; ai_summary?: string }>(`/search?q=${encodeURIComponent(query)}`),
+    search: (query: string) => request<{ results: SearchResult[]; suggestions: string[]; ai_answer?: string }>(`/search?q=${encodeURIComponent(query)}`),
     autocomplete: (query: string) => request<{ suggestions: { text: string; type: string }[] }>(`/search/suggest?q=${encodeURIComponent(query)}`),
 
     // Intelligence
@@ -100,6 +100,12 @@ export const api = {
         };
         sector_opportunities: { id: string; name: string; articles: number; avg_engagement: number }[];
     }>(`/market-intel/country/${code}/outlook`),
+    getCountryRelationships: (code: string) => request<{
+        country_code: string;
+        country_name: string;
+        relationships: { partner: string; type: string; context: string }[];
+        updated_at: string;
+    }>(`/countries/${code}/relationships`),
     getNarratives: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
         return request<{
@@ -131,6 +137,8 @@ export const api = {
         sector_coverage: { id: string; name: string; article_count: number; }[];
     }>(`/narratives/country/${code}`),
     getReports: () => request<{ data: ArticleListItem[] }>('/market-intel/reports'),
+    getGeneratedReports: () => request<{ data: any[] }>('/market-intel/generated-reports'),
+    getGeneratedReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/generated-reports/${id}`),
     getReportsBySector: (sectorId: string) => request<{ data: ArticleListItem[] }>(`/market-intel/reports/sector/${sectorId}`),
     getReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/reports/${id}`),
     getAudienceInsights: () => request<{
@@ -139,6 +147,18 @@ export const api = {
         interests: { topic: string; score: number }[];
         engagement_trends: { date: string; views: number }[];
     }>('/intel/audience'),
+
+    // Analyst Lens (Real-time AI Rewriting)
+    reframeArticle: (articleId: string, targetAudience: 'investor' | 'tourist' | 'partner' | 'general') =>
+        request<{ content: string; audience: string }>('/intel/reframe', {
+            method: 'POST',
+            body: JSON.stringify({ articleId, targetAudience })
+        }),
+    reformatArticle: (articleId: string, format: 'long-form' | 'summary' | 'bullet' | 'brief') =>
+        request<{ content: string; format: string }>('/intel/reformat', {
+            method: 'POST',
+            body: JSON.stringify({ articleId, format })
+        }),
     getPremiumCountryReport: (code: string) => request<{
         country: Country;
         article_count: number;
@@ -216,4 +236,32 @@ export const api = {
         total_articles_7d: number;
         updated_at: string;
     }>('/dashboards/analytics/summary'),
+
+    getStrategicOpportunities: () => request<{
+        data: {
+            country_code: string;
+            country_name: string;
+            sector_id: string;
+            sector_name: string;
+            title: string;
+            summary: string;
+            score: number;
+        }[]
+    }>('/market-intel/opportunities'),
+
+    getSectorVelocity: (sectorId: string) => request<{
+        sector_id: string;
+        cagr_5yr: number;
+        deal_flow_usd: number;
+        active_projects: number;
+        updated_at: string;
+    }>(`/market-intel/sector/${sectorId}/velocity`),
+
+    getPlatformImpact: () => request<{
+        total_fdi_usd: number;
+        countries_covered: number;
+        sectors_covered: number;
+        total_reports: number;
+        updated_at: string;
+    }>('/dashboards/stats/platform-impact'),
 };

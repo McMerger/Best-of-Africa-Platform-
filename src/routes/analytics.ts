@@ -80,6 +80,51 @@ router.get('/live/:metric', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// GET /analytics/insight - AI "Morning Report" (Why are numbers moving?)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/insight', requireAuth, async (c) => {
+    // 1. Get Traffic Overview (Last 24h)
+    const [traffic, topArticles] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT SUM(view_count) as views, COUNT(DISTINCT session_id) as visitors 
+            FROM analytics_events 
+            WHERE type = 'page_view' AND created_at > datetime('now', '-24 hours')
+        `).first(),
+
+        c.env.DB.prepare(`
+            SELECT a.title, a.summary, SUM(e.view_count) as views
+            FROM articles a
+            JOIN analytics_events e ON e.resource_id = a.id
+            WHERE e.created_at > datetime('now', '-24 hours')
+            GROUP BY a.id
+            ORDER BY views DESC
+            LIMIT 3
+        `).all()
+    ]);
+
+    // 2. Generate AI Explanation
+    let insight = "Traffic is stable.";
+    const topContext = (topArticles.results as any[]).map(a => `"${a.title}": ${a.views} views`).join(', ');
+
+    try {
+        const response = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+                { role: 'system', content: 'You are a Data Journalist. Explain the traffic trend based on the top stories. Be concise.' },
+                { role: 'user', content: `Traffic Stats: ${(traffic as any).views} views. Top Stories: ${topContext}` }
+            ]
+        });
+        insight = response?.response?.trim();
+    } catch (e) { /* Ignore */ }
+
+    return c.json({
+        period: '24h',
+        traffic: traffic,
+        top_drivers: topArticles.results,
+        ai_narrative: insight
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
 // GET /analytics/dashboard - Admin dashboard metrics (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/dashboard', requireAuth, async (c) => {
@@ -207,6 +252,36 @@ router.get('/content-gaps', requireAuth, async (c) => {
             sectors_needing_content: lowCoverageSectors.results || [],
         },
         coverage: coverageStats,
+    });
+
+    // AI Strategic Content Advice
+    const advice = await getCached(
+        c.env,
+        CACHE_KEYS.analyticsContentStrategy,
+        async () => {
+            const gapContext = (lowCoverageCountries.results as any[]).slice(0, 3).map(c => c.name).join(', ');
+            if (!gapContext) return "Coverage is balanced.";
+
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        { role: 'system', content: 'You are a Content Strategist. Advise on filling content gaps.' },
+                        { role: 'user', content: `We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.` }
+                    ]
+                });
+                return aiResponse?.response?.trim();
+            } catch { return "Focus on underserved regions."; }
+        },
+        { ttl: CACHE_TTL.DASHBOARD }
+    );
+
+    return c.json({
+        narrative_gaps: {
+            countries_needing_content: lowCoverageCountries.results || [],
+            sectors_needing_content: lowCoverageSectors.results || [],
+        },
+        coverage: coverageStats,
+        ai_strategy_advice: advice
     });
 });
 

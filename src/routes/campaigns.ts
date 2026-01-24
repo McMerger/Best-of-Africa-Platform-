@@ -1,0 +1,330 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAMPAIGNS ROUTER
+// Sponsored content and campaign management
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { Hono } from 'hono';
+import type { Env, Variables } from '../types';
+
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /campaigns - List all campaigns (for admin dashboard)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/', async (c) => {
+    const { status, sponsor_id, limit = '20' } = c.req.query();
+
+    let query = `
+        SELECT c.*, 
+               (SELECT COUNT(*) FROM articles a WHERE a.sponsor_id = c.sponsor_id AND a.is_sponsored = 1) as article_count
+        FROM campaigns c
+        WHERE 1=1
+    `;
+    const params: string[] = [];
+
+    if (status) {
+        query += ' AND c.status = ?';
+        params.push(status);
+    }
+
+    if (sponsor_id) {
+        query += ' AND c.sponsor_id = ?';
+        params.push(sponsor_id);
+    }
+
+    query += ' ORDER BY c.created_at DESC LIMIT ?';
+    params.push(limit);
+
+    const campaigns = await c.env.DB.prepare(query).bind(...params).all();
+
+    return c.json({
+        success: true,
+        data: (campaigns.results || []).map((campaign: any) => ({
+            ...campaign,
+            target_countries: campaign.target_countries ? JSON.parse(campaign.target_countries) : [],
+            target_sectors: campaign.target_sectors ? JSON.parse(campaign.target_sectors) : [],
+        }))
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /campaigns/:id - Get single campaign details
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/:id', async (c) => {
+    const id = c.req.param('id');
+
+    const campaign = await c.env.DB.prepare(`
+        SELECT c.*
+        FROM campaigns c
+        WHERE c.id = ?
+    `).bind(id).first();
+
+    if (!campaign) {
+        return c.json({
+            success: false,
+            error: 'not_found',
+            message: 'Campaign not found'
+        }, 404);
+    }
+
+    // Get associated sponsored articles
+    const articles = await c.env.DB.prepare(`
+        SELECT id, slug, title, summary, published_at, view_count, engagement_score
+        FROM articles
+        WHERE sponsor_id = ? AND is_sponsored = 1
+        ORDER BY published_at DESC
+        LIMIT 20
+    `).bind((campaign as any).sponsor_id).all();
+
+    const data = campaign as any;
+
+    return c.json({
+        success: true,
+        data: {
+            ...data,
+            target_countries: data.target_countries ? JSON.parse(data.target_countries) : [],
+            target_sectors: data.target_sectors ? JSON.parse(data.target_sectors) : [],
+            articles: articles.results || [],
+            stats: {
+                total_articles: articles.results?.length || 0,
+                total_views: articles.results?.reduce((sum: number, a: any) => sum + (a.view_count || 0), 0) || 0,
+                avg_engagement: articles.results?.length
+                    ? (articles.results.reduce((sum: number, a: any) => sum + (a.engagement_score || 0), 0) / articles.results.length).toFixed(1)
+                    : 0
+            }
+        }
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns - Create new campaign
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/', async (c) => {
+    const body = await c.req.json();
+    const {
+        sponsor_id,
+        name,
+        description,
+        target_countries,
+        target_sectors,
+        target_audience,
+        budget_usd,
+        start_date,
+        end_date,
+        narrative_strategy_id
+    } = body;
+
+    // Validation
+    if (!sponsor_id || !name) {
+        return c.json({
+            success: false,
+            error: 'validation_error',
+            message: 'sponsor_id and name are required'
+        }, 400);
+    }
+
+    const id = crypto.randomUUID();
+
+    await c.env.DB.prepare(`
+        INSERT INTO campaigns (
+            id, sponsor_id, name, description, 
+            target_countries, target_sectors, target_audience,
+            budget_usd, start_date, end_date, 
+            narrative_strategy_id, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', datetime('now'))
+    `).bind(
+        id,
+        sponsor_id,
+        name,
+        description || null,
+        target_countries ? JSON.stringify(target_countries) : null,
+        target_sectors ? JSON.stringify(target_sectors) : null,
+        target_audience || null,
+        budget_usd || null,
+        start_date || null,
+        end_date || null,
+        narrative_strategy_id || null
+    ).run();
+
+    return c.json({
+        success: true,
+        data: { id },
+        message: 'Campaign created successfully'
+    }, 201);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// PATCH /campaigns/:id - Update campaign
+// ───────────────────────────────────────────────────────────────────────────────
+router.patch('/:id', async (c) => {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+
+    // Check if campaign exists
+    const existing = await c.env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(id).first();
+    if (!existing) {
+        return c.json({
+            success: false,
+            error: 'not_found',
+            message: 'Campaign not found'
+        }, 404);
+    }
+
+    // Build dynamic update query
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    const allowedFields = [
+        'name', 'description', 'target_audience', 'budget_usd',
+        'start_date', 'end_date', 'status', 'narrative_strategy_id',
+        'target_countries', 'target_sectors'
+    ];
+
+    for (const field of allowedFields) {
+        if (body[field] !== undefined) {
+            updates.push(`${field} = ?`);
+            if (field === 'target_countries' || field === 'target_sectors') {
+                values.push(JSON.stringify(body[field]));
+            } else {
+                values.push(body[field]);
+            }
+        }
+    }
+
+    if (updates.length === 0) {
+        return c.json({
+            success: false,
+            error: 'validation_error',
+            message: 'No valid fields to update'
+        }, 400);
+    }
+
+    values.push(id);
+    await c.env.DB.prepare(`UPDATE campaigns SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run();
+
+    return c.json({
+        success: true,
+        message: 'Campaign updated successfully'
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns/:id/launch - Launch/activate campaign
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/:id/launch', async (c) => {
+    const id = c.req.param('id');
+
+    const campaign = await c.env.DB.prepare('SELECT id, status FROM campaigns WHERE id = ?').bind(id).first();
+
+    if (!campaign) {
+        return c.json({
+            success: false,
+            error: 'not_found',
+            message: 'Campaign not found'
+        }, 404);
+    }
+
+    if ((campaign as any).status === 'active') {
+        return c.json({
+            success: false,
+            error: 'already_active',
+            message: 'Campaign is already active'
+        }, 400);
+    }
+
+    await c.env.DB.prepare(`
+        UPDATE campaigns SET status = 'active', start_date = datetime('now') WHERE id = ?
+    `).bind(id).run();
+
+    return c.json({
+        success: true,
+        message: 'Campaign launched successfully'
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns/:id/pause - Pause active campaign
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/:id/pause', async (c) => {
+    const id = c.req.param('id');
+
+    await c.env.DB.prepare(`
+        UPDATE campaigns SET status = 'paused' WHERE id = ?
+    `).bind(id).run();
+
+    return c.json({
+        success: true,
+        message: 'Campaign paused'
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// DELETE /campaigns/:id - Delete campaign
+// ───────────────────────────────────────────────────────────────────────────────
+router.delete('/:id', async (c) => {
+    const id = c.req.param('id');
+
+    const result = await c.env.DB.prepare('DELETE FROM campaigns WHERE id = ?').bind(id).run();
+
+    if (result.meta?.changes === 0) {
+        return c.json({
+            success: false,
+            error: 'not_found',
+            message: 'Campaign not found'
+        }, 404);
+    }
+
+    return c.json({
+        success: true,
+        message: 'Campaign deleted'
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /campaigns/:id/analytics - Get campaign performance analytics
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/:id/analytics', async (c) => {
+    const id = c.req.param('id');
+
+    const campaign = await c.env.DB.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+
+    if (!campaign) {
+        return c.json({
+            success: false,
+            error: 'not_found',
+            message: 'Campaign not found'
+        }, 404);
+    }
+
+    const data = campaign as any;
+
+    // Calculate CTR
+    const ctr = data.impressions > 0
+        ? ((data.clicks / data.impressions) * 100).toFixed(2)
+        : '0.00';
+
+    // Calculate ROI (simplified)
+    const cost = data.budget_usd || 0;
+    const value = data.clicks * 2.5; // Assumed $2.50 per click value
+    const roi = cost > 0 ? (((value - cost) / cost) * 100).toFixed(1) : '0';
+
+    return c.json({
+        success: true,
+        data: {
+            campaign_id: id,
+            impressions: data.impressions || 0,
+            clicks: data.clicks || 0,
+            ctr: parseFloat(ctr),
+            budget_spent: data.budget_usd || 0,
+            roi_percentage: parseFloat(roi),
+            roi_score: data.roi_score || 0,
+            reach_score: data.reach_score || 0,
+            credibility_impact: data.credibility_impact || 0,
+            status: data.status,
+            start_date: data.start_date,
+            end_date: data.end_date
+        }
+    });
+});
+
+export { router as campaignsRouter };

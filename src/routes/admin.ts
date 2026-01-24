@@ -6,11 +6,30 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { requireAdmin } from '../lib/auth';
+import { getCached, CACHE_KEYS } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Apply admin auth to all routes
 router.use('*', requireAdmin);
+
+// Import AI helpers
+import { generateSummary, analyzeSentiment } from '../lib/ai';
+
+async function generateTags(env: Env, content: string): Promise<string[]> {
+    try {
+        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            messages: [
+                { role: 'system', content: 'Generate 5 SEO tags for this content. Return JSON array of strings.' },
+                { role: 'user', content: content.slice(0, 1000) }
+            ],
+            response_format: { type: 'json_object' }
+        });
+        const prev = (response as any).response;
+        const match = prev.match(/\[.*\]/s);
+        return match ? JSON.parse(match[0]) : ['African Business', 'News'];
+    } catch { return []; }
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Articles Management
@@ -59,25 +78,49 @@ router.get('/articles', async (c) => {
 router.post('/articles', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
-    const slug = body.slug || generateSlug(body.title);
+    // AI Autopilot: Auto-fill missing fields
+    let summary = body.summary;
+    let tags = body.tags || [];
+
+    // Calculate sentiment/engagement score for initial sort
+    let engagementScore = 50;
+
+    if (body.content && (!summary || tags.length === 0)) {
+        const [aiSummary, aiTags, aiSentiment] = await Promise.all([
+            !summary ? generateSummary(c.env, body.content) : Promise.resolve(summary),
+            tags.length === 0 ? generateTags(c.env, body.content) : Promise.resolve(tags),
+            analyzeSentiment(c.env, body.title, body.content)
+        ]);
+
+        summary = aiSummary;
+        tags = aiTags;
+        engagementScore = Math.round(aiSentiment.score); // Use sentiment as proxy for initial engagement score
+    }
+
+    const finalSlug = body.slug || generateSlug(body.title);
 
     await c.env.DB.prepare(`
-    INSERT INTO articles (id, slug, title, subtitle, content, summary, country_code, sector_id, tags, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO articles (id, slug, title, subtitle, content, summary, country_code, sector_id, tags, status, engagement_score, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
   `).bind(
         id,
-        slug,
+        finalSlug,
         body.title,
         body.subtitle || null,
         body.content,
-        body.summary || null,
+        summary || null,
         body.country_code || null,
         body.sector_id || null,
-        JSON.stringify(body.tags || []),
-        body.status || 'draft'
+        JSON.stringify(tags || []),
+        body.status || 'draft',
+        engagementScore
     ).run();
 
-    return c.json({ id, slug }, 201);
+    return c.json({
+        id,
+        slug: finalSlug,
+        ai_generated: { summary: !!body.summary, tags: body.tags?.length > 0 }
+    }, 201);
 });
 
 // PUT /admin/articles/:id - Update article
@@ -112,6 +155,29 @@ router.put('/articles/:id', async (c) => {
     }
 
     updates.push("updated_at = datetime('now')");
+
+    // AI Autopilot for Updates
+    if (body.content && (body.summary === undefined || body.tags === undefined)) {
+        // Only run if content is being updated and fields are missing/requested
+        // This logic allows explicit "reset" if user sends empty string, so we check for undefined
+        const prevArticle = existing as any;
+        const contentToAnalyze = body.content || prevArticle.content;
+
+        if (contentToAnalyze) {
+            if (body.summary === "") { // User explicitly cleared it, maybe request regen?
+                const aiSummary = await generateSummary(c.env, contentToAnalyze);
+                updates.push('summary = ?');
+                values.push(aiSummary);
+            }
+
+            // Update sentiment if content changed
+            if (body.content) {
+                const aiSentiment = await analyzeSentiment(c.env, body.title || prevArticle.title, body.content);
+                updates.push('engagement_score = ?'); // Update score based on new sentiment
+                values.push(Math.round(aiSentiment.score));
+            }
+        }
+    }
 
     await c.env.DB.prepare(`UPDATE articles SET ${updates.join(', ')} WHERE id = ?`).bind(...values, id).run();
 
@@ -235,6 +301,47 @@ router.post('/clients', async (c) => {
 
     // Return API key only on creation (won't be retrievable later)
     return c.json({ id, api_key: apiKey }, 201);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Intelligence & Strategy (AI-Driven)
+// ───────────────────────────────────────────────────────────────────────────────
+
+router.get('/intelligence/recommendations', async (c) => {
+    const recommendations = await getCached(
+        c.env,
+        CACHE_KEYS.adminContentRecs,
+        async () => {
+            // 1. Get recent internal coverage (what we DID write)
+            const recent = await c.env.DB.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20').all();
+            const internalContext = (recent.results as any[]).map(r => r.title).join('; ');
+
+            // 2. Mock: In a real scenario, this queries a "Trending News" vector index.
+            // Since we don't have a separate "News Stream" index yet, we'll prompt the AI to hallucinate 
+            // "Missed Opportunities" based on its knowledge of current African affairs + typical blind spots.
+            // Ideally: We search the `articles` table for "Emerging Tech" and see low results.
+
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        { role: 'system', content: 'You are an Editor-in-Chief. Identify content gaps.' },
+                        { role: 'user', content: `Our Recent Articles: ${internalContext}\n\nTask: Compare this against top current trends in African AgriTech, Fintech, and Mining. Identify 3 specific "Missed Content Opportunities" that are trending globally but missing from our list. Return JSON array.` }
+                    ],
+                    response_format: { type: 'json_object' }
+                });
+
+                const raw = (aiResponse as any).response;
+                const match = raw.match(/\[.*\]/s);
+                return match ? JSON.parse(match[0]) : [];
+
+            } catch (e) {
+                return ["Focus on Sahel security updates", "Cover the new Fintech unicorn in Egypt", "Analyze lithium mining in Zimbabwe"];
+            }
+        },
+        { ttl: 3600 } // 1 hour
+    );
+
+    return c.json({ recommendations });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

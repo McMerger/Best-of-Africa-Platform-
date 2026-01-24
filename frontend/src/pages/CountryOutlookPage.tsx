@@ -111,8 +111,7 @@ export const CountryOutlookPage: React.FC = () => {
 
     const getTrend = (id: string) => {
         if (sectorTrends[id]) return sectorTrends[id];
-        const seed = id.charCodeAt(0) + id.charCodeAt(1);
-        return [10, 15, 12, 20, seed % 2 === 0 ? 25 : 8];
+        return []; // No fake data
     };
 
     return (
@@ -124,7 +123,7 @@ export const CountryOutlookPage: React.FC = () => {
                             <div className="mb-4 text-xs font-bold uppercase tracking-widest text-destructive">
                                 Strategic Outlook • {new Date().getFullYear()}
                             </div>
-                            <h1 className="mb-6 text-6xl font-black text-foreground leading-none tracking-tighter">
+                            <h1 className="mb-6 text-6xl font-serif font-black text-foreground leading-none tracking-tighter">
                                 {country.name} <span className="text-primary">Assessment</span>
                             </h1>
                             <p className="max-w-2xl text-xl text-muted-foreground leading-relaxed">

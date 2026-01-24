@@ -8,9 +8,9 @@ export const EditorialGuidelinesPage: React.FC = () => {
         <Layout>
             <div className="container max-w-4xl py-20">
                 <div className="mb-12 text-center">
-                    <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground">
+                    <h1 className="mb-6 text-5xl font-serif font-bold tracking-tight text-foreground">
                         Editorial Guidelines & <br />
-                        <span className="text-primary">Standards of Transparency</span>
+                        <span className="text-primary italic">Standards of Transparency</span>
                     </h1>
                     <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
                         How we maintain the delicate balance between AI-driven intelligence, human curation, and commercial partnerships.

@@ -1,4 +1,6 @@
-// Imports fixed at top of file
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+
 import {
     MagnifyingGlassIcon,
     GearIcon,
@@ -9,7 +11,7 @@ import {
     MagicWandIcon    // Replacing Sparkles
 } from '@radix-ui/react-icons';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import {
     Sheet,
     SheetContent,
@@ -28,11 +30,7 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 
-interface NavBarProps {
-    onAskAi?: () => void;
-}
-
-export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
+export const NavBar: React.FC = () => {
     const location = useLocation();
 
     const navLinks = [
@@ -62,7 +60,7 @@ export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
                 {/* Brand */}
                 <div className="flex items-center gap-4">
                     <Link to="/" className="flex flex-col leading-none">
-                        <span className="text-xl font-black tracking-tighter text-foreground">Best of Africa</span>
+                        <span className="text-2xl font-serif font-bold tracking-tight text-foreground">Best of Africa</span>
                         <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">Intelligence Platform</span>
                     </Link>
                 </div>
@@ -94,13 +92,14 @@ export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
                                 <span className="sr-only">Admin</span>
                             </Link>
                         </Button>
-                        <Button
+                        <Button asChild
                             variant="outline"
                             size="sm"
                             className="ml-2 gap-2 text-primary border-primary/20 font-bold hover:bg-primary hover:text-white transition-colors"
-                            onClick={onAskAi}
                         >
-                            <StarIcon className="h-4 w-4" /> Ask AI
+                            <Link to="/analyst">
+                                <StarIcon className="h-4 w-4 mr-2" /> Analyst Console
+                            </Link>
                         </Button>
                         <Button variant="ghost" size="sm" asChild className="ml-2 font-bold text-primary">
                             <Link to="/membership">Subscribe</Link>
@@ -136,9 +135,11 @@ export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
                                     </Link>
                                 ))}
                                 <div className="mt-4 flex flex-col gap-2">
-                                    <Button variant="outline" onClick={onAskAi} className="justify-start font-bold text-primary">
-                                        <MagicWandIcon className="mr-2 h-4 w-4" />
-                                        Ask AI
+                                    <Button variant="outline" asChild className="justify-start font-bold text-primary">
+                                        <Link to="/analyst">
+                                            <MagicWandIcon className="mr-2 h-4 w-4" />
+                                            Analyst Console
+                                        </Link>
                                     </Button>
                                     <Button variant="ghost" asChild className="justify-start">
                                         <Link to="/library">
@@ -202,9 +203,9 @@ export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
                                         </li>
                                         {[
                                             { title: "Energy & Mining", href: "/market-intel/sectors/energy", desc: "Oil, Gas, Critical Minerals" },
-                                            { title: "Technology", href: "/market-intel/sectors/tech", desc: "Fintech, Mobile Money, Digital Infra" },
-                                            { title: "Agriculture", href: "/market-intel/sectors/agri", desc: "Agri-processing, Food Security" },
-                                            { title: "Infrastructure", href: "/market-intel/sectors/infra", desc: "Logistics, Ports, Railways" },
+                                            { title: "Technology", href: "/market-intel/sectors/technology", desc: "Fintech, Mobile Money, Digital Infra" },
+                                            { title: "Agriculture", href: "/market-intel/sectors/agriculture", desc: "Agri-processing, Food Security" },
+                                            { title: "Infrastructure", href: "/market-intel/sectors/infrastructure", desc: "Logistics, Ports, Railways" },
                                             { title: "Finance", href: "/market-intel/sectors/finance", desc: "Capital Markets, FDI Trends" },
                                             { title: "Tourism", href: "/market-intel/sectors/tourism", desc: "Luxury Travel, Conservation" },
                                         ].map((sector) => (
@@ -358,6 +359,6 @@ export const NavBar: React.FC<NavBarProps> = ({ onAskAi }) => {
                     </NavigationMenu>
                 </div>
             </div>
-        </header>
+        </header >
     );
 };

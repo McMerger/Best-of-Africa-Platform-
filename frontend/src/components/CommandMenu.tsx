@@ -118,11 +118,24 @@ export const CommandMenu = () => {
                                 </span>
                                 Live Intelligence Signals
                             </div>
-                            <div className="grid gap-2">
+                            <div
+                                onClick={() => { setOpen(false); navigate('/analyst'); }}
+                                className="relative flex cursor-default select-none items-center rounded-md px-4 py-3 text-sm outline-none transition-colors text-foreground hover:bg-muted/50"
+                            >
+                                <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
+                                    <div className="h-4 w-4 bg-primary/20 rounded-full" />
+                                </div>
+                                <div className="flex-1">
+                                    <div className="font-bold">Open Analyst Console</div>
+                                    <div className="text-xs opacity-50">Strategic Intelligence</div>
+                                </div>
+                                <ArrowRightIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </div>
+                            <div className="grid gap-2 mt-4">
                                 {[
-                                    { label: "MOZAMBIQUE: LNG Export Delay Confirmed", type: "RISK", time: "2m ago" },
-                                    { label: "KENYA: Tech Visa Quota Increased", type: "OPPORTUNITY", time: "14m ago" },
-                                    { label: "NIGERIA: Central Bank Rate Decision", type: "EVENT", time: "1h ago" },
+                                    { label: "New market intelligence available", type: "OPPORTUNITY", time: "Just now" },
+                                    { label: "Regional analysis updated", type: "EVENT", time: "Recently" },
+                                    { label: "Strategic briefing ready", type: "RISK", time: "Today" },
                                 ].map((signal, i) => (
                                     <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-muted/40 cursor-default transition-all group">
                                         <div className="flex items-center gap-3">

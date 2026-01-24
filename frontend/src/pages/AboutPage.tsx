@@ -7,7 +7,7 @@ export const AboutPage: React.FC = () => {
         <Layout>
             <div className="container py-20 max-w-4xl mx-auto">
                 <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase text-primary border-primary/20 px-4 py-1">Mission</Badge>
-                <h1 className="text-5xl font-black mb-10 tracking-tight text-foreground">
+                <h1 className="text-5xl font-serif font-black mb-10 tracking-tight text-foreground">
                     New Narratives for a <br /> New Continent.
                 </h1>
 
@@ -16,12 +16,12 @@ export const AboutPage: React.FC = () => {
                         Best of Africa is a unified public relations and strategic narrative platform, designed to strengthen Africa's image on the global stage by promoting—country by country—opportunities for tourism, investment, and sustainable development.
                     </p>
 
-                    <h3 className="text-2xl font-bold text-foreground mt-12 mb-4">Our Intelligence Core</h3>
+                    <h3 className="text-2xl font-serif font-bold text-foreground mt-12 mb-4">Our Intelligence Core</h3>
                     <p>
                         Although we present as a human-curated brand to ensure authenticity, Best of Africa is at its core a <strong>native artificial intelligence platform</strong>. Our autonomous backend collects real-time data, processes signal from noise, and generates actionable intelligence for investors and policymakers.
                     </p>
 
-                    <h3 className="text-2xl font-bold text-foreground mt-12 mb-4">Our Role</h3>
+                    <h3 className="text-2xl font-serif font-bold text-foreground mt-12 mb-4">Our Role</h3>
                     <div className="grid md:grid-cols-2 gap-8 not-prose my-8">
                         <div className="p-6 border border-border rounded-lg bg-card">
                             <h4 className="font-bold text-primary mb-2">Media Outlet</h4>
@@ -29,7 +29,7 @@ export const AboutPage: React.FC = () => {
                         </div>
                         <div className="p-6 border border-border rounded-lg bg-card">
                             <h4 className="font-bold text-primary mb-2">Market Intelligence</h4>
-                            <p className="text-sm text-muted-foreground">Strategic insights for stakeholders.</p>
+                            <p className="text-sm text-muted-foreground">We combine ground-truth reporting with our proprietary Intelligence Engine to deliver insights that matter.akeholders.</p>
                         </div>
                         <div className="p-6 border border-border rounded-lg bg-card">
                             <h4 className="font-bold text-primary mb-2">Narrative Diplomacy</h4>

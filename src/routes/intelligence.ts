@@ -10,9 +10,16 @@ import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// Apply API key auth and rate limiting to all intelligence routes
-router.use('*', requireApiKey);
-router.use('*', rateLimit);
+// Apply API key auth and rate limiting to premium intelligence routes
+// Excludes /audience, which is public
+router.use('/country/*', requireApiKey);
+router.use('/country/*', rateLimit);
+
+router.use('/sector/*', requireApiKey);
+router.use('/sector/*', rateLimit);
+
+router.use('/campaigns/*', requireApiKey);
+router.use('/campaigns/*', rateLimit);
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /intel/country/:code/report - Deep country analysis (CACHED)
@@ -108,7 +115,7 @@ router.get('/country/:code/report', async (c) => {
         investment_readiness_score: Math.round(investmentScore),
         tourism_appeal_score: Math.round(tourismScore),
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
-        recommendations: generateRecommendations(code, articleCount?.total || 0, gaps.results || []),
+        recommendations: await generateAIRecommendations(c.env, (country as any).name, recentArticles.results || []),
       } as CountryReport;
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -184,11 +191,34 @@ router.get('/sector/:id/trends', async (c) => {
         `).bind(sectorId).all(),
       ]);
 
+      const aiReport = await getCached(
+        c.env,
+        CACHE_KEYS.intelSectorAnalysis(sectorId),
+        async () => {
+          const headlines = (topArticles.results as any[]).slice(0, 10).map(a => `- ${a.title} (Engagement: ${a.engagement_score})`).join('\n');
+          if (!headlines) return "Insufficient data for deep analysis.";
+
+          try {
+            const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+              messages: [
+                { role: 'system', content: `You are a Senior Investment Analyst. Write a "Deep Dive Market Analysis" for the ${sector.name} sector in Africa.` },
+                { role: 'user', content: `Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.` }
+              ]
+            });
+            return aiResponse?.response?.trim();
+          } catch (e) {
+            return "Analysis currently unavailable.";
+          }
+        },
+        { ttl: CACHE_TTL.INTEL }
+      );
+
       return {
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         monthly_trend: monthlyTrend.results || [],
         top_articles: topArticles.results || [],
+        ai_analyst_report: aiReport
       };
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -253,15 +283,20 @@ router.get('/audience', async (c) => {
     { age_group: '55+', percentage: 6 },
   ];
 
-  // Generate simulated engagement trends
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split('T')[0];
-  });
-  const engagement_trends = dates.map((date, i) => ({
-    date,
-    views: Math.floor(1000 + Math.random() * 500 + (i * 50))
+  // Get real engagement trends based on content publication
+  const trendData = await c.env.DB.prepare(`
+    SELECT 
+      date(published_at) as date,
+      SUM(view_count) as views
+    FROM articles
+    WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+    GROUP BY date(published_at)
+    ORDER BY date ASC
+  `).all();
+
+  const engagement_trends = (trendData.results || []).map((d: any) => ({
+    date: d.date,
+    views: d.views || 0
   }));
 
   // Return in format expected by AudienceInsightsPage.tsx
@@ -310,7 +345,10 @@ router.get('/campaigns/:id', async (c) => {
   `).bind(campaignId).all();
 
   return c.json({
-    campaign,
+    campaign: {
+      ...campaign,
+      ai_roi_projection: (campaign as any).ai_predicted_roi || "Calculating..."
+    },
     articles: articles.results || [],
   });
 });
@@ -318,22 +356,7 @@ router.get('/campaigns/:id', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // Helper: Generate recommendations
 // ───────────────────────────────────────────────────────────────────────────────
-function generateRecommendations(countryCode: string, articleCount: number, gaps: any[]): string[] {
-  const recommendations: string[] = [];
 
-  if (articleCount < 10) {
-    recommendations.push('Increase content volume to improve visibility and search ranking');
-  }
-
-  if (gaps.length > 3) {
-    recommendations.push(`Expand coverage to uncovered sectors: ${gaps.slice(0, 3).map((g: any) => g.name).join(', ')}`);
-  }
-
-  recommendations.push('Consider sponsored content partnerships to boost reach');
-  recommendations.push('Engage with local correspondents for authentic regional insights');
-
-  return recommendations;
-}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /intel/audience/reach - Aggregated platform reach metrics
@@ -368,5 +391,167 @@ router.get('/audience/reach', async (c) => {
     updated_at: new Date().toISOString()
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /intel/ai-chat - RAG-powered AI Consultant
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/ai-chat', async (c) => {
+  const { message } = await c.req.json();
+  if (!message) return c.json({ error: 'Message required' }, 400);
+
+  try {
+    // 1. Generate Embedding for Query
+    const embeddingResponse = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', {
+      text: [message]
+    });
+    const queryVector = (embeddingResponse as any).data[0];
+
+    // 2. Search Vector Database (RAG)
+    // Query best-of-africa-content index
+    const vectorResults = await c.env.VECTORS.query(queryVector, {
+      topK: 5,
+      returnMetadata: true
+    });
+
+    // 3. Retrieve Context
+    const matches = vectorResults.matches || [];
+    const contextDocs = matches.map(m => {
+      const meta = m.metadata as any;
+      return `Title: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nDate: ${meta.published_at}`;
+    }).join('\n---\n');
+
+    // 4. Generate Response with Llama-3
+    const systemPrompt = `You are the AI Market Consultant for "Best of Africa", a strategic intelligence platform. 
+    Current Date: ${new Date().toLocaleDateString()}.
+    Use the provided Real-Time Context to answer the user's question about African markets. 
+    If the context is relevant, cite it. If not, rely on your general knowledge but mention you are missing specific real-time data on that niche.
+    Be professional, concise, and investor-focused.
+    
+    REAL-TIME CONTEXT FROM DATABASE:
+    ${contextDocs}`;
+
+    const llmResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: message }
+      ]
+    });
+
+    return c.json({
+      response: (llmResponse as any).response,
+      sources: matches.map(m => (m.metadata as any).title)
+    });
+
+  } catch (error) {
+    console.error('AI Chat Error:', error);
+    return c.json({ error: 'AI service failed', details: String(error) }, 500);
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /intel/reframe - Rewrite article for specific audience (Analyst Lens)
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/reframe', async (c) => {
+  const { articleId, targetAudience } = await c.req.json();
+
+  if (!articleId || !targetAudience) {
+    return c.json({ error: 'Missing articleId or targetAudience' }, 400);
+  }
+
+  // 1. Fetch Article Content
+  const article = await c.env.DB.prepare(
+    'SELECT content, title FROM articles WHERE id = ?'
+  ).bind(articleId).first();
+
+  if (!article) {
+    return c.json({ error: 'Article not found' }, 404);
+  }
+
+  // 2. Call AI Service
+  try {
+    const { optimizeForAudience } = await import('../lib/ai');
+    const rewrittenContent = await optimizeForAudience(
+      c.env,
+      (article as any).content,
+      targetAudience as any
+    );
+
+    return c.json({
+      original_id: articleId,
+      audience: targetAudience,
+      content: rewrittenContent
+    });
+  } catch (e) {
+    console.error('Reframe Error:', e);
+    return c.json({ error: 'Failed to reframe content' }, 500);
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /intel/reformat - Adapt content format (Briefing Mode)
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/reformat', async (c) => {
+  const { articleId, format } = await c.req.json();
+
+  if (!articleId || !format) {
+    return c.json({ error: 'Missing articleId or format' }, 400);
+  }
+
+  const article = await c.env.DB.prepare(
+    'SELECT content FROM articles WHERE id = ?'
+  ).bind(articleId).first();
+
+  if (!article) {
+    return c.json({ error: 'Article not found' }, 404);
+  }
+
+  try {
+    const { adaptContentFormat } = await import('../lib/ai');
+    const reformattedContent = await adaptContentFormat(
+      c.env,
+      (article as any).content,
+      format as any
+    );
+
+    return c.json({
+      original_id: articleId,
+      format: format,
+      content: reformattedContent
+    });
+  } catch (e) {
+    console.error('Reformat Error:', e);
+    return c.json({ error: 'Failed to reformat content' }, 500);
+  }
+});
+
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Helper: AI Strategic Recommendations
+// ───────────────────────────────────────────────────────────────────────────────
+async function generateAIRecommendations(env: Env, countryName: string, articles: any[]): Promise<string[]> {
+  try {
+    const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
+
+    const aiRes = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct' as any, {
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a Strategic Advisor. Provide 3 specific strategic recommendations for investors in this country based on recent news. Return array of strings.'
+        },
+        {
+          role: 'user',
+          content: `Country: ${countryName}. News: ${topStories}`
+        }
+      ]
+    });
+
+    // Parse response (simple heuristic)
+    const text = (aiRes as any).response;
+    return text.split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
+
+  } catch (e) {
+    return ["Monitor currency fluctuations.", "Engage local legal counsel.", "Verify supply chain resilience."];
+  }
+}
 
 export { router as intelligenceRouter };

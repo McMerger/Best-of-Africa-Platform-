@@ -21,8 +21,7 @@ import { PremiumCountryAnalysisPage } from './pages/PremiumCountryAnalysisPage';
 import { PremiumSectorTrendsPage } from './pages/PremiumSectorTrendsPage';
 import { PersonalizedFeedPage } from './pages/PersonalizedFeedPage';
 import { EditorialGuidelinesPage } from './pages/EditorialGuidelinesPage';
-import { StrategicServicesPage } from './pages/StrategicServicesPage';
-import { BusinessTravelPage } from './pages/BusinessTravelPage';
+
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
 import { AdminPage } from './pages/AdminPage';
@@ -32,9 +31,11 @@ import { TermsPage } from './pages/TermsPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { EventsPage } from './pages/EventsPage';
+import { EventDetailPage } from './pages/EventDetailPage';
+import { BookingRequestPage } from './pages/BookingRequestPage';
 import { MembershipPage } from './pages/MembershipPage';
 import { AboutPage } from './pages/AboutPage';
-import { AiConsultantPage } from './pages/AiConsultantPage';
+import { AnalystPage } from './pages/AnalystPage';
 import { ImpactPage } from './pages/ImpactPage';
 import { LibraryPage } from './pages/LibraryPage';
 
@@ -69,12 +70,15 @@ function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/guidelines" element={<EditorialGuidelinesPage />} />
-        <Route path="/strategic-services" element={<StrategicServicesPage />} />
-        <Route path="/travel" element={<BusinessTravelPage />} />
+        {/* Services Removed */}
+        {/* Travel Removed */}
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/request-consultation" element={<BookingRequestPage />} />
+
         <Route path="/membership" element={<MembershipPage />} />
         <Route path="/about" element={<AboutPage />} />
-        <Route path="/ask-ai" element={<AiConsultantPage />} />
+        <Route path="/analyst" element={<AnalystPage />} />
         <Route path="/impact" element={<ImpactPage />} />
         <Route path="/library" element={<LibraryPage />} />
         <Route path="/contact" element={<ContactPage />} />

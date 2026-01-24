@@ -15,10 +15,15 @@ export const ReportDetailPage: React.FC = () => {
 
     useEffect(() => {
         if (id) {
-            // Loading is true by default, no need to set it here
-            api.getReport(id)
+            // Prioritize generated reports, fallback to legacy
+            api.getGeneratedReport(id)
                 .then(res => setData(res))
-                .catch(console.error)
+                .catch(err => {
+                    console.error('Failed to fetch generated report, trying legacy:', err);
+                    api.getReport(id)
+                        .then(res => setData(res))
+                        .catch(console.error);
+                })
                 .finally(() => setLoading(false));
         }
     }, [id]);
@@ -36,7 +41,7 @@ export const ReportDetailPage: React.FC = () => {
                         <span className="rounded bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary-foreground">PREMIUM REPORT</span>
                         <span className="rounded bg-muted px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{report.sector_id || 'General'}</span>
                     </div>
-                    <h1 className="mb-6 text-4xl font-extrabold leading-tight text-foreground md:text-5xl">{report.title}</h1>
+                    <h1 className="mb-6 text-4xl font-serif font-extrabold leading-tight text-foreground md:text-5xl">{report.title}</h1>
                     <p className="text-xl leading-relaxed text-muted-foreground">{report.subtitle || report.summary}</p>
 
                     <div className="mt-8 flex items-center gap-6 text-sm font-bold text-muted-foreground">

@@ -10,10 +10,10 @@ export const Footer: React.FC = () => {
 
                     {/* Brand / Mission Column */}
                     <div>
-                        <div className="mb-5 text-2xl font-black tracking-tighter text-primary-foreground pl-1">
+                        <div className="mb-5 font-serif text-3xl font-black tracking-tighter text-primary-foreground pl-1">
                             BEST OF AFRICA<span className="text-accent">.</span>
                         </div>
-                        <p className="mb-0 max-w-[400px] text-lg font-medium leading-relaxed text-primary-foreground/90 italic">
+                        <p className="mb-0 max-w-[400px] text-lg font-serif font-medium leading-relaxed text-primary-foreground/90 italic">
                             "Best of Africa amplifies the continent's voice with rigor, sophistication, and vision—while serving as a practical, trusted gateway for business travelers, investors, and partners to engage directly with Africa's opportunities across every sector and country."
                         </p>
                     </div>

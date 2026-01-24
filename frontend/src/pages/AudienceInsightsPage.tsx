@@ -24,7 +24,7 @@ export const AudienceInsightsPage: React.FC = () => {
             api.getAudienceInsights(),
             fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/intel/audience/reach`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('boa_auth_token') || ''}` }
-            }).then(r => r.ok ? r.json() : { reach_display: '2.4M', trend: 'up' })
+            }).then(r => r.ok ? r.json() : { reach_display: 'Calculating...', trend: 'up' })
         ])
             .then(([audienceRes, reachRes]) => {
                 setData(audienceRes);
@@ -51,7 +51,7 @@ export const AudienceInsightsPage: React.FC = () => {
                                 </span>
                                 Monitoring Active
                             </Badge>
-                            <h1 className="text-5xl font-black tracking-tighter text-foreground md:text-6xl">Audience Impact Monitor</h1>
+                            <h1 className="text-5xl font-serif font-black tracking-tighter text-foreground md:text-6xl">Audience Impact Monitor</h1>
                             <p className="max-w-2xl font-mono text-muted-foreground">
                                 Tracking narrative penetration and influence vectors across 54 key markets.
                             </p>
@@ -59,7 +59,7 @@ export const AudienceInsightsPage: React.FC = () => {
                         <div className="text-right">
                             <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Total Reach Equivalent</div>
                             <div className="text-5xl font-black text-secondary-foreground flex items-center justify-end gap-2">
-                                {reach?.reach_display || '2.4M'}
+                                {reach?.reach_display || 'Loading...'}
                                 {reach?.trend === 'up' ? (
                                     <ArrowTopRightIcon className="h-6 w-6 text-primary" />
                                 ) : (

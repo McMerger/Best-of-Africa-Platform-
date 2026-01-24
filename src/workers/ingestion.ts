@@ -48,7 +48,7 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
             }
         }
 
-        return items.slice(0, 20); // Limit per source
+        return items.slice(0, 50); // Limit per source
     } catch (error) {
         console.error(`Failed to parse RSS ${url}:`, error);
         return [];
@@ -183,144 +183,136 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     let queued = 0;
 
     // Get active sources
-    const sources = await env.DB.prepare(`
+    const sourcesResult = await env.DB.prepare(`
     SELECT id, name, type, url, country_code, sector_id
     FROM sources
     WHERE is_active = 1
   `).all();
 
-    // Process each source
-    for (const source of sources.results || []) {
-        const s = source as any;
+    // Shuffle sources to ensure coverage equality
+    const sources = (sourcesResult.results || []).sort(() => 0.5 - Math.random());
+    const BATCH_SIZE = 10; // Process more in parallel
 
-        try {
-            let items: Array<{ title: string; url: string; content: string; publishedAt: string }> = [];
+    // Define the Fixed Sources Task
+    const fixedSourcesTask = async () => {
+        console.log(`Processing ${sources.length} fixed sources...`);
+        for (let i = 0; i < sources.length; i += BATCH_SIZE) {
+            const batch = sources.slice(i, i + BATCH_SIZE);
+            await Promise.all(batch.map(async (source: any) => {
+                const s = source;
+                try {
+                    let items: Array<{ title: string; url: string; content: string; publishedAt: string }> = [];
 
-            if (s.type === 'rss') {
-                const rssItems = await parseRSS(s.url);
-                items = rssItems.map(item => ({
-                    title: item.title,
-                    url: item.link,
-                    content: item.description,
-                    publishedAt: item.pubDate,
-                }));
-            } else if (s.type === 'newsapi' && env.NEWS_API_KEY) {
-                const newsItems = await fetchNewsAPI(env.NEWS_API_KEY, s.url);
-                items = newsItems.map(item => ({
-                    title: item.title,
-                    url: item.url,
-                    content: item.description || '',
-                    publishedAt: item.publishedAt,
-                }));
-            }
-
-            // Process items
-            for (const item of items) {
-                processed++;
-
-                // Check if already ingested
-                const existing = await env.DB.prepare(`
-          SELECT id FROM ingested_items
-          WHERE source_id = ? AND external_id = ?
-        `).bind(s.id, item.url).first();
-
-                if (existing) continue;
-
-                // Filter out non-Africa content (simple keyword check)
-                const africaKeywords = ['africa', 'african', 'nigeria', 'kenya', 'south africa', 'egypt', 'morocco', 'ethiopia', 'ghana', 'tanzania', 'angola', 'mozambique', 'senegal', 'rwanda', 'uganda', 'cameroon'];
-                const isAfrican = africaKeywords.some(kw =>
-                    item.title.toLowerCase().includes(kw) || item.content.toLowerCase().includes(kw)
-                );
-
-                if (!isAfrican && !s.country_code) continue;
-
-                // If content is short (just a summary), try to scrape full content
-                let fullContent = item.content;
-                if (fullContent.length < 500 && item.url) {
-                    console.log(`Scraping full content for: ${item.title.slice(0, 50)}...`);
-                    const scraped = await scrapeFullContent(item.url);
-                    if (scraped) {
-                        fullContent = scraped;
-                        console.log(`  → Scraped ${fullContent.length} chars`);
+                    if (s.type === 'rss') {
+                        const rssItems = await parseRSS(s.url);
+                        items = rssItems.map(item => ({
+                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate,
+                        }));
+                    } else if (s.type === 'newsapi' && env.NEWS_API_KEY) {
+                        const newsItems = await fetchNewsAPI(env.NEWS_API_KEY, s.url);
+                        items = newsItems.map(item => ({
+                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt,
+                        }));
                     }
+
+                    for (const item of items) {
+                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
+                        if (existing) continue;
+
+                        const africaKeywords = ['africa', 'african', 'nigeria', 'kenya', 'south africa', 'egypt', 'morocco', 'ethiopia', 'ghana', 'tanzania', 'angola', 'mozambique', 'senegal', 'rwanda', 'uganda', 'cameroon'];
+                        const isAfrican = africaKeywords.some(kw => item.title.toLowerCase().includes(kw) || item.content.toLowerCase().includes(kw));
+
+                        if (!isAfrican && !s.country_code) continue;
+
+                        processed++;
+
+                        let fullContent = item.content;
+                        if (fullContent.length < 500 && item.url) {
+                            try {
+                                const scraped = await scrapeFullContent(item.url);
+                                if (scraped) fullContent = scraped;
+                            } catch (e) { /* Ignore */ }
+                        }
+
+                        const itemId = crypto.randomUUID();
+                        await env.DB.prepare(`
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString()).run();
+
+                        await env.CONTENT_QUEUE.send({
+                            type: 'generate_article', ingested_item_id: itemId, source_id: s.id, priority: 'normal',
+                        });
+                        queued++;
+                    }
+                    await env.DB.prepare(`UPDATE sources SET last_fetched_at = datetime('now') WHERE id = ?`).bind(s.id).run();
+                } catch (error) {
+                    console.error(`Failed to process source ${s.name}:`, error);
                 }
-
-                // Insert ingested item
-                const itemId = crypto.randomUUID();
-                await env.DB.prepare(`
-          INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-        `).bind(
-                    itemId,
-                    s.id,
-                    item.url,
-                    item.title,
-                    fullContent,
-                    item.url,
-                    item.publishedAt || new Date().toISOString()
-                ).run();
-
-                // Queue for AI processing
-                const message: ContentGenerationMessage = {
-                    type: 'generate_article',
-                    ingested_item_id: itemId,
-                    source_id: s.id,
-                    priority: 'normal',
-                };
-
-                await env.CONTENT_QUEUE.send(message);
-                queued++;
-            }
-
-            // Update last fetched
-            await env.DB.prepare(`
-        UPDATE sources SET last_fetched_at = datetime('now') WHERE id = ?
-      `).bind(s.id).run();
-
-        } catch (error) {
-            console.error(`Failed to process source ${s.name}:`, error);
+            }));
         }
-    }
+    };
 
-    // Also fetch from NewsAPI for general Africa news if API key is set
-    if (env.NEWS_API_KEY) {
+    // Define the Massive Scale Discovery Task (Google News)
+    const discoveryTask = async () => {
         try {
-            const generalNews = await fetchNewsAPI(env.NEWS_API_KEY, 'Africa investment OR Africa tourism OR African economy');
+            console.log('Starting Massive Scale Discovery...');
+            const [countries, sectors] = await Promise.all([
+                env.DB.prepare('SELECT name FROM countries').all(),
+                env.DB.prepare('SELECT name FROM sectors').all()
+            ]);
 
-            for (const item of generalNews) {
-                processed++;
+            const countryList = (countries.results || []).map((c: any) => c.name);
+            const sectorList = (sectors.results || []).map((s: any) => s.name);
 
-                const existing = await env.DB.prepare(`
-          SELECT id FROM ingested_items WHERE external_id = ?
-        `).bind(item.url).first();
+            // INCREASED DISCOVERY RATE: 10 Countries, 5 Sectors per run
+            const targetCountries = countryList.sort(() => 0.5 - Math.random()).slice(0, 10);
+            const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 5);
 
-                if (existing) continue;
+            const queries = [
+                ...targetCountries.map((c: string) => `"${c}" business news when:1d`),
+                ...targetSectors.map((s: string) => `"${s}" industry Africa news when:1d`),
+                '"Africa" economy investment when:1h'
+            ];
 
-                const itemId = crypto.randomUUID();
-                await env.DB.prepare(`
-          INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-          VALUES (?, 'newsapi-general', ?, ?, ?, ?, ?, 'pending')
-        `).bind(
-                    itemId,
-                    item.url,
-                    item.title,
-                    item.description || '',
-                    item.url,
-                    item.publishedAt
-                ).run();
+            console.log(`Aggregating topics: ${queries.join(' | ')}`);
 
-                await env.CONTENT_QUEUE.send({
-                    type: 'generate_article',
-                    ingested_item_id: itemId,
-                    source_id: 'newsapi-general',
-                    priority: 'normal',
-                });
-                queued++;
-            }
+            await Promise.all(queries.map(async (query) => {
+                try {
+                    const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
+                    const items = await parseRSS(googleNewsUrl);
+
+                    for (const item of items) {
+                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ?`).bind(item.link).first();
+                        if (existing) continue;
+
+                        const itemId = crypto.randomUUID();
+                        await env.DB.prepare(`
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
+                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString()).run();
+
+                        await env.CONTENT_QUEUE.send({
+                            type: 'generate_article', ingested_item_id: itemId, source_id: 'google-news-aggregator', priority: 'normal',
+                        });
+                        processed++;
+                        queued++;
+                    }
+                } catch (e) {
+                    console.error(`Discovery failed for query ${query}:`, e);
+                }
+            }));
         } catch (error) {
-            console.error('Failed to fetch general NewsAPI:', error);
+            console.error('Failed to execute Massive Scale Discovery:', error);
         }
-    }
+    };
+
+    // EXECUTE BOTH PIPELINES CONCURRENTLY
+    // This ensures discovery never waits for RSS scraping to finish
+    await Promise.all([
+        fixedSourcesTask(),
+        discoveryTask()
+    ]);
 
     console.log(`Ingestion complete: ${processed} processed, ${queued} queued`);
     return { processed, queued };
@@ -332,29 +324,33 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
 // ───────────────────────────────────────────────────────────────────────────────
 
 export const DEFAULT_SOURCES = [
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // GENERAL AFRICAN NEWS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'African Business', type: 'rss', url: 'https://african.business/feed/', sector_id: null, country_code: null },
     { name: 'The Africa Report', type: 'rss', url: 'https://www.theafricareport.com/feed/', sector_id: null, country_code: null },
     { name: 'AllAfrica', type: 'rss', url: 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf', sector_id: null, country_code: null },
-    { name: 'Reuters Africa', type: 'rss', url: 'https://www.reuters.com/world/africa/rss', sector_id: null, country_code: null },
+    { name: 'CNBC Africa', type: 'rss', url: 'https://www.cnbcafrica.com/feed/', sector_id: 'finance', country_code: null },
     { name: 'BBC Africa', type: 'rss', url: 'https://feeds.bbci.co.uk/news/world/africa/rss.xml', sector_id: null, country_code: null },
     { name: 'African Arguments', type: 'rss', url: 'https://africanarguments.org/feed/', sector_id: null, country_code: null },
     { name: 'Africa News', type: 'rss', url: 'https://www.africanews.com/rss', sector_id: null, country_code: null },
     { name: 'The Continent', type: 'rss', url: 'https://www.thecontinent.org/feed/', sector_id: null, country_code: null },
+    { name: 'The Conversation Africa', type: 'rss', url: 'https://theconversation.com/africa/articles.atom', sector_id: null, country_code: null },
+    { name: 'Semafor Africa', type: 'rss', url: 'https://www.semafor.com/feed/africa', sector_id: null, country_code: null },
+    { name: 'Quartz Africa', type: 'rss', url: 'https://qz.com/africa/rss', sector_id: null, country_code: null },
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // BUSINESS & INVESTMENT
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'Ventures Africa', type: 'rss', url: 'https://venturesafrica.com/feed/', sector_id: 'finance', country_code: null },
     { name: 'How We Made It In Africa', type: 'rss', url: 'https://www.howwemadeitinafrica.com/feed/', sector_id: 'finance', country_code: null },
     { name: 'Africa Business Insider', type: 'rss', url: 'https://africa.businessinsider.com/feed', sector_id: 'finance', country_code: null },
     { name: 'African Private Equity', type: 'rss', url: 'https://www.africaprivateequity.co.za/feed/', sector_id: 'finance', country_code: null },
+    { name: 'Afrik21', type: 'rss', url: 'https://www.afrik21.africa/en/feed/', sector_id: 'energy', country_code: null },
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // TECHNOLOGY & STARTUPS
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'TechCabal', type: 'rss', url: 'https://techcabal.com/feed/', sector_id: 'technology', country_code: null },
     { name: 'Disrupt Africa', type: 'rss', url: 'https://disrupt-africa.com/feed/', sector_id: 'technology', country_code: null },
     { name: 'TechPoint Africa', type: 'rss', url: 'https://techpoint.africa/feed/', sector_id: 'technology', country_code: 'NG' },
@@ -362,74 +358,45 @@ export const DEFAULT_SOURCES = [
     { name: 'IT News Africa', type: 'rss', url: 'https://www.itnewsafrica.com/feed/', sector_id: 'technology', country_code: null },
     { name: 'Techweez', type: 'rss', url: 'https://www.techweez.com/feed/', sector_id: 'technology', country_code: 'KE' },
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // ENERGY & MINING
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'ESI Africa', type: 'rss', url: 'https://www.esi-africa.com/feed/', sector_id: 'energy', country_code: null },
     { name: 'African Mining Brief', type: 'rss', url: 'https://africanminingbrief.com/feed/', sector_id: 'energy', country_code: null },
     { name: 'Mining Review Africa', type: 'rss', url: 'https://www.miningreview.com/feed/', sector_id: 'energy', country_code: null },
     { name: 'Energy Voice Africa', type: 'rss', url: 'https://www.energyvoice.com/category/oilandgas/africa/feed/', sector_id: 'energy', country_code: null },
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // AGRICULTURE
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'African Farming', type: 'rss', url: 'https://www.africanfarming.net/feed/', sector_id: 'agriculture', country_code: null },
     { name: 'Agribusiness Global', type: 'rss', url: 'https://www.agribusinessglobal.com/feed/', sector_id: 'agriculture', country_code: null },
+    { name: 'Farmers Review Africa', type: 'rss', url: 'https://farmersreviewafrica.com/feed/', sector_id: 'agriculture', country_code: null },
 
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     // TOURISM & TRAVEL
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'Tourism Update', type: 'rss', url: 'https://www.tourismupdate.co.za/feed/', sector_id: 'tourism', country_code: 'ZA' },
+    { name: 'VoyagesAfriq', type: 'rss', url: 'https://voyagesafriq.com/feed/', sector_id: 'tourism', country_code: null },
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: NIGERIA
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COUNTRY-SPECIFIC
+    // ═══════════════════════════════════════════════════════════════════════════════
     { name: 'BusinessDay Nigeria', type: 'rss', url: 'https://businessday.ng/feed/', sector_id: null, country_code: 'NG' },
     { name: 'Nairametrics', type: 'rss', url: 'https://nairametrics.com/feed/', sector_id: 'finance', country_code: 'NG' },
     { name: 'The Guardian Nigeria', type: 'rss', url: 'https://guardian.ng/feed/', sector_id: null, country_code: 'NG' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: KENYA
-    // ═══════════════════════════════════════════════════════════════════════════
     { name: 'Business Daily Africa', type: 'rss', url: 'https://www.businessdailyafrica.com/rss', sector_id: null, country_code: 'KE' },
     { name: 'The Standard Kenya', type: 'rss', url: 'https://www.standardmedia.co.ke/rss/', sector_id: null, country_code: 'KE' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: SOUTH AFRICA
-    // ═══════════════════════════════════════════════════════════════════════════
     { name: 'Fin24', type: 'rss', url: 'https://www.news24.com/fin24/rss', sector_id: 'finance', country_code: 'ZA' },
     { name: 'Business Insider SA', type: 'rss', url: 'https://www.businessinsider.co.za/feed', sector_id: null, country_code: 'ZA' },
     { name: 'Daily Maverick', type: 'rss', url: 'https://www.dailymaverick.co.za/dmrss/', sector_id: null, country_code: 'ZA' },
     { name: 'Moneyweb', type: 'rss', url: 'https://www.moneyweb.co.za/feed/', sector_id: 'finance', country_code: 'ZA' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: EGYPT
-    // ═══════════════════════════════════════════════════════════════════════════
     { name: 'Egypt Independent', type: 'rss', url: 'https://www.egyptindependent.com/feed/', sector_id: null, country_code: 'EG' },
     { name: 'Daily News Egypt', type: 'rss', url: 'https://dailynewsegypt.com/feed/', sector_id: null, country_code: 'EG' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: GHANA
-    // ═══════════════════════════════════════════════════════════════════════════
+    { name: 'Ahram Online', type: 'rss', url: 'https://english.ahram.org.eg/RSS/Main/News.xml', sector_id: null, country_code: 'EG' },
     { name: 'Ghana Business News', type: 'rss', url: 'https://www.ghanabusinessnews.com/feed/', sector_id: null, country_code: 'GH' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: RWANDA
-    // ═══════════════════════════════════════════════════════════════════════════
     { name: 'The New Times Rwanda', type: 'rss', url: 'https://www.newtimes.co.rw/rss', sector_id: null, country_code: 'RW' },
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COUNTRY-SPECIFIC: MOROCCO
-    // ═══════════════════════════════════════════════════════════════════════════
     { name: 'Morocco World News', type: 'rss', url: 'https://www.moroccoworldnews.com/feed/', sector_id: null, country_code: 'MA' },
+    { name: 'Zitamar News', type: 'rss', url: 'https://zitamar.com/feed/', sector_id: null, country_code: 'MZ' },
+    { name: 'Club of Mozambique', type: 'rss', url: 'https://clubofmozambique.com/feed/', sector_id: null, country_code: 'MZ' },
 ];
-
-// Total: 38 sources covering:
-// - 8 general African news
-// - 4 business/investment
-// - 6 technology
-// - 4 energy/mining
-// - 2 agriculture
-// - 1 tourism
-// - 13 country-specific (NG, KE, ZA, EG, GH, RW, MA)
-

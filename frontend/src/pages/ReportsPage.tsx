@@ -20,10 +20,25 @@ export const ReportsPage: React.FC = () => {
         : reports.filter(r => r.sector_name?.toLowerCase().includes(filterSector.toLowerCase()));
 
     useEffect(() => {
-        // Initial load is handled by default state
-        const fetcher = sectorId ? api.getReportsBySector(sectorId) : api.getReports();
-        fetcher
-            .then(res => setReports(res.data))
+        // Fetch real generated reports from Intelligence worker
+        api.getGeneratedReports()
+            .then(res => {
+                const mappedReports: ArticleListItem[] = res.data.map((r: any) => ({
+                    id: r.id,
+                    slug: r.id,
+                    title: r.title,
+                    summary: r.metadata?.summary || r.metadata?.subtitle || 'Strategic Market Analysis',
+                    country_code: r.metadata?.country_code || 'AF',
+                    country_name: r.metadata?.country_name || 'Pan-Africa',
+                    country_flag: '🌍',
+                    sector_id: r.type || 'general',
+                    sector_name: r.metadata?.sector_name || 'Strategic Analysis',
+                    hero_image_url: `/assets/images/sectors/${r.type || 'finance'}.jpg`,
+                    reading_time_minutes: 5,
+                    published_at: r.created_at
+                }));
+                setReports(mappedReports);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [sectorId]);
@@ -54,7 +69,7 @@ export const ReportsPage: React.FC = () => {
                         <div className="mb-4 inline-flex items-center gap-2 rounded bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
                             <ArchiveIcon className="h-3 w-3" /> PREMIUM CONTENT
                         </div>
-                        <h1 className="mb-4 text-5xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
+                        <h1 className="mb-4 text-5xl font-serif font-black leading-none tracking-tighter text-foreground lg:text-7xl">
                             Intelligence <span className="text-muted-foreground">Archive</span>
                         </h1>
                         <p className="max-w-lg text-lg text-muted-foreground">

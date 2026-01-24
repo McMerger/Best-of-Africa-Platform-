@@ -22,9 +22,9 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                     )}
                 </div>
 
-                <h3 className={`mb-3 font-bold leading-tight tracking-tight text-foreground ${featured ? 'text-xl' : 'text-lg'}`}>
+                <h3 className={`mb-3 font-serif font-bold leading-tight tracking-tight text-foreground ${featured ? 'text-2xl' : 'text-xl'}`}>
                     <Link to={`/articles/${article.slug}`} className="hover:text-primary">
-                        {article.title}
+                        {(article.title || 'Untitled Article').replace(/\*\*/g, '').replace(/##/g, '')}
                     </Link>
                 </h3>
 
@@ -34,19 +34,24 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
 
                 <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3">
                     <div className="flex items-center gap-3">
-                        {/* Visual Sentiment Bar (Fake Data for Aesthetic) */}
-                        <div className="flex items-center gap-1.5" title="Market Sentiment: Positive">
+                        {/* Visual Sentiment Bar (Dynamic) */}
+                        <div className="flex items-center gap-1.5" title={`Engagement Score: ${article.engagement_score || 0}/100`}>
                             <div className="flex gap-0.5">
-                                <div className="h-2 w-1 rounded-sm bg-primary/80"></div>
-                                <div className="h-2 w-1 rounded-sm bg-primary/60"></div>
-                                <div className="h-2 w-1 rounded-sm bg-primary/40"></div>
-                                <div className="h-2 w-1 rounded-sm bg-muted"></div>
+                                {[1, 2, 3, 4].map((bar) => (
+                                    <div
+                                        key={bar}
+                                        className={`h-2 w-1 rounded-sm ${(article.engagement_score || 0) >= bar * 25
+                                            ? 'bg-primary/80'
+                                            : 'bg-muted'
+                                            }`}
+                                    />
+                                ))}
                             </div>
                             <span className="text-[9px] font-bold uppercase text-muted-foreground">Signal Strength</span>
                         </div>
                     </div>
                     <div className="text-[10px] font-medium text-muted-foreground">
-                        {Math.floor(article.title.length / 5)} min read
+                        {article.reading_time_minutes || 5} min read
                     </div>
                 </div>
             </CardContent>

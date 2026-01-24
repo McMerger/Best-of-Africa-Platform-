@@ -21,7 +21,8 @@ export async function generateArticle(
     sourceTitle: string,
     sourceContent: string,
     countryName: string | null,
-    sectorName: string | null
+    sectorName: string | null,
+    model?: string
 ): Promise<{
     title: string;
     subtitle: string;
@@ -31,7 +32,7 @@ export async function generateArticle(
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
 
-    const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
+    const response = await (env.AI as any).run(model || MODELS.TEXT_GENERATION, {
         prompt,
         max_tokens: 2000,
         temperature: 0.7,
@@ -83,12 +84,17 @@ export async function generateSummary(
     env: Env,
     content: string
 ): Promise<string> {
-    const prompt = `Summarize this article in exactly 2-3 sentences. Focus on the key investment or tourism opportunity. Be specific and compelling.
+    const prompt = `Summarize this article as a Strategic Intelligence Brief.
+    Focus on:
+    1. The core development.
+    2. The direct implication for investors or businesses.
+    3. Any immediate risk or opportunity.
+    Keep it under 4 sentences. Be professional and high-signal.
 
-Article:
-${content.slice(0, 3000)}
+    Article:
+    ${content.slice(0, 3000)}
 
-Summary:`;
+    Summary:`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
         prompt,
@@ -134,8 +140,8 @@ export async function identifySector(
 
     const prompt = `Classify this article into exactly ONE of these sectors: ${sectors.join(', ')}
 
-Title: ${title}
-Content: ${content.slice(0, 1000)}
+    Title: ${title}
+    Content: ${content.slice(0, 1000)}
 
 Reply with ONLY the sector name, nothing else.`;
 
@@ -159,10 +165,10 @@ export async function identifyCountry(
 ): Promise<string | null> {
     const prompt = `Identify the primary African country this article is about.
 
-Title: ${title}
-Content: ${content.slice(0, 1000)}
+        Title: ${title}
+    Content: ${content.slice(0, 1000)}
 
-Reply with ONLY the 2-letter ISO country code (e.g., NG for Nigeria, KE for Kenya, ZA for South Africa).
+Reply with ONLY the 2 - letter ISO country code(e.g., NG for Nigeria, KE for Kenya, ZA for South Africa).
 If no specific country, reply "NONE".`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
@@ -180,6 +186,47 @@ If no specific country, reply "NONE".`;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Analyze Sentiment (True AI)
+// ───────────────────────────────────────────────────────────────────────────────
+export async function analyzeSentiment(
+    env: Env,
+    title: string,
+    content: string
+): Promise<{ score: number; label: string }> {
+    const prompt = `Analyze the sentiment of this business news article regarding the subject's economic/investment outlook.
+
+    Title: ${title}
+    Content: ${content.slice(0, 1000)}
+
+Determine a Sentiment Score between 0(Very Bearish / Negative) and 100(Very Bullish / Positive). 50 is Neutral.
+Also provide a one - word label: "Bullish", "Bearish", or "Neutral".
+
+    Reply in JSON format: { "score": 75, "label": "Bullish" } `;
+
+    try {
+        const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 50,
+            temperature: 0.1, // Deterministic
+        });
+
+        const text = (response as any).response || '';
+        const jsonMatch = text.match(/\{.*\}/s);
+        if (jsonMatch) {
+            const data = JSON.parse(jsonMatch[0]);
+            return {
+                score: Math.min(100, Math.max(0, data.score || 50)),
+                label: data.label || 'Neutral'
+            };
+        }
+    } catch (e) {
+        console.error('Sentiment analysis failed:', e);
+    }
+
+    return { score: 50, label: 'Neutral' };
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Fill Narrative Gap - Generate Article for Underrepresented Topic
 // ───────────────────────────────────────────────────────────────────────────────
 export async function fillNarrativeGap(
@@ -193,29 +240,29 @@ export async function fillNarrativeGap(
     summary: string;
     tags: string[];
 }> {
-    const prompt = `You are a senior correspondent for "Best of Africa," a premium pan-African publication covering investment and tourism.
+    const prompt = `You are a senior correspondent for "Best of Africa," a premium pan - African publication covering investment and tourism.
 
 Write a comprehensive article about the ${sectorName} sector in ${countryName}.
 
-Requirements:
-- Guardian-style journalism: authoritative, well-researched, engaging
-- Focus on investment opportunities and/or tourism potential
-- Include specific details, statistics, and examples
-- Optimistic but realistic tone
-- 600-800 words
+    Requirements:
+    - Guardian - style journalism: authoritative, well - researched, engaging
+        - Focus on investment opportunities and / or tourism potential
+            - Include specific details, statistics, and examples
+                - Optimistic but realistic tone
+                    - 600 - 800 words
 
 Structure your response EXACTLY as follows:
 
-TITLE: [Compelling headline, max 80 characters]
+    TITLE: [Compelling headline, max 80 characters]
 
-SUBTITLE: [Secondary headline adding context, max 120 characters]
+    SUBTITLE: [Secondary headline adding context, max 120 characters]
 
-CONTENT:
-[Full article in markdown format with subheadings]
+    CONTENT:
+    [Full article in markdown format with subheadings]
 
-SUMMARY: [2-3 sentence summary]
+    SUMMARY: [2 - 3 sentence summary]
 
-TAGS: [comma-separated list of 3-5 relevant tags]`;
+    TAGS: [comma - separated list of 3 - 5 relevant tags]`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
         prompt,
@@ -237,35 +284,35 @@ function buildArticlePrompt(
     countryName: string | null,
     sectorName: string | null
 ): string {
-    return `You are a senior correspondent for "Best of Africa," a premium pan-African publication covering investment and tourism opportunities.
+    return `You are a senior correspondent for "Best of Africa," a premium pan - African publication covering investment and tourism opportunities.
 
-Transform this news into a compelling, Guardian-style article:
+Transform this news into a compelling, Guardian - style article:
 
 Source Title: ${sourceTitle}
 Source Content: ${sourceContent.slice(0, 2000)}
 ${countryName ? `Country: ${countryName}` : ''}
 ${sectorName ? `Sector: ${sectorName}` : ''}
 
-Requirements:
-- Write in authoritative, engaging Guardian-style prose
-- Focus on investment opportunities and/or tourism potential
-- Expand on the source with additional context and analysis
-- Maintain journalistic credibility
-- 400-600 words
-- Optimistic but grounded tone
+    Requirements:
+    - Write in authoritative, engaging Guardian - style prose
+        - Focus on investment opportunities and / or tourism potential
+            - Expand on the source with additional context and analysis
+                - Maintain journalistic credibility
+                    - 400 - 600 words
+                        - Optimistic but grounded tone
 
 Structure your response EXACTLY as follows:
 
-TITLE: [Compelling headline, max 80 characters]
+    TITLE: [Compelling headline, max 80 characters]
 
-SUBTITLE: [Secondary headline adding context, max 120 characters]
+    SUBTITLE: [Secondary headline adding context, max 120 characters]
 
-CONTENT:
-[Full article in markdown format with subheadings]
+    CONTENT:
+    [Full article in markdown format with subheadings]
 
-SUMMARY: [2-3 sentence summary]
+    SUMMARY: [2 - 3 sentence summary]
 
-TAGS: [comma-separated list of 3-5 relevant tags]`;
+    TAGS: [comma - separated list of 3 - 5 relevant tags]`;
 }
 
 function parseArticleResponse(text: string): {
@@ -308,12 +355,12 @@ export async function optimizeForAudience(
 
     const prompt = `Adapt this article for a ${targetAudience} audience.
 
-Guidelines: ${audienceGuidance[targetAudience]}
+        Guidelines: ${audienceGuidance[targetAudience]}
 
 Original content:
 ${content.slice(0, 3000)}
 
-Rewrite the content maintaining the same information but optimizing the tone and emphasis for the target audience. Keep the same length.`;
+Rewrite the content maintaining the same information but optimizing the tone and emphasis for the target audience.Keep the same length.`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
         prompt,
@@ -344,7 +391,7 @@ export async function adaptContentFormat(
 Content to adapt:
 ${content.slice(0, 3000)}
 
-Adapted content:`;
+Adapted content: `;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
         prompt,
@@ -372,9 +419,9 @@ export async function generateMarketIntelligence(
     risks: string[];
 }> {
     const focus = countryName && sectorName
-        ? `the ${sectorName} sector in ${countryName}`
+        ? `the ${sectorName} sector in ${countryName} `
         : countryName
-            ? `investment and development opportunities in ${countryName}`
+            ? `investment and development opportunities in ${countryName} `
             : sectorName
                 ? `the ${sectorName} sector across Africa`
                 : 'pan-African market trends';
@@ -385,27 +432,27 @@ Generate a ${reportType.replace('_', ' ')} report on ${focus}.
 
 Structure your response EXACTLY as:
 
-TITLE: [Professional report title]
+    TITLE: [Professional report title]
 
-EXECUTIVE_SUMMARY: [3-4 sentence overview for executives]
+    EXECUTIVE_SUMMARY: [3 - 4 sentence overview for executives]
 
-CONTENT:
-[Detailed analysis in markdown with sections: Market Overview, Key Trends, Competitive Landscape, Regulatory Environment]
+    CONTENT:
+    [Detailed analysis in markdown with sections: Market Overview, Key Trends, Competitive Landscape, Regulatory Environment]
 
-KEY_FINDINGS:
-- [Finding 1]
-- [Finding 2]
-- [Finding 3]
+    KEY_FINDINGS:
+    -[Finding 1]
+        - [Finding 2]
+        - [Finding 3]
 
-OPPORTUNITIES:
-- [Opportunity 1]
-- [Opportunity 2]
-- [Opportunity 3]
+    OPPORTUNITIES:
+    -[Opportunity 1]
+        - [Opportunity 2]
+        - [Opportunity 3]
 
-RISKS:
-- [Risk 1]
-- [Risk 2]
-- [Risk 3]`;
+    RISKS:
+    -[Risk 1]
+        - [Risk 2]
+        - [Risk 3]`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
         prompt,

@@ -12,7 +12,7 @@ export const NotFoundPage: React.FC = () => {
                     <ExclamationTriangleIcon className="h-16 w-16 text-destructive" />
                 </div>
                 <h1 className="mb-4 text-6xl font-black text-foreground tracking-tighter">404</h1>
-                <h2 className="mb-8 text-2xl font-bold text-muted-foreground uppercase tracking-wide">Page Not Found</h2>
+                <h2 className="mb-8 text-2xl font-serif font-bold text-muted-foreground uppercase tracking-wide">Page Not Found</h2>
                 <p className="mb-10 max-w-md text-lg leading-relaxed text-muted-foreground">
                     The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
                 </p>

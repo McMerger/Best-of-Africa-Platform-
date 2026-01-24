@@ -87,8 +87,9 @@ new_classes = ["LiveCounter"]
 # ═══════════════════════════════════════════════════════════════════════════════
 [triggers]
 crons = [
-  "*/30 * * * *",  # Ingestion: every 30 minutes
-  "0 */6 * * *"    # Optimization: every 6 hours
+  "* * * * *",     # Ingestion: Every 1 minute (Real-time)
+  "*/2 * * * *",   # Optimization: Every 2 minutes
+  "0 5 * * *"      # Reporting: Daily at 5am UTC
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════

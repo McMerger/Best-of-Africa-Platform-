@@ -44,7 +44,7 @@ export const getSectorIcon = (id: string, className?: string): React.ReactNode =
     }
 };
 
-export const getRegionIcon = (region: string, className?: string): React.ReactNode => {
+export const getRegionIcon = (_region: string, className?: string): React.ReactNode => {
     // For future expansion if we want specific icons per region (e.g. North, South maps)
     // Currently returing a high-fidelity generic globe
     return <GlobeIcon className={className || "h-6 w-6"} />;

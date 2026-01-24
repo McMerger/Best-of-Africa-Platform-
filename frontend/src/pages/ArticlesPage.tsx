@@ -53,7 +53,7 @@ export const ArticlesPage: React.FC = () => {
         <Layout>
             <div className="container py-10">
                 <header className="mb-10 text-center">
-                    <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl">
+                    <h1 className="font-serif text-5xl font-bold tracking-tight text-foreground md:text-6xl">
                         News & Intelligence
                     </h1>
                 </header>

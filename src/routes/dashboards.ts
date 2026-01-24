@@ -6,6 +6,8 @@
 import { Hono } from 'hono';
 import type { Env, Variables, Dashboard } from '../types';
 
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -101,12 +103,34 @@ router.get('/:region', async (c) => {
         ORDER BY count DESC
     `).bind(region).all();
 
+    // AI Regional Insight (RAG)
+    let aiInsight = "Region is stable.";
+    const cacheKey = `insight:region:${region}`;
+    try {
+        const cached = await c.env.CACHE.get(cacheKey);
+        if (cached) {
+            aiInsight = cached;
+        } else {
+            // Generate if missing
+            // We reuse the logic from countries.ts efficiently via cache check or generate
+            // For now, simpler fallback or quick gen
+            const aiRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                messages: [
+                    { role: 'system', content: 'You are a Regional Strategist. Write a 1-sentence situational overview.' },
+                    { role: 'user', content: `Region: ${region}. Trends: ${JSON.stringify(trendingCountries)}` }
+                ]
+            });
+            aiInsight = aiRes?.response?.trim() || "Monitoring regional trends.";
+            await c.env.CACHE.put(cacheKey, aiInsight, { expirationTtl: 3600 });
+        }
+    } catch { }
+
+
     return c.json({
         dashboard: {
             ...dashboardData,
-            key_metrics: dashboardData?.key_metrics ? JSON.parse(dashboardData.key_metrics) : null,
-            trending_topics: dashboardData?.trending_topics ? JSON.parse(dashboardData.trending_topics) : [],
-            sentiment_overview: dashboardData?.sentiment_overview ? JSON.parse(dashboardData.sentiment_overview) : null,
+            key_metrics: dashboardData.key_metrics ? JSON.parse(dashboardData.key_metrics) : null,
+            ai_regional_insight: aiInsight // The Refinement
         },
         featured_articles: featuredArticles,
         trending_countries: trendingCountries.results || [],
@@ -236,18 +260,53 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
         top_sectors: (topSectors.results || []).map((s: any) => s.id),
     };
 
+    // AI Executive Brief (RAG)
+    let executiveBrief = "Regional data updating...";
+    try {
+        const query = `${region} Africa business political economic developments last 24h`;
+        const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+        const vector = (embedding as any).data[0];
+        const relevant = await env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+        const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+
+        if (context) {
+            const aiResponse = await (env.AI as any).run('@cf/meta/llama-3.1-70b-instruct', {
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You are the Regional Director for ${region} Africa. 
+                        Write a strict 3-bullet Executive Brief for the last 24 hours.
+                        1. Major Development
+                        2. Key Risk
+                        3. Strategic Opportunity
+                        Be concise and high-level.`
+                    },
+                    { role: 'user', content: `Context:\n${context}` }
+                ]
+            });
+            executiveBrief = aiResponse?.response?.trim() || executiveBrief;
+        }
+    } catch (e) { /* Fallback */ }
+
     await env.DB.prepare(`
-        INSERT INTO dashboards (id, region, title, key_metrics, featured_articles, is_current)
-        VALUES (?, ?, ?, ?, ?, 1)
+        INSERT INTO dashboards (id, region, title, key_metrics, featured_articles, executive_brief, is_current, generated_at)
+        VALUES (?, ?, ?, ?, ?, ?, 1, datetime('now'))
     `).bind(
         dashboardId,
         region,
         `${region} Africa Dashboard`,
         JSON.stringify(keyMetrics),
-        JSON.stringify((featured.results || []).map((a: any) => a.id))
+        JSON.stringify((featured.results || []).map((a: any) => a.id)),
+        executiveBrief
     ).run();
 
-    return { id: dashboardId, region, title: `${region} Africa Dashboard`, key_metrics: keyMetrics };
+    return {
+        id: dashboardId,
+        region,
+        title: `${region} Africa Dashboard`,
+        key_metrics: keyMetrics,
+        executive_brief: executiveBrief
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -307,9 +366,50 @@ router.get('/analytics/summary', async (c) => {
         article_count: s.recent_count
     }));
 
-    // Generate market summary based on data
+    // Generate market summary (AI-driven)
     const topSector = sectors[0]?.name || 'Technology';
-    const marketSummary = `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage this week with ${sectors[0]?.recent_count || 0} reports. Platform engagement is ${avgEngagement > 60 ? 'strong' : 'steady'} across ${stats?.total_articles || 0} published analyses.`;
+
+    // Prepare context for AI
+    const summaryContext = {
+        stability: stabilityIndex,
+        avg_engagement: Math.round(avgEngagement),
+        total_articles: stats?.total_articles || 0,
+        top_sector: topSector,
+        top_sector_count: sectors[0]?.recent_count || 0,
+        sentiment: sentimentTrend,
+        sentiment_pct: sentimentPct
+    };
+
+    const marketSummary = await getCached(
+        c.env,
+        'dashboard_market_summary_ai',
+        async () => {
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are the Chief Intelligence Analyst for Best of Africa. 
+                            Write a concise, 2-sentence "Executive Market Pulse" based on the platform data provided. 
+                            Tone: Professional, Insightful, Forward-looking. 
+                            Do NOT use "Based on the data" or generic openers.`
+                        },
+                        {
+                            role: 'user',
+                            content: `Data: ${JSON.stringify(summaryContext)}`
+                        }
+                    ],
+                    max_tokens: 100,
+                    temperature: 0.7
+                });
+                return aiResponse?.response?.trim() || `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage.`;
+            } catch (e) {
+                console.error('AI Dashboard Summary Failed', e);
+                return `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} leads coverage with strong engagement.`;
+            }
+        },
+        { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
+    );
 
     return c.json({
         market_summary: marketSummary,
@@ -319,6 +419,45 @@ router.get('/analytics/summary', async (c) => {
         sentiment_trend: sentimentTrend,
         sector_trends: sectorWithTrends,
         total_articles_7d: stats?.total_articles || 0,
+        updated_at: new Date().toISOString()
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /dashboards/stats/platform-impact - Aggregated platform metrics
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/stats/platform-impact', async (c) => {
+    const [fdiStats, coverageStats, articleStats] = await Promise.all([
+        // Total FDI across all countries
+        c.env.DB.prepare(`
+            SELECT SUM(fdi_inflow_usd) as total_fdi
+            FROM countries
+            WHERE fdi_inflow_usd IS NOT NULL
+        `).first(),
+        // Unique countries and sectors covered
+        c.env.DB.prepare(`
+            SELECT 
+                COUNT(DISTINCT country_code) as countries_covered,
+                COUNT(DISTINCT sector_id) as sectors_covered
+            FROM articles
+            WHERE status = 'published'
+        `).first(),
+        // Total reports generated
+        c.env.DB.prepare(`
+            SELECT COUNT(*) as total_reports
+            FROM generated_reports
+        `).first()
+    ]);
+
+    const fdi = fdiStats as any;
+    const coverage = coverageStats as any;
+    const reports = articleStats as any;
+
+    return c.json({
+        total_fdi_usd: fdi?.total_fdi || 0,
+        countries_covered: coverage?.countries_covered || 0,
+        sectors_covered: coverage?.sectors_covered || 0,
+        total_reports: reports?.total_reports || 0,
         updated_at: new Date().toISOString()
     });
 });

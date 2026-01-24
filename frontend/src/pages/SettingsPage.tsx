@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout } from '../components/Layout';
-import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, CreditCardIcon, EnvelopeClosedIcon, LightningBoltIcon } from '@radix-ui/react-icons';
+import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, IdCardIcon, EnvelopeClosedIcon, LightningBoltIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,16 +10,27 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 export const SettingsPage: React.FC = () => {
-    const [user, setUser] = useState({
-        name: 'Jonathan Doe',
-        email: 'j.doe@investment-fund.com',
-        role: 'Institutional Analyst',
-        tier: 'Premium',
-        notifications: {
-            email: true,
-            push: false,
-            reports: true
+    const [user, setUser] = useState(() => {
+        const saved = localStorage.getItem('boa_client_info');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                return {
+                    name: parsed.name || 'Guest User',
+                    email: parsed.email || 'guest@example.com',
+                    role: parsed.organization || 'Viewer',
+                    tier: parsed.tier || 'Basic',
+                    notifications: { email: true, push: false, reports: true }
+                };
+            } catch (e) { console.error('Failed to parse user info', e); }
         }
+        return {
+            name: 'Guest User',
+            email: 'guest@example.com',
+            role: 'Viewer',
+            tier: 'Basic',
+            notifications: { email: true, push: false, reports: true }
+        };
     });
 
     const [isEditing, setIsEditing] = useState(false);
@@ -38,7 +49,7 @@ export const SettingsPage: React.FC = () => {
         <Layout>
             <div className="container py-20 max-w-4xl">
                 <header className="mb-12 border-b border-border pb-8">
-                    <h1 className="mb-2 text-4xl font-black tracking-tight text-foreground">Control Center</h1>
+                    <h1 className="mb-2 text-4xl font-serif font-black tracking-tight text-foreground">Control Center</h1>
                     <p className="text-lg text-muted-foreground">Manage your account, preferences, and subscription.</p>
                 </header>
 
@@ -110,6 +121,34 @@ export const SettingsPage: React.FC = () => {
                         </CardContent>
                     </Card>
 
+                    {/* INTELLIGENCE PARAMETERS */}
+                    <Card className="border-border shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <LightningBoltIcon className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg font-bold text-foreground">Intelligence Parameters</CardTitle>
+                                    <CardDescription>
+                                        Customize how our Intelligence Engine processes and delivers your insights.
+                                    </CardDescription>
+                                </div>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-6 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label>Intelligence Focus</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Prioritize specific vectors in your daily briefing.
+                                    </p>
+                                    {/* Add actual controls here later */}
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     {/* NOTIFICATIONS */}
                     <Card className="border-border shadow-sm">
                         <CardHeader className="pb-4">
@@ -127,7 +166,7 @@ export const SettingsPage: React.FC = () => {
                             {[
                                 { key: 'email', label: 'Email Digest', desc: 'Daily summary of tracked markets.', icon: EnvelopeClosedIcon },
                                 { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: LightningBoltIcon },
-                                { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: CreditCardIcon },
+                                { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: IdCardIcon },
                             ].map((item) => (
                                 <div key={item.key} className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">

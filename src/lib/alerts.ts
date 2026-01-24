@@ -15,6 +15,7 @@ export interface ArticleAlert {
         slug: string;
         title: string;
         summary: string | null;
+        ai_push_message?: string;
         country_code: string | null;
         country_name: string | null;
         sector_id: string | null;
@@ -155,6 +156,29 @@ export async function onArticlePublished(
         sectorName = sector?.name || null;
     }
 
+    // Generate AI Push Message
+    // Optimize for lock screen: < 120 chars, urgent, actionable
+    let pushMessage = (article as any).ai_push_message || article.title;
+
+    // Fallback: Generate if missing (e.g. old article)
+    if (!pushMessage || pushMessage === article.title) {
+        try {
+            const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a Mobile Notification Editor. Rewrite this headline into a <120 char push notification. Urgent, high-signal, no clickbait.'
+                    },
+                    { role: 'user', content: `Headline: ${article.title}\nSummary: ${article.summary || ''}` }
+                ]
+            });
+            const generated = response?.response?.trim();
+            if (generated && generated.length < 140) {
+                pushMessage = generated.replace(/^"/, '').replace(/"$/, '');
+            }
+        } catch (e) { /* Fallback to title */ }
+    }
+
     // 1. Broadcast to all connected WebSocket clients
     await broadcastAlert(env, {
         type: 'new_article',
@@ -162,6 +186,7 @@ export async function onArticlePublished(
             id: article.id,
             slug: article.slug,
             title: article.title,
+            ai_push_message: pushMessage,
             summary: article.summary,
             country_code: article.country_code,
             country_name: countryName,

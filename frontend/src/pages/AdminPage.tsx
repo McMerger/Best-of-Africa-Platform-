@@ -11,7 +11,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 export const AdminPage: React.FC = () => {
     const [token, setToken] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
     // Simulate initial check
     React.useEffect(() => {
@@ -33,8 +32,6 @@ export const AdminPage: React.FC = () => {
                 if (token === 'admin-secret' || token.length > 5) {
                     localStorage.setItem('boa_admin_token', token);
                     setStatus('success');
-                    localStorage.setItem('boa_admin_token', token);
-                    setStatus('success');
                 } else {
                     throw new Error('Invalid credentials');
                 }
@@ -53,12 +50,12 @@ export const AdminPage: React.FC = () => {
                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary mb-2">
                             <LockClosedIcon className="h-4 w-4" /> Restricted Access
                         </div>
-                        <h1 className="text-4xl font-black text-foreground">Administrative Console</h1>
+                        <h1 className="text-4xl font-serif font-black text-foreground">Administrative Console</h1>
                         <p className="text-muted-foreground font-medium">Access granted. Session logged for compliance.</p>
                     </div>
 
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        {['User Management', 'Content Moderation', 'System Diagnostics', 'API Logs', 'Access Control', 'Deployment Config'].map((item, i) => (
+                        {['User Management', 'Content Moderation', 'System Deep Scan', 'Intelligence Logs', 'Access Control', 'Deployment Config'].map((item, i) => (
                             <Card key={i} className="hover:border-primary transition-colors cursor-pointer group border-border">
                                 <CardHeader>
                                     <CardTitle className="text-lg font-bold text-foreground flex items-center justify-between">
@@ -89,7 +86,7 @@ export const AdminPage: React.FC = () => {
                         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <LockClosedIcon className="h-8 w-8" />
                         </div>
-                        <CardTitle className="text-2xl font-black text-foreground">Restricted Access</CardTitle>
+                        <CardTitle className="text-2xl font-serif font-black text-foreground">Restricted Access</CardTitle>
                         <CardDescription>
                             This area is for authorized personnel only.
                             <br />All attempts are logged.
@@ -135,7 +132,7 @@ export const AdminPage: React.FC = () => {
                         </form>
                     </CardContent>
                     <CardFooter className="justify-center border-t border-border py-4 bg-muted/20 rounded-b-xl">
-                        <p className="text-xs text-muted-foreground font-mono">ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                        <p className="text-xs text-muted-foreground font-mono">ID: {new Date().getTime().toString(36).toUpperCase()}</p>
                     </CardFooter>
                 </Card>
             </div>

@@ -13,7 +13,7 @@ export const MembershipPage: React.FC = () => {
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000005_1px,transparent_1px),linear-gradient(to_bottom,#00000005_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
                 <div className="container relative py-20 text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
                     <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase bg-background text-primary border-primary/20 px-4 py-1">Premium Access</Badge>
-                    <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight text-foreground">
+                    <h1 className="text-5xl md:text-7xl font-serif font-black mb-6 tracking-tight text-foreground">
                         Unlock the <br /> Intelligence Engine.
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium text-balance">
@@ -28,7 +28,7 @@ export const MembershipPage: React.FC = () => {
                     {/* OBSERVER (Free) */}
                     <Card className="border border-border bg-card hover:border-primary/30 transition-all">
                         <CardHeader>
-                            <CardTitle className="text-2xl font-bold">Observer</CardTitle>
+                            <CardTitle className="text-2xl font-serif font-bold">Observer</CardTitle>
                             <CardDescription>Essential daily briefings.</CardDescription>
                             <div className="mt-4">
                                 <span className="text-4xl font-black text-foreground">$0</span>
@@ -53,7 +53,7 @@ export const MembershipPage: React.FC = () => {
                             <Badge className="bg-primary text-white">RECOMMENDED</Badge>
                         </div>
                         <CardHeader>
-                            <CardTitle className="text-2xl font-bold text-primary">Signal</CardTitle>
+                            <CardTitle className="text-2xl font-serif font-bold text-primary">Signal</CardTitle>
                             <CardDescription>For active investors & executives.</CardDescription>
                             <div className="mt-4">
                                 <span className="text-4xl font-black text-foreground">$2,500</span>
@@ -76,7 +76,7 @@ export const MembershipPage: React.FC = () => {
                     {/* SOVEREIGN (Enterprise) */}
                     <Card className="border border-border bg-card hover:border-primary/30 transition-all">
                         <CardHeader>
-                            <CardTitle className="text-2xl font-bold">Sovereign</CardTitle>
+                            <CardTitle className="text-2xl font-serif font-bold">Sovereign</CardTitle>
                             <CardDescription>For Governments & Institutional.</CardDescription>
                             <div className="mt-4">
                                 <span className="text-4xl font-black text-foreground">Custom</span>

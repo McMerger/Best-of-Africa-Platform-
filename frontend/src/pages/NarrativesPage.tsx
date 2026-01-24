@@ -96,7 +96,7 @@ export const NarrativesPage: React.FC = () => {
                                 <LightningBoltIcon className="h-4 w-4" />
                                 Strategic Operations
                             </div>
-                            <h1 className="text-5xl font-bold tracking-tight text-foreground">Narrative Strategy Board</h1>
+                            <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground">Narrative Strategy Board</h1>
                         </div>
                         <div className="text-right">
                             <div className="text-sm font-medium text-muted-foreground">Active Campaigns</div>

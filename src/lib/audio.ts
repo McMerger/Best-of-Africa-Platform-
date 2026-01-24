@@ -31,7 +31,7 @@ export async function generateAudioNarration(
 
         // Store audio in R2 bucket
         const audioKey = `audio/${articleId}.wav`;
-        await env.ASSETS.put(audioKey, response.audio, {
+        await env.MEDIA.put(audioKey, response.audio, {
             httpMetadata: { contentType: 'audio/wav' },
         });
 
@@ -131,7 +131,7 @@ export async function generateBriefAudio(
 
             // Store in R2
             const audioKey = `briefs/${countryCode}/${date}.wav`;
-            await env.ASSETS.put(audioKey, response.audio, {
+            await env.MEDIA.put(audioKey, response.audio, {
                 httpMetadata: { contentType: 'audio/wav' },
             });
 

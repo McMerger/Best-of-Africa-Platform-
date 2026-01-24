@@ -76,7 +76,7 @@ export const LoginPage: React.FC = () => {
                                 <LockClosedIcon className="h-8 w-8 text-foreground" />
                             )}
                         </div>
-                        <h1 className="mb-2 text-2xl font-extralight uppercase tracking-[0.2em] text-foreground">
+                        <h1 className="mb-2 text-3xl font-serif font-bold uppercase tracking-tight text-foreground">
                             Client Portal
                         </h1>
                         <p className="font-mono text-xs text-muted-foreground">

@@ -5,6 +5,8 @@
 
 import { Hono } from 'hono';
 import type { Env, Variables, UserPreference } from '../types';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -201,32 +203,37 @@ router.get('/recommended', async (c) => {
         `).bind(limit).all();
 
         return c.json({
-            data: popular.results || [],
-            personalized: false
+            recommendations: (popular.results || []).map((art: any) => ({
+                ...art,
+                reasoning: "Trending on the platform right now."
+            }))
         });
     }
 
     // Get user preferences
     const prefs = await c.env.DB.prepare(
         'SELECT * FROM user_preferences WHERE session_id = ?'
-    ).bind(sessionId).first();
+    ).bind(sessionId).first<UserPreference>();
 
     if (!prefs) {
         // No preferences yet, return popular
         const popular = await c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code,
-                   c.name as country_name, c.flag_emoji,
+            SELECT a.id, a.slug, a.title, a.summary, a.country_code, a.sector_id,
+                   c.name as country_name, c.flag_emoji, s.name as sector_name,
                    a.hero_image_url, a.published_at
             FROM articles a
             LEFT JOIN countries c ON a.country_code = c.code
+            LEFT JOIN sectors s ON a.sector_id = s.id
             WHERE a.status = 'published'
             ORDER BY a.engagement_score DESC
             LIMIT ?
         `).bind(limit).all();
 
         return c.json({
-            data: popular.results || [],
-            personalized: false
+            recommendations: (popular.results || []).map((art: any) => ({
+                ...art,
+                reasoning: "Trending on the platform right now."
+            }))
         });
     }
 
@@ -271,14 +278,140 @@ router.get('/recommended', async (c) => {
     const params = [...articlesRead, ...countries, ...sectors, limit];
     const recommended = await c.env.DB.prepare(query).bind(...params).all();
 
+    // Generate Reasoning for each item
+    const enrichedResults = (recommended.results || []).map((art: any) => {
+        let reason = "Recommended for you.";
+        if (art.country_code && countries.includes(art.country_code)) {
+            reason = `Because you follow ${art.country_name}`;
+        } else if (art.sector_id && sectors.includes(art.sector_id)) {
+            reason = `Because you follow ${art.sector_name}`;
+        } else {
+            reason = "Trending in your region";
+        }
+        return { ...art, reasoning: reason };
+    });
+
     return c.json({
-        data: recommended.results || [],
+        data: enrichedResults,
         personalized: true,
+        ai_feed_summary: `We've curated these stories focusing on ${countries.join(', ')} and ${sectors.join(', ')} based on your reading history.`,
         based_on: {
             countries: countries.slice(0, 3),
             sectors: sectors.slice(0, 3),
         }
     });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /personalization/feed/ai-curated - AI-curated briefing (The "Why it matters")
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/feed/ai-curated', async (c) => {
+    const sessionId = c.req.header('X-Session-ID');
+
+    // Auth Check
+    if (!sessionId) {
+        return c.json({ error: 'unauthorized', message: 'Session ID required for AI curation' }, 401);
+    }
+
+    // Get Preferences
+    const prefs = await c.env.DB.prepare('SELECT * FROM user_preferences WHERE session_id = ?').bind(sessionId).first();
+    if (!prefs) {
+        return c.json({ error: 'no_prefs', message: 'Set preferences to enable AI curation' }, 400);
+    }
+    const prefsData = prefs as any;
+    const countries = prefsData.countries_of_interest ? JSON.parse(prefsData.countries_of_interest) : [];
+    const sectors = prefsData.sectors_of_interest ? JSON.parse(prefsData.sectors_of_interest) : [];
+
+    // Smart Caching: Keyed by session + latest article ID (to invalidate on new content) 
+    // For now, simpler time-based cache is sufficient
+    return c.json(await getCached(
+        c.env,
+        `feed:ai-curated:${sessionId}`,
+        async () => {
+            // 1. Fetch Top 15 Candidates (SQL)
+            const candidates = await c.env.DB.prepare(`
+                SELECT a.id, a.slug, a.title, a.summary, c.name as country, s.name as sector
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.status = 'published'
+                AND (
+                    a.country_code IN (${countries.length ? countries.map(() => '?').join(',') : "''"})
+                    OR a.sector_id IN (${sectors.length ? sectors.map(() => '?').join(',') : "''"})
+                )
+                ORDER BY a.engagement_score DESC
+                LIMIT 15
+             `).bind(...countries, ...sectors).all();
+
+            if (!candidates.results || candidates.results.length < 3) {
+                // Fallback if not enough matches
+                return { curated: [], message: "Not enough matching content for AI curation yet." };
+            }
+
+            // 2. AI Curation Logic
+            const context = (candidates.results as any[]).map((a, i) =>
+                `[${i}] ID:${a.id} | Title: ${a.title} | Context: ${a.country}, ${a.sector}`
+            ).join('\n');
+
+            const prompt = `
+                User Profile: Interested in ${countries.join(', ')} and ${sectors.join(', ')}.
+                Task: Select the top 5 most critical articles from the list below.
+                For each, write a 1-sentence "relevance_note" explaining EXACTLY why it matters to this user.
+                
+                Articles:
+                ${context}
+
+                Output JSON Array format:
+                [ { "id": "article_id", "relevance_note": "..." } ]
+             `;
+
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        { role: 'system', content: 'You are a Personal Intelligence Officer. Curate a briefing.' },
+                        { role: 'user', content: prompt }
+                    ],
+                    response_format: { type: 'json_object' } // optimization if supported, else parse
+                });
+
+                const rawText = aiResponse?.response || '[]';
+                const jsonMatch = rawText.match(/\[.*\]/s);
+                const selections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+
+                // 3. Hydrate Results
+                const finalFeed = [];
+                for (const sel of selections) {
+                    const original = (candidates.results as any[]).find(c => c.id === sel.id);
+                    if (original) {
+                        finalFeed.push({
+                            ...original,
+                            ai_curation: {
+                                relevance_note: sel.relevance_note,
+                                score: 0.95 // Synthetic relevance score
+                            }
+                        });
+                    }
+                }
+
+                return {
+                    data: finalFeed,
+                    meta: {
+                        curated_count: finalFeed.length,
+                        model: 'llama-3-8b-curator'
+                    }
+                };
+
+            } catch (e) {
+                console.error('AI Curation Failed', e);
+                // Fallback to top 5 raw
+                return {
+                    data: candidates.results.slice(0, 5).map(c => ({ ...c, ai_curation: { relevance_note: "Top match for your profile." } })),
+                    meta: { mode: 'fallback' }
+                };
+            }
+        },
+        { ttl: 1800 } // Cache for 30 mins
+    ));
 });
 
 export { router as personalizationRouter };

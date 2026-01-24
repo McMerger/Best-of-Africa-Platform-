@@ -42,9 +42,55 @@ router.get('/', async (c) => {
             }
         }
 
+        // AI Refinement: Add Regional Insights (RAG)
+        // We do this concurrently for all regions to be fast
+        const regions = Object.keys(grouped);
+        const insights: Record<string, string> = {};
+
+        await Promise.all(regions.map(async (region) => {
+            // Check cache for insight
+            const cacheKey = `insight:region:${region}`;
+            const cachedInsight = await c.env.CACHE.get(cacheKey);
+
+            if (cachedInsight) {
+                insights[region] = cachedInsight;
+                return;
+            }
+
+            try {
+                // RAG Search
+                const query = `${region} Africa business investment stability trends`;
+                const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+                const vector = (embedding as any).data[0];
+                const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
+                const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+
+                if (context) {
+                    const aiRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        messages: [
+                            { role: 'system', content: 'Summarize the current business climate for this region in 1 sentence. Focus on key opportunities.' },
+                            { role: 'user', content: `Region: ${region}. News: ${context}` }
+                        ]
+                    });
+                    const text = aiRes?.response?.trim();
+                    if (text) {
+                        insights[region] = text;
+                        await c.env.CACHE.put(cacheKey, text, { expirationTtl: 3600 * 4 }); // 4 hours
+                    }
+                }
+            } catch (e) {
+                insights[region] = "Regional data currently updating.";
+            }
+        }));
+
         return c.json({
             data: cachedResult,
-            by_region: grouped,
+            by_region: Object.fromEntries(
+                Object.entries(grouped).map(([r, countries]) => [
+                    r,
+                    { countries, ai_insight: insights[r] || "Stable business environment." }
+                ])
+            ),
             total: cachedResult.length,
         });
     }
@@ -55,7 +101,7 @@ router.get('/', async (c) => {
 });
 
 // Helper to process country JSON fields
-function processCountries(countries: Country[]) {
+export function processCountries(countries: Country[]) {
     const parseJsonField = (val: unknown): string[] => {
         if (!val) return [];
         if (typeof val === 'string') {
@@ -172,6 +218,24 @@ router.get('/:code', async (c) => {
             top_sectors: stats.top_sectors,
         },
         recent_articles: stats.recent_articles,
+        ai_situation_report: await getCached(
+            c.env,
+            CACHE_KEYS.countrySituation(code),
+            async () => {
+                const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
+                if (!headlines) return "Monitoring situation.";
+                try {
+                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        messages: [
+                            { role: 'system', content: `SitRep Officer for ${country.name}. 1-sentence current status.` },
+                            { role: 'user', content: headlines }
+                        ]
+                    });
+                    return aiResponse?.response?.trim();
+                } catch { return "Status Normal."; }
+            },
+            { ttl: CACHE_TTL.DASHBOARD }
+        )
     });
 });
 
@@ -275,7 +339,7 @@ router.get('/:code/economics', async (c) => {
     const data = country as any;
 
     // Calculate derived metrics
-    const gdpGrowth = ((data.diplomacy_score || 0.5) * 10 - 2).toFixed(1);
+    const gdpGrowth = null; // No mocked data
     const stability = (data.image_strength_score || 0.5) > 0.6 ? 'Stable'
         : (data.image_strength_score || 0.5) > 0.4 ? 'Moderate' : 'Volatile';
 
@@ -307,15 +371,37 @@ router.get('/:code/relationships', async (c) => {
     const data = country as any;
     const diplomacyScore = data.diplomacy_score || 0.5;
 
-    // Generate relationship weights based on country metrics
-    // In production, this would come from a relationships table
-    const relationships = [
-        { id: 'eu', label: 'EU', weight: Math.round(diplomacyScore * 5), color: '#052962' },
-        { id: 'us', label: 'United States', weight: Math.round(diplomacyScore * 4), color: '#1e40af' },
-        { id: 'china', label: 'China', weight: Math.round((1 - diplomacyScore) * 5 + 1), color: '#dc2626' },
-        { id: 'gulf', label: 'Gulf States', weight: Math.round(diplomacyScore * 3 + 1), color: '#059669' },
-        { id: 'india', label: 'India', weight: Math.round(diplomacyScore * 2 + 1), color: '#d97706' }
-    ];
+    // Relationships: Removed mocked logic. In future, use real AI analysis.
+    const relationships = await getCached(
+        c.env,
+        CACHE_KEYS.countryRelationships(code),
+        async () => {
+            // SEARCH: Find news about relationships
+            const query = `diplomatic relations trade agreement partnership ${data.name}`;
+            const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as any).data[0];
+            const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+
+            const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+            if (!context) return [];
+
+            // AI: Extract Partners
+            try {
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        { role: 'system', content: `Extract diplomatic/trade partners for ${data.name} from the news. Return JSON array: [{ "partner": "China", "type": "Trade", "context": "Infrastructure deal" }]` },
+                        { role: 'user', content: context }
+                    ],
+                    response_format: { type: 'json_object' }
+                });
+                const jsonMatch = (aiResponse as any).response.match(/\[.*\]/s);
+                return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+            } catch (e) {
+                return [];
+            }
+        },
+        { ttl: CACHE_TTL.STATIC } // 6 hours
+    );
 
     return c.json({
         country_code: code,

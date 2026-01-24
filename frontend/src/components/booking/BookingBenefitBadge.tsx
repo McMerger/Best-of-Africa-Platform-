@@ -14,17 +14,17 @@ const BENEFIT_CONFIG: Record<BenefitType, { label: string; icon: React.ElementTy
     breakfast: {
         label: 'Daily Breakfast for Two',
         icon: StarFilledIcon,
-        color: 'text-[#D4AF37]' // Gold
+        color: 'text-secondary' // Gold
     },
     upgrade: {
         label: 'Room Upgrade',
         icon: StarFilledIcon,
-        color: 'text-[#D4AF37]' // Gold
+        color: 'text-secondary' // Gold
     },
     credit: {
-        label: '$100 Hotel Credit',
+        label: 'Partner Hotel Credit',
         icon: StarFilledIcon,
-        color: 'text-[#D4AF37]' // Gold
+        color: 'text-secondary' // Gold
     },
     wifi: {
         label: 'High-Speed WiFi',
@@ -39,7 +39,7 @@ const BENEFIT_CONFIG: Record<BenefitType, { label: string; icon: React.ElementTy
     lounge: {
         label: 'Executive Lounge Access',
         icon: BackpackIcon,
-        color: 'text-[#D4AF37]' // Gold
+        color: 'text-secondary' // Gold
     }
 };
 
@@ -62,7 +62,7 @@ export const BookingBenefitBadge: React.FC<BookingBenefitBadgeProps> = ({
 
     if (variant === 'card') {
         return (
-            <div className={cn("flex flex-col items-center justify-center p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-center gap-2", className)}>
+            <div className={cn("flex flex-col items-center justify-center p-3 rounded-lg bg-secondary/10 border border-secondary/20 text-center gap-2", className)}>
                 <div className={cn("p-2 rounded-full bg-white shadow-sm", config.color)}>
                     <Icon className="h-4 w-4" />
                 </div>

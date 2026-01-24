@@ -119,9 +119,16 @@ export async function autoPostArticle(
         country_code: string | null;
         sector_name: string | null;
         slug: string;
+        ai_social_post?: string; // Added field
     }
 ): Promise<void> {
-    const tweet = formatTweet(article);
+    // 1. Try to use Pre-Calculated AI Post (from Ingestion Engine)
+    let tweet = article.ai_social_post;
+
+    // 2. Fallback: Generate if missing
+    if (!tweet) {
+        tweet = formatTweet(article);
+    }
 
     console.log(`[SOCIAL] Auto-posting article: ${article.id}`);
 

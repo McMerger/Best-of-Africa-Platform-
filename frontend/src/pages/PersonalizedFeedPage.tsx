@@ -64,7 +64,7 @@ export const PersonalizedFeedPage: React.FC = () => {
                         <div className="mb-4 flex gap-4 font-mono text-xs text-muted-foreground">
                             <span className="flex items-center gap-1.5"><ClockIcon className="h-3.5 w-3.5" /> {today}</span>
                         </div>
-                        <h1 className="text-5xl font-black uppercase leading-[0.9] tracking-tighter text-foreground md:text-6xl">
+                        <h1 className="text-5xl font-serif font-black uppercase leading-[0.9] tracking-tighter text-foreground md:text-6xl">
                             Daily <span className="text-primary">Intelligence</span> Briefing
                         </h1>
                     </div>

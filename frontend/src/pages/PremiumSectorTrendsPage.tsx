@@ -138,7 +138,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                             <Card className="border-border">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-primary">
-                                        <TrendingUp className="h-4 w-4" /> Growth Drivers
+                                        <ArrowTopRightIcon className="h-4 w-4" /> Growth Drivers
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -154,7 +154,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                             <Card className="border-border">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-destructive">
-                                        <AlertTriangle className="h-4 w-4" /> Risk Factors
+                                        <ExclamationTriangleIcon className="h-4 w-4" /> Risk Factors
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -172,7 +172,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                     <aside className="space-y-8">
                         <div className="rounded-xl bg-secondary p-8 text-secondary-foreground">
                             <div className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                                <Clock className="h-4 w-4" /> Market Cycle
+                                <ClockIcon className="h-4 w-4" /> Market Cycle
                             </div>
                             <div className="mb-2 text-3xl font-black text-primary">Early Growth</div>
                             <p className="text-sm text-muted-foreground">Sector is currently in expansion phase, outpacing regional average by 2.4x.</p>
@@ -186,7 +186,7 @@ export const PremiumSectorTrendsPage: React.FC = () => {
                                 {top_companies.map((company, i) => (
                                     <div key={i} className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0">
                                         <span className="font-bold text-foreground">{company}</span>
-                                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                        <ArrowRightIcon className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                 ))}
                             </CardContent>

@@ -14,6 +14,10 @@ export interface Country {
     hero_image_url: string;
     diplomacy_score: number;
     image_strength_score: number;
+    fdi_inflow_usd?: number;
+    fdi_yoy_growth?: number;
+    key_narratives?: string;
+    ai_situation_report?: string;
 }
 
 export interface Sector {
@@ -40,6 +44,14 @@ export interface Article {
     engagement_score: number;
     published_at: string;
     is_sponsored: boolean;
+    ai_sentiment_score?: number;
+    ai_sentiment_label?: string;
+    ai_investor_brief?: string;
+    ai_push_message?: string;
+    ai_social_post?: string;
+    refinement_count?: number;
+    generation_prompt_version?: string;
+    ai_headline_variants?: string;
 }
 
 export interface ArticleListItem {
@@ -55,6 +67,7 @@ export interface ArticleListItem {
     hero_image_url: string;
     reading_time_minutes: number;
     published_at: string;
+    engagement_score?: number;
 }
 
 export interface Dashboard {
@@ -71,15 +84,18 @@ export interface Dashboard {
     trending_topics: string[];
     featured_articles: string[];
     generated_at: string;
+    ai_regional_insight?: string;
 }
 
 export interface CountryStats {
     article_count: number;
+    risk_rating?: string;
     top_sectors: {
         sector: {
             name: string;
         };
         count: number;
+        ai_sentiment_score?: number;
     }[];
 }
 

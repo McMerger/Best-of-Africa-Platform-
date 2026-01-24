@@ -33,8 +33,8 @@ export const SearchPage: React.FC = () => {
                 const res = await api.search(query);
                 setResults(res.results);
                 setSuggestions(res.suggestions);
-                if (res.ai_summary) {
-                    setAiSummary(res.ai_summary);
+                if (res.ai_answer) {
+                    setAiSummary(res.ai_answer);
                 }
             } catch (error) {
                 console.error(error);
@@ -54,7 +54,7 @@ export const SearchPage: React.FC = () => {
                         <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"></div>
                         Briefing Mode
                     </div>
-                    <h1 className="mb-4 text-6xl font-black tracking-tighter text-foreground">Market Intelligence</h1>
+                    <h1 className="mb-4 text-6xl font-serif font-black tracking-tighter text-foreground">Market Intelligence</h1>
                     <p className="mx-auto max-w-2xl text-xl font-mono text-muted-foreground">
                         Generate summaries from platform data.
                     </p>
@@ -108,7 +108,8 @@ export const SearchPage: React.FC = () => {
                     <div className="py-20 text-center">
                         <div className="flex flex-col items-center gap-6">
                             <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                            <div className="font-mono text-sm font-bold uppercase tracking-widest text-primary animate-pulse">Analyzing Data...</div>
+                            <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                            <div className="font-mono text-sm font-bold uppercase tracking-widest text-primary animate-pulse">Synthesizing Intelligence...</div>
                         </div>
                     </div>
                 )}
@@ -121,7 +122,7 @@ export const SearchPage: React.FC = () => {
                                 <main>
                                     <div className="mb-12">
                                         <h3 className="mb-6 flex items-center gap-2 text-sm font-black uppercase tracking-widest text-primary">
-                                            <StarIcon className="h-4 w-4" /> AI Summary
+                                            <StarIcon className="h-4 w-4" /> Strategic Synthesis
                                         </h3>
                                         <div className="text-lg leading-loose text-foreground">
                                             {aiSummary ? (

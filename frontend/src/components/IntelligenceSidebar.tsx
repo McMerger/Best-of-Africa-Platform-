@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DesktopIcon, PersonIcon, StarIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
-// import { ScrollArea } from '@/components/ui/scroll-area';
+
 
 interface IntelligenceSidebarProps {
     open: boolean;
@@ -18,21 +18,44 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
         { role: 'assistant', content: "Select a Lens above to adapt the market insights, or ask me to refine the parameters." }
     ]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!query.trim()) return;
 
         // Add user message
         const newHistory = [...chatHistory, { role: 'user', content: query }];
         setChatHistory(newHistory);
+        const userQuery = query;
         setQuery("");
 
-        // Mock AI Response (Immediate)
-        setTimeout(() => {
+        try {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
+            const res = await fetch(`${API_BASE}/intel/ai-chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('boa_auth_token') || ''}`
+                },
+                body: JSON.stringify({ message: userQuery, context: 'sidebar' })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setChatHistory(prev => [...prev, {
+                    role: 'assistant',
+                    content: data.response || data.message || "I processed your request."
+                }]);
+            } else {
+                setChatHistory(prev => [...prev, {
+                    role: 'assistant',
+                    content: "I encountered an issue processing your request. Please try again."
+                }]);
+            }
+        } catch (error) {
             setChatHistory(prev => [...prev, {
                 role: 'assistant',
-                content: "Parameters updated. Re-calibrating vector search for 'Investor Risk' context. I've highlighted 3 regulatory shifts in the main view."
+                content: "Connection error. The intelligence service may be temporarily unavailable."
             }]);
-        }, 800);
+        }
     };
 
     return (
@@ -68,7 +91,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                     </div>
                 </SheetHeader>
 
-                <ScrollArea className="flex-1 p-6">
+                <div className="flex-1 p-6 overflow-y-auto">
                     <div className="space-y-6">
                         {chatHistory.map((msg, i) => (
                             <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
