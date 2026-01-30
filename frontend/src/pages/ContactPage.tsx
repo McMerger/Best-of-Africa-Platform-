@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { EnvelopeClosedIcon, ChatBubbleIcon, PaperPlaneIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { toast } from "sonner"
@@ -12,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
 export const ContactPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -51,7 +53,9 @@ export const ContactPage: React.FC = () => {
         <Layout>
             <div className="container py-20 max-w-4xl">
                 <div className="mb-12 text-center">
-                    <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">Contact Best of Africa</h1>
+                    <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">
+                        {config?.['contact_headline'] || "Contact Best of Africa"}
+                    </h1>
                     <p className="text-xl text-muted-foreground">
                         For media inquiries, partnership opportunities, or support.
                     </p>

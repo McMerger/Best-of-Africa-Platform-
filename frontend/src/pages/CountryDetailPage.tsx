@@ -6,7 +6,7 @@ import { ArticleCard } from '../components/ArticleCard';
 import { Badge } from '@/components/ui/badge';
 import type { Country, ArticleListItem, CountryStats } from '../types';
 import { cn } from '@/lib/utils';
-import { ArrowRightIcon, PersonIcon, InfoCircledIcon, ArrowTopRightIcon, PieChartIcon, LightningBoltIcon } from '@radix-ui/react-icons';
+import { ArrowRightIcon, PersonIcon, InfoCircledIcon, ArrowTopRightIcon, PieChartIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,6 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ActivityLogIcon, PlayIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
 
 
+
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ActionBar } from '@/components/ActionBar';
 
 export const CountryDetailPage: React.FC = () => {
     const { code } = useParams<{ code: string }>();
@@ -79,9 +83,11 @@ export const CountryDetailPage: React.FC = () => {
 
     return (
         <Layout>
-            {/* Hero Section: Editorial Dynamic Context */}
-            <div className="container py-8 md:py-12">
-                <div className="mb-12 rounded-xl bg-card border border-border p-8 shadow-sm md:p-12 relative overflow-hidden">
+            <ActionBar title={country.name} type="country" />
+
+            {/* Hero Section: Editorial Dynamic Context (Always Visible) */}
+            <div className="container pt-8 md:pt-12 pb-6">
+                <div className="rounded-xl bg-card border border-border p-8 shadow-sm md:p-12 relative overflow-hidden">
                     {/* Ambient Background Gradient */}
                     <div className={cn(
                         "absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-10 pointer-events-none",
@@ -129,293 +135,261 @@ export const CountryDetailPage: React.FC = () => {
                             </span>
                         )}
                     </h1>
-
-                    {/* Subtext */}
-                    <p className="mb-12 max-w-3xl text-lg leading-relaxed text-muted-foreground md:text-xl relative z-10">
-                        Our systems have analyzed <strong className="text-foreground font-semibold">{stats.article_count} new reports</strong> in the last 24 hours. The primary narrative thread is <strong className="text-foreground font-semibold">{stats.top_sectors?.[0]?.sector?.name}</strong>, which is currently outpacing broader regional currents.
-                    </p>
-
-                    {/* Quick Stats Grid */}
-                    <div className="grid gap-6 md:grid-cols-3 relative z-10">
-                        {/* Stability Index */}
-                        <div className="rounded-lg border border-border bg-muted/30 p-6 backdrop-blur-sm">
-                            <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stability Index</div>
-                            <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-black text-foreground">{country.image_strength_score || "--"}</span>
-                                <span className="text-sm font-medium text-muted-foreground">/100</span>
-                            </div>
-                        </div>
-
-                        {/* Dominant Sector */}
-                        <div className="rounded-lg border border-border bg-muted/30 p-6 backdrop-blur-sm">
-                            <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dominant Sector</div>
-                            <div className="text-xl font-bold text-foreground">{stats.top_sectors?.[0]?.sector?.name || "--"}</div>
-                        </div>
-
-                        {/* Emerging Narratives */}
-                        <div className="rounded-lg border border-border bg-muted/30 p-6 backdrop-blur-sm">
-                            <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Emerging Narratives</div>
-                            <div className="flex flex-wrap gap-2">
-                                {country.investment_highlights?.slice(0, 3).map((tag: string) => (
-                                    <span key={tag} className="inline-flex items-center gap-1 rounded bg-background/80 px-2 py-1 text-[10px] font-bold text-secondary-foreground border border-border">
-                                        {tag} <ArrowTopRightIcon className="h-3 w-3 opacity-50" />
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <div className="container py-12">
-                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                {/* SECTOR OPPORTUNITIES (Strategic Context - PRIMARY FOCUS)                        */}
-                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                <section className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2">
-                        <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground mb-6">Sector Opportunities</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Dynamic Sector Opportunities from API */}
-                            {stats.top_sectors?.length > 0 ? stats.top_sectors.map((sectorData, i) => {
-                                const sectorSlug = sectorData.sector?.name?.toLowerCase().replace(/\s+/g, '-').replace(/&/g, '').replace('--', '-') || 'general';
-                                const sectorName = sectorData.sector?.name || 'General';
-                                return (
-                                    <Link key={i} to={`/market-intel/sectors/${sectorSlug}`}>
-                                        <Card className="border-l-4 border-l-primary bg-card hover:bg-muted/5 transition-colors cursor-pointer group h-full shadow-sm">
-                                            <CardContent className="p-5">
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <h3 className="font-bold text-foreground group-hover:text-primary transition-colors underline decoration-transparent group-hover:decoration-primary underline-offset-4">{sectorName}</h3>
-                                                    <Badge variant="outline" className="text-[10px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
-                                                        {sectorData.count} Articles
-                                                    </Badge>
-                                                </div>
-                                                <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-600">
-                                                    <ArrowTopRightIcon className="h-3 w-3" />
-                                                    Active Coverage
-                                                </div>
-                                                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                                                    {sectorData.ai_sentiment_score !== undefined ? "Analyst Sentiment Analysis" : "Market Sentiment"} in {sectorName.toLowerCase()}.
-                                                </p>
-                                                <div className="flex items-center justify-between text-xs font-medium">
-                                                    <span className="text-muted-foreground">Market Status</span>
-                                                    <span className="text-foreground font-bold">Active</span>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </Link>
-                                );
-                            }) : (
-                                <div className="col-span-2 text-center py-8 text-muted-foreground">
-                                    No sector data available for this country yet.
-                                </div>
-                            )}
-                        </div>
-                    </div>
+            <div className="container pb-20">
+                <Tabs defaultValue="overview" className="space-y-8">
+                    <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex h-12 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                        <TabsTrigger value="overview" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                            Situation Room
+                        </TabsTrigger>
+                        <TabsTrigger value="economy" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                            Economic Data
+                        </TabsTrigger>
+                        <TabsTrigger value="sectors" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                            Sector Matrix
+                        </TabsTrigger>
+                        <TabsTrigger value="intel" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                            Intel Stream
+                        </TabsTrigger>
+                    </TabsList>
 
-                    <div className="rounded-xl bg-card border border-border p-6 shadow-sm">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <InfoCircledIcon className="h-5 w-5 text-primary" /> Market Considerations
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-6">
-                            Key narrative themes currently influencing market perception:
-                        </p>
-                        <div className="space-y-4">
-                            {articles.length > 0 ? (
-                                articles.slice(0, 3).map((article, i) => (
-                                    <div key={i} className="flex gap-3 items-start">
-                                        <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
-                                        <div>
-                                            <div className="text-sm font-bold text-foreground">
-                                                {article.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '').split(':')[0].split('?')[0]}
+                    {/* TAB 1: SITUATION ROOM (Overview) */}
+                    <TabsContent value="overview" className="animate-in fade-in slide-in-from-left-4 duration-500">
+                        <div className="grid gap-6 md:grid-cols-3">
+                            {/* Stability Index */}
+                            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                                <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stability Index</div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-4xl font-black text-foreground">{country.image_strength_score || "--"}</span>
+                                    <span className="text-sm font-medium text-muted-foreground">/100</span>
+                                </div>
+                            </div>
+
+                            {/* Dominant Sector */}
+                            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dominant Sector</div>
+                                <div className="text-xl font-bold text-foreground">{stats.top_sectors?.[0]?.sector?.name || "--"}</div>
+                            </div>
+
+                            {/* Emerging Narratives */}
+                            <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Emerging Narratives</div>
+                                <div className="flex flex-wrap gap-2">
+                                    {country.investment_highlights?.slice(0, 3).map((tag: string) => (
+                                        <span key={tag} className="inline-flex items-center gap-1 rounded bg-secondary/20 px-2 py-1 text-[10px] font-bold text-secondary-foreground border border-secondary/20">
+                                            {tag} <ArrowTopRightIcon className="h-3 w-3 opacity-50" />
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 rounded-xl bg-card border border-border p-6 shadow-sm">
+                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                <InfoCircledIcon className="h-5 w-5 text-primary" /> Market Considerations
+                            </h3>
+                            <p className="text-sm text-muted-foreground mb-6">
+                                Key narrative themes currently influencing market perception:
+                            </p>
+                            <div className="space-y-4">
+                                {articles.length > 0 ? (
+                                    articles.slice(0, 3).map((article, i) => (
+                                        <div key={i} className="flex gap-3 items-start">
+                                            <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
+                                            <div>
+                                                <div className="text-sm font-bold text-foreground">
+                                                    {article.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '').split(':')[0].split('?')[0]}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">Driven by {article.sector_name || 'Market'} news.</p>
                                             </div>
-                                            <p className="text-xs text-muted-foreground">Driven by {article.sector_name || 'Market'} news.</p>
                                         </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-muted-foreground">Monitoring emerging narratives...</p>
+                                )}
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    {/* TAB 2: ECONOMIC DATA */}
+                    <TabsContent value="economy" className="animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* C. GDP */}
+                            <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
+                                <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
+                                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                                    <PieChartIcon className="h-4 w-4" /> GDP (USD)
+                                </div>
+                                <div className="text-3xl font-black text-foreground tracking-tight">
+                                    ${(country.gdp_usd / 1000000000).toFixed(1)}B
+                                </div>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <div className="text-xs font-bold text-muted-foreground">Est. 2025 Prediction</div>
+                                    {/* CSS Sparkline */}
+                                    <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M0 25 C20 25, 30 15, 50 15 S 80 5, 100 2" />
+                                    </svg>
+                                </div>
+                            </Card>
+
+                            {/* D. Population */}
+                            <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
+                                <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
+                                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                                    <PersonIcon className="h-4 w-4" /> Population
+                                </div>
+                                <div className="text-3xl font-black text-foreground tracking-tight">
+                                    {(country.population / 1000000).toFixed(1)}M
+                                </div>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <div className="flex items-center gap-1 text-xs font-bold text-primary">
+                                        <PersonIcon className="h-3 w-3" /> Growth: +{((country.diplomacy_score || 0.5) * 5).toFixed(1)}%
                                     </div>
+                                    {/* CSS Sparkline */}
+                                    <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M0 28 L20 25 L40 22 L60 18 L80 12 L100 5" />
+                                    </svg>
+                                </div>
+                            </Card>
+
+                            {/* E. FDI */}
+                            <Card className="col-span-1 md:col-span-2 relative overflow-hidden flex flex-col justify-center p-6 bg-primary/5 transition-all duration-300 hover:shadow-lg border border-primary/20 group">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                                        <ArrowRightIcon className="h-4 w-4" /> Foreign Direct Investment
+                                    </div>
+                                    <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">
+                                        {country.fdi_yoy_growth && country.fdi_yoy_growth > 0 ? "Check Inflow" : "Steady Flow"}
+                                    </Badge>
+                                </div>
+
+                                <div className="flex items-end gap-4">
+                                    <div className="text-3xl font-black text-foreground tracking-tight">
+                                        ${((country.fdi_inflow_usd || 0) / 1000000000).toFixed(1)}B <span className="text-lg font-bold text-muted-foreground">/ yr</span>
+                                    </div>
+                                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                                        Focusing on {stats.top_sectors?.[0]?.sector?.name || 'Emerging Markets'}
+                                    </div>
+                                </div>
+                                {/* Abstract Projection Bar */}
+                                <div className="mt-4 flex gap-1 h-1.5 w-full">
+                                    <div className="h-full w-[40%] bg-primary rounded-full opacity-40"></div>
+                                    <div className="h-full w-[30%] bg-primary rounded-full opacity-60"></div>
+                                    <div className="h-full w-[20%] bg-primary rounded-full opacity-80"></div>
+                                    <div className="h-full w-[10%] bg-primary rounded-full"></div>
+                                </div>
+                            </Card>
+                        </div>
+                    </TabsContent>
+
+                    {/* TAB 3: SECTOR MATRIX */}
+                    <TabsContent value="sectors" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="lg:col-span-2">
+                                <h2 className="text-xl font-bold mb-4">Strategic Opportunities</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Dynamic Sector Opportunities from API */}
+                                    {stats.top_sectors?.length > 0 ? stats.top_sectors.map((sectorData, i) => {
+                                        const sectorSlug = sectorData.sector?.name?.toLowerCase().replace(/\s+/g, '-').replace(/&/g, '').replace('--', '-') || 'general';
+                                        const sectorName = sectorData.sector?.name || 'General';
+                                        return (
+                                            <Link key={i} to={`/market-intel/sectors/${sectorSlug}`}>
+                                                <Card className="border-l-4 border-l-primary bg-card hover:bg-muted/5 transition-colors cursor-pointer group h-full shadow-sm">
+                                                    <CardContent className="p-5">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <h3 className="font-bold text-foreground group-hover:text-primary transition-colors underline decoration-transparent group-hover:decoration-primary underline-offset-4">{sectorName}</h3>
+                                                            <Badge variant="outline" className="text-[10px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
+                                                                {sectorData.count} Articles
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-600">
+                                                            <ArrowTopRightIcon className="h-3 w-3" />
+                                                            Active Coverage
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                                            {sectorData.ai_sentiment_score !== undefined ? "Analyst Sentiment Analysis" : "Market Sentiment"} in {sectorName.toLowerCase()}.
+                                                        </p>
+                                                    </CardContent>
+                                                </Card>
+                                            </Link>
+                                        );
+                                    }) : (
+                                        <div className="col-span-2 text-center py-8 text-muted-foreground">
+                                            No sector data available for this country yet.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Key Partners */}
+                            <div>
+                                <h2 className="text-xl font-bold mb-4">Strategic Relations</h2>
+                                <div className="rounded-xl bg-card border border-border p-6 shadow-sm">
+                                    <div className="space-y-6">
+                                        <div className="group">
+                                            <div className="flex justify-between mb-2 items-center">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-foreground">Diplomacy Score</span>
+                                                </div>
+                                                <span className="text-sm font-bold text-primary">{country.diplomacy_score?.toFixed(1) || '--'}/100</span>
+                                            </div>
+                                            <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary"
+                                                    style={{ width: `${country.diplomacy_score || 0}%` }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {relationships && relationships.length > 0 && (
+                                            <div className="pt-6 border-t border-border">
+                                                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Partnerships</h4>
+                                                <div className="grid gap-3">
+                                                    {relationships.slice(0, 3).map((rel, i) => (
+                                                        <div key={i} className="flex items-start gap-3 p-3 rounded bg-muted/30 border border-border/50">
+                                                            <div>
+                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                    <span className="font-bold text-sm text-foreground">{rel.partner}</span>
+                                                                    <Badge variant="outline" className="text-[9px] py-0 h-4">{rel.type}</Badge>
+                                                                </div>
+                                                                <p className="text-xs text-muted-foreground leading-snug">{rel.context}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    {/* TAB 4: INTEL STREAM */}
+                    <TabsContent value="intel">
+                        <div className="mb-6 flex items-center justify-between">
+                            <h2 className="text-2xl font-bold text-foreground">Latest Intelligence</h2>
+                            <Button asChild size="sm">
+                                <Link to={`/articles?country=${country.code}`}>View Archive</Link>
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {articles.length > 0 ? (
+                                articles.map(article => (
+                                    <ArticleCard key={article.id} article={article} />
                                 ))
                             ) : (
-                                <p className="text-sm text-muted-foreground">Monitoring emerging narratives...</p>
-                            )}
-                        </div>
-                        <Button variant="outline" className="w-full mt-6 border-primary/20 hover:bg-primary/5 text-primary font-bold uppercase text-xs tracking-wider">
-                            View Risk Analysis
-                        </Button>
-                    </div>
-
-                    {/* New Strategic Scores Card */}
-                    <div className="rounded-xl bg-card border border-border p-6 shadow-sm mt-6">
-                        <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                            <LightningBoltIcon className="h-5 w-5 text-primary" /> Strategic Intelligence
-                        </h3>
-                        <div className="space-y-8">
-                            <div className="group">
-                                <div className="flex justify-between mb-2 items-center">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-foreground">Diplomatic Influence</span>
-                                        <div className="h-4 w-4 rounded-full border border-border flex items-center justify-center text-[10px] text-muted-foreground cursor-help" title="Based on international treaties, embassy presence, and conflict mediation roles.">?</div>
-                                    </div>
-                                    <span className="text-sm font-bold text-primary">{country.diplomacy_score?.toFixed(1) || '--'}/100</span>
-                                </div>
-                                <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-1000 ease-out group-hover:from-primary group-hover:to-primary"
-                                        style={{ width: `${country.diplomacy_score || 0}%` }}
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                                    Calculated from UN voting alignment, regional mediation, and trade pact density.
-                                </p>
-                            </div>
-
-                            <div className="group">
-                                <div className="flex justify-between mb-2 items-center">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-foreground">Brand Strength</span>
-                                        <div className="h-4 w-4 rounded-full border border-border flex items-center justify-center text-[10px] text-muted-foreground cursor-help" title="Derived from global media sentiment, search volume trends, and tourism demand.">?</div>
-                                    </div>
-                                    <span className="text-sm font-bold text-blue-500">{country.image_strength_score?.toFixed(1) || '--'}/100</span>
-                                </div>
-                                <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-blue-500/80 to-blue-500 transition-all duration-1000 ease-out group-hover:from-blue-500 group-hover:to-blue-500"
-                                        style={{ width: `${country.image_strength_score || 0}%` }}
-                                    />
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                                    Global perception index based on media sentiment and investment search trends.
-                                </p>
-                            </div>
-
-                            {/* Diplomatic Relations (New AI Feature) */}
-                            {relationships && relationships.length > 0 && (
-                                <div className="pt-6 border-t border-border">
-                                    <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Key Strategic Partnerships</h4>
-                                    <div className="grid gap-3">
-                                        {relationships.slice(0, 3).map((rel, i) => (
-                                            <div key={i} className="flex items-start gap-3 p-3 rounded bg-muted/30 border border-border/50">
-                                                <div className="mt-1 h-3 w-3 rounded-full bg-primary/20 border border-primary flex items-center justify-center">
-                                                    <div className="h-1 w-1 rounded-full bg-primary" />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <span className="font-bold text-sm text-foreground">{rel.partner}</span>
-                                                        <Badge variant="outline" className="text-[9px] py-0 h-4">{rel.type}</Badge>
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground leading-snug">{rel.context}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                <div className="col-span-full flex flex-col items-center justify-center rounded-xl bg-muted/20 py-12 text-muted-foreground border border-dashed border-border">
+                                    <InfoCircledIcon className="h-10 w-10 mb-2 opacity-50" />
+                                    <p>No recent intelligence briefings for {country.name}.</p>
                                 </div>
                             )}
                         </div>
-                    </div>
-                </section>
-
-                <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* C. GDP (Standard Block: 1x1) */}
-                    {/* C. GDP (Premium Block: 1x1 with Sparkline) */}
-                    <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
-                        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
-                        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                            <PieChartIcon className="h-4 w-4" /> GDP (USD)
-                        </div>
-                        <div className="text-3xl font-black text-foreground tracking-tight">
-                            ${(country.gdp_usd / 1000000000).toFixed(1)}B
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                            <div className="text-xs font-bold text-muted-foreground">Est. 2025 Prediction</div>
-                            {/* CSS Sparkline */}
-                            <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M0 25 C20 25, 30 15, 50 15 S 80 5, 100 2" />
-                            </svg>
-                        </div>
-                    </Card>
-
-                    {/* D. Population (Standard Block: 1x1) */}
-                    <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
-                        <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
-                        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                            <PersonIcon className="h-4 w-4" /> Population
-                        </div>
-                        <div className="text-3xl font-black text-foreground tracking-tight">
-                            {(country.population / 1000000).toFixed(1)}M
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-xs font-bold text-primary">
-                                <PersonIcon className="h-3 w-3" /> Growth: +{((country.diplomacy_score || 0.5) * 5).toFixed(1)}%
-                            </div>
-                            {/* CSS Sparkline */}
-                            <svg className="h-8 w-24 text-primary opacity-20 group-hover:opacity-100 transition-opacity" viewBox="0 0 100 30" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M0 28 L20 25 L40 22 L60 18 L80 12 L100 5" />
-                            </svg>
-                        </div>
-                    </Card>
-
-                    {/* E. FDI (New Density Metric) */}
-                    <Card className="col-span-1 md:col-span-2 relative overflow-hidden flex flex-col justify-center p-6 bg-primary/5 transition-all duration-300 hover:shadow-lg border border-primary/20 group">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                                <ArrowRightIcon className="h-4 w-4" /> Foreign Direct Investment
-                            </div>
-                            <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">
-                                {country.fdi_yoy_growth && country.fdi_yoy_growth > 0 ? "Check Inflow" : "Steady Flow"}
-                            </Badge>
-                        </div>
-
-                        <div className="flex items-end gap-4">
-                            <div className="text-3xl font-black text-foreground tracking-tight">
-                                ${((country.fdi_inflow_usd || 0) / 1000000000).toFixed(1)}B <span className="text-lg font-bold text-muted-foreground">/ yr</span>
-                            </div>
-                            <div className="text-sm font-medium text-muted-foreground mb-1">
-                                Focusing on {stats.top_sectors?.[0]?.sector?.name || 'Emerging Markets'}
-                            </div>
-                        </div>
-                        {/* Abstract Projection Bar */}
-                        <div className="mt-4 flex gap-1 h-1.5 w-full">
-                            <div className="h-full w-[40%] bg-primary rounded-full opacity-40"></div>
-                            <div className="h-full w-[30%] bg-primary rounded-full opacity-60"></div>
-                            <div className="h-full w-[20%] bg-primary rounded-full opacity-80"></div>
-                            <div className="h-full w-[10%] bg-primary rounded-full"></div>
-                        </div>
-                    </Card>
-                </div>
-
-
-                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                {/* BUSINESS TRAVEL RESOURCES (REMOVED - User preferred pure Intel)                  */}
-                {/* ═══════════════════════════════════════════════════════════════════════════════ */}
-                {/* Section removed to ensure 100% dynamic AI focus */}
-
-                {/* Sector-Driven Editorial (Was News) */}
-                <section>
-                    <div className="mb-8 flex flex-col justify-between gap-4 border-b border-border pb-6 md:flex-row md:items-end">
-                        <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground">Sector-Driven Editorial</h2>
-                        <div className="flex flex-wrap gap-2">
-                            <Button variant="outline" asChild size="sm" className="border-primary text-primary hover:bg-primary/10">
-                                <Link to={`/market-intel/country/${country.code}`}>Investment Outlook</Link>
-                            </Button>
-                            <Button variant="outline" asChild size="sm" className="border-primary text-primary hover:bg-primary/10">
-                                <Link to={`/narratives/country/${country.code}`}>Narrative Strategy</Link>
-                            </Button>
-                            <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                                <Link to={`/articles?country=${country.code}`}>View All Intel</Link>
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {articles.length > 0 ? (
-                            articles.map(article => (
-                                <ArticleCard key={article.id} article={article} />
-                            ))
-                        ) : (
-                            <div className="col-span-full flex flex-col items-center justify-center rounded-xl bg-muted/20 py-12 text-muted-foreground border border-dashed border-border">
-                                <InfoCircledIcon className="h-10 w-10 mb-2 opacity-50" />
-                                <p>No recent intelligence briefings for {country.name}.</p>
-                            </div>
-                        )}
-                    </div>
-                </section>
+                    </TabsContent>
+                </Tabs>
             </div>
         </Layout>
     );

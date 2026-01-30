@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { LockClosedIcon, PersonIcon, CheckCircledIcon, EyeOpenIcon, UpdateIcon, ChevronRightIcon } from '@radix-ui/react-icons';
@@ -8,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
 export const LoginPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [status, setStatus] = useState<'IDLE' | 'SCANNING' | 'VERIFIED' | 'ERROR'>('IDLE');
@@ -38,7 +40,7 @@ export const LoginPage: React.FC = () => {
 
                 // Redirect after brief delay to show success state
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.href = '/feed';
                 }, 1500);
             } else {
                 setError(data.message || 'Authentication failed');
@@ -77,10 +79,10 @@ export const LoginPage: React.FC = () => {
                             )}
                         </div>
                         <h1 className="mb-2 text-3xl font-serif font-bold uppercase tracking-tight text-foreground">
-                            Client Portal
+                            {config?.['auth_login_header'] || "Client Portal"}
                         </h1>
                         <p className="font-mono text-xs text-muted-foreground">
-                            MEMBER SIGN IN
+                            {config?.['auth_login_subhead'] || "MEMBER SIGN IN"}
                         </p>
                     </div>
 

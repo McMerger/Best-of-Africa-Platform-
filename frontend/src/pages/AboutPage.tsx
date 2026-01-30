@@ -1,19 +1,22 @@
 import React from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Badge } from '@/components/ui/badge';
 
 export const AboutPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     return (
         <Layout>
             <div className="container py-20 max-w-4xl mx-auto">
                 <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase text-primary border-primary/20 px-4 py-1">Mission</Badge>
                 <h1 className="text-5xl font-serif font-black mb-10 tracking-tight text-foreground">
-                    New Narratives for a <br /> New Continent.
+                    {/* {config?.['about_headline'] || "New Narratives for a New Continent."} */}
+                    <span dangerouslySetInnerHTML={{ __html: (config?.['about_headline'] || "New Narratives for a <br /> New Continent.") }} />
                 </h1>
 
                 <div className="prose prose-lg dark:prose-invert max-w-none">
                     <p className="text-xl leading-relaxed font-medium text-muted-foreground mb-8">
-                        Best of Africa is a unified public relations and strategic narrative platform, designed to strengthen Africa's image on the global stage by promoting—country by country—opportunities for tourism, investment, and sustainable development.
+                        {config?.['about_mission_text'] || "Best of Africa is a unified public relations and strategic narrative platform, designed to strengthen Africa's image on the global stage by promoting—country by country—opportunities for tourism, investment, and sustainable development."}
                     </p>
 
                     <h3 className="text-2xl font-serif font-bold text-foreground mt-12 mb-4">Our Intelligence Core</h3>

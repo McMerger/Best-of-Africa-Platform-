@@ -1,7 +1,9 @@
 import React from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
+    const { data: config } = useSystemConfig();
 
     return (
         <footer className="mt-20 border-t-4 border-primary bg-primary pt-20 pb-10 text-primary-foreground/80">
@@ -14,7 +16,7 @@ export const Footer: React.FC = () => {
                             BEST OF AFRICA<span className="text-accent">.</span>
                         </div>
                         <p className="mb-0 max-w-[400px] text-lg font-serif font-medium leading-relaxed text-primary-foreground/90 italic">
-                            "Best of Africa amplifies the continent's voice with rigor, sophistication, and vision—while serving as a practical, trusted gateway for business travelers, investors, and partners to engage directly with Africa's opportunities across every sector and country."
+                            "{config?.['footer_mission_statement'] || "Best of Africa amplifies the continent's voice with rigor, sophistication, and vision—while serving as a practical, trusted gateway for business travelers, investors, and partners to engage directly with Africa's opportunities across every sector and country."}"
                         </p>
                     </div>
 

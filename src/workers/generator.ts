@@ -4,7 +4,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment } from '../lib/ai';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage } from '../lib/ai';
+import { uploadImage } from '../lib/media';
 import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
 import { onArticlePublished } from '../lib/alerts';
@@ -172,6 +173,30 @@ export async function generateArticleFromQueue(
             sentiment.score,
             sentiment.label
         ).run();
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // IMAGE GENERATION (Stable Diffusion XL)
+        // ═══════════════════════════════════════════════════════════════════════
+        try {
+            const context = [countryName, sectorName].filter(Boolean).join(', ');
+            const prompt = `Photorealistic journalism style photo of ${generated.title}. Context: ${context}. High quality, 4k, award winning photography, dramatic lighting, highly detailed, news editorial style. No text.`;
+
+            console.log(`Generating image for ${articleId}`);
+            const imageBuffer = await generateArticleImage(env, prompt);
+
+            if (imageBuffer) {
+                const key = `hero/${articleId}.png`;
+                const publicUrl = await uploadImage(env, key, imageBuffer, 'image/png');
+
+                await env.DB.prepare(`UPDATE articles SET hero_image_url = ? WHERE id = ?`)
+                    .bind(publicUrl, articleId).run();
+
+                console.log(`Image generated and stored: ${publicUrl}`);
+            }
+        } catch (imgError) {
+            console.error('Auto-image generation failed:', imgError);
+            // Non-critical, continue
+        }
 
         // Index in Vectorize for semantic search (returns generated chunk count)
         const chunkCount = await indexArticle(env, articleId, generated.title, generated.content, {

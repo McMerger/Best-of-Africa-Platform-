@@ -203,7 +203,7 @@ router.get('/recommended', async (c) => {
         `).bind(limit).all();
 
         return c.json({
-            recommendations: (popular.results || []).map((art: any) => ({
+            data: (popular.results || []).map((art: any) => ({
                 ...art,
                 reasoning: "Trending on the platform right now."
             }))
@@ -230,7 +230,7 @@ router.get('/recommended', async (c) => {
         `).bind(limit).all();
 
         return c.json({
-            recommendations: (popular.results || []).map((art: any) => ({
+            data: (popular.results || []).map((art: any) => ({
                 ...art,
                 reasoning: "Trending on the platform right now."
             }))

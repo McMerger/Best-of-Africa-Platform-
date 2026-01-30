@@ -1,102 +1,99 @@
 import React from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckIcon, LightningBoltIcon, GlobeIcon, StarFilledIcon, LockClosedIcon } from '@radix-ui/react-icons';
-import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card';
+import { CheckIcon, LightningBoltIcon, StarIcon } from '@radix-ui/react-icons';
 
 export const MembershipPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     return (
         <Layout>
             <div className="relative bg-background border-b border-border overflow-hidden">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000005_1px,transparent_1px),linear-gradient(to_bottom,#00000005_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
                 <div className="container relative py-20 text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase bg-background text-primary border-primary/20 px-4 py-1">Premium Access</Badge>
-                    <h1 className="text-5xl md:text-7xl font-serif font-black mb-6 tracking-tight text-foreground">
-                        Unlock the <br /> Intelligence Engine.
+                    <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase bg-background text-primary border-primary/20 px-4 py-1">Operational Advantage</Badge>
+                    <h1 className="text-4xl md:text-6xl font-serif font-black mb-6 tracking-tight text-foreground">
+                        {/* {config?.['membership_headline'] || "Intelligence for Decision Makers."} */}
+                        {/* Line break handling might be tricky, maybe just text */}
+                        <span dangerouslySetInnerHTML={{ __html: (config?.['membership_headline'] || "Intelligence for <br /> Decision Makers.") }} />
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium text-balance">
-                        Join the world's leading investors and decision-makers leveraging our real-time African market narrative data.
+                        {config?.['membership_subhead'] || "For investors, governments, and corporations who cannot afford to be surprised."}
                     </p>
                 </div>
             </div>
 
-            <div className="container py-16">
-                <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-
-                    {/* OBSERVER (Free) */}
-                    <Card className="border border-border bg-card hover:border-primary/30 transition-all">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-serif font-bold">Observer</CardTitle>
-                            <CardDescription>Essential daily briefings.</CardDescription>
-                            <div className="mt-4">
-                                <span className="text-4xl font-black text-foreground">$0</span>
-                                <span className="text-muted-foreground">/mo</span>
+            <div className="container py-12 pb-24">
+                <div className="max-w-4xl mx-auto">
+                    {/* SINGLE DECISION MOMENT CARD */}
+                    <Card className="border-2 border-primary bg-card shadow-2xl overflow-hidden">
+                        <div className="grid md:grid-cols-2">
+                            <div className="p-10 flex flex-col justify-center border-b md:border-b-0 md:border-r border-border bg-muted/10">
+                                <Badge className="w-fit mb-4 bg-primary text-primary-foreground hover:bg-primary/90">PREMIER ACCESS</Badge>
+                                <CardTitle className="text-4xl font-serif font-bold mb-4">Partner Tier</CardTitle>
+                                <CardDescription className="text-lg mb-8">
+                                    The complete intelligence suite for strategic operations.
+                                </CardDescription>
+                                <div className="mb-8">
+                                    <span className="text-5xl font-black text-foreground">$2,500</span>
+                                    <span className="text-xl text-muted-foreground ml-2">/ year</span>
+                                </div>
+                                <Button className="w-full font-bold text-lg h-14 shadow-lg shadow-primary/25" size="lg">
+                                    Start Operational Advantage
+                                </Button>
+                                <p className="mt-4 text-center text-xs text-muted-foreground">
+                                    Immediate access. Cancel anytime.
+                                </p>
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="space-y-3">
-                                <li className="flex gap-2 items-center text-sm"><CheckIcon className="h-4 w-4 text-primary" /> Daily Narrative Brief</li>
-                                <li className="flex gap-2 items-center text-sm"><CheckIcon className="h-4 w-4 text-primary" /> Travel Booking Portal</li>
-                                <li className="flex gap-2 items-center text-sm"><CheckIcon className="h-4 w-4 text-primary" /> Public Sector News</li>
-                            </ul>
-                        </CardContent>
-                        <CardFooter>
-                            <Button className="w-full font-bold" variant="outline">Sign Up Free</Button>
-                        </CardFooter>
-                    </Card>
 
-                    {/* SIGNAL (Pro) - Highlighted */}
-                    <Card className="border-2 border-primary bg-card shadow-xl relative scale-105 z-10">
-                        <div className="absolute top-0 right-0 p-4">
-                            <Badge className="bg-primary text-white">RECOMMENDED</Badge>
+                            <CardContent className="p-10 flex flex-col justify-center bg-card">
+                                <h3 className="font-bold uppercase tracking-widest text-muted-foreground text-sm mb-6">What you receive daily:</h3>
+                                <ul className="space-y-5">
+                                    <li className="flex gap-3 items-start">
+                                        <div className="mt-1 bg-primary/10 p-1 rounded-full"><LightningBoltIcon className="h-4 w-4 text-primary" /></div>
+                                        <div>
+                                            <div className="font-bold text-foreground">Daily Intelligence Briefing</div>
+                                            <div className="text-sm text-muted-foreground">Curated executive synthesis every morning at 6 AM.</div>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3 items-start">
+                                        <div className="mt-1 bg-primary/10 p-1 rounded-full"><CheckIcon className="h-4 w-4 text-primary" /></div>
+                                        <div>
+                                            <div className="font-bold text-foreground">Real-time Warning Signals</div>
+                                            <div className="text-sm text-muted-foreground">Mobile alerts for critical narrative shifts.</div>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3 items-start">
+                                        <div className="mt-1 bg-primary/10 p-1 rounded-full"><StarIcon className="h-4 w-4 text-primary" /></div>
+                                        <div>
+                                            <div className="font-bold text-foreground">Deep-Dive Sector Reports</div>
+                                            <div className="text-sm text-muted-foreground">Full PDF access to Energy, Tech, and Finance verticals.</div>
+                                        </div>
+                                    </li>
+                                    <li className="flex gap-3 items-start">
+                                        <div className="mt-1 bg-primary/10 p-1 rounded-full"><CheckIcon className="h-4 w-4 text-primary" /></div>
+                                        <div>
+                                            <div className="font-bold text-foreground">Analyst On-Call</div>
+                                            <div className="text-sm text-muted-foreground">Direct line to our narrative strategy desk.</div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </CardContent>
                         </div>
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-serif font-bold text-primary">Signal</CardTitle>
-                            <CardDescription>For active investors & executives.</CardDescription>
-                            <div className="mt-4">
-                                <span className="text-4xl font-black text-foreground">$2,500</span>
-                                <span className="text-muted-foreground">/yr</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="space-y-4">
-                                <li className="flex gap-2 items-center font-medium"><LightningBoltIcon className="h-4 w-4 text-primary" /> Real-time Sentiment Dashboards</li>
-                                <li className="flex gap-2 items-center font-medium"><CheckIcon className="h-4 w-4 text-primary" /> Deep-Dive Sector Reports (PDF)</li>
-                                <li className="flex gap-2 items-center font-medium"><CheckIcon className="h-4 w-4 text-primary" /> VIP Event Access</li>
-                                <li className="flex gap-2 items-center font-medium"><CheckIcon className="h-4 w-4 text-primary" /> Warning Sign Alerts</li>
-                            </ul>
-                        </CardContent>
-                        <CardFooter>
-                            <Button className="w-full font-bold text-lg h-12">Start Trial</Button>
-                        </CardFooter>
                     </Card>
 
-                    {/* SOVEREIGN (Enterprise) */}
-                    <Card className="border border-border bg-card hover:border-primary/30 transition-all">
-                        <CardHeader>
-                            <CardTitle className="text-2xl font-serif font-bold">Sovereign</CardTitle>
-                            <CardDescription>For Governments & Institutional.</CardDescription>
-                            <div className="mt-4">
-                                <span className="text-4xl font-black text-foreground">Custom</span>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <ul className="space-y-3">
-                                <li className="flex gap-2 items-center text-sm"><GlobeIcon className="h-4 w-4 text-primary" /> Nation-Branding Campaigns</li>
-                                <li className="flex gap-2 items-center text-sm"><StarFilledIcon className="h-4 w-4 text-primary" /> Crisis Management Intel</li>
-                                <li className="flex gap-2 items-center text-sm"><LockClosedIcon className="h-4 w-4 text-primary" /> API Access</li>
-                                <li className="flex gap-2 items-center text-sm"><CheckIcon className="h-4 w-4 text-primary" /> Dedicated Analyst Team</li>
-                            </ul>
-                        </CardContent>
-                        <CardFooter>
-                            <Button className="w-full font-bold" variant="outline" asChild>
-                                <Link to="/strategic-services">Contact Sales</Link>
-                            </Button>
-                        </CardFooter>
-                    </Card>
-
+                    <div className="mt-12 text-center">
+                        <p className="text-muted-foreground text-sm mb-4">Trusted by strategic teams at:</p>
+                        <div className="flex flex-wrap justify-center gap-8 opacity-50 grayscale">
+                            {/* Simple text placeholders for logos as per "clean" aesthetic */}
+                            <span className="font-serif font-bold text-xl">AFRICA FINANCE CORP</span>
+                            <span className="font-serif font-bold text-xl">DANGOTE GROUP</span>
+                            <span className="font-serif font-bold text-xl">STANDARDBANK</span>
+                            <span className="font-serif font-bold text-xl">MTN</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Layout>

@@ -25,6 +25,7 @@ import { authRouter } from './routes/auth-router';
 import { eventsRouter } from './routes/events';
 import { campaignsRouter } from './routes/campaigns';
 import { LiveCounter } from './durable-objects/live-counter';
+import { configRouter } from './routes/config';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // App Initialization
@@ -97,6 +98,7 @@ api.route('/personalization', personalizationRouter);
 api.route('/auth', authRouter);
 api.route('/events', eventsRouter);
 api.route('/campaigns', campaignsRouter);
+api.route('/config', configRouter);
 
 // ───────────────────────────────────────────────────────────────────────────────
 // WebSocket: Real-time live stream (forwards to Durable Object)

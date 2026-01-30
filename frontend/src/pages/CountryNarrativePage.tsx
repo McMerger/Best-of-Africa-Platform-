@@ -144,7 +144,7 @@ export const CountryNarrativePage: React.FC = () => {
                                             </div>
                                             <div className="flex-1">
                                                 <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary">Verified Alignment</div>
-                                                <h4 className="text-lg font-bold text-foreground group-hover:text-primary">{article.title}</h4>
+                                                <h4 className="text-lg font-bold text-foreground group-hover:text-primary">{(article.title || '').replace(/\*\*/g, '').replace(/##/g, '')}</h4>
                                             </div>
                                             <ArrowRightIcon className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
                                         </div>

@@ -43,6 +43,18 @@ export async function optimizeContent(env: Env): Promise<void> {
     // 9. Generate narrative strategies for underserved countries
     await populateNarrativeStrategies(env);
 
+    // 10. Generate dynamic UI strings (Sector Summaries)
+    await generateDynamicSectorSummaries(env);
+
+    // 11. Generate Home Page Dynamic Content (Headlines)
+    await generateHomePageDynamicContent(env);
+
+    // 12. Generate Systemic Dynamic Content (Search, Footer)
+    await generateSystemicDynamicContent(env);
+
+    // 13. Generate Page Specific Content (Auth, Member, About, Error)
+    await generatePageSpecificContent(env);
+
     console.log('Autonomous optimization complete');
 }
 
@@ -577,9 +589,6 @@ async function populateMarketMetrics(env: Env): Promise<void> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Populate Narrative Strategies (for Narratives Page)
-// ───────────────────────────────────────────────────────────────────────────────
-// ───────────────────────────────────────────────────────────────────────────────
 // Populate Narrative Strategies (for Narratives Page) - AI Powered
 // ───────────────────────────────────────────────────────────────────────────────
 async function populateNarrativeStrategies(env: Env): Promise<void> {
@@ -656,3 +665,109 @@ async function populateNarrativeStrategies(env: Env): Promise<void> {
     }
 }
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Generate Dynamic Sector Summaries (for NavBar)
+// ───────────────────────────────────────────────────────────────────────────────
+async function generateDynamicSectorSummaries(env: Env): Promise<void> {
+    const sectors = ['Energy & Mining', 'Technology', 'Agriculture', 'Infrastructure', 'Finance', 'Tourism'];
+
+    for (const sector of sectors) {
+        // find recent articles
+        const context = await env.DB.prepare(`
+            SELECT title FROM articles 
+            WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+            AND (sector_id = (SELECT id FROM sectors WHERE name LIKE ?) OR title LIKE ?)
+            LIMIT 5
+        `).bind(`${sector}%`, `%${sector}%`).all();
+
+        const contextText = (context.results || []).map((a: any) => a.title).join('\n');
+        let summary = "Trends and insights"; // fallback
+
+        if (contextText) {
+            try {
+                const aiRes = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        { role: 'system', content: 'Generate a 3-5 word "Current Trend Summary" for this sector based on headlines. Example: "Lithium Export Bans effective". No quotes.' },
+                        { role: 'user', content: `Sector: ${sector}\nHeadlines:\n${contextText}` }
+                    ]
+                });
+                summary = (aiRes as any).response.trim().replace(/^"|"$/g, '');
+            } catch (e) {
+                console.error(`AI Sector Summary failed for ${sector}`, e);
+            }
+        }
+
+        // Save to system_config
+        // key format: sector_energy_desc (lowercase, first word only for simple matching)
+        const key = `sector_${sector.split(' ')[0].toLowerCase()}_desc`;
+
+        await env.DB.prepare(`
+            INSERT OR REPLACE INTO system_config (key, value, updated_at)
+            VALUES (?, ?, datetime('now'))
+        `).bind(key, summary).run();
+
+        console.log(`Updated dynamic summary for ${sector}: ${summary}`);
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────────
+    // Generate Home Page Dynamic Content (Headlines, Stats)
+    // ───────────────────────────────────────────────────────────────────────────────
+    async function generateHomePageDynamicContent(env: Env): Promise<void> {
+        // 1. Get stats
+        const stats = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM articles WHERE status = 'published'
+    `).first<{ count: number }>();
+
+        // 2. Get top trending topic
+        const trending = await env.DB.prepare(`
+        SELECT title, sector_id FROM articles 
+        WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+        ORDER BY view_count DESC LIMIT 3
+    `).all();
+
+        const trendingContext = (trending.results || []).map((a: any) => a.title).join('\n');
+
+        let headline = "Strategic Narrative Engine.";
+        let subhead = `Tracking ${stats?.count || 500} active intelligence reports across 54 markets.`;
+        let cta = "Explore Intelligence";
+
+        if (trendingContext) {
+            try {
+                const aiRes = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a Chief Editor. Write a "Hero Headline" (3-5 words) and "Subhead" (1 sentence) for the home page based on these trending stories. Tone: Professional, Epic, Urgent. Return JSON: {"headline": "...", "subhead": "...", "cta": "View [Topic] Report"}'
+                        },
+                        { role: 'user', content: `Trending Stories:\n${trendingContext}` }
+                    ],
+                    response_format: { type: 'json_object' }
+                });
+
+                const json = JSON.parse((aiRes as any).response);
+                if (json.headline) headline = json.headline;
+                if (json.subhead) subhead = json.subhead;
+                if (json.cta) cta = json.cta;
+            } catch (e) {
+                console.error('AI Home Page Gen Failed', e);
+            }
+        }
+
+        // Save keys
+        const updates = {
+            'home_hero_headline': headline,
+            'home_hero_subhead': subhead,
+            'home_cta_primary': cta
+        };
+
+        for (const [key, value] of Object.entries(updates)) {
+            await env.DB.prepare(`
+            INSERT OR REPLACE INTO system_config (key, value, updated_at)
+            VALUES (?, ?, datetime('now'))
+        `).bind(key, value).run();
+        }
+
+        console.log('Updated Home Page Dynamic Content', updates);
+    }
+
+}

@@ -450,6 +450,7 @@ router.post('/ai-chat', async (c) => {
 
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /intel/reframe - Rewrite article for specific audience (Analyst Lens)
+// DEEP PERSONALIZATION: Now injects country/sector context
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/reframe', async (c) => {
   const { articleId, targetAudience } = await c.req.json();
@@ -458,27 +459,49 @@ router.post('/reframe', async (c) => {
     return c.json({ error: 'Missing articleId or targetAudience' }, 400);
   }
 
-  // 1. Fetch Article Content
-  const article = await c.env.DB.prepare(
-    'SELECT content, title FROM articles WHERE id = ?'
-  ).bind(articleId).first();
+  // 1. Fetch Article with Context (Country + Sector)
+  const article = await c.env.DB.prepare(`
+    SELECT 
+      a.content, 
+      a.title,
+      c.name as country_name,
+      c.gdp_growth,
+      c.investment_score,
+      s.name as sector_name
+    FROM articles a
+    LEFT JOIN countries c ON a.country_code = c.code
+    LEFT JOIN sectors s ON a.sector_id = s.id
+    WHERE a.id = ?
+  `).bind(articleId).first();
 
   if (!article) {
     return c.json({ error: 'Article not found' }, 404);
   }
 
-  // 2. Call AI Service
+  // 2. Build Context Object for Deep Personalization
+  const contextData = {
+    countryName: (article as any).country_name || undefined,
+    sectorName: (article as any).sector_name || undefined,
+    gdp: (article as any).gdp_growth ? `${(article as any).gdp_growth}% YoY` : undefined,
+    stability: (article as any).investment_score
+      ? `${(article as any).investment_score}/100 (Investment Score)`
+      : undefined
+  };
+
+  // 3. Call AI Service with Context
   try {
     const { optimizeForAudience } = await import('../lib/ai');
     const rewrittenContent = await optimizeForAudience(
       c.env,
       (article as any).content,
-      targetAudience as any
+      targetAudience as any,
+      contextData // <-- NEW: Inject context
     );
 
     return c.json({
       original_id: articleId,
       audience: targetAudience,
+      context: contextData,
       content: rewrittenContent
     });
   } catch (e) {
@@ -553,5 +576,58 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
     return ["Monitor currency fluctuations.", "Engage local legal counsel.", "Verify supply chain resilience."];
   }
 }
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /intel/synthesize-unified - Generate all perspectives in one call
+// ZERO-FRICTION: No user selection needed - delivers complete analysis
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/synthesize-unified', async (c) => {
+  const { articleId } = await c.req.json();
+
+  if (!articleId) {
+    return c.json({ error: 'Missing articleId' }, 400);
+  }
+
+  // Fetch article with context
+  const article = await c.env.DB.prepare(`
+    SELECT 
+      a.content, 
+      a.title,
+      c.name as country_name,
+      c.gdp_growth,
+      s.name as sector_name
+    FROM articles a
+    LEFT JOIN countries c ON a.country_code = c.code
+    LEFT JOIN sectors s ON a.sector_id = s.id
+    WHERE a.id = ?
+  `).bind(articleId).first();
+
+  if (!article) {
+    return c.json({ error: 'Article not found' }, 404);
+  }
+
+  try {
+    const { synthesizeUnifiedBriefing } = await import('../lib/ai');
+
+    const briefing = await synthesizeUnifiedBriefing(
+      c.env,
+      (article as any).content,
+      {
+        countryName: (article as any).country_name || undefined,
+        sectorName: (article as any).sector_name || undefined,
+        gdp: (article as any).gdp_growth ? `${(article as any).gdp_growth}%` : undefined
+      }
+    );
+
+    return c.json({
+      article_id: articleId,
+      title: (article as any).title,
+      briefing
+    });
+  } catch (e) {
+    console.error('Unified Synthesis Error:', e);
+    return c.json({ error: 'Failed to synthesize briefing' }, 500);
+  }
+});
 
 export { router as intelligenceRouter };

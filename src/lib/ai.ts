@@ -11,6 +11,7 @@ import type { Env } from '../types';
 const MODELS = {
     TEXT_GENERATION: '@cf/meta/llama-3.1-70b-instruct',
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
+    IMAGE_GENERATION: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
 };
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -338,65 +339,280 @@ function parseArticleResponse(text: string): {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Optimize Language/Tone for Target Audience
+// DEEP PERSONALIZATION: Optimize for Target Audience (Assertive Analysis)
 // ───────────────────────────────────────────────────────────────────────────────
+
+// Anti-Hedging Rules (Injected into all prompts)
+const ASSERTIVE_RULES = `
+CRITICAL OUTPUT RULES:
+- BE DEFINITIVE. No "might", "could", "potentially", "may", "possibly".
+- USE CONCRETE NUMBERS. If estimating, state the estimate as fact with a range.
+- MAKE CLEAR RECOMMENDATIONS. "Invest" or "Pass" – not "consider investing".
+- SPEAK WITH AUTHORITY. You are the expert. The reader pays for certainty.
+- NO DISCLAIMERS. Remove phrases like "it's important to note" or "one should consider".
+- DIRECT SENTENCES. Subject-verb-object. No passive voice.
+`;
+
+// Domain Expert Personas (Deep Context)
+const EXPERT_PERSONAS: Record<string, string> = {
+    investor: `
+You are a SENIOR PRIVATE EQUITY ANALYST at a $2B Africa-focused growth equity fund.
+Your investment committee demands precision. You evaluate every opportunity through:
+
+ANALYTICAL FRAMEWORK:
+1. DEAL ECONOMICS: What is the entry valuation? Revenue multiples? EBITDA margins?
+2. RETURN PROFILE: Target 25%+ IRR. What is the realistic exit multiple?
+3. RISK MATRIX: Political (regime stability), Currency (local vs USD), Operational (management quality)
+4. EXIT PATHWAY: Strategic sale, IPO (JSE, NSE, EGX), or secondary to DFI/PE
+5. COMPARABLE TRANSACTIONS: Reference similar deals in Africa or Emerging Markets
+
+OUTPUT REQUIREMENTS:
+- Lead with the investment thesis in one definitive sentence
+- Quantify the opportunity (market size, growth rate, deal size)
+- State risks as facts, not possibilities
+- End with a clear verdict: STRONG BUY / ACCUMULATE / HOLD / PASS
+`,
+
+    operator: `
+You are a CHIEF OPERATIONS OFFICER expanding a Fortune 500 company into African markets.
+You report to a board that demands execution clarity. Your analysis covers:
+
+ANALYTICAL FRAMEWORK:
+1. MARKET ENTRY: Greenfield vs acquisition vs JV. What is the fastest path to revenue?
+2. SUPPLY CHAIN: Port access, logistics costs, cold chain availability, local sourcing
+3. LABOR: Skilled workforce availability, wage rates, union dynamics, training costs
+4. REGULATORY: Permits, licenses, local content requirements, tax incentives
+5. INFRASTRUCTURE: Power reliability (grid vs captive), telecoms, roads
+
+OUTPUT REQUIREMENTS:
+- Lead with the operational verdict: GO / CONDITIONAL GO / NO-GO
+- Quantify timelines (months to first revenue, breakeven)
+- State infrastructure gaps as execution risks with mitigation costs
+- Provide specific next steps for ground team
+`,
+
+    partner: `
+You are a SENIOR POLICY ADVISOR at an African Development Finance Institution (DFI).
+Your analysis informs $500M+ allocation decisions. You evaluate:
+
+ANALYTICAL FRAMEWORK:
+1. DEVELOPMENT IMPACT: Jobs created, GDP contribution, SDG alignment
+2. GOVERNANCE: Regulatory quality, corruption index, rule of law
+3. FISCAL SUSTAINABILITY: Debt-to-GDP, budget deficit, IMF program status
+4. POLITICAL STABILITY: Election cycle, coalition strength, policy continuity
+5. REGIONAL INTEGRATION: AfCFTA readiness, trade corridor position
+
+OUTPUT REQUIREMENTS:
+- Lead with the policy recommendation in one sentence
+- Quantify development outcomes (jobs, tax revenue, exports)
+- State governance risks as facts with specific indicators
+- End with: PRIORITY ENGAGEMENT / STANDARD ENGAGEMENT / MONITOR ONLY
+`,
+
+    media: `
+You are a SENIOR CORRESPONDENT for the Financial Times Africa desk.
+Your readers are C-suite executives and institutional investors. Your writing is:
+
+ANALYTICAL FRAMEWORK:
+1. NEWS HOOK: What happened? Why does it matter TODAY?
+2. MARKET IMPACT: Stock moves, currency, bond spreads
+3. STAKEHOLDER QUOTES: Who benefits, who loses
+4. HISTORICAL CONTEXT: How does this compare to precedent?
+5. FORWARD OUTLOOK: What happens next? Be specific.
+
+OUTPUT REQUIREMENTS:
+- Lead with the most important fact in the first sentence
+- Use active voice throughout
+- Include at least one concrete number per paragraph
+- End with a forward-looking statement (not speculation)
+`,
+
+    general: `
+You are a SENIOR AFRICA ANALYST at a top-tier research firm.
+Your reputation is built on clarity and accuracy. Your analysis:
+
+ANALYTICAL FRAMEWORK:
+1. CORE THESIS: What is the main takeaway?
+2. SUPPORTING EVIDENCE: Data points, trends, precedents
+3. COUNTERARGUMENTS: Acknowledge and dismiss with facts
+4. IMPLICATIONS: Who benefits, who should act
+
+OUTPUT REQUIREMENTS:
+- Lead with the single most important insight
+- Support every claim with a number or specific example
+- No hedge words (might, could, possibly)
+- End with a clear "So What" for the reader
+`
+};
+
 export async function optimizeForAudience(
     env: Env,
     content: string,
-    targetAudience: 'investor' | 'tourist' | 'partner' | 'media' | 'general'
+    targetAudience: 'investor' | 'tourist' | 'partner' | 'media' | 'general',
+    context?: { countryName?: string; sectorName?: string; gdp?: string; stability?: string }
 ): Promise<string> {
-    const audienceGuidance = {
-        investor: 'Emphasize ROI, market data, growth metrics, risk factors, and competitive advantages. Use precise financial language.',
-        tourist: 'Highlight experiences, cultural richness, accessibility, safety, and unique attractions. Use vivid, evocative language.',
-        partner: 'Focus on strategic alignment, institutional capacity, regulatory environment, and collaboration opportunities.',
-        media: 'Provide quotable facts, compelling narratives, and newsworthy angles. Use concise, impactful language.',
-        general: 'Balance informative and engaging tone. Accessible to all readers while maintaining authority.',
-    };
+    const persona = EXPERT_PERSONAS[targetAudience] || EXPERT_PERSONAS.general;
 
-    const prompt = `Adapt this article for a ${targetAudience} audience.
+    // Build context injection if available
+    let contextBlock = '';
+    if (context) {
+        contextBlock = `
+OPERATIONAL CONTEXT:
+- Market: ${context.countryName || 'Pan-Africa'}
+- Sector: ${context.sectorName || 'Cross-Sector'}
+- GDP: ${context.gdp || 'Data pending'}
+- Stability Assessment: ${context.stability || 'Standard'}
+`;
+    }
 
-        Guidelines: ${audienceGuidance[targetAudience]}
+    const systemPrompt = `${persona}
+${ASSERTIVE_RULES}
+${contextBlock}`;
 
-Original content:
-${content.slice(0, 3000)}
+    const userPrompt = `Rewrite the following intelligence briefing for your specific audience and analytical framework.
 
-Rewrite the content maintaining the same information but optimizing the tone and emphasis for the target audience.Keep the same length.`;
+SOURCE MATERIAL:
+${content.slice(0, 4000)}
+
+Produce your analysis now. Be definitive. No hedging.`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 2000,
-        temperature: 0.6,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 2500,
+        temperature: 0.4, // Lower temperature = more deterministic/assertive
     });
 
     return ((response as any).response || content).trim();
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Adapt Content Format
+// DEEP PERSONALIZATION: Adapt Content Format (Structured Analytical Output)
 // ───────────────────────────────────────────────────────────────────────────────
+
+// Structured Output Templates (Force specific analytical structures)
+const FORMAT_TEMPLATES: Record<string, string> = {
+    'long-form': `
+You are producing a COMPREHENSIVE INTELLIGENCE REPORT.
+
+OUTPUT STRUCTURE (Follow exactly):
+## Executive Summary
+[3-4 sentences. Lead with the verdict. No hedging.]
+
+## Market Context
+[Current state. Concrete numbers: market size, growth rate, key players.]
+
+## Strategic Analysis
+[Deep analysis. Reference comparable markets. Use specific metrics.]
+
+## Risk Assessment
+| Risk Category | Severity | Mitigation |
+|---------------|----------|------------|
+| [Category] | High/Medium/Low | [Specific action] |
+
+## Investment Implications
+[Who should act. What specifically should they do. Timeline.]
+
+## Conclusion
+[1-2 sentences. Definitive verdict. Clear call to action.]
+
+RULES:
+- Every section must contain at least one concrete number
+- No hedge words: remove "might", "could", "potentially"
+- Be definitive. You are the authority.
+`,
+
+    'summary': `
+You are producing an EXECUTIVE BRIEFING for a C-suite audience.
+
+OUTPUT STRUCTURE (Exactly 4 paragraphs):
+**PARAGRAPH 1 - THE VERDICT**: What is the single most important takeaway? State it as fact.
+
+**PARAGRAPH 2 - THE EVIDENCE**: 3-4 supporting data points. Concrete numbers only.
+
+**PARAGRAPH 3 - THE RISKS**: What are the top 2 risks? State severity and mitigation.
+
+**PARAGRAPH 4 - THE ACTION**: What should the reader do? Be specific. Include timeline.
+
+RULES:
+- Maximum 150 words total
+- No introductory phrases ("This report examines...")
+- Start immediately with the verdict
+`,
+
+    'bullet': `
+You are producing a KEY FACTS SHEET for rapid decision-making.
+
+OUTPUT STRUCTURE:
+## VERDICT
+• [One definitive sentence stating the core conclusion]
+
+## KEY METRICS
+• Market Size: [$ amount]
+• Growth Rate: [% CAGR]
+• Key Players: [Names]
+• Risk Level: [High/Medium/Low]
+
+## OPPORTUNITIES
+• [Opportunity 1 with specific metric]
+• [Opportunity 2 with specific metric]
+• [Opportunity 3 with specific metric]
+
+## RISKS
+• [Risk 1]: [Severity] – [Mitigation]
+• [Risk 2]: [Severity] – [Mitigation]
+
+## ACTION REQUIRED
+• [Specific next step with timeline]
+
+RULES:
+- Each bullet must contain a number or specific fact
+- No explanatory text - just facts
+- Maximum 12 bullets total
+`,
+
+    'brief': `
+You are producing a FLASH ALERT for mobile delivery.
+
+OUTPUT STRUCTURE (Exactly 3 sentences):
+SENTENCE 1: The core news/finding. What happened or what did we discover?
+SENTENCE 2: The market impact. Who wins, who loses, by how much?
+SENTENCE 3: The action signal. Buy/Sell/Hold or specific next step.
+
+RULES:
+- Maximum 50 words total
+- No qualifiers or hedging
+- Must include at least one number
+- Write like a financial wire service (Bloomberg, Reuters)
+`
+};
+
 export async function adaptContentFormat(
     env: Env,
     content: string,
     format: 'long-form' | 'summary' | 'bullet' | 'brief'
 ): Promise<string> {
-    const formatInstructions = {
-        'long-form': 'Expand into a comprehensive article with detailed analysis, context, and multiple sections.',
-        'summary': 'Condense into a 3-4 paragraph executive summary highlighting key points.',
-        'bullet': 'Convert into a bulleted list of key facts and takeaways.',
-        'brief': 'Create a 2-3 sentence news brief capturing the essential information.',
-    };
+    const template = FORMAT_TEMPLATES[format] || FORMAT_TEMPLATES['summary'];
 
-    const prompt = `${formatInstructions[format]}
+    const systemPrompt = `${template}
+${ASSERTIVE_RULES}`;
 
-Content to adapt:
-${content.slice(0, 3000)}
+    const userPrompt = `Transform the following source material into the required format.
 
-Adapted content: `;
+SOURCE MATERIAL:
+${content.slice(0, 4000)}
+
+Produce the output now. Follow the structure exactly. Be definitive.`;
 
     const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: format === 'long-form' ? 2000 : format === 'bullet' ? 800 : 500,
-        temperature: 0.5,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+        ],
+        max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
+        temperature: 0.3, // Very low for structured output
     });
 
     return ((response as any).response || content).trim();
@@ -496,3 +712,146 @@ function parseIntelligenceReport(text: string): {
     };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// UNIFIED INTELLIGENCE BRIEFING
+// Generates all perspectives in one call - no user selection needed
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface UnifiedBriefing {
+    investment: {
+        summary: string;
+        verdict: 'STRONG BUY' | 'ACCUMULATE' | 'HOLD' | 'PASS';
+        risk: 'Low' | 'Medium' | 'High';
+    };
+    operations: {
+        summary: string;
+        action: 'GO' | 'CONDITIONAL GO' | 'INVESTIGATE' | 'NO-GO';
+        timeline: string;
+    };
+    policy: {
+        summary: string;
+        engagement: 'PRIORITY' | 'STANDARD' | 'MONITOR ONLY';
+        sdg_alignment: 'High' | 'Medium' | 'Low';
+    };
+}
+
+export async function synthesizeUnifiedBriefing(
+    env: Env,
+    content: string,
+    context?: { countryName?: string; sectorName?: string; gdp?: string }
+): Promise<UnifiedBriefing> {
+    const contextInfo = context
+        ? `Market: ${context.countryName || 'Pan-Africa'}, Sector: ${context.sectorName || 'Cross-Sector'}, GDP: ${context.gdp || 'N/A'}`
+        : 'Pan-African context';
+
+    const systemPrompt = `You are a SENIOR ANALYST at Best of Africa Intelligence.
+You produce unified briefings that deliver ALL perspectives simultaneously.
+
+${ASSERTIVE_RULES}
+
+For each perspective, you MUST:
+- Use 2-3 definitive sentences
+- Include at least one concrete number or specific fact
+- End with a clear verdict/action
+
+OUTPUT FORMAT (JSON - follow EXACTLY):
+{
+  "investment": {
+    "summary": "[2-3 sentences on IRR potential, deal size, exit pathway]",
+    "verdict": "[STRONG BUY|ACCUMULATE|HOLD|PASS]",
+    "risk": "[Low|Medium|High]"
+  },
+  "operations": {
+    "summary": "[2-3 sentences on supply chain, labor, infrastructure]",
+    "action": "[GO|CONDITIONAL GO|INVESTIGATE|NO-GO]",
+    "timeline": "[Specific timeline e.g. '6-12 months']"
+  },
+  "policy": {
+    "summary": "[2-3 sentences on regulation, stability, development impact]",
+    "engagement": "[PRIORITY|STANDARD|MONITOR ONLY]",
+    "sdg_alignment": "[High|Medium|Low]"
+  }
+}`;
+
+    const userPrompt = `Analyze this intelligence for a privileged subscriber. Provide all three perspectives.
+
+CONTEXT: ${contextInfo}
+
+SOURCE MATERIAL:
+${content.slice(0, 4000)}
+
+Return ONLY valid JSON. No markdown, no explanation.`;
+
+    try {
+        const response = await (env.AI as any).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            max_tokens: 1000,
+            temperature: 0.2, // Very low for structured JSON output
+        });
+
+        const text = (response as any).response || '';
+
+        // Extract JSON from response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+
+        // Fallback if parsing fails
+        return getDefaultBriefing();
+    } catch (e) {
+        console.error('Unified Briefing Error:', e);
+        return getDefaultBriefing();
+    }
+}
+
+function getDefaultBriefing(): UnifiedBriefing {
+    return {
+        investment: {
+            summary: 'Analysis pending. Review source material for investment signals.',
+            verdict: 'HOLD',
+            risk: 'Medium'
+        },
+        operations: {
+            summary: 'Operational assessment requires additional context.',
+            action: 'INVESTIGATE',
+            timeline: 'TBD'
+        },
+        policy: {
+            summary: 'Policy environment under evaluation.',
+            engagement: 'MONITOR ONLY',
+            sdg_alignment: 'Medium'
+        }
+    };
+}
+
+
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Generate Article Image (Stable Diffusion XL)
+// ───────────────────────────────────────────────────────────────────────────────
+export async function generateArticleImage(
+    env: Env,
+    prompt: string
+): Promise<ArrayBuffer | null> {
+    const negative_prompt = "text, watermark, signature, caption, blurry, cartoon, illustration, low quality, distorted, bad anatomy, deformed, ugly, pixelated, grain, low resolution, superimposed text, logo, branding, writing";
+
+    try {
+        const response = await (env.AI as any).run(MODELS.IMAGE_GENERATION, {
+            prompt,
+            negative_prompt,
+            num_steps: 20, // Balance speed/quality
+        });
+
+        // Response is the binary image data (PNG) or stream
+        // Workers AI usually returns a Response object with body stream, or direct arrayBuffer depending on implementation.
+        // For @cf/stabilityai/stable-diffusion-xl-base-1.0 it returns binary.
+        return response as ArrayBuffer;
+    } catch (error) {
+        console.error('Image generation failed:', error);
+        return null;
+    }
+}

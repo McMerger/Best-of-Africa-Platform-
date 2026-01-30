@@ -14,10 +14,19 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
             // 1. Sanitize to prevent basic failures (though we trust backend)
             .replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-            // 2. Headers
-            .replace(/^### (.*$)/gm, '<h3 class="text-xl font-bold mt-6 mb-3 text-foreground">$1</h3>')
-            .replace(/^## (.*$)/gm, '<h2 class="text-2xl font-bold mt-8 mb-4 text-primary">$1</h2>')
-            .replace(/^# (.*$)/gm, '<h1 class="text-3xl font-bold mt-10 mb-6 text-foreground">$1</h1>')
+            // 2. Headers with IDs
+            .replace(/^### (.*$)/gm, (_, text) => {
+                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                return `<h3 id="${id}" class="text-xl font-bold mt-6 mb-3 text-foreground scroll-mt-24">${text}</h3>`;
+            })
+            .replace(/^## (.*$)/gm, (_, text) => {
+                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                return `<h2 id="${id}" class="text-2xl font-bold mt-8 mb-4 text-primary scroll-mt-24">${text}</h2>`;
+            })
+            .replace(/^# (.*$)/gm, (_, text) => {
+                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                return `<h1 id="${id}" class="text-3xl font-bold mt-10 mb-6 text-foreground scroll-mt-24">${text}</h1>`;
+            })
 
             // 3. Horizontal Rules
             .replace(/^---$/gm, '<hr class="my-8 border-border"/>')

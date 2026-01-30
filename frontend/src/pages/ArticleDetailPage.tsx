@@ -10,21 +10,57 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { ActionBar } from '@/components/ActionBar';
+import { SEO } from '@/components/SEO';
+// useMission removed - unified briefing replaces role selection
 
 export const ArticleDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [data, setData] = useState<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] } | null>(null);
     const [loading, setLoading] = useState(true);
     const [economics, setEconomics] = useState<{ gdp_growth: string; stability: string } | null>(null);
-    const [activeLens, setActiveLens] = useState<'standard' | 'investor' | 'tourist' | 'partner'>('standard');
-    const [activeFormat, setActiveFormat] = useState<'long-form' | 'bullet' | 'brief'>('long-form');
-    const [reformattedContent, setReformattedContent] = useState<Record<string, string>>({});
-    const [rewrittenContent, setRewrittenContent] = useState<Record<string, string>>({});
-    const [isReframing, setIsReframing] = useState(false);
+
+    // UNIFIED BRIEFING STATE (Zero-Friction - No Selection Needed)
+    const [unifiedBriefing, setUnifiedBriefing] = useState<{
+        investment: { summary: string; verdict: string; risk: string };
+        operations: { summary: string; action: string; timeline: string };
+        policy: { summary: string; engagement: string; sdg_alignment: string };
+    } | null>(null);
+    const [briefingLoading, setBriefingLoading] = useState(false);
+
+    // PAYWALL STATE - Connected to real auth
+    const [scrollProgress, setScrollProgress] = useState(0);
+
+    // Auth integration - check real subscription status
+    const getAuthState = () => {
+        try {
+            const userJson = localStorage.getItem('boa_user');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                return user?.tier === 'premium' || user?.tier === 'enterprise';
+            }
+        } catch { /* ignore */ }
+        return false;
+    };
+    const isSubscribed = getAuthState();
+
+    // Scroll tracking for paywall
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = docHeight > 0 ? scrollTop / docHeight : 0;
+            setScrollProgress(scrollPercent);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    // Unified Briefing replaces the old Mission Control Integration
 
     useEffect(() => {
         if (slug) {
-
             api.getArticle(slug)
                 .then(res => {
                     setData(res);
@@ -35,61 +71,58 @@ export const ArticleDetailPage: React.FC = () => {
                             .then(econ => setEconomics(econ))
                             .catch(() => { });
                     }
+                    // AUTO-FETCH UNIFIED BRIEFING (Zero-Friction)
+                    if (res.article?.id) {
+                        setBriefingLoading(true);
+                        api.getUnifiedBriefing(res.article.id)
+                            .then(briefRes => setUnifiedBriefing(briefRes.briefing))
+                            .catch(console.error)
+                            .finally(() => setBriefingLoading(false));
+                    }
                 })
                 .catch(console.error)
                 .finally(() => setLoading(false));
         }
     }, [slug]);
 
-    const handleLensChange = async (lens: string) => {
-        const targetAudience = lens as 'standard' | 'investor' | 'tourist' | 'partner';
-        setActiveLens(targetAudience);
-
-        if (targetAudience === 'standard') return;
-        if (rewrittenContent[targetAudience]) return; // Use cached
-
-        if (!data?.article.id) return;
-
-        setIsReframing(true);
-        try {
-            const res = await api.reframeArticle(data.article.id, targetAudience);
-            setRewrittenContent(prev => ({ ...prev, [targetAudience]: res.content }));
-        } catch (error) {
-            console.error("Failed to reframe:", error);
-        } finally {
-            setIsReframing(false);
-        }
-    };
-
-    const handleFormatChange = async (format: string) => {
-        const targetFormat = format as 'long-form' | 'bullet' | 'brief';
-        setActiveFormat(targetFormat);
-
-        if (targetFormat === 'long-form') return;
-        if (reformattedContent[targetFormat]) return;
-
-        if (!data?.article.id) return;
-
-        setIsReframing(true);
-        try {
-            const res = await api.reformatArticle(data.article.id, targetFormat);
-            setReformattedContent(prev => ({ ...prev, [targetFormat]: res.content }));
-        } catch (error) {
-            console.error("Failed to reformat:", error);
-        } finally {
-            setIsReframing(false);
-        }
-    };
+    // Lens/Format handlers removed - Unified Briefing replaces user selection
 
     if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
     if (!data) return <Layout><div className="container py-20 text-center text-xl text-muted-foreground">Article not found</div></Layout>;
 
     const { article, country, sector } = data;
 
+    // Trigger point: 60% - using scrollProgress from top-level state
+    const showPaywall = !isSubscribed && scrollProgress > 0.6;
+
     return (
         <Layout>
-            <div className="container py-12">
-                <div className="grid gap-12 lg:grid-cols-[2fr_350px]">
+            <ActionBar title={article.title} type="article" />
+            <div className="container py-12 relative">
+                {/* PAYWALL OVERLAY */}
+                {showPaywall && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-gradient-to-t from-background via-background/90 to-transparent pb-32 pointer-events-auto backdrop-blur-[2px] transition-all duration-700 animate-in fade-in">
+                        <div className="w-full max-w-lg p-6 mx-4 text-center border shadow-2xl bg-card/95 border-primary/20 rounded-2xl backdrop-blur-md">
+                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">
+                                🔒
+                            </div>
+                            <h2 className="mb-2 text-2xl font-serif font-bold text-foreground">
+                                What is the cost of not knowing?
+                            </h2>
+                            <p className="mb-6 text-muted-foreground">
+                                You've reached the limit of public clearance. Gain full access to strategic intelligence, sector alerts, and premium reports.
+                            </p>
+                            <Button asChild size="lg" className="w-full font-bold uppercase tracking-wider shadow-lg shadow-primary/20">
+                                <Link to="/membership">Unlock Operational Advantage</Link>
+                            </Button>
+                            <div className="mt-4 text-xs text-muted-foreground">
+                                Already a partner? <Link to="/login" className="underline hover:text-primary">Sign in</Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className={cn("grid gap-12 lg:grid-cols-[2fr_350px]", showPaywall && "blur-sm select-none pointer-events-none transition-filter duration-1000")}>
                     <article className="border border-border bg-card rounded-lg overflow-hidden shadow-sm">
                         {/* Intelligence Briefing Header */}
                         <div className="bg-muted/10 border-b border-border p-8">
@@ -115,8 +148,30 @@ export const ArticleDetailPage: React.FC = () => {
                                 </Badge>
                             </div>
 
+                            <SEO
+                                title={article.title}
+                                description={article.summary}
+                                image={article.hero_image_url}
+                                publishedTime={article.published_at}
+                            />
+
+                            {/* HERO IMAGE - OPTIMIZED */}
+                            {article.hero_image_url && (
+                                <div className="mb-8 rounded-lg overflow-hidden shadow-lg border border-border/50 bg-muted aspect-video relative">
+                                    <img
+                                        src={article.hero_image_url}
+                                        alt={article.title}
+                                        className="w-full h-full object-cover"
+                                        fetchPriority="high"
+                                        decoding="async"
+                                        width="1200"
+                                        height="675"
+                                    />
+                                </div>
+                            )}
+
                             <h1 className="mb-4 font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
-                                {article.title}
+                                {(article.title || '').replace(/\*\*/g, '').replace(/##/g, '')}
                             </h1>
 
                             <div className="flex flex-col gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-4 mt-6">
@@ -185,13 +240,65 @@ export const ArticleDetailPage: React.FC = () => {
                                     <div className="flex flex-col gap-2">
                                         {(JSON.parse(article.ai_headline_variants as unknown as string) as string[]).map((h: string, i: number) => (
                                             <div key={i} className="text-xs font-medium text-muted-foreground/80 italic hover:text-primary cursor-help" title="Analyst generated alternative perspective">
-                                                "{h}"
+                                                "{(h || '').replace(/\*\*/g, '').replace(/##/g, '')}"
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
                         </div>
+
+                        {/* ═══════════════════════════════════════════════════════════════════ */}
+                        {/* UNIFIED INTELLIGENCE BRIEFING (Zero-Friction - All Perspectives) */}
+                        {/* ═══════════════════════════════════════════════════════════════════ */}
+                        {briefingLoading ? (
+                            <div className="grid gap-4 md:grid-cols-3 mb-10">
+                                <Skeleton className="h-40 rounded-lg" />
+                                <Skeleton className="h-40 rounded-lg" />
+                                <Skeleton className="h-40 rounded-lg" />
+                            </div>
+                        ) : unifiedBriefing && (
+                            <div className="grid gap-4 md:grid-cols-3 mb-10">
+                                {/* INVESTMENT SIGNAL */}
+                                <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-lg">📊</span>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-green-600">Investment Signal</h3>
+                                    </div>
+                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.investment.summary}</p>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <Badge variant="outline" className="border-green-500/50 text-green-600 font-bold">{unifiedBriefing.investment.verdict}</Badge>
+                                        <span className="text-muted-foreground">Risk: <strong>{unifiedBriefing.investment.risk}</strong></span>
+                                    </div>
+                                </div>
+
+                                {/* OPERATIONAL BRIEF */}
+                                <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-lg">⚙️</span>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-blue-600">Operational Brief</h3>
+                                    </div>
+                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.operations.summary}</p>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <Badge variant="outline" className="border-blue-500/50 text-blue-600 font-bold">{unifiedBriefing.operations.action}</Badge>
+                                        <span className="text-muted-foreground">Timeline: <strong>{unifiedBriefing.operations.timeline}</strong></span>
+                                    </div>
+                                </div>
+
+                                {/* POLICY CONTEXT */}
+                                <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-5">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="text-lg">📜</span>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-purple-600">Policy Context</h3>
+                                    </div>
+                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.policy.summary}</p>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <Badge variant="outline" className="border-purple-500/50 text-purple-600 font-bold">{unifiedBriefing.policy.engagement}</Badge>
+                                        <span className="text-muted-foreground">SDG: <strong>{unifiedBriefing.policy.sdg_alignment}</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Executive Summary - High Visibility Box */}
                         {(article.ai_investor_brief || article.summary) && (
@@ -200,7 +307,7 @@ export const ArticleDetailPage: React.FC = () => {
                                     Analyst Executive Brief
                                 </h3>
                                 <p className="text-xl font-serif font-medium leading-relaxed text-foreground italic">
-                                    {article.ai_investor_brief || article.summary}
+                                    {(article.ai_investor_brief || article.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
                                 </p>
                             </div>
                         )}
@@ -248,100 +355,11 @@ export const ArticleDetailPage: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Main Analysis Body */}
+                        {/* Main Analysis Body - Direct Content (No Selection Needed) */}
                         <div className="p-8 leading-relaxed text-foreground">
-                            {/* Control Center: Lens & Format */}
-                            <div className="mb-8 grid gap-4 rounded-lg bg-muted/30 p-4 border border-border">
-                                {/* Row 1: Lens */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Analyst Lens</h3>
-                                        <p className="text-[10px] text-muted-foreground">Select a strategic viewpoint to reframe this intelligence.</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant={activeLens === 'standard' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleLensChange('standard')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider"
-                                        >
-                                            Standard
-                                        </Button>
-                                        <Button
-                                            variant={activeLens === 'investor' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleLensChange('investor')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider"
-                                        >
-                                            Investor
-                                        </Button>
-                                        <Button
-                                            variant={activeLens === 'partner' ? 'default' : 'outline'}
-                                            size="sm"
-                                            onClick={() => handleLensChange('partner')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider"
-                                        >
-                                            Policy
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {/* Row 2: Format */}
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-border/50">
-                                    <div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Briefing Format</h3>
-                                        <p className="text-[10px] text-muted-foreground">Adjust the depth of analysis.</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button
-                                            variant={activeFormat === 'long-form' ? 'secondary' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => handleFormatChange('long-form')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider border border-border"
-                                        >
-                                            Deep Dive
-                                        </Button>
-                                        <Button
-                                            variant={activeFormat === 'bullet' ? 'secondary' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => handleFormatChange('bullet')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider border border-border"
-                                        >
-                                            Key Facts
-                                        </Button>
-                                        <Button
-                                            variant={activeFormat === 'brief' ? 'secondary' : 'ghost'}
-                                            size="sm"
-                                            onClick={() => handleFormatChange('brief')}
-                                            className="h-7 text-[10px] font-bold uppercase tracking-wider border border-border"
-                                        >
-                                            Executive Brief
-                                        </Button>
-                                    </div>
-                                </div>
+                            <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary max-w-none dark:prose-invert">
+                                <MarkdownRenderer content={article.content} />
                             </div>
-
-                            {isReframing ? (
-                                <div className="space-y-4 py-8 animate-pulse text-center">
-                                    <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Analyst Engine is processing request...</p>
-                                </div>
-                            ) : (
-                                <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary max-w-none dark:prose-invert">
-                                    <MarkdownRenderer
-                                        content={
-                                            activeFormat !== 'long-form' ? reformattedContent[activeFormat] || article.content :
-                                                activeLens !== 'standard' ? rewrittenContent[activeLens] || article.content :
-                                                    article.content
-                                        }
-                                    />
-                                    {(activeLens !== 'standard' || activeFormat !== 'long-form') && (
-                                        <div className="mt-8 border-t border-dashed border-primary/30 pt-4 text-[10px] uppercase text-primary opacity-70">
-                                            {activeLens !== 'standard' ? `Reframed for ${activeLens} context` : 'Format adapted'} by Analyst Engine.
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </article>
 
@@ -368,6 +386,31 @@ export const ArticleDetailPage: React.FC = () => {
                                     <h3 className="mb-6 flex items-center gap-2 border-b border-primary pb-2 text-xs font-bold uppercase tracking-widest text-primary">
                                         Operational Context
                                     </h3>
+
+                                    {/* Table of Contents (New) */}
+                                    <div className="mb-8 p-4 bg-muted/30 rounded border border-border">
+                                        <div className="text-xs font-bold uppercase text-muted-foreground mb-3">Contents</div>
+                                        <nav className="flex flex-col gap-2">
+                                            {(article.content || '').match(/^##+ (.*$)/gm)?.map((header: string, i: number) => {
+                                                const text = header.replace(/^##+ /, '');
+                                                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                                                const level = header.startsWith('###') ? 'ml-3' : '';
+                                                return (
+                                                    <a
+                                                        key={i}
+                                                        href={`#${id}`}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                                                        }}
+                                                        className={`text-xs text-muted-foreground hover:text-primary hover:underline transition-colors block truncate ${level}`}
+                                                    >
+                                                        {text}
+                                                    </a>
+                                                );
+                                            })}
+                                        </nav>
+                                    </div>
 
                                     {/* Sentiment Signal (AI or Country Proxy) */}
                                     {(article.ai_sentiment_score !== undefined || country) && (
@@ -473,7 +516,7 @@ export const ArticleDetailPage: React.FC = () => {
                                     {data.related.map(item => (
                                         <Link to={`/articles/${item.slug}`} key={item.id} className="group block rounded-lg border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/50">
                                             <h4 className="mb-3 text-base font-bold leading-snug text-foreground group-hover:text-primary">
-                                                {item.title}
+                                                {(item.title || '').replace(/\*\*/g, '').replace(/##/g, '').replace(/\.$/, '').trim()}
                                             </h4>
                                             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                                                 {item.country_name} • {item.sector_name}

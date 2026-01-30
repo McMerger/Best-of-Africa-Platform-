@@ -159,6 +159,22 @@ export const api = {
             method: 'POST',
             body: JSON.stringify({ articleId, format })
         }),
+
+    // Unified Intelligence Briefing (Zero-Friction - All Perspectives)
+    getUnifiedBriefing: (articleId: string) =>
+        request<{
+            article_id: string;
+            title: string;
+            briefing: {
+                investment: { summary: string; verdict: string; risk: string };
+                operations: { summary: string; action: string; timeline: string };
+                policy: { summary: string; engagement: string; sdg_alignment: string };
+            };
+        }>('/intel/synthesize-unified', {
+            method: 'POST',
+            body: JSON.stringify({ articleId })
+        }),
+
     getPremiumCountryReport: (code: string) => request<{
         country: Country;
         article_count: number;

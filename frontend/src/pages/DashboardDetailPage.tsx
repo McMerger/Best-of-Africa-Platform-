@@ -110,7 +110,7 @@ export const DashboardDetailPage: React.FC = () => {
                                         </span>
                                     </div>
                                     <p className="font-mono text-lg leading-relaxed text-foreground">
-                                        <strong>"{analytics?.market_summary?.split('.')[0] || 'Market Updates Pending'}."</strong> {analytics?.market_summary?.split('.').slice(1).join('.') || 'Analyzing latest regional data streams.'}
+                                        <strong>"{(analytics?.market_summary?.split('.')[0] || 'Market Updates Pending').replace(/\*\*/g, '').replace(/##/g, '')}."</strong> {(analytics?.market_summary?.split('.').slice(1).join('.') || 'Analyzing latest regional data streams.').replace(/\*\*/g, '').replace(/##/g, '')}
                                     </p>
                                     <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-primary to-transparent"></div>
                                 </CardContent>

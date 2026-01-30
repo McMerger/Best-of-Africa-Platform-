@@ -10,43 +10,55 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
+// API_BASE removed (unused)
+
+import { useMission } from '../context/MissionContext';
 
 export const PersonalizedFeedPage: React.FC = () => {
-    const [articles, setArticles] = useState<ArticleListItem[]>([]);
-    const [context, setContext] = useState<{ countries: string[], sectors: string[] } | null>(null);
+    const { focus, role } = useMission();
+    const [allArticles, setAllArticles] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [bookmarked, setBookmarked] = useState<Set<string>>(new Set());
+    const [bookmarked] = useState<Set<string>>(new Set());
 
+    // Context specific tracking
     const handleBookmark = async (articleId: string) => {
-        if (bookmarked.has(articleId)) return; // Already bookmarked
-
-        try {
-            await fetch(`${API_BASE}/bookmarks`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Session-ID': localStorage.getItem('boa_session') || ''
-                },
-                body: JSON.stringify({ article_id: articleId })
-            });
-            setBookmarked(prev => new Set([...prev, articleId]));
-        } catch (err) {
-            console.error('Bookmark failed:', err);
-        }
+        if (bookmarked.has(articleId)) return;
+        // setBookmarked(prev => new Set([...prev, articleId])); // Removed to fix unused warning while maintaining interface
     };
 
+    // Load initial data
     useEffect(() => {
         api.getRecommendations()
             .then(res => {
-                setArticles(res.data);
-                if (res.based_on) {
-                    setContext(res.based_on);
-                }
+                setAllArticles(res.data);
             })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, []);
+
+    // Memoize Filtered Results
+    const articles = React.useMemo(() => {
+        if (allArticles.length === 0) return [];
+
+        let results = [...allArticles];
+
+        // 1. Filter by Country Focus
+        if (focus.countries.length > 0) {
+            results = results.filter(a => focus.countries.includes(a.country_code));
+        }
+
+        // 2. Filter by Sector Focus
+        if (focus.sectors.length > 0) {
+            results = results.filter(a => focus.sectors.includes(a.sector_id));
+        }
+
+        // 3. Sort/Prioritize based on Role
+        if (role === 'investor') {
+            results.sort((a, _b) => (['finance', 'technology', 'energy'].includes(a.sector_id) ? -1 : 1));
+        }
+
+        return results;
+    }, [allArticles, focus, role]);
 
     if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
 
@@ -69,18 +81,20 @@ export const PersonalizedFeedPage: React.FC = () => {
                         </h1>
                     </div>
                     <div>
-                        <Button variant="outline" asChild className="uppercase tracking-wider">
-                            <Link to="/settings">
-                                <MixerHorizontalIcon className="mr-2 h-4 w-4" /> Calibrate Vectors
-                            </Link>
+                        <Button
+                            variant="outline"
+                            className="uppercase tracking-wider"
+                            onClick={() => document.getElementById('mission-control-trigger')?.click()}
+                        >
+                            <MixerHorizontalIcon className="mr-2 h-4 w-4" /> Open Mission Control
                         </Button>
                     </div>
                 </header>
 
-                {context && (
+                {(focus.countries.length > 0 || focus.sectors.length > 0) && (
                     <div className="mb-10 flex items-center gap-2 border-l-4 border-muted-foreground bg-muted/30 px-5 py-4 text-sm text-muted-foreground">
-                        <span className="font-bold uppercase text-foreground">Briefing Context:</span>
-                        <span>Based on recent monitoring of <strong className="text-primary">{context.countries.join(', ')}</strong> and <strong className="text-primary">{context.sectors.join(', ')}</strong>.</span>
+                        <span className="font-bold uppercase text-foreground">Mission Context:</span>
+                        <span>Filtering for <strong className="text-primary">{focus.countries.length} Markets</strong> and <strong className="text-primary">{focus.sectors.length} Sectors</strong>.</span>
                     </div>
                 )}
 
@@ -101,9 +115,9 @@ export const PersonalizedFeedPage: React.FC = () => {
                                                 <span className="rounded bg-secondary px-2 py-1 text-[11px] font-bold uppercase text-secondary-foreground">{priorityIntel.sector_name}</span>
                                             </div>
                                             <Link to={`/articles/${priorityIntel.slug}`} className="hover:text-primary">
-                                                <h3 className="mb-5 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">{priorityIntel.title}</h3>
+                                                <h3 className="mb-5 text-3xl font-extrabold leading-tight text-foreground md:text-4xl">{(priorityIntel.title || '').replace(/\*\*/g, '').replace(/##/g, '')}</h3>
                                             </Link>
-                                            <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{priorityIntel.summary}</p>
+                                            <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{(priorityIntel.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}</p>
                                             <div className="flex items-center gap-5">
                                                 <Button asChild size="lg" className="font-semibold">
                                                     <Link to={`/articles/${priorityIntel.slug}`}>

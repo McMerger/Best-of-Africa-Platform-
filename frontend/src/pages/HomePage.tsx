@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
@@ -11,6 +12,7 @@ import { GlobeIcon, ArrowRightIcon, ArrowTopRightIcon } from '@radix-ui/react-ic
 import type { Dashboard } from '../types';
 
 export const HomePage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     const [featured, setFeatured] = useState<ArticleListItem[]>([]);
     const [dashboards, setDashboards] = useState<Dashboard[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,14 +60,14 @@ export const HomePage: React.FC = () => {
                             <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
                         </div>
                         <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-7xl">
-                            Strategic Narrative Engine.
+                            {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
                         </h1>
                         <p className="mb-10 text-xl leading-relaxed text-muted-foreground max-w-2xl">
-                            A unified public relations and strategic narrative engine for the continent, designed to strengthen Africa's image on the global stage by promoting—country by country—opportunities for tourism, investment, and sustainable development.
+                            {config?.['home_hero_subhead'] || "A unified public relations and strategic narrative engine for the continent."}
                         </p>
                         <div className="flex flex-wrap items-center gap-4">
                             <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-sm">
-                                Explore Intelligence
+                                {config?.['home_cta_primary'] || "Explore Intelligence"}
                             </Button>
                             <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-medium">
                                 <Link to="/countries">View Countries</Link>
@@ -104,7 +106,7 @@ export const HomePage: React.FC = () => {
                                 <h3 className="relative z-10 text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-2">
                                     {article.sector_name || 'Market'} <span className="text-muted-foreground font-normal">in</span> {article.country_name || 'Africa'}
                                 </h3>
-                                <div className="relative z-10 text-sm font-medium text-muted-foreground line-clamp-1">{article.title}</div>
+                                <div className="relative z-10 text-sm font-medium text-muted-foreground line-clamp-1">{(article.title || '').replace(/\*\*/g, '').replace(/##/g, '')}</div>
                             </Link>
                         ))}
                     </div>
@@ -119,10 +121,10 @@ export const HomePage: React.FC = () => {
                                     Latest Sector Analysis
                                 </div>
                                 <h3 className="text-2xl font-bold text-foreground">
-                                    {featured[0]?.title || "Loading Sector Analysis..."}
+                                    {(featured[0]?.title || "Loading Sector Analysis...").replace(/\*\*/g, '').replace(/##/g, '')}
                                 </h3>
                                 <p className="text-muted-foreground max-w-3xl truncate">
-                                    {featured[0]?.summary}
+                                    {(featured[0]?.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
                                 </p>
                             </div>
                             <Button variant="outline" asChild className="shrink-0 bg-background font-bold">
@@ -132,7 +134,42 @@ export const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 4. BUSINESS TRAVEL (REMOVED - Pure Intel Focus) */}
+                {/* 4. BUSINESS TRAVEL */}
+                <section className="border-t border-border bg-card py-24">
+                    <div className="container">
+                        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+                            <div>
+                                <h2 className="mb-6 text-4xl font-serif font-black tracking-tight lg:text-5xl">
+                                    Mission Support & <br /> Logistics.
+                                </h2>
+                                <p className="mb-8 text-lg font-medium leading-relaxed text-muted-foreground">
+                                    We don't just provide intelligence; we enable presence. From secure aviation to expedited visas and security details, we ensure your team lands, operates, and succeeds in any jurisdiction.
+                                </p>
+                                <Button asChild size="lg" className="h-12 px-8 font-bold text-base shadow-lg shadow-primary/20">
+                                    <Link to="/travel">Secure Mobility Support</Link>
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-4">
+                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
+                                        <div className="mb-2 text-2xl font-black text-primary">54</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Countries Covered</div>
+                                    </div>
+                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
+                                        <div className="mb-2 text-2xl font-black text-primary">24/7</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Security Overwatch</div>
+                                    </div>
+                                </div>
+                                <div className="rounded-xl border border-border bg-muted/20 p-6 flex flex-col justify-end">
+                                    <div className="text-sm font-medium italic text-muted-foreground">
+                                        "The only partner we trust for Sahel transitions."
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 {/* 5. STRATEGIC SERVICES (REMOVED - Pure Intel Focus) */}
             </div>
         </Layout>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { cn } from '@/lib/utils';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
@@ -10,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const SearchPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     const [searchParams, setSearchParams] = useSearchParams();
     const query = searchParams.get('q') || '';
     const [searchInput, setSearchInput] = useState(query);
@@ -54,9 +56,11 @@ export const SearchPage: React.FC = () => {
                         <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"></div>
                         Briefing Mode
                     </div>
-                    <h1 className="mb-4 text-6xl font-serif font-black tracking-tighter text-foreground">Market Intelligence</h1>
+                    <h1 className="mb-4 text-6xl font-serif font-black tracking-tighter text-foreground">
+                        {config?.['search_hero_headline'] || "Market Intelligence"}
+                    </h1>
                     <p className="mx-auto max-w-2xl text-xl font-mono text-muted-foreground">
-                        Generate summaries from platform data.
+                        {config?.['search_hero_subhead'] || "Generate summaries from platform data."}
                     </p>
                 </header>
 
@@ -78,7 +82,7 @@ export const SearchPage: React.FC = () => {
                                         setSuggestions([]);
                                     }
                                 }}
-                                placeholder="Search markets, sectors, or trends (e.g., 'Nigeria Energy Risk')..."
+                                placeholder={config?.['search_input_placeholder'] || "Search markets, sectors, or trends (e.g., 'Nigeria Energy Risk')..."}
                                 className="w-full border-none bg-transparent py-6 pl-14 pr-4 text-xl font-medium placeholder:text-muted-foreground/50 focus-visible:ring-0 shadow-none h-auto"
                             />
                             <Button type="submit" size="lg" className="ml-2 font-bold">

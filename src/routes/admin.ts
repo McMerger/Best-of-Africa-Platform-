@@ -389,4 +389,132 @@ async function hashApiKey(key: string): Promise<string> {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Batch Fix: Reclassify Articles Without Sectors
+// ───────────────────────────────────────────────────────────────────────────────
+import { identifySector, identifyCountry } from '../lib/ai';
+
+router.post('/fix-sectors', async (c) => {
+    const { limit = '50' } = c.req.query();
+    const batchSize = Math.min(100, parseInt(limit));
+
+    // Get articles without sector or country
+    const articles = await c.env.DB.prepare(`
+        SELECT id, title, content, sector_id, country_code
+        FROM articles
+        WHERE (sector_id IS NULL OR sector_id = '' OR country_code IS NULL OR country_code = '')
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batchSize).all();
+
+    const results = { fixed: 0, failed: 0, details: [] as { id: string; sector: string | null; country: string | null }[] };
+
+    for (const article of (articles.results || [])) {
+        const a = article as any;
+        try {
+            let newSector = a.sector_id;
+            let newCountry = a.country_code;
+
+            // Classify sector if missing
+            if (!newSector) {
+                newSector = await identifySector(c.env, a.title, a.content || '');
+            }
+
+            // Classify country if missing
+            if (!newCountry) {
+                newCountry = await identifyCountry(c.env, a.title, a.content || '');
+            }
+
+            // Update if we found either
+            if (newSector || newCountry) {
+                await c.env.DB.prepare(`
+                    UPDATE articles SET sector_id = COALESCE(?, sector_id), country_code = COALESCE(?, country_code)
+                    WHERE id = ?
+                `).bind(newSector || null, newCountry || null, a.id).run();
+
+                results.fixed++;
+                results.details.push({ id: a.id, sector: newSector, country: newCountry });
+            } else {
+                results.failed++;
+            }
+        } catch (e) {
+            console.error(`Failed to classify article ${a.id}:`, e);
+            results.failed++;
+        }
+    }
+
+    return c.json({
+        message: `Batch sector/country fix complete`,
+        total_processed: articles.results?.length || 0,
+        fixed: results.fixed,
+        failed: results.failed,
+        details: results.details.slice(0, 10) // Only return first 10 for brevity
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Batch Job: Generate Article Images
+// ───────────────────────────────────────────────────────────────────────────────
+import { generateArticleImage } from '../lib/ai';
+import { uploadImage } from '../lib/media';
+
+router.post('/generate-images', async (c) => {
+    const { limit = '10' } = c.req.query();
+    const batchSize = Math.min(50, parseInt(limit));
+
+    // Get articles without images
+    const articles = await c.env.DB.prepare(`
+        SELECT a.id, a.title, a.content, c.name as country_name, s.name as sector_name 
+        FROM articles a
+        LEFT JOIN countries c ON a.country_code = c.code
+        LEFT JOIN sectors s ON a.sector_id = s.id
+        WHERE (a.hero_image_url IS NULL OR a.hero_image_url = '')
+        AND a.status = 'published'
+        ORDER BY a.published_at DESC
+        LIMIT ?
+    `).bind(batchSize).all();
+
+    const results = { generated: 0, failed: 0, details: [] as any[] };
+
+    for (const article of (articles.results || [])) {
+        const a = article as any;
+        try {
+            // Construct Prompt
+            const context = [a.country_name, a.sector_name].filter(Boolean).join(', ');
+            const prompt = `Photorealistic journalism style photo of ${a.title}. Context: ${context}. High quality, 4k, award winning photography, dramatic lighting, highly detailed, news editorial style. No text.`;
+
+            console.log(`Generating image for ${a.id}: ${prompt.slice(0, 100)}...`);
+
+            // Generate
+            const imageBuffer = await generateArticleImage(c.env, prompt);
+
+            if (imageBuffer) {
+                // Upload to R2
+                const key = `hero/${a.id}.png`;
+                const publicUrl = await uploadImage(c.env, key, imageBuffer, 'image/png');
+
+                // Update DB
+                await c.env.DB.prepare(`
+                    UPDATE articles SET hero_image_url = ? WHERE id = ?
+                `).bind(publicUrl, a.id).run();
+
+                results.generated++;
+                results.details.push({ id: a.id, url: publicUrl });
+            } else {
+                results.failed++;
+                console.error(`Failed to generate image for ${a.id}`);
+            }
+        } catch (e) {
+            console.error(`Error processing image for article ${a.id}:`, e);
+            results.failed++;
+        }
+    }
+
+    return c.json({
+        message: `Batch image generation complete`,
+        total_processed: articles.results?.length || 0,
+        results
+    });
+});
+
 export { router as adminRouter };

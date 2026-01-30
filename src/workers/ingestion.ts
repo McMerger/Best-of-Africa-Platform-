@@ -219,7 +219,29 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
                         if (existing) continue;
 
-                        const africaKeywords = ['africa', 'african', 'nigeria', 'kenya', 'south africa', 'egypt', 'morocco', 'ethiopia', 'ghana', 'tanzania', 'angola', 'mozambique', 'senegal', 'rwanda', 'uganda', 'cameroon'];
+                        // COMPREHENSIVE AFRICA KEYWORDS - All 54 Countries + Key Terms
+                        const africaKeywords = [
+                            // Pan-African Terms
+                            'africa', 'african', 'sub-saharan', 'afrique', 'afrika',
+                            // Northern Africa
+                            'algeria', 'egypt', 'libya', 'morocco', 'tunisia', 'mauritania', 'western sahara',
+                            // Eastern Africa
+                            'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
+                            'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
+                            'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
+                            // Western Africa
+                            'benin', 'burkina faso', 'cape verde', 'cabo verde', 'cote d\'ivoire', 'ivory coast',
+                            'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
+                            'senegal', 'sierra leone', 'togo',
+                            // Central Africa
+                            'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
+                            'democratic republic of congo', 'equatorial guinea', 'gabon', 'sao tome',
+                            // Southern Africa
+                            'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
+                            // Major Cities (high signal)
+                            'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
+                            'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar'
+                        ];
                         const isAfrican = africaKeywords.some(kw => item.title.toLowerCase().includes(kw) || item.content.toLowerCase().includes(kw));
 
                         if (!isAfrican && !s.country_code) continue;
@@ -256,18 +278,29 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     // Define the Massive Scale Discovery Task (Google News)
     const discoveryTask = async () => {
         try {
-            console.log('Starting Massive Scale Discovery...');
-            const [countries, sectors] = await Promise.all([
-                env.DB.prepare('SELECT name FROM countries').all(),
+            console.log('Starting Massive Scale Discovery with PRIORITY TARGETING...');
+
+            // PRIORITY TARGETING: Query underserved countries first
+            const underservedQuery = await env.DB.prepare(`
+                SELECT c.name, COUNT(a.id) as article_count
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code
+                GROUP BY c.code
+                ORDER BY article_count ASC
+                LIMIT 20
+            `).all();
+
+            const [sectors] = await Promise.all([
                 env.DB.prepare('SELECT name FROM sectors').all()
             ]);
 
-            const countryList = (countries.results || []).map((c: any) => c.name);
+            // PRIORITY: 10 most underserved countries + 5 random for diversity
+            const underservedCountries = (underservedQuery.results || []).map((c: any) => c.name);
+            const targetCountries = underservedCountries.slice(0, 10);
             const sectorList = (sectors.results || []).map((s: any) => s.name);
-
-            // INCREASED DISCOVERY RATE: 10 Countries, 5 Sectors per run
-            const targetCountries = countryList.sort(() => 0.5 - Math.random()).slice(0, 10);
             const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            console.log(`PRIORITY COUNTRIES (underserved): ${targetCountries.join(', ')}`);
 
             const queries = [
                 ...targetCountries.map((c: string) => `"${c}" business news when:1d`),
