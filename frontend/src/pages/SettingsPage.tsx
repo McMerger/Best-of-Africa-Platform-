@@ -110,7 +110,7 @@ export const SettingsPage: React.FC = () => {
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Account Tier</Label>
-                                    <div className="flex items-center h-10 px-3 rounded-md bg-secondary border border-border">
+                                    <div className="flex items-center h-10 px-3 rounded-full bg-secondary border border-border">
                                         <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 mr-2">
                                             {user.tier}
                                         </Badge>

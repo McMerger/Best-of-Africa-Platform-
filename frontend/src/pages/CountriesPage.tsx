@@ -136,8 +136,8 @@ export const CountriesPage: React.FC = () => {
                             <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
                                 {(regionData.countries || []).map(country => (
                                     <Link to={`/countries/${country.code}`} key={country.code} className="group">
-                                        <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-lg">
-                                            <CardContent className="relative overflow-hidden p-6">
+                                        <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-lg rounded-3xl">
+                                            <CardContent className="relative overflow-hidden p-6 rounded-3xl">
                                                 <div className="absolute left-0 top-0 h-full w-1 bg-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                                                 <div className="mb-4 flex items-start justify-between">
                                                     <div className="text-4xl">{country.flag_emoji}</div>

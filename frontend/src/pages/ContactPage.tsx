@@ -89,7 +89,7 @@ export const ContactPage: React.FC = () => {
                         </CardHeader>
                         <CardContent>
                             {error && (
-                                <div className="mb-6 rounded-md bg-destructive/10 p-4 text-sm text-destructive border border-destructive/20">
+                                <div className="mb-6 rounded-3xl bg-destructive/10 p-4 text-sm text-destructive border border-destructive/20">
                                     {error}
                                 </div>
                             )}

@@ -54,8 +54,8 @@ export const MissionControl: React.FC = () => {
                     <MixerHorizontalIcon className="h-3 w-3 opacity-50 ml-1" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0" align="end">
-                <div className="flex flex-col h-[600px] overflow-hidden bg-card border border-border/50 shadow-2xl">
+            <PopoverContent className="w-[400px] p-0 rounded-3xl overflow-hidden" align="end">
+                <div className="flex flex-col h-[600px] bg-card border border-border/50 shadow-2xl">
 
                     {/* Header */}
                     <div className="p-4 border-b border-border bg-muted/20">
@@ -79,7 +79,7 @@ export const MissionControl: React.FC = () => {
                                         key={r}
                                         onClick={() => setRole(r)}
                                         className={cn(
-                                            "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-all",
+                                            "flex flex-col items-start gap-1 p-3 rounded-3xl border text-left transition-all",
                                             role === r
                                                 ? "bg-primary/10 border-primary text-primary shadow-sm"
                                                 : "bg-card border-border hover:bg-muted"

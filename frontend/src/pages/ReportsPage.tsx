@@ -78,7 +78,7 @@ export const ReportsPage: React.FC = () => {
                     </div>
 
                     {/* Industrial Filter */}
-                    <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-3">
+                    <div className="flex items-center gap-4 rounded-3xl border border-border bg-muted/50 p-3">
                         <MixerHorizontalIcon className="h-4 w-4 text-muted-foreground" />
                         <Select value={filterSector} onValueChange={setFilterSector}>
                             <SelectTrigger className="w-[200px] border-none bg-transparent text-sm font-bold text-foreground shadow-none focus:ring-0">

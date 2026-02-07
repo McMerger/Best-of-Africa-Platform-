@@ -142,7 +142,7 @@ export const CountryOutlookPage: React.FC = () => {
 
             <div className="container py-16">
                 {/* Premium Promo */}
-                <div className="relative mb-16 overflow-hidden rounded-lg bg-primary p-10 text-primary-foreground shadow-xl">
+                <div className="relative mb-16 overflow-hidden rounded-3xl bg-primary p-10 text-primary-foreground shadow-xl">
                     <div className="absolute -right-6 -top-6 text-[12rem] font-black text-white/5 select-none">CONFIDENTIAL</div>
                     <div className="relative z-10 flex flex-col justify-between gap-8 md:flex-row md:items-center">
                         <div className="space-y-2">

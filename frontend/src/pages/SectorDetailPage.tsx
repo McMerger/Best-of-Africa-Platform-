@@ -79,7 +79,7 @@ export const SectorDetailPage: React.FC = () => {
 
             <div className="container py-8 pb-20">
                 <Tabs defaultValue="performance" className="space-y-8">
-                    <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex h-12 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                    <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex h-12 items-center justify-center rounded-3xl bg-muted p-1 text-muted-foreground">
                         <TabsTrigger value="performance" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                             Performance
                         </TabsTrigger>
@@ -89,7 +89,7 @@ export const SectorDetailPage: React.FC = () => {
                         <TabsTrigger value="markets" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                             Regional Heatmap
                         </TabsTrigger>
-                        <TabsTrigger value="intel" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                        <TabsTrigger value="intel" className="inline-flex items-center justify-center whitespace-nowrap rounded-3xl px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                             Intel Stream
                         </TabsTrigger>
                     </TabsList>

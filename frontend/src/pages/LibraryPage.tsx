@@ -45,23 +45,25 @@ export const LibraryPage: React.FC = () => {
                         <Button asChild><Link to="/articles">Browse Articles</Link></Button>
                     </Card>
                 ) : (
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {savedItems.map((item, i) => (
-                            <Link to={`/articles/${item.slug}`} key={item.id || i}>
-                                <Card className="group flex items-center p-4 border border-border hover:border-primary/50 transition-all">
-                                    <div className="h-12 w-12 rounded bg-muted/50 flex items-center justify-center mr-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                        <BookmarkIcon className="h-6 w-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Badge variant="outline" className="text-[10px] uppercase font-bold">Saved</Badge>
-                                            <span className="text-xs text-muted-foreground uppercase tracking-widest">Article</span>
+                            <Link to={`/articles/${item.slug}`} key={item.id || i} className="group">
+                                <Card className="h-full border-border hover:border-primary/50 transition-all hover:shadow-lg rounded-3xl overflow-hidden flex flex-col">
+                                    <div className="p-6 flex-1">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                <BookmarkIcon className="h-5 w-5" />
+                                            </div>
+                                            <Badge variant="outline" className="rounded-full text-[10px] uppercase font-bold">Saved Article</Badge>
                                         </div>
-                                        <h3 className="font-bold text-lg text-foreground">{item.title}</h3>
+                                        <h3 className="font-bold text-xl text-foreground mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors">{item.title}</h3>
+                                        <p className="text-sm text-muted-foreground line-clamp-3">
+                                            Accessed from your personal library.
+                                        </p>
                                     </div>
-                                    <div className="flex items-center gap-4 text-muted-foreground">
-                                        <span className="text-sm">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recently'}</span>
-                                        <Button size="icon" variant="secondary">
+                                    <div className="p-6 pt-0 mt-auto flex items-center justify-between text-muted-foreground border-t border-border/50 bg-muted/5">
+                                        <span className="text-xs font-mono">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recently Saved'}</span>
+                                        <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 hover:bg-primary hover:text-primary-foreground">
                                             <ArrowRightIcon className="h-4 w-4" />
                                         </Button>
                                     </div>

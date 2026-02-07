@@ -55,58 +55,59 @@ export const EventsPage: React.FC = () => {
                             <h2 className="text-2xl font-bold flex items-center gap-2">
                                 <CalendarIcon className="h-6 w-6 text-primary" /> Upcoming Summits
                             </h2>
-                            <Button variant="outline" size="sm">Download Calendar</Button>
+                            <Button variant="outline" size="sm" className="rounded-full">Download Calendar</Button>
                         </div>
 
-                        {events.length === 0 ? (
-                            <div className="text-center py-12 border rounded-3xl bg-muted/20">
-                                <p className="text-muted-foreground">Loading events...</p>
-                            </div>
-                        ) : (
-                            events.map((event, index) => (
-                                <Card
-                                    key={index}
-                                    className="group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md cursor-pointer rounded-3xl"
-                                    onClick={() => navigate(`/events/${event.id}`)}
-                                >
-                                    <CardContent className="p-0">
-                                        <div className="flex flex-col md:flex-row">
-                                            <div className="w-full md:w-32 bg-muted/30 flex flex-col items-center justify-center p-4 border-b md:border-b-0 md:border-r border-border">
-                                                <span className="text-3xl font-black text-foreground">{new Date(event.date).getDate()}</span>
-                                                <span className="text-xs font-bold uppercase text-muted-foreground">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
-                                            </div>
-                                            <div className="p-6 flex-1 flex flex-col justify-center">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div>
-                                                        <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider rounded-full">{event.event_type}</Badge>
-                                                        <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{event.title}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {events.length === 0 ? (
+                                <div className="text-center py-12 border rounded-3xl bg-muted/20">
+                                    <p className="text-muted-foreground">Loading events...</p>
+                                </div>
+                            ) : (
+                                events.map((event, index) => (
+                                    <Card
+                                        key={index}
+                                        className={`group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md cursor-pointer rounded-3xl flex flex-col ${index === 0 ? 'md:col-span-2' : ''}`}
+                                        onClick={() => navigate(`/events/${event.id}`)}
+                                    >
+                                        <CardContent className="p-0 flex flex-col h-full">
+                                            <div className={`flex ${index === 0 ? 'flex-col md:flex-row' : 'flex-col'} h-full`}>
+                                                <div className={`${index === 0 ? 'w-full md:w-32' : 'w-full h-24'} bg-muted/30 flex flex-col items-center justify-center p-4 border-b ${index === 0 ? 'md:border-b-0 md:border-r' : 'border-b'} border-border`}>
+                                                    <span className="text-3xl font-black text-foreground">{new Date(event.date).getDate()}</span>
+                                                    <span className="text-xs font-bold uppercase text-muted-foreground">{new Date(event.date).toLocaleString('default', { month: 'short' })}</span>
+                                                </div>
+                                                <div className="p-6 flex-1 flex flex-col justify-center">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider rounded-full">{event.event_type}</Badge>
+                                                            <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{event.title}</h3>
+                                                        </div>
+                                                        {event.is_exclusive && (
+                                                            <Badge className="bg-primary text-primary-foreground rounded-full">VIP Access</Badge>
+                                                        )}
                                                     </div>
-                                                    {event.is_exclusive && (
-                                                        <Badge className="bg-primary text-primary-foreground rounded-full">VIP Access</Badge>
-                                                    )}
+                                                    <div className="flex items-center text-sm text-muted-foreground gap-4 mt-auto pt-4">
+                                                        <span className="flex items-center gap-1"><MapPinIcon className="h-4 w-4" /> {event.location}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center text-sm text-muted-foreground gap-4">
-                                                    <span className="flex items-center gap-1"><MapPinIcon className="h-4 w-4" /> {event.location}</span>
-                                                    <span className="w-1 h-1 bg-muted-foreground/30 rounded-full"></span>
-                                                    <span>{event.status}</span>
+                                                <div className={`p-6 flex items-center justify-center ${index === 0 ? 'border-t md:border-t-0 md:border-l' : 'border-t'} border-border bg-muted/5`}>
+                                                    <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform rounded-full">
+                                                        <ArrowRightIcon className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </div>
-                                            <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-border bg-muted/5">
-                                                <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform rounded-full">
-                                                    Details <ArrowRightIcon className="ml-2 h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
+                                        </CardContent>
+                                    </Card>
+                                ))
+                            )}
+                        </div>
                     </div>
 
                     {/* Copilot Sidebar (Davos & Delegations) */}
                     <aside className="space-y-8">
                         {/* Davos Debrief */}
-                        <Card className="bg-primary text-primary-foreground border-none overflow-hidden relative">
+                        <Card className="bg-primary text-primary-foreground border-none overflow-hidden relative rounded-3xl">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10"></div>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -119,7 +120,7 @@ export const EventsPage: React.FC = () => {
                             <CardContent>
                                 <Button
                                     variant="secondary"
-                                    className="w-full font-bold text-primary bg-white hover:bg-white/90"
+                                    className="w-full font-bold text-primary bg-white hover:bg-white/90 rounded-full"
                                     onClick={() => navigate('/search?q=Davos')}
                                 >
                                     Access Briefing
@@ -128,7 +129,7 @@ export const EventsPage: React.FC = () => {
                         </Card>
 
                         {/* Delegation Service */}
-                        <Card>
+                        <Card className="rounded-3xl">
                             <CardHeader>
                                 <CardTitle className="text-lg">Private Delegations</CardTitle>
                                 <CardDescription>
@@ -138,7 +139,7 @@ export const EventsPage: React.FC = () => {
                             <CardContent>
                                 <Button
                                     variant="outline"
-                                    className="w-full font-bold"
+                                    className="w-full font-bold rounded-full"
                                     onClick={() => navigate('/request-consultation')}
                                 >
                                     Request Access

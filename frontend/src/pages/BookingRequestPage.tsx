@@ -245,7 +245,7 @@ export function BookingRequestPage() {
                                                     />
                                                     <label
                                                         htmlFor={service.id}
-                                                        className="flex flex-col items-center justify-center p-6 bg-background border-2 rounded-lg cursor-pointer hover:bg-muted/50 peer-checked:border-primary peer-checked:bg-primary/5 transition-all text-center h-full"
+                                                        className="flex flex-col items-center justify-center p-6 bg-background border-2 rounded-3xl cursor-pointer hover:bg-muted/50 peer-checked:border-primary peer-checked:bg-primary/5 transition-all text-center h-full"
                                                     >
                                                         <service.icon className="w-8 h-8 mb-3 text-muted-foreground peer-checked:text-primary" />
                                                         <span className="font-medium text-sm">{service.label}</span>
