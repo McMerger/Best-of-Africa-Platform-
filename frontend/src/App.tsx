@@ -37,7 +37,7 @@ import { MembershipPage } from './pages/MembershipPage';
 import { AboutPage } from './pages/AboutPage';
 import { AnalystPage } from './pages/AnalystPage';
 import { ImpactPage } from './pages/ImpactPage';
-import { ImpactPage } from './pages/ImpactPage';
+
 import { LibraryPage } from './pages/LibraryPage';
 import { TravelPage } from './pages/TravelPage';
 

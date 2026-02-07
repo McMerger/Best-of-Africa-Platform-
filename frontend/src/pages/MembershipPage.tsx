@@ -54,29 +54,29 @@ export const MembershipPage: React.FC = () => {
                                     <li className="flex gap-3 items-start">
                                         <div className="mt-1 bg-primary/10 p-1 rounded-full"><LightningBoltIcon className="h-4 w-4 text-primary" /></div>
                                         <div>
-                                            <div className="font-bold text-foreground">Daily Intelligence Briefing</div>
-                                            <div className="text-sm text-muted-foreground">Curated executive synthesis every morning at 6 AM.</div>
+                                            <div className="font-bold text-foreground">{config?.['membership_feature_1_title'] || 'Daily Intelligence Briefing'}</div>
+                                            <div className="text-sm text-muted-foreground">{config?.['membership_feature_1_desc'] || 'Curated executive synthesis every morning at 6 AM.'}</div>
                                         </div>
                                     </li>
                                     <li className="flex gap-3 items-start">
                                         <div className="mt-1 bg-primary/10 p-1 rounded-full"><CheckIcon className="h-4 w-4 text-primary" /></div>
                                         <div>
-                                            <div className="font-bold text-foreground">Real-time Warning Signals</div>
-                                            <div className="text-sm text-muted-foreground">Mobile alerts for critical narrative shifts.</div>
+                                            <div className="font-bold text-foreground">{config?.['membership_feature_2_title'] || 'Real-time Warning Signals'}</div>
+                                            <div className="text-sm text-muted-foreground">{config?.['membership_feature_2_desc'] || 'Mobile alerts for critical narrative shifts.'}</div>
                                         </div>
                                     </li>
                                     <li className="flex gap-3 items-start">
                                         <div className="mt-1 bg-primary/10 p-1 rounded-full"><StarIcon className="h-4 w-4 text-primary" /></div>
                                         <div>
-                                            <div className="font-bold text-foreground">Deep-Dive Sector Reports</div>
-                                            <div className="text-sm text-muted-foreground">Full PDF access to Energy, Tech, and Finance verticals.</div>
+                                            <div className="font-bold text-foreground">{config?.['membership_feature_3_title'] || 'Deep-Dive Sector Reports'}</div>
+                                            <div className="text-sm text-muted-foreground">{config?.['membership_feature_3_desc'] || 'Full PDF access to Energy, Tech, and Finance verticals.'}</div>
                                         </div>
                                     </li>
                                     <li className="flex gap-3 items-start">
                                         <div className="mt-1 bg-primary/10 p-1 rounded-full"><CheckIcon className="h-4 w-4 text-primary" /></div>
                                         <div>
-                                            <div className="font-bold text-foreground">Analyst On-Call</div>
-                                            <div className="text-sm text-muted-foreground">Direct line to our narrative strategy desk.</div>
+                                            <div className="font-bold text-foreground">{config?.['membership_feature_4_title'] || 'Analyst On-Call'}</div>
+                                            <div className="text-sm text-muted-foreground">{config?.['membership_feature_4_desc'] || 'Direct line to our narrative strategy desk.'}</div>
                                         </div>
                                     </li>
                                 </ul>
@@ -85,13 +85,11 @@ export const MembershipPage: React.FC = () => {
                     </Card>
 
                     <div className="mt-12 text-center">
-                        <p className="text-muted-foreground text-sm mb-4">Trusted by strategic teams at:</p>
+                        <p className="text-muted-foreground text-sm mb-4">{config?.['membership_trust_label'] || 'Trusted by strategic teams at:'}</p>
                         <div className="flex flex-wrap justify-center gap-8 opacity-50 grayscale">
-                            {/* Simple text placeholders for logos as per "clean" aesthetic */}
-                            <span className="font-serif font-bold text-xl">AFRICA FINANCE CORP</span>
-                            <span className="font-serif font-bold text-xl">DANGOTE GROUP</span>
-                            <span className="font-serif font-bold text-xl">STANDARDBANK</span>
-                            <span className="font-serif font-bold text-xl">MTN</span>
+                            {(config?.['membership_trust_logos'] || 'AFRICA FINANCE CORP,DANGOTE GROUP,STANDARDBANK,MTN').split(',').map((logo: string, i: number) => (
+                                <span key={i} className="font-serif font-bold text-xl">{logo.trim()}</span>
+                            ))}
                         </div>
                     </div>
                 </div>

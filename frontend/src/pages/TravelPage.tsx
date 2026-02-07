@@ -3,7 +3,7 @@ import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { RocketIcon, GlobeIcon, ShieldCheckIcon, BackpackIcon } from '@radix-ui/react-icons';
+import { RocketIcon, GlobeIcon, LockClosedIcon, BackpackIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -52,9 +52,9 @@ export const TravelPage: React.FC = () => {
                             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <GlobeIcon className="h-6 w-6" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">Executive Mobility</h3>
+                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_1_title'] || 'Executive Mobility'}</h3>
                             <p className="text-muted-foreground leading-relaxed">
-                                Private aviation charters, expedited visa processing, and VIP ground transport coordination across 54 jurisdictions.
+                                {config?.['travel_service_1_desc'] || 'Private aviation charters, expedited visa processing, and VIP ground transport coordination across 54 jurisdictions.'}
                             </p>
                         </CardContent>
                     </Card>
@@ -63,11 +63,11 @@ export const TravelPage: React.FC = () => {
                     <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
                         <CardContent className="p-8">
                             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                <ShieldCheckIcon className="h-6 w-6" />
+                                <LockClosedIcon className="h-6 w-6" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">Security Intelligence</h3>
+                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_2_title'] || 'Security Intelligence'}</h3>
                             <p className="text-muted-foreground leading-relaxed">
-                                Real-time threat assessments, secure routing, and close protection detail for high-stakes environments.
+                                {config?.['travel_service_2_desc'] || 'Real-time threat assessments, secure routing, and close protection detail for high-stakes environments.'}
                             </p>
                         </CardContent>
                     </Card>
@@ -78,9 +78,9 @@ export const TravelPage: React.FC = () => {
                             <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <BackpackIcon className="h-6 w-6" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">Logistics & Fixers</h3>
+                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_3_title'] || 'Logistics & Fixers'}</h3>
                             <p className="text-muted-foreground leading-relaxed">
-                                Local "fixers" to navigate bureaucracy, equipment importation, and regulatory compliance on the ground.
+                                {config?.['travel_service_3_desc'] || 'Local "fixers" to navigate bureaucracy, equipment importation, and regulatory compliance on the ground.'}
                             </p>
                         </CardContent>
                     </Card>

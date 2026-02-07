@@ -51,7 +51,7 @@ export const CountriesPage: React.FC = () => {
                             <div className="h-2 w-2 rounded-full bg-primary/50"></div>
                             Geospatial Intelligence
                         </div>
-                        <h1 className="mb-4 font-serif text-5xl font-bold leading-none tracking-tight text-foreground lg:text-7xl text-left">Continental Atlas</h1>
+                        <h1 className="mb-4 font-serif text-3xl md:text-5xl lg:text-7xl font-bold leading-none tracking-tight text-foreground text-left">Continental Atlas</h1>
                         <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
                             Interactive intelligence mapping across {stats?.total_countries || '54'} markets.
                             <br /><span className="text-sm font-bold text-primary">Hover map to filter by region.</span>

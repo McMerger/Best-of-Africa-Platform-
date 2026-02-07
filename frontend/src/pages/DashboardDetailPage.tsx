@@ -163,26 +163,30 @@ export const DashboardDetailPage: React.FC = () => {
                             <h2 className="mb-6 flex items-center gap-2 border-b-2 border-primary pb-2 text-lg font-bold uppercase tracking-wide text-foreground">
                                 <GlobeIcon className="h-5 w-5" /> Market Performance Heatmap
                             </h2>
-                            <div className="rounded-lg border border-border bg-card">
-                                {continentalData.top_countries.map((c, i) => (
-                                    <div key={c.code} className="flex items-center border-b border-border px-5 py-3 last:border-0 hover:bg-muted/50 even:bg-muted/10">
-                                        <div className="w-10 text-xs font-bold text-muted-foreground">#{i + 1}</div>
-                                        <div className="flex w-48 items-center gap-2 font-semibold text-primary">
-                                            <span className="text-lg">{c.flag_emoji}</span> {c.name}
-                                        </div>
+                            <div className="rounded-lg border border-border bg-card overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <div className="min-w-[500px]">
+                                        {continentalData.top_countries.map((c, i) => (
+                                            <div key={c.code} className="flex items-center border-b border-border px-5 py-3 last:border-0 hover:bg-muted/50 even:bg-muted/10">
+                                                <div className="w-10 text-xs font-bold text-muted-foreground">#{i + 1}</div>
+                                                <div className="flex w-48 items-center gap-2 font-semibold text-primary">
+                                                    <span className="text-lg">{c.flag_emoji}</span> {c.name}
+                                                </div>
 
-                                        <div className="flex-1 px-5">
-                                            <Progress value={(c.articles / 50) * 100} className="h-1.5" />
-                                        </div>
+                                                <div className="flex-1 px-5">
+                                                    <Progress value={(c.articles / 50) * 100} className="h-1.5" />
+                                                </div>
 
-                                        <div className="w-24 text-right text-sm font-bold text-foreground">
-                                            {c.articles} <span className="text-[10px] font-normal text-muted-foreground">REPORTS</span>
-                                        </div>
-                                        <div className="hidden w-24 text-right font-mono text-sm text-muted-foreground md:block">
-                                            {c.views.toLocaleString()}
-                                        </div>
+                                                <div className="w-24 text-right text-sm font-bold text-foreground">
+                                                    {c.articles} <span className="text-[10px] font-normal text-muted-foreground">REPORTS</span>
+                                                </div>
+                                                <div className="hidden w-24 text-right font-mono text-sm text-muted-foreground md:block">
+                                                    {c.views.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
+                                </div>
                             </div>
                         </div>
 

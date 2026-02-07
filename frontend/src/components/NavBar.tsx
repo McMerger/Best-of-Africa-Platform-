@@ -7,8 +7,7 @@ import {
     HamburgerMenuIcon,
     StarIcon,
     BookmarkIcon,
-    LockClosedIcon,
-    MagicWandIcon    // Replacing Sparkles
+    LockClosedIcon
 } from '@radix-ui/react-icons';
 import { Button } from "@/components/ui/button";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
@@ -42,18 +41,21 @@ export const NavBar: React.FC = () => {
         { href: "/countries", label: "Countries" },
         { href: "/dashboards", label: "Risk Dashboards" },
         { href: "/market-intel/reports", label: "Reports" },
+        { href: "/events", label: "Summits" },
+        { href: "/request-consultation", label: "Concierge" },
+        { href: "/travel", label: "Travel" },
         { href: "/search", label: "Search" },
         { href: "/settings", label: "Settings" },
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
             <div className="container flex h-16 items-center justify-between">
                 {/* Brand */}
                 <div className="flex items-center gap-4">
-                    <Link to="/" className="flex flex-col leading-none">
-                        <span className="text-2xl font-serif font-bold tracking-tight text-foreground">Best of Africa</span>
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary">Intelligence Platform</span>
+                    <Link to="/" className="flex flex-col leading-none group">
+                        <span className="text-2xl font-serif font-black tracking-tighter text-foreground transition-colors group-hover:text-primary/90">Best of Africa</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary mt-0.5">Intelligence Platform</span>
                     </Link>
                 </div>
 
@@ -111,55 +113,88 @@ export const NavBar: React.FC = () => {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right">
-                            <SheetHeader>
-                                <SheetTitle className="text-left font-bold text-xl">Best of Africa</SheetTitle>
+                            <SheetHeader className="border-b pb-4 mb-4">
+                                <SheetTitle className="text-left font-serif font-black text-2xl tracking-tight">Best of Africa</SheetTitle>
+                                {/* <SheetDescription className="text-left text-xs uppercase tracking-widest text-primary font-bold">
+                                    Command Center
+                                </SheetDescription> */}
                             </SheetHeader>
-                            <div className="grid gap-4 py-4">
-                                {navLinks.map((link) => (
-                                    <Link
-                                        key={link.href}
-                                        to={link.href}
-                                        className={cn(
-                                            "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                                            location.pathname === link.href ? "text-primary" : "text-muted-foreground"
-                                        )}
-                                    >
-                                        {link.label}
-                                    </Link>
-                                ))}
-                                <div className="mt-4 flex flex-col gap-2">
-                                    <Button variant="outline" asChild className="justify-start font-bold text-primary">
-                                        <Link to="/analyst">
-                                            <MagicWandIcon className="mr-2 h-4 w-4" />
-                                            Analyst Console
+                            <div className="grid gap-6 py-2 overflow-y-auto max-h-[calc(100vh-8rem)] pr-2">
+                                {/* Section 1: Main Intelligence */}
+                                <div>
+                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Intelligence</div>
+                                    <div className="space-y-1">
+                                        {navLinks.filter(l => !['/events', '/request-consultation', '/travel', '/settings', '/search', '/analyst', '/membership', '/library'].includes(l.href)).map((link) => (
+                                            <Link
+                                                key={link.href}
+                                                to={link.href}
+                                                className={cn(
+                                                    "block py-3 px-4 -mx-2 rounded-lg text-lg transition-all hover:bg-muted",
+                                                    location.pathname === link.href ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground font-medium"
+                                                )}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section 2: Premium Services */}
+                                <div>
+                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-primary tracking-widest flex items-center gap-2">
+                                        Corporate Services <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Link to="/events" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10 mb-2">
+                                            Global Summits ✨
                                         </Link>
-                                    </Button>
-                                    <Button variant="ghost" asChild className="justify-start">
-                                        <Link to="/library">
-                                            <BookmarkIcon className="mr-2 h-4 w-4" />
-                                            Saved Intelligence
+                                        <Link to="/request-consultation" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10 mb-2">
+                                            Concierge ✨
                                         </Link>
-                                    </Button>
-                                    <Button variant="ghost" asChild className="justify-start">
-                                        <Link to="/membership">
-                                            Subscribe
+                                        <Link to="/travel" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10">
+                                            Secure Travel ✨
                                         </Link>
-                                    </Button>
-                                    <Button variant="ghost" asChild className="justify-start">
-                                        <Link to="/settings">
-                                            <GearIcon className="mr-2 h-4 w-4" />
-                                            Settings
-                                        </Link>
-                                    </Button>
-                                    <Button variant="outline" asChild className="justify-start">
-                                        <Link to="/search">
-                                            <MagnifyingGlassIcon className="mr-2 h-4 w-4" />
-                                            Search
-                                        </Link>
-                                    </Button>
-                                    <Button asChild>
-                                        <Link to="/login">Sign In</Link>
-                                    </Button>
+                                    </div>
+                                </div>
+
+                                {/* Section 3: Workspace */}
+                                <div>
+                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Workspace</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button variant="outline" asChild className="justify-start font-bold text-primary h-auto py-3">
+                                            <Link to="/analyst">
+                                                <StarIcon className="mr-2 h-4 w-4" />
+                                                Analyst
+                                            </Link>
+                                        </Button>
+                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
+                                            <Link to="/library">
+                                                <BookmarkIcon className="mr-2 h-4 w-4" />
+                                                Saved
+                                            </Link>
+                                        </Button>
+                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
+                                            <Link to="/search">
+                                                <MagnifyingGlassIcon className="mr-2 h-4 w-4" />
+                                                Search
+                                            </Link>
+                                        </Button>
+                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
+                                            <Link to="/settings">
+                                                <GearIcon className="mr-2 h-4 w-4" />
+                                                Settings
+                                            </Link>
+                                        </Button>
+                                    </div>
+                                    <div className="mt-4 space-y-2">
+                                        <Button variant="default" className="w-full font-bold shadow-lg" asChild>
+                                            <Link to="/membership">Subscribe Now</Link>
+                                        </Button>
+                                        <Button variant="ghost" className="w-full" asChild>
+                                            <Link to="/login">Sign In</Link>
+                                        </Button>
+                                        <div className="mt-4 text-[10px] text-muted-foreground/50 text-center font-mono">v1.2 (Mobile Fix)</div>
+                                    </div>
                                 </div>
                             </div>
                         </SheetContent>
@@ -206,12 +241,12 @@ export const NavBar: React.FC = () => {
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
 
-                            {/* VALUE CONFIRMATION MENU (Formerly Sector Analysis) - Promoted to main view */}
+                            {/* INTELLIGENCE & SERVICES MENU */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>Intelligence Products</NavigationMenuTrigger>
+                                <NavigationMenuTrigger>Intelligence & Services</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                                        <li className="row-span-3">
+                                        <li className="row-span-4">
                                             <NavigationMenuLink asChild>
                                                 <Link
                                                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
@@ -242,11 +277,21 @@ export const NavBar: React.FC = () => {
                                                 </Link>
                                             </NavigationMenuLink>
                                         </li>
-                                        <li>
+                                        <li className="col-span-1 mt-2 pt-2 border-t border-border/50">
+                                            <div className="mb-2 px-2 text-[10px] uppercase font-bold text-primary tracking-widest">Premium Services</div>
                                             <NavigationMenuLink asChild>
-                                                <Link to="/events" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                                                    <div className="text-sm font-medium leading-none">Summits</div>
+                                                <Link to="/events" className="group block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
+                                                    <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Global Summits</div>
                                                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Strategic networking events.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li className="mt-2 pt-2 border-t border-border/50">
+                                            <div className="h-[22px]" /> {/* Spacer to align with Premium Services header */}
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/request-consultation" className="group block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
+                                                    <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Concierge</div>
+                                                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Market entry support.</p>
                                                 </Link>
                                             </NavigationMenuLink>
                                         </li>

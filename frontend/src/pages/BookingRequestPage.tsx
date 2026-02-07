@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 
 // Define steps
 const STEPS = [
@@ -56,6 +57,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export function BookingRequestPage() {
+    const { data: config } = useSystemConfig();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submittedData, setSubmittedData] = useState<{ id: string; ai_brief: string } | null>(null);
@@ -171,10 +173,9 @@ export function BookingRequestPage() {
         <div className="min-h-screen bg-muted/30 py-12 px-4">
             <div className="container mx-auto max-w-3xl">
                 <div className="text-center mb-10">
-                    <h1 className="text-3xl font-serif font-bold mb-3">Concierge Request</h1>
+                    <h1 className="text-3xl font-serif font-bold mb-3">{config?.['booking_hero_headline'] || "Concierge Request"}</h1>
                     <p className="text-muted-foreground max-w-xl mx-auto">
-                        Book strategic services tailored to your market entry and expansion needs.
-                        Receive an instant AI preliminary assessment upon submission.
+                        {config?.['booking_hero_subhead'] || "Book strategic services tailored to your market entry and expansion needs. Receive an instant AI preliminary assessment upon submission."}
                     </p>
                 </div>
 

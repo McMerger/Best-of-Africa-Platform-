@@ -54,22 +54,22 @@ export const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="container py-20 md:py-32">
+                <div className="container py-12 md:py-32">
                     <div className="max-w-4xl">
-                        <div className="mb-6 flex items-center gap-2 text-sm font-bold text-primary uppercase tracking-widest">
+                        <div className="mb-6 flex items-center gap-2 text-xs md:text-sm font-bold text-primary uppercase tracking-widest">
                             <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
                         </div>
-                        <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-7xl">
+                        <h1 className="mb-6 font-serif text-3xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-foreground">
                             {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
                         </h1>
-                        <p className="mb-10 text-xl leading-relaxed text-muted-foreground max-w-2xl">
+                        <p className="mb-8 md:mb-10 text-lg md:text-xl leading-relaxed text-muted-foreground max-w-2xl">
                             {config?.['home_hero_subhead'] || "A unified public relations and strategic narrative engine for the continent."}
                         </p>
-                        <div className="flex flex-wrap items-center gap-4">
-                            <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-sm">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <Button size="lg" className="w-full sm:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-bold shadow-sm">
                                 {config?.['home_cta_primary'] || "Explore Intelligence"}
                             </Button>
-                            <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-medium">
+                            <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-medium">
                                 <Link to="/countries">View Countries</Link>
                             </Button>
                         </div>
@@ -134,36 +134,66 @@ export const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 4. BUSINESS TRAVEL */}
+                {/* 4. UPCOMING EVENTS (New) */}
+                <section className="mb-24">
+                    <div className="flex items-end justify-between mb-8 border-b border-border pb-4">
+                        <div>
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary mb-2">
+                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                                Live Agenda
+                            </div>
+                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground">Strategic Summits</h2>
+                        </div>
+                        <Button variant="ghost" className="text-primary font-bold hidden md:flex" asChild>
+                            <Link to="/events">View All Events <ArrowRightIcon className="ml-2 h-4 w-4" /></Link>
+                        </Button>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-6">
+                        {/* We'll fetch these dynamically later, for now linking to the events page */}
+                        <div className="md:col-span-3 rounded-lg border border-border bg-muted/20 p-12 text-center">
+                            <h3 className="text-2xl font-serif font-bold mb-4">Where Power Meets Purpose</h3>
+                            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+                                Access the continent's most consequential investment forums, policy dialogues, and private delegations.
+                            </p>
+                            <Button asChild size="lg" className="font-bold">
+                                <Link to="/events">Explore the 2026 Calendar</Link>
+                            </Button>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 5. BUSINESS TRAVEL */}
                 <section className="border-t border-border bg-card py-24">
                     <div className="container">
                         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
                             <div>
                                 <h2 className="mb-6 text-4xl font-serif font-black tracking-tight lg:text-5xl">
-                                    Mission Support & <br /> Logistics.
+                                    <span dangerouslySetInnerHTML={{ __html: config?.['home_mission_headline'] || 'Mission Support & <br /> Logistics.' }} />
                                 </h2>
                                 <p className="mb-8 text-lg font-medium leading-relaxed text-muted-foreground">
-                                    We don't just provide intelligence; we enable presence. From secure aviation to expedited visas and security details, we ensure your team lands, operates, and succeeds in any jurisdiction.
+                                    {config?.['home_mission_body'] || "We don't just provide intelligence; we enable presence. From secure aviation to expedited visas and security details, we ensure your team lands, operates, and succeeds in any jurisdiction."}
                                 </p>
                                 <Button asChild size="lg" className="h-12 px-8 font-bold text-base shadow-lg shadow-primary/20">
-                                    <Link to="/travel">Secure Mobility Support</Link>
+                                    <Link to="/travel">{config?.['home_mission_cta'] || 'Secure Mobility Support'}</Link>
                                 </Button>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-4">
                                     <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
-                                        <div className="mb-2 text-2xl font-black text-primary">54</div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Countries Covered</div>
+                                        <div className="mb-2 text-2xl font-black text-primary">{config?.['home_stat_countries'] || '54'}</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_countries_label'] || 'Countries Covered'}</div>
                                     </div>
                                     <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
-                                        <div className="mb-2 text-2xl font-black text-primary">24/7</div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Security Overwatch</div>
+                                        <div className="mb-2 text-2xl font-black text-primary">{config?.['home_stat_security'] || '24/7'}</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_security_label'] || 'Security Overwatch'}</div>
                                     </div>
                                 </div>
                                 <div className="rounded-xl border border-border bg-muted/20 p-6 flex flex-col justify-end">
                                     <div className="text-sm font-medium italic text-muted-foreground">
-                                        "The only partner we trust for Sahel transitions."
+                                        "{config?.['home_testimonial_quote'] || 'The only partner we trust for Sahel transitions.'}"
                                     </div>
+                                    <div className="text-xs text-muted-foreground/70 mt-2">— {config?.['home_testimonial_author'] || 'Fortune 500 Security Director'}</div>
                                 </div>
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,7 @@ interface Event {
 }
 
 export const EventsPage: React.FC = () => {
+    const { data: config } = useSystemConfig();
     const [events, setEvents] = useState<Event[]>([]);
     const navigate = useNavigate();
 
@@ -36,10 +38,10 @@ export const EventsPage: React.FC = () => {
                 <div className="container relative py-20 text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
                     <Badge variant="outline" className="mb-6 font-bold tracking-widest uppercase bg-background text-primary border-primary/20 px-4 py-1">Global Summits</Badge>
                     <h1 className="text-5xl md:text-7xl font-serif font-black mb-6 tracking-tight text-foreground">
-                        Where Decisions <br /> Are Made.
+                        <span dangerouslySetInnerHTML={{ __html: config?.['events_hero_headline'] || 'Where Decisions <br /> Are Made.' }} />
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-medium text-balance">
-                        Exclusive access to the continent's most consequential investment summits, policy forums, and private delegations.
+                        {config?.['events_hero_subhead'] || "Exclusive access to the continent's most consequential investment summits, policy forums, and private delegations."}
                     </p>
                 </div>
             </div>
