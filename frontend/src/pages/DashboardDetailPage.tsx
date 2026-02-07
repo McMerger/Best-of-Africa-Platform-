@@ -303,25 +303,28 @@ export const DashboardDetailPage: React.FC = () => {
 
                     {/* Sidebar */}
                     <aside className="space-y-8">
-                        <div className="rounded-lg border-t-4 border-destructive bg-card p-6 border border-border">
+                        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
                                 <RocketIcon className="h-5 w-5" /> Market Movers
                             </h3>
-                            <ul className="space-y-4">
+                            <div className="grid grid-cols-1 gap-3">
                                 {(trending_countries || []).map((c) => (
-                                    <li key={c.code} className="border-b border-border pb-4 last:border-0 last:pb-0">
-                                        <Link to={`/countries/${c.code}`} className="flex items-center justify-between hover:text-primary">
-                                            <span className="font-medium text-foreground">{c.flag_emoji} {c.name}</span>
-                                            <span className="rounded bg-accent px-2 py-0.5 text-xs font-bold text-accent-foreground">
-                                                {c.article_count} stories
+                                    <Link key={c.code} to={`/countries/${c.code}`} className="group relative overflow-hidden rounded-2xl border border-border bg-muted/30 p-4 transition-all hover:bg-primary/5 hover:border-primary/20 hover:shadow-md">
+                                        <div className="flex items-center justify-between z-10 relative">
+                                            <span className="font-black text-xl text-foreground group-hover:text-primary transition-colors">{c.flag_emoji} {c.name}</span>
+                                            <span className="rounded-full bg-background/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground shadow-sm">
+                                                {c.article_count} Signals
                                             </span>
-                                        </Link>
-                                    </li>
+                                        </div>
+                                        <div className="mt-2 h-1 w-full bg-border/50 rounded-full overflow-hidden">
+                                            <div className="h-full bg-primary/50 group-hover:bg-primary transition-all" style={{ width: `${Math.min(c.article_count * 5, 100)}%` }}></div>
+                                        </div>
+                                    </Link>
                                 ))}
-                            </ul>
+                            </div>
                         </div>
 
-                        <div className="rounded-lg border-t-4 border-primary bg-card p-6 border border-border">
+                        <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
                             <h3 className="mb-6 flex items-center gap-2 text-lg font-bold text-foreground">
                                 <PieChartIcon className="h-5 w-5" /> Sector Breakdown
                             </h3>

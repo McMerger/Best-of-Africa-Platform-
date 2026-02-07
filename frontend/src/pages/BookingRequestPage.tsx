@@ -112,8 +112,11 @@ export function BookingRequestPage() {
             } else {
                 toast.error(data.message || "Submission failed");
             }
-        } catch (error) {
+        } catch {
             toast.error("An error occurred. Please try again.");
+            // ...
+            // ...
+            // ...
         } finally {
             setIsSubmitting(false);
         }
@@ -136,8 +139,8 @@ export function BookingRequestPage() {
                     </div>
 
                     <div className="p-8">
-                        <div className="mb-6 flex items-start gap-4 p-4 bg-muted/50 rounded-lg border">
-                            <div className="p-2 bg-primary/10 rounded-lg">
+                        <div className="mb-6 flex items-start gap-4 p-4 bg-muted/50 rounded-3xl border">
+                            <div className="p-2 bg-primary/10 rounded-full">
                                 <StarFilledIcon className="w-5 h-5 text-primary" />
                             </div>
                             <div>
@@ -259,7 +262,7 @@ export function BookingRequestPage() {
                                         <FormField
                                             control={form.control}
                                             name="country_code"
-                                            render={({ field }: { field: any }) => (
+                                            render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Target Country</FormLabel>
                                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -326,7 +329,7 @@ export function BookingRequestPage() {
                                         <FormField
                                             control={form.control}
                                             name="requirements"
-                                            render={({ field }: { field: any }) => (
+                                            render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Specific Requirements</FormLabel>
                                                     <FormControl>
@@ -349,7 +352,7 @@ export function BookingRequestPage() {
                                         <FormField
                                             control={form.control}
                                             name="user_name"
-                                            render={({ field }: { field: any }) => (
+                                            render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Full Name</FormLabel>
                                                     <FormControl>
@@ -363,7 +366,7 @@ export function BookingRequestPage() {
                                         <FormField
                                             control={form.control}
                                             name="user_email"
-                                            render={({ field }: { field: any }) => (
+                                            render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel>Business Email</FormLabel>
                                                     <FormControl>

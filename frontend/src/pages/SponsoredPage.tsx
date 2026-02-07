@@ -26,7 +26,7 @@ export const SponsoredPage: React.FC = () => {
         <Layout>
             <div className="container py-20 max-w-5xl">
                 <header className="mb-16 border-b border-border pb-12 text-center md:text-left">
-                    <div className="mb-6 inline-flex items-center rounded-md bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
+                    <div className="mb-6 inline-flex items-center rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-primary-foreground">
                         Partnership Division
                     </div>
                     <h1 className="mb-6 text-5xl font-serif font-black leading-none tracking-tighter text-foreground md:text-7xl">
@@ -47,7 +47,7 @@ export const SponsoredPage: React.FC = () => {
                             <div className="grid gap-6">
                                 <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
                                     <CardContent className="flex gap-6 p-6">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                             <GlobeIcon className="h-6 w-6" />
                                         </div>
                                         <div>
@@ -59,7 +59,7 @@ export const SponsoredPage: React.FC = () => {
 
                                 <Card className="border-border shadow-sm transition-all hover:border-primary/50 hover:shadow-md">
                                     <CardContent className="flex gap-6 p-6">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                             <StarIcon className="h-6 w-6" />
                                         </div>
                                         <div>

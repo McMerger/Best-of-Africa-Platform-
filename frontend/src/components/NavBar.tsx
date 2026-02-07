@@ -10,6 +10,7 @@ import {
     LockClosedIcon
 } from '@radix-ui/react-icons';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { MissionControl } from './MissionControl';
 
@@ -90,10 +91,10 @@ export const NavBar: React.FC = () => {
                         <Button asChild
                             variant="outline"
                             size="sm"
-                            className="ml-2 gap-2 text-primary border-primary/20 font-bold hover:bg-primary hover:text-white transition-colors"
+                            className="hidden lg:flex ml-2 gap-2 rounded-full text-primary border-primary/20 font-bold hover:bg-primary hover:text-white transition-all hover:scale-105"
                         >
                             <Link to="/analyst">
-                                <StarIcon className="h-4 w-4 mr-2" /> Analyst Console
+                                <StarIcon className="h-4 w-4 mr-1" /> Analyst Console
                             </Link>
                         </Button>
                         <Button variant="ghost" size="sm" asChild className="ml-2 font-bold text-primary">
@@ -129,7 +130,7 @@ export const NavBar: React.FC = () => {
                                                 key={link.href}
                                                 to={link.href}
                                                 className={cn(
-                                                    "block py-3 px-4 -mx-2 rounded-lg text-lg transition-all hover:bg-muted",
+                                                    "block py-3 px-4 -mx-2 rounded-2xl text-lg transition-all hover:bg-muted",
                                                     location.pathname === link.href ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground font-medium"
                                                 )}
                                             >
@@ -222,7 +223,7 @@ export const NavBar: React.FC = () => {
                                             <NavigationMenuLink asChild>
                                                 <Link
                                                     to="/market-intel"
-                                                    className="flex items-center gap-2 select-none rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                                    className="flex items-center gap-2 select-none rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                                 >
                                                     <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Market Intelligence Overview</div>
                                                     <span className="text-xs text-muted-foreground">View Sector Performance Matrix &rarr;</span>
@@ -249,9 +250,30 @@ export const NavBar: React.FC = () => {
                                         <li className="row-span-4">
                                             <NavigationMenuLink asChild>
                                                 <Link
-                                                    className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
+                                                    className="flex h-full w-full select-none flex-col justify-end rounded-3xl bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
                                                     to="/feed"
                                                 >
+                                                    <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center">
+                                                        <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 backdrop-blur-md rounded-full border border-border/50 shadow-sm">
+                                                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-primary">Command Center</span>
+                                                            <span className="flex h-2 w-2 relative">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                                                                <div className="relative hidden md:block w-[320px]">
+                                                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                                                    <Input
+                                                                        type="search"
+                                                                        placeholder="Search intelligence (e.g. 'Nigeria Energy')..."
+                                                                        className="h-10 w-full rounded-full border-border bg-muted/50 pl-10 text-sm focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all"
+                                                                    />
+                                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                                        <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded-full border bg-muted px-2 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
+                                                                            <span className="text-xs">⌘</span>K
+                                                                        </kbd>
+                                                                    </div>
+                                                                </div>
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                     <div className="mb-2 mt-4 text-lg font-medium text-white">
                                                         Daily Briefing
                                                     </div>
@@ -263,7 +285,7 @@ export const NavBar: React.FC = () => {
                                         </li>
                                         <li>
                                             <NavigationMenuLink asChild>
-                                                <Link to="/market-intel/reports" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                                                <Link to="/market-intel/reports" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                                                     <div className="text-sm font-medium leading-none">Premium Reports</div>
                                                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Deep-dives and PDF exports.</p>
                                                 </Link>
@@ -271,7 +293,7 @@ export const NavBar: React.FC = () => {
                                         </li>
                                         <li>
                                             <NavigationMenuLink asChild>
-                                                <Link to="/dashboards" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                                                <Link to="/dashboards" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                                                     <div className="text-sm font-medium leading-none">Risk Dashboards</div>
                                                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Real-time stability scores.</p>
                                                 </Link>
@@ -280,7 +302,7 @@ export const NavBar: React.FC = () => {
                                         <li className="col-span-1 mt-2 pt-2 border-t border-border/50">
                                             <div className="mb-2 px-2 text-[10px] uppercase font-bold text-primary tracking-widest">Premium Services</div>
                                             <NavigationMenuLink asChild>
-                                                <Link to="/events" className="group block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
+                                                <Link to="/events" className="group block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
                                                     <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Global Summits</div>
                                                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Strategic networking events.</p>
                                                 </Link>
@@ -289,7 +311,7 @@ export const NavBar: React.FC = () => {
                                         <li className="mt-2 pt-2 border-t border-border/50">
                                             <div className="h-[22px]" /> {/* Spacer to align with Premium Services header */}
                                             <NavigationMenuLink asChild>
-                                                <Link to="/request-consultation" className="group block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
+                                                <Link to="/request-consultation" className="group block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
                                                     <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Concierge</div>
                                                     <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Market entry support.</p>
                                                 </Link>
@@ -326,7 +348,7 @@ const SectorLinks = () => {
                     <NavigationMenuLink asChild>
                         <Link
                             to={sector.href}
-                            className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
                             <div className="text-sm font-medium leading-none text-primary">{sector.title}</div>
                             <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">

@@ -101,13 +101,14 @@ export const ReportsPage: React.FC = () => {
                             key={report.id}
                             className="group relative h-full"
                         >
-                            <Card className={`h-full overflow-hidden transition-all hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg ${isLocked(i) ? 'border-border opacity-80' : 'border-border'}`}>
+
+                            <Card className={`h-full overflow-hidden transition-all hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg rounded-3xl ${isLocked(i) ? 'border-border opacity-80' : 'border-border'}`}>
                                 {/* Card Header (Stripe) */}
                                 <div className={`h-1.5 w-full ${isLocked(i) ? 'bg-muted' : 'bg-primary'}`}></div>
 
                                 <CardContent className="flex flex-1 flex-col p-8">
                                     <div className="mb-6 flex items-start justify-between">
-                                        <div className={`rounded px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isLocked(i) ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
+                                        <div className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${isLocked(i) ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}>
                                             {report.sector_name || 'General Intel'}
                                         </div>
                                         {isLocked(i) ? <LockClosedIcon className="h-5 w-5 text-muted-foreground" /> : <StarFilledIcon className="h-5 w-5 text-primary" />}
@@ -142,7 +143,7 @@ export const ReportsPage: React.FC = () => {
                             </Card>
                         </Link>
                     )) : (
-                        <div className="col-span-full flex flex-col items-center justify-center rounded-2xl bg-muted/30 py-24 text-center border-2 border-dashed border-border">
+                        <div className="col-span-full flex flex-col items-center justify-center rounded-3xl bg-muted/30 py-24 text-center border-2 border-dashed border-border">
                             <LockClosedIcon className="mb-6 h-12 w-12 text-muted-foreground/50" />
                             <h3 className="mb-2 text-lg font-bold text-foreground">No Reports Found</h3>
                             <p className="text-muted-foreground">No intelligence reports match your current clearance filters.</p>

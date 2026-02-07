@@ -59,14 +59,14 @@ export const EventsPage: React.FC = () => {
                         </div>
 
                         {events.length === 0 ? (
-                            <div className="text-center py-12 border rounded-lg bg-muted/20">
+                            <div className="text-center py-12 border rounded-3xl bg-muted/20">
                                 <p className="text-muted-foreground">Loading events...</p>
                             </div>
                         ) : (
                             events.map((event, index) => (
                                 <Card
                                     key={index}
-                                    className="group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md cursor-pointer"
+                                    className="group overflow-hidden transition-all hover:border-primary/50 hover:shadow-md cursor-pointer rounded-3xl"
                                     onClick={() => navigate(`/events/${event.id}`)}
                                 >
                                     <CardContent className="p-0">
@@ -78,11 +78,11 @@ export const EventsPage: React.FC = () => {
                                             <div className="p-6 flex-1 flex flex-col justify-center">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <div>
-                                                        <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider">{event.event_type}</Badge>
+                                                        <Badge variant="secondary" className="mb-2 text-[10px] font-bold uppercase tracking-wider rounded-full">{event.event_type}</Badge>
                                                         <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{event.title}</h3>
                                                     </div>
                                                     {event.is_exclusive && (
-                                                        <Badge className="bg-primary text-primary-foreground">VIP Access</Badge>
+                                                        <Badge className="bg-primary text-primary-foreground rounded-full">VIP Access</Badge>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center text-sm text-muted-foreground gap-4">
@@ -92,7 +92,7 @@ export const EventsPage: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="p-6 flex items-center justify-center border-t md:border-t-0 md:border-l border-border bg-muted/5">
-                                                <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform">
+                                                <Button variant="ghost" className="font-bold group-hover:translate-x-1 transition-transform rounded-full">
                                                     Details <ArrowRightIcon className="ml-2 h-4 w-4" />
                                                 </Button>
                                             </div>

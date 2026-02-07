@@ -86,7 +86,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
+                                <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
                                     <TargetIcon className={`h-10 w-10 ${isUndervalued ? 'text-primary' : 'text-destructive'}`} />
                                     <div>
                                         <div className="mb-1 text-lg font-bold">
@@ -109,7 +109,7 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                                 {recommendations.map((rec, i) => (
                                     <Card key={i} className="border-border transition-all hover:shadow-md hover:-translate-y-1">
                                         <CardContent className="p-6 flex gap-6">
-                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-base font-bold text-foreground">
+                                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-muted text-base font-bold text-foreground">
                                                 {i + 1}
                                             </div>
                                             <div>
@@ -167,10 +167,10 @@ export const PremiumCountryAnalysisPage: React.FC = () => {
                             <div className="rounded-xl bg-card border border-border p-6">
                                 <div className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Cross-Reference</div>
                                 <div className="space-y-3">
-                                    <Link to={`/market-intel/country/${country.code}`} className="flex items-center justify-between rounded-lg bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
+                                    <Link to={`/market-intel/country/${country.code}`} className="flex items-center justify-between rounded-3xl bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
                                         Investment Data <ArrowRightIcon className="h-4 w-4" />
                                     </Link>
-                                    <Link to={`/narratives/country/${country.code}`} className="flex items-center justify-between rounded-lg bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
+                                    <Link to={`/narratives/country/${country.code}`} className="flex items-center justify-between rounded-3xl bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
                                         Narrative Strategy <ArrowRightIcon className="h-4 w-4" />
                                     </Link>
                                 </div>

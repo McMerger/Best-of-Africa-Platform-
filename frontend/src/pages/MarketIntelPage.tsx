@@ -49,7 +49,7 @@ export const MarketIntelPage: React.FC = () => {
         return perf ? { growth: perf.growth_yoy, vol: perf.volatility } : { growth: 0, vol: '--' };
     };
 
-    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-3xl" /></div></Layout>;
 
     return (
         <Layout>
@@ -90,7 +90,7 @@ export const MarketIntelPage: React.FC = () => {
                                     aria-label={`${sector.name} Sector. Sentiment Score ${growth}. Volatility ${vol}. Click for full analysis.`}
                                     role="listitem"
                                 >
-                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-lg">
+                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-lg rounded-3xl">
                                         <CardContent className="flex flex-col p-6">
                                             <div className="mb-6 flex justify-between">
                                                 <div className="text-primary transition-all group-hover:scale-110" aria-hidden="true">
@@ -140,7 +140,7 @@ export const MarketIntelPage: React.FC = () => {
                             <Link
                                 key={`${opp.country_code}-${opp.sector_id}-${i}`}
                                 to={`/market-intel/sectors/${opp.sector_id}`}
-                                className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-secondary hover:shadow-md"
+                                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all hover:border-secondary hover:shadow-md"
                             >
                                 <div className="mb-4 flex items-center justify-between">
                                     <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">{opp.sector_name}</Badge>
@@ -153,7 +153,7 @@ export const MarketIntelPage: React.FC = () => {
                                 </div>
                             </Link>
                         )) : (
-                            <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-xl">
+                            <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-3xl">
                                 System is analyzing emerging opportunities. Check back shortly.
                             </div>
                         )}

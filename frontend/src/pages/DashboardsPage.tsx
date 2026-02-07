@@ -91,7 +91,7 @@ export const DashboardsPage: React.FC = () => {
 
                 <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 fill-mode-both">
                     {dashboards.map(d => (
-                        <Card key={d.id} className="group flex flex-col overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2">
+                        <Card key={d.id} className="group flex flex-col overflow-hidden rounded-3xl border-border/50 bg-card/50 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2">
                             <CardHeader className="pb-4 relative">
                                 <div className="absolute top-4 right-4 flex gap-1">
                                     <div className="w-1 h-3 bg-primary/20 rounded-full group-hover:bg-primary transition-colors delay-75"></div>

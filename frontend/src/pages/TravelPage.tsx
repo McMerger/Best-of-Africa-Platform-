@@ -49,7 +49,7 @@ export const TravelPage: React.FC = () => {
                     {/* Service 1 */}
                     <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <GlobeIcon className="h-6 w-6" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_1_title'] || 'Executive Mobility'}</h3>
@@ -62,7 +62,7 @@ export const TravelPage: React.FC = () => {
                     {/* Service 2 */}
                     <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <LockClosedIcon className="h-6 w-6" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_2_title'] || 'Security Intelligence'}</h3>
@@ -75,7 +75,7 @@ export const TravelPage: React.FC = () => {
                     {/* Service 3 */}
                     <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                                 <BackpackIcon className="h-6 w-6" />
                             </div>
                             <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_3_title'] || 'Logistics & Fixers'}</h3>

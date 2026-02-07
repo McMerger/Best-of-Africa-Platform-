@@ -38,7 +38,7 @@
     /* Ring: Gold for Premium Focus States */
     --ring: 45 90% 55%;
 
-    --radius: 0.5rem;
+    --radius: 2rem;
   }
 
   .dark {

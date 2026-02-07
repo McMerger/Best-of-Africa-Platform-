@@ -97,7 +97,7 @@ export const SectorDetailPage: React.FC = () => {
                     {/* TAB 1: PERFORMANCE */}
                     <TabsContent value="performance" className="animate-in fade-in slide-in-from-left-4 duration-500">
                         {/* Sector Velocity Dashboard (HUD) */}
-                        <div className="rounded-xl border border-border bg-card p-8 shadow-sm mb-8">
+                        <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
                             <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
                                 <div>
                                     <div className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Sector Velocity</div>
@@ -131,31 +131,31 @@ export const SectorDetailPage: React.FC = () => {
 
                         {/* Top Performers / Briefing */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
+                            <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <StackIcon className="h-5 w-5 text-primary" /> Sector Strengths
                                 </h3>
                                 <div className="space-y-4">
-                                    <div className="relative overflow-hidden p-4 rounded bg-muted/20 border border-border/50">
+                                    <div className="relative overflow-hidden p-5 rounded-2xl bg-muted/30 border border-border/50 transition-all hover:bg-muted/50">
                                         <h4 className="font-bold text-sm mb-1">Investment Potential</h4>
                                         <p className="text-xs text-muted-foreground">High growth projected over the next 5 years driven by policy reforms.</p>
                                     </div>
-                                    <div className="relative overflow-hidden p-4 rounded bg-muted/20 border border-border/50">
+                                    <div className="relative overflow-hidden p-5 rounded-2xl bg-muted/30 border border-border/50 transition-all hover:bg-muted/50">
                                         <h4 className="font-bold text-sm mb-1">Key Markets</h4>
                                         <p className="text-xs text-muted-foreground">Concentrated activity in East and Southern Africa.</p>
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-card rounded-lg border border-border p-6 shadow-sm">
+                            <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
                                 <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                                     <InfoCircledIcon className="h-5 w-5 text-primary" /> Risk Profile
                                 </h3>
                                 <div className="space-y-4">
-                                    <div className="relative overflow-hidden p-4 rounded bg-red-500/5 border border-red-500/10">
+                                    <div className="relative overflow-hidden p-5 rounded-2xl bg-red-500/5 border border-red-500/10 hover:bg-red-500/10 transition-all">
                                         <h4 className="font-bold text-sm mb-1 text-red-600">Regulatory Hurdles</h4>
                                         <p className="text-xs text-muted-foreground">Inconsistent compliance frameworks across borders.</p>
                                     </div>
-                                    <div className="relative overflow-hidden p-4 rounded bg-yellow-500/5 border border-yellow-500/10">
+                                    <div className="relative overflow-hidden p-5 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 hover:bg-yellow-500/10 transition-all">
                                         <h4 className="font-bold text-sm mb-1 text-yellow-600">Infrastructure Gaps</h4>
                                         <p className="text-xs text-muted-foreground">Logistics remain a primary bottleneck for scaling.</p>
                                     </div>
@@ -193,19 +193,19 @@ export const SectorDetailPage: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {data.by_country && data.by_country.length > 0 ? (
                                             data.by_country.map((c) => (
-                                                <Link key={c.code} to={`/countries/${c.code}`} className="flex items-center justify-between group p-3 rounded-lg border border-border hover:bg-muted/50 hover:border-primary/50 transition-all">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-2xl grayscale group-hover:grayscale-0 transition-all">{c.flag_emoji}</span>
+                                                <Link key={c.code} to={`/countries/${c.code}`} className="flex items-center justify-between group p-4 rounded-2xl border border-border/50 bg-muted/20 hover:bg-background hover:border-primary/50 hover:shadow-md transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-3xl grayscale group-hover:grayscale-0 transition-all filter">{c.flag_emoji}</span>
                                                         <div>
                                                             <div className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{c.name}</div>
-                                                            <div className="h-1 w-16 bg-primary/20 mt-1 rounded-full overflow-hidden">
+                                                            <div className="h-1.5 w-24 bg-border mt-2 rounded-full overflow-hidden">
                                                                 <div className="h-full bg-primary" style={{ width: `${(c.name.length * 7) % 40 + 60}%` }}></div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="text-xs font-bold text-foreground">{c.count} Signals</div>
-                                                        <div className="text-[10px] text-green-500 font-medium">High Activity</div>
+                                                        <div className="text-sm font-black text-foreground">{c.count}</div>
+                                                        <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-bold">Signals</div>
                                                     </div>
                                                 </Link>
                                             ))

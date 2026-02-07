@@ -35,7 +35,7 @@ export const HomePage: React.FC = () => {
         fetchData();
     }, []);
 
-    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-3xl" /></div></Layout>;
 
     return (
         <Layout>
@@ -93,10 +93,10 @@ export const HomePage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {featured.slice(0, 6).map((article, i) => (
-                            <Link key={article.id || i} to={`/articles/${article.slug}`} className="group relative overflow-hidden block p-6 rounded-lg border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+                            <Link key={article.id || i} to={`/articles/${article.slug}`} className="group relative overflow-hidden block p-6 rounded-3xl border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
                                 <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 rounded-md bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors relative z-10">
+                                    <div className="p-3 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors relative z-10">
                                         <GlobeIcon className="h-6 w-6" />
                                     </div>
                                     <Badge variant="outline" className="text-xs font-bold text-muted-foreground border-border relative z-10">
@@ -114,7 +114,7 @@ export const HomePage: React.FC = () => {
 
                 {/* 3. INTELLIGENCE STREAM (Flat, No blinking lights) */}
                 <section className="mb-24">
-                    <div className="rounded-lg border border-border bg-muted/30 p-8">
+                    <div className="rounded-3xl border border-border bg-muted/30 p-8">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
@@ -151,7 +151,7 @@ export const HomePage: React.FC = () => {
 
                     <div className="grid md:grid-cols-3 gap-6">
                         {/* We'll fetch these dynamically later, for now linking to the events page */}
-                        <div className="md:col-span-3 rounded-lg border border-border bg-muted/20 p-12 text-center">
+                        <div className="md:col-span-3 rounded-3xl border border-border bg-muted/20 p-12 text-center">
                             <h3 className="text-2xl font-serif font-bold mb-4">Where Power Meets Purpose</h3>
                             <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
                                 Access the continent's most consequential investment forums, policy dialogues, and private delegations.
@@ -178,22 +178,22 @@ export const HomePage: React.FC = () => {
                                     <Link to="/travel">{config?.['home_mission_cta'] || 'Secure Mobility Support'}</Link>
                                 </Button>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-4">
-                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
-                                        <div className="mb-2 text-2xl font-black text-primary">{config?.['home_stat_countries'] || '54'}</div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-6">
+                                    <div className="rounded-3xl border border-border bg-background p-8 shadow-sm flex flex-col justify-center h-full">
+                                        <div className="mb-2 text-4xl font-black text-primary">{config?.['home_stat_countries'] || '54'}</div>
                                         <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_countries_label'] || 'Countries Covered'}</div>
                                     </div>
-                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
-                                        <div className="mb-2 text-2xl font-black text-primary">{config?.['home_stat_security'] || '24/7'}</div>
+                                    <div className="rounded-3xl border border-border bg-background p-8 shadow-sm flex flex-col justify-center h-full">
+                                        <div className="mb-2 text-4xl font-black text-primary">{config?.['home_stat_security'] || '24/7'}</div>
                                         <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_security_label'] || 'Security Overwatch'}</div>
                                     </div>
                                 </div>
-                                <div className="rounded-xl border border-border bg-muted/20 p-6 flex flex-col justify-end">
-                                    <div className="text-sm font-medium italic text-muted-foreground">
+                                <div className="rounded-3xl border border-border bg-muted/30 p-8 flex flex-col justify-end">
+                                    <div className="text-lg font-serif font-medium italic text-foreground leading-relaxed">
                                         "{config?.['home_testimonial_quote'] || 'The only partner we trust for Sahel transitions.'}"
                                     </div>
-                                    <div className="text-xs text-muted-foreground/70 mt-2">— {config?.['home_testimonial_author'] || 'Fortune 500 Security Director'}</div>
+                                    <div className="text-xs font-bold text-muted-foreground/70 mt-4 uppercase tracking-wider">— {config?.['home_testimonial_author'] || 'Fortune 500 Security Director'}</div>
                                 </div>
                             </div>
                         </div>

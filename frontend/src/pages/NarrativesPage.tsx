@@ -105,7 +105,7 @@ export const NarrativesPage: React.FC = () => {
                     </div>
 
                     {/* Narrative Divergence Index */}
-                    <div className="rounded-xl border border-border bg-card p-8 text-card-foreground shadow-sm">
+                    <div className="rounded-3xl border border-border bg-card p-8 text-card-foreground shadow-sm">
                         <div className="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-start">
                             <div>
                                 <h2 className="mb-2 flex items-center gap-2 text-lg font-bold uppercase tracking-wide">
@@ -157,7 +157,7 @@ export const NarrativesPage: React.FC = () => {
                 </header>
 
                 {/* Filters Bar */}
-                <div className="mb-12 flex flex-col gap-4 rounded-lg bg-muted/30 p-4 sm:flex-row sm:items-center">
+                <div className="mb-12 flex flex-col gap-4 rounded-full bg-muted/30 p-4 sm:flex-row sm:items-center">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mr-2">
                         <MixerHorizontalIcon className="h-4 w-4" /> Strategy Filter:
                     </div>
@@ -231,7 +231,7 @@ export const NarrativesPage: React.FC = () => {
                                 {narratives.length > 0 ? narratives.map(narrative => (
                                     <StrategyCard key={narrative.id} narrative={narrative} />
                                 )) : (
-                                    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/20 py-24 text-center">
+                                    <div className="col-span-full flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-muted/20 py-24 text-center">
                                         <p className="text-lg font-medium text-muted-foreground">No active strategies match these parameters.</p>
                                     </div>
                                 )}
@@ -267,7 +267,7 @@ const Swimlane: React.FC<{ title: string; data: NarrativeStrategy[]; color: stri
 
 const StrategyCard: React.FC<{ narrative: NarrativeStrategy; borderColor?: string }> = ({ narrative, borderColor = '#052962' }) => (
     <Link to={`/narratives/country/${narrative.country_code}`} className="block h-full">
-        <Card className="h-full border-t-4 transition-all hover:-translate-y-1 hover:shadow-lg" style={{ borderTopColor: borderColor }}>
+        <Card className="h-full border-t-4 transition-all hover:-translate-y-1 hover:shadow-lg rounded-3xl" style={{ borderTopColor: borderColor }}>
             <CardContent className="p-6">
                 <div className="mb-4 flex justify-between items-center">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">

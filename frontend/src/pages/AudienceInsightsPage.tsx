@@ -113,7 +113,7 @@ export const AudienceInsightsPage: React.FC = () => {
                                     <span className="text-lg font-black text-foreground">{d.percentage}%</span>
                                 </div>
                             ))}
-                            <div className="mt-8 rounded-lg bg-primary/10 p-4 text-xs text-primary border border-primary/20">
+                            <div className="mt-8 rounded-3xl bg-primary/10 p-4 text-xs text-primary border border-primary/20">
                                 <strong>Alert:</strong> High engagement detected in the <span className="underline decoration-primary underline-offset-2">25-34</span> bracket, indicating emerging political influence.
                             </div>
                         </CardContent>

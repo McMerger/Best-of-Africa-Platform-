@@ -87,7 +87,7 @@ export const ArticleDetailPage: React.FC = () => {
 
     // Lens/Format handlers removed - Unified Briefing replaces user selection
 
-    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-3xl" /></div></Layout>;
     if (!data) return <Layout><div className="container py-20 text-center text-xl text-muted-foreground">Article not found</div></Layout>;
 
     const { article, country, sector } = data;
@@ -102,7 +102,7 @@ export const ArticleDetailPage: React.FC = () => {
                 {/* PAYWALL OVERLAY */}
                 {showPaywall && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-gradient-to-t from-background via-background/90 to-transparent pb-32 pointer-events-auto backdrop-blur-[2px] transition-all duration-700 animate-in fade-in">
-                        <div className="w-full max-w-lg p-6 mx-4 text-center border shadow-2xl bg-card/95 border-primary/20 rounded-2xl backdrop-blur-md">
+                        <div className="w-full max-w-lg p-6 mx-4 text-center border shadow-2xl bg-card/95 border-primary/20 rounded-3xl backdrop-blur-md">
                             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-3xl">
                                 🔒
                             </div>
@@ -123,11 +123,11 @@ export const ArticleDetailPage: React.FC = () => {
                 )}
 
                 <div className={cn("grid gap-12 lg:grid-cols-[2fr_350px]", showPaywall && "blur-sm select-none pointer-events-none transition-filter duration-1000")}>
-                    <article className="border border-border bg-card rounded-lg overflow-hidden shadow-sm">
+                    <article className="border border-border bg-card rounded-3xl overflow-hidden shadow-sm">
                         {/* Intelligence Briefing Header */}
                         <div className="bg-muted/10 border-b border-border p-8">
                             <div className="flex items-center justify-between mb-6">
-                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary rounded-none uppercase tracking-widest text-[10px] font-bold">
+                                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary rounded-full uppercase tracking-widest text-[10px] font-bold">
                                     Sector Analysis
                                 </Badge>
                                 <span className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold">
@@ -157,7 +157,7 @@ export const ArticleDetailPage: React.FC = () => {
 
                             {/* HERO IMAGE - OPTIMIZED */}
                             {article.hero_image_url && (
-                                <div className="mb-8 rounded-lg overflow-hidden shadow-lg border border-border/50 bg-muted aspect-video relative">
+                                <div className="mb-8 rounded-3xl overflow-hidden shadow-lg border border-border/50 bg-muted aspect-video relative">
                                     <img
                                         src={article.hero_image_url}
                                         alt={article.title}
@@ -253,14 +253,14 @@ export const ArticleDetailPage: React.FC = () => {
                         {/* ═══════════════════════════════════════════════════════════════════ */}
                         {briefingLoading ? (
                             <div className="grid gap-4 md:grid-cols-3 mb-10">
-                                <Skeleton className="h-40 rounded-lg" />
-                                <Skeleton className="h-40 rounded-lg" />
-                                <Skeleton className="h-40 rounded-lg" />
+                                <Skeleton className="h-40 rounded-3xl" />
+                                <Skeleton className="h-40 rounded-3xl" />
+                                <Skeleton className="h-40 rounded-3xl" />
                             </div>
                         ) : unifiedBriefing && (
                             <div className="grid gap-4 md:grid-cols-3 mb-10">
                                 {/* INVESTMENT SIGNAL */}
-                                <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-5">
+                                <div className="rounded-3xl border border-green-500/30 bg-green-500/5 p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="text-lg">📊</span>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-green-600">Investment Signal</h3>
@@ -273,7 +273,7 @@ export const ArticleDetailPage: React.FC = () => {
                                 </div>
 
                                 {/* OPERATIONAL BRIEF */}
-                                <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-5">
+                                <div className="rounded-3xl border border-blue-500/30 bg-blue-500/5 p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="text-lg">⚙️</span>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-blue-600">Operational Brief</h3>
@@ -286,7 +286,7 @@ export const ArticleDetailPage: React.FC = () => {
                                 </div>
 
                                 {/* POLICY CONTEXT */}
-                                <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-5">
+                                <div className="rounded-3xl border border-purple-500/30 bg-purple-500/5 p-5">
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="text-lg">📜</span>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-purple-600">Policy Context</h3>
@@ -318,7 +318,7 @@ export const ArticleDetailPage: React.FC = () => {
                         <div className="grid gap-6 md:grid-cols-2 mb-10">
                             {/* Mobile Flash Alert Preview */}
                             {article.ai_push_message && (
-                                <div className="rounded-xl border border-border bg-background shadow-sm overflow-hidden">
+                                <div className="rounded-3xl border border-border bg-background shadow-sm overflow-hidden">
                                     <div className="bg-muted/30 px-4 py-2 border-b border-border flex items-center justify-between">
                                         <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                                             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
@@ -340,7 +340,7 @@ export const ArticleDetailPage: React.FC = () => {
 
                             {/* Social Intelligence Brief */}
                             {article.ai_social_post && (
-                                <div className="rounded-xl border border-border bg-card shadow-sm p-4">
+                                <div className="rounded-3xl border border-border bg-card shadow-sm p-4">
                                     <div className="mb-3 flex items-center gap-2">
                                         <div className="text-[10px] font-bold uppercase tracking-widest text-blue-500">LinkedIn / Social Brief</div>
                                     </div>
@@ -388,7 +388,7 @@ export const ArticleDetailPage: React.FC = () => {
                                     </h3>
 
                                     {/* Table of Contents (New) */}
-                                    <div className="mb-8 p-4 bg-muted/30 rounded border border-border">
+                                    <div className="mb-8 p-4 bg-muted/30 rounded-3xl border border-border">
                                         <div className="text-xs font-bold uppercase text-muted-foreground mb-3">Contents</div>
                                         <nav className="flex flex-col gap-2">
                                             {(article.content || '').match(/^##+ (.*$)/gm)?.map((header: string, i: number) => {
@@ -414,7 +414,7 @@ export const ArticleDetailPage: React.FC = () => {
 
                                     {/* Sentiment Signal (AI or Country Proxy) */}
                                     {(article.ai_sentiment_score !== undefined || country) && (
-                                        <div className="mb-8 p-4 bg-muted/30 rounded border border-border">
+                                        <div className="mb-8 p-4 bg-muted/30 rounded-3xl border border-border">
                                             <div className="flex justify-between items-center mb-2">
                                                 <span className="text-xs font-bold uppercase text-muted-foreground">
                                                     {article.ai_sentiment_score !== undefined ? "Analyst Sentiment Analysis" : "Market Sentiment"}
@@ -458,11 +458,11 @@ export const ArticleDetailPage: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3 mb-4">
-                                                <div className="rounded border border-border bg-background p-3">
+                                                <div className="rounded-2xl border border-border bg-background p-3">
                                                     <div className="mb-1 text-[10px] text-muted-foreground uppercase">GDP Growth</div>
                                                     <div className="font-bold text-primary">{economics?.gdp_growth || 'N/A'}</div>
                                                 </div>
-                                                <div className="rounded border border-border bg-background p-3">
+                                                <div className="rounded-2xl border border-border bg-background p-3">
                                                     <div className="mb-1 text-[10px] text-muted-foreground uppercase">Stability</div>
                                                     <div className="font-bold text-primary">{economics?.stability || 'N/A'}</div>
                                                 </div>
@@ -482,7 +482,7 @@ export const ArticleDetailPage: React.FC = () => {
                                                     <div className="text-xs text-muted-foreground">Sector Outlook</div>
                                                 </div>
                                             </div>
-                                            <div className="mb-4 rounded bg-primary/10 p-4 text-center text-primary">
+                                            <div className="mb-4 rounded-3xl bg-primary/10 p-4 text-center text-primary">
                                                 <div className="mb-1 text-[10px] opacity-70 uppercase">Market Outlook</div>
                                                 <div className="text-lg font-bold">Positive</div>
                                             </div>
@@ -492,7 +492,7 @@ export const ArticleDetailPage: React.FC = () => {
                                         </div>
                                     )}
 
-                                    <div className="rounded border border-primary/50 bg-primary/10 p-5 text-center shadow-sm">
+                                    <div className="rounded-3xl border border-primary/50 bg-primary/10 p-5 text-center shadow-sm">
                                         <h4 className="mb-2 text-sm font-bold text-foreground">Need deeper data?</h4>
                                         <p className="mb-4 text-xs text-muted-foreground leading-relaxed">
                                             Access full premium reports and raw datasets for this region.
@@ -514,7 +514,7 @@ export const ArticleDetailPage: React.FC = () => {
                                 <h3 className="mb-8 text-2xl font-bold text-foreground">Related Intelligence</h3>
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                                     {data.related.map(item => (
-                                        <Link to={`/articles/${item.slug}`} key={item.id} className="group block rounded-lg border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/50">
+                                        <Link to={`/articles/${item.slug}`} key={item.id} className="group block rounded-3xl border border-border bg-card p-5 transition-shadow hover:shadow-md hover:border-primary/50">
                                             <h4 className="mb-3 text-base font-bold leading-snug text-foreground group-hover:text-primary">
                                                 {(item.title || '').replace(/\*\*/g, '').replace(/##/g, '').replace(/\.$/, '').trim()}
                                             </h4>

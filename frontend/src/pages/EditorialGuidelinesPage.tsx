@@ -19,7 +19,7 @@ export const EditorialGuidelinesPage: React.FC = () => {
 
                 <div className="grid gap-12 md:grid-cols-2 mb-16">
                     <div className="rounded-xl border border-border bg-card p-8">
-                        <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 text-primary">
+                        <div className="mb-4 inline-flex rounded-3xl bg-primary/10 p-3 text-primary">
                             <LockClosedIcon className="h-6 w-6" />
                         </div>
                         <h3 className="mb-3 text-2xl font-bold">Narrative Integrity</h3>
@@ -29,7 +29,7 @@ export const EditorialGuidelinesPage: React.FC = () => {
                         </p>
                     </div>
                     <div className="rounded-xl border border-border bg-card p-8">
-                        <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-3 text-primary">
+                        <div className="mb-4 inline-flex rounded-3xl bg-primary/10 p-3 text-primary">
                             <PieChartIcon className="h-6 w-6" />
                         </div>
                         <h3 className="mb-3 text-2xl font-bold">Commercial Independence</h3>

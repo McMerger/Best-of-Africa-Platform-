@@ -161,7 +161,7 @@ export function EventDetailPage() {
 
                         {/* AI Brief */}
                         {event.ai_context_brief && (
-                            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-lg p-6">
+                            <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-3xl p-6">
                                 <div className="flex items-start gap-3">
                                     <InfoCircledIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
                                     <div>

@@ -38,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                             to="/feed"
                             aria-label="Daily Briefing Feed"
                             className={({ isActive }) => cn(
-                                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden",
+                                "group flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden",
                                 isActive
                                     ? "bg-primary/10 text-primary font-bold shadow-sm"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                                 </>
                             )}
                         </NavLink>
-                        <NavLink to="/market-intel" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/market-intel" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -61,7 +61,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                                 </>
                             )}
                         </NavLink>
-                        <NavLink to="/countries" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/countries" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -78,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                         Analysis Tools
                     </h3>
                     <div className="space-y-1">
-                        <NavLink to="/dashboards" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/dashboards" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -87,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                                 </>
                             )}
                         </NavLink>
-                        <NavLink to="/market-intel/reports" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/market-intel/reports" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -99,22 +99,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     </div>
                 </div>
 
-                <div className="mb-8 mt-6 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-3 shadow-sm relative overflow-hidden">
+                <div className="mb-8 mt-6 rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-3 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
                     <h3 className="mb-3 px-2 text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                         Corporate Services
                     </h3>
                     <div className="space-y-1">
-                        <NavLink to="/events" className={({ isActive }) => cn("group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
+                        <NavLink to="/events" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
                             <StarIcon className="h-4 w-4" />
                             Global Summits
                         </NavLink>
-                        <NavLink to="/request-consultation" className={({ isActive }) => cn("group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
+                        <NavLink to="/request-consultation" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
                             <StarIcon className="h-4 w-4" />
                             Concierge
                         </NavLink>
-                        <NavLink to="/travel" className={({ isActive }) => cn("group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
+                        <NavLink to="/travel" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2 text-sm font-bold transition-all duration-200 hover:bg-primary/10 hover:translate-x-1", isActive ? "bg-primary text-primary-foreground shadow-md" : "text-muted-foreground hover:text-primary")}>
                             <StarIcon className="h-4 w-4" />
                             Secure Travel
                         </NavLink>
@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                         Workspace
                     </h3>
                     <div className="space-y-1">
-                        <NavLink to="/search" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/search" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                                 </>
                             )}
                         </NavLink>
-                        <NavLink to="/library" className={({ isActive }) => cn("group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
+                        <NavLink to="/library" className={({ isActive }) => cn("group flex items-center gap-3 rounded-full px-3 py-2.5 text-sm font-medium transition-all duration-200 relative overflow-hidden", isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50")}>
                             {({ isActive }) => (
                                 <>
                                     {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />}
@@ -150,11 +150,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
 
             {/* Footer / User */}
             <div className="p-4 border-t border-border/40 bg-card/30">
-                <NavLink to="/analyst" className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-bold transition-colors border border-primary/20 hover:bg-primary/5 text-primary mb-2 shadow-sm", isActive ? "bg-primary/10 shadow-inner" : "")}>
+                <NavLink to="/analyst" className={({ isActive }) => cn("flex items-center gap-3 rounded-full px-3 py-3 text-sm font-bold transition-colors border border-primary/20 hover:bg-primary/5 text-primary mb-2 shadow-sm", isActive ? "bg-primary/10 shadow-inner" : "")}>
                     <StarIcon className="h-4 w-4" />
                     Analyst Console
                 </NavLink>
-                <NavLink to="/settings" className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground", isActive ? "bg-accent text-foreground font-bold" : "")}>
+                <NavLink to="/settings" className={({ isActive }) => cn("flex items-center gap-3 rounded-full px-3 py-2 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground text-muted-foreground", isActive ? "bg-accent text-foreground font-bold" : "")}>
                     <GearIcon className="h-3.5 w-3.5" />
                     Settings
                 </NavLink>

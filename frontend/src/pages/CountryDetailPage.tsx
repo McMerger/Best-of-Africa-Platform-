@@ -296,19 +296,19 @@ export const CountryDetailPage: React.FC = () => {
                                         const sectorName = sectorData.sector?.name || 'General';
                                         return (
                                             <Link key={i} to={`/market-intel/sectors/${sectorSlug}`}>
-                                                <Card className="border-l-4 border-l-primary bg-card hover:bg-muted/5 transition-colors cursor-pointer group h-full shadow-sm">
-                                                    <CardContent className="p-5">
-                                                        <div className="flex justify-between items-start mb-3">
-                                                            <h3 className="font-bold text-foreground group-hover:text-primary transition-colors underline decoration-transparent group-hover:decoration-primary underline-offset-4">{sectorName}</h3>
-                                                            <Badge variant="outline" className="text-[10px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
+                                                <Card className="border-l-4 border-l-primary bg-card hover:bg-muted/5 transition-all cursor-pointer group h-full shadow-sm rounded-3xl overflow-hidden hover:shadow-md hover:-translate-y-1">
+                                                    <CardContent className="p-6">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <h3 className="font-black text-xl text-foreground group-hover:text-primary transition-colors">{sectorName}</h3>
+                                                            <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold uppercase bg-primary/5 text-primary border-primary/20">
                                                                 {sectorData.count} Articles
                                                             </Badge>
                                                         </div>
-                                                        <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-600">
+                                                        <div className="mb-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-full w-fit">
                                                             <ArrowTopRightIcon className="h-3 w-3" />
                                                             Active Coverage
                                                         </div>
-                                                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                                                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                                                             {sectorData.ai_sentiment_score !== undefined ? "Analyst Sentiment Analysis" : "Market Sentiment"} in {sectorName.toLowerCase()}.
                                                         </p>
                                                     </CardContent>
@@ -316,7 +316,7 @@ export const CountryDetailPage: React.FC = () => {
                                             </Link>
                                         );
                                     }) : (
-                                        <div className="col-span-2 text-center py-8 text-muted-foreground">
+                                        <div className="col-span-2 text-center py-12 rounded-3xl border border-dashed text-muted-foreground bg-muted/20">
                                             No sector data available for this country yet.
                                         </div>
                                     )}
@@ -326,18 +326,18 @@ export const CountryDetailPage: React.FC = () => {
                             {/* Key Partners */}
                             <div>
                                 <h2 className="text-xl font-bold mb-4">Strategic Relations</h2>
-                                <div className="rounded-xl bg-card border border-border p-6 shadow-sm">
+                                <div className="rounded-3xl bg-card border border-border p-6 shadow-sm">
                                     <div className="space-y-6">
                                         <div className="group">
-                                            <div className="flex justify-between mb-2 items-center">
+                                            <div className="flex justify-between mb-3 items-center">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-foreground">Diplomacy Score</span>
+                                                    <span className="text-sm font-bold text-foreground uppercase tracking-wider">Diplomacy Score</span>
                                                 </div>
-                                                <span className="text-sm font-bold text-primary">{country.diplomacy_score?.toFixed(1) || '--'}/100</span>
+                                                <span className="text-xl font-black text-primary">{country.diplomacy_score?.toFixed(1) || '--'}<span className="text-sm text-muted-foreground font-medium">/100</span></span>
                                             </div>
-                                            <div className="h-2 w-full bg-muted/50 rounded-full overflow-hidden">
+                                            <div className="h-4 w-full bg-muted/50 rounded-full overflow-hidden border border-border/50">
                                                 <div
-                                                    className="h-full bg-primary"
+                                                    className="h-full bg-gradient-to-r from-primary/50 to-primary transition-all duration-1000 ease-out"
                                                     style={{ width: `${country.diplomacy_score || 0}%` }}
                                                 />
                                             </div>
@@ -346,15 +346,16 @@ export const CountryDetailPage: React.FC = () => {
                                         {relationships && relationships.length > 0 && (
                                             <div className="pt-6 border-t border-border">
                                                 <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Partnerships</h4>
-                                                <div className="grid gap-3">
+                                                <div className="grid grid-cols-1 gap-3">
                                                     {relationships.slice(0, 3).map((rel, i) => (
-                                                        <div key={i} className="flex items-start gap-3 p-3 rounded bg-muted/30 border border-border/50">
+                                                        <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-muted/20 border border-border/50 hover:bg-muted/40 transition-colors">
+                                                            <div className="h-2 w-2 mt-2 rounded-full bg-primary shrink-0" />
                                                             <div>
-                                                                <div className="flex items-center gap-2 mb-0.5">
-                                                                    <span className="font-bold text-sm text-foreground">{rel.partner}</span>
-                                                                    <Badge variant="outline" className="text-[9px] py-0 h-4">{rel.type}</Badge>
+                                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                                    <span className="font-bold text-base text-foreground">{rel.partner}</span>
+                                                                    <Badge variant="outline" className="rounded-full text-[9px] py-0 h-5 px-2 bg-background">{rel.type}</Badge>
                                                                 </div>
-                                                                <p className="text-xs text-muted-foreground leading-snug">{rel.context}</p>
+                                                                <p className="text-xs text-muted-foreground leading-relaxed">{rel.context}</p>
                                                             </div>
                                                         </div>
                                                     ))}

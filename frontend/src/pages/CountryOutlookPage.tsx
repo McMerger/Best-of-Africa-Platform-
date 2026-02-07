@@ -132,7 +132,7 @@ export const CountryOutlookPage: React.FC = () => {
                             </p>
                         </div>
                         {/* THE STRATEGIC RADAR */}
-                        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <div className="rounded-3xl border border-primary/20 bg-primary/5 p-6 flex items-center gap-6">
                             <h4 className="mb-4 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">Performance Mix</h4>
                             <RadarChart data={outlook} />
                         </div>

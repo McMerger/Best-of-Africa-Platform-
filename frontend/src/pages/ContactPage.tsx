@@ -181,12 +181,12 @@ export const ContactPage: React.FC = () => {
                 )}
 
                 <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="flex flex-col items-center rounded-lg bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
+                    <div className="flex flex-col items-center rounded-3xl bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
                         <ChatBubbleIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">Press Inquiries</h3>
                         <p className="text-sm text-muted-foreground font-medium">press@bestofafrica.com</p>
                     </div>
-                    <div className="flex flex-col items-center rounded-lg bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
+                    <div className="flex flex-col items-center rounded-3xl bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
                         <EnvelopeClosedIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">General Support</h3>
                         <p className="text-sm text-muted-foreground font-medium">support@bestofafrica.com</p>

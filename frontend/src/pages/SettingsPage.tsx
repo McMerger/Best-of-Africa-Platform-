@@ -168,7 +168,7 @@ export const SettingsPage: React.FC = () => {
                                 { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: LightningBoltIcon },
                                 { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: IdCardIcon },
                             ].map((item) => (
-                                <div key={item.key} className="flex items-center justify-between rounded-lg border border-border p-4 hover:bg-muted/50 transition-colors">
+                                <div key={item.key} className="flex items-center justify-between rounded-3xl border border-border p-4 hover:bg-muted/50 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className="rounded-full bg-card p-2 shadow-sm border border-border">
                                             <item.icon className="h-4 w-4 text-muted-foreground" />

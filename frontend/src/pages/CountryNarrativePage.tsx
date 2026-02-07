@@ -101,7 +101,7 @@ export const CountryNarrativePage: React.FC = () => {
 
                             <div className="grid gap-6">
                                 {narratives.map(narrative => (
-                                    <Card key={narrative.id} className="border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                    <Link to={`/market-intel/country/${country.code}`} className="flex items-center justify-between rounded-3xl bg-card p-4 text-sm font-bold text-primary shadow-sm border border-border transition-colors hover:bg-muted">
                                         <CardHeader className="bg-muted/10 border-b border-border flex flex-row items-center justify-between space-y-0 py-4 px-6">
                                             <CardTitle className="text-lg font-bold text-foreground">
                                                 {narrative.narrative_theme}
@@ -121,7 +121,7 @@ export const CountryNarrativePage: React.FC = () => {
                                                 ))}
                                             </div>
                                         </CardContent>
-                                    </Card>
+                                    </Link>
                                 ))}
                             </div>
                         </section>
@@ -136,10 +136,10 @@ export const CountryNarrativePage: React.FC = () => {
                                     <Link
                                         to={`/articles/${article.slug}`}
                                         key={article.id}
-                                        className="group block rounded-xl border border-border bg-card p-6 transition-all hover:border-primary hover:-translate-y-0.5 hover:shadow-lg"
+                                        className="group block rounded-3xl border border-border bg-card p-6 transition-all hover:border-primary hover:-translate-y-0.5 hover:shadow-lg"
                                     >
                                         <div className="flex gap-6 items-center">
-                                            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-3xl bg-primary/10 text-primary">
                                                 <CheckCircledIcon className="h-6 w-6" />
                                             </div>
                                             <div className="flex-1">
@@ -172,7 +172,7 @@ export const CountryNarrativePage: React.FC = () => {
                                 </CardContent>
                             </Card>
 
-                            <div className="rounded-xl border border-border bg-muted/20 p-8">
+                            <div className="rounded-3xl border border-border bg-muted/20 p-8">
                                 <h3 className="mb-6 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                                     <BarChartIcon className="h-4 w-4" /> Sector Weighting
                                 </h3>

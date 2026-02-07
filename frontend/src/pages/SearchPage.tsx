@@ -131,7 +131,7 @@ export const SearchPage: React.FC = () => {
                                         <div className="text-lg leading-loose text-foreground">
                                             {aiSummary ? (
                                                 <>
-                                                    <div className="mb-4 rounded-lg border-l-4 border-primary bg-muted/30 p-6 font-medium shadow-sm">
+                                                    <div className="mb-4 rounded-3xl border-l-4 border-primary bg-muted/30 p-6 font-medium shadow-sm">
                                                         {aiSummary}
                                                     </div>
                                                     <p className="text-sm text-muted-foreground">
@@ -145,7 +145,7 @@ export const SearchPage: React.FC = () => {
                                                     <span
                                                         onMouseEnter={() => setHighlightedSource(0)}
                                                         onMouseLeave={() => setHighlightedSource(null)}
-                                                        className={`mx-1 cursor-pointer rounded px-2 py-0.5 text-base font-bold transition-colors ${highlightedSource === 0 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}
+                                                        className={`mx-1 cursor-pointer rounded-lg px-2 py-0.5 text-base font-bold transition-colors ${highlightedSource === 0 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}
                                                     >
                                                         {results[0]?.article.country_name}
                                                     </span>
@@ -163,7 +163,7 @@ export const SearchPage: React.FC = () => {
                                             {results.map((item, index) => (
                                                 <div
                                                     key={index}
-                                                    className={`rounded-xl border p-6 transition-all duration-300 ${highlightedSource === index ? 'border-primary bg-primary/5 shadow-lg scale-[1.02]' : 'border-border bg-card hover:border-primary/50'}`}
+                                                    className={`rounded-3xl border p-6 transition-all duration-300 ${highlightedSource === index ? 'border-primary bg-primary/5 shadow-lg scale-[1.02]' : 'border-border bg-card hover:border-primary/50'}`}
                                                     onMouseEnter={() => setHighlightedSource(index)}
                                                     onMouseLeave={() => setHighlightedSource(null)}
                                                 >
@@ -224,7 +224,7 @@ export const SearchPage: React.FC = () => {
                                 </aside>
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center rounded-2xl bg-muted/20 py-24 text-center border border-dashed border-border">
+                            <div className="flex flex-col items-center justify-center rounded-3xl bg-muted/20 py-24 text-center border border-dashed border-border">
                                 <FileTextIcon className="mb-6 h-12 w-12 text-muted-foreground" />
                                 <h3 className="mb-2 text-xl font-bold text-foreground">No Relevancy Found</h3>
                                 <p className="max-w-md text-muted-foreground">

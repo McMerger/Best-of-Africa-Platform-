@@ -26,19 +26,19 @@ export const AboutPage: React.FC = () => {
 
                     <h3 className="text-2xl font-serif font-bold text-foreground mt-12 mb-4">Our Role</h3>
                     <div className="grid md:grid-cols-2 gap-8 not-prose my-8">
-                        <div className="p-6 border border-border rounded-lg bg-card">
+                        <div className="p-6 border border-border rounded-3xl bg-card">
                             <h4 className="font-bold text-primary mb-2">{config?.['about_role_media_title'] || 'Media Outlet'}</h4>
                             <p className="text-sm text-muted-foreground">{config?.['about_role_media_desc'] || 'Premium pan-African content platform.'}</p>
                         </div>
-                        <div className="p-6 border border-border rounded-lg bg-card">
+                        <div className="p-6 border border-border rounded-3xl bg-card">
                             <h4 className="font-bold text-primary mb-2">{config?.['about_role_intel_title'] || 'Market Intelligence'}</h4>
                             <p className="text-sm text-muted-foreground">{config?.['about_role_intel_desc'] || 'Ground-truth reporting combined with our proprietary Intelligence Engine.'}</p>
                         </div>
-                        <div className="p-6 border border-border rounded-lg bg-card">
+                        <div className="p-6 border border-border rounded-3xl bg-card">
                             <h4 className="font-bold text-primary mb-2">{config?.['about_role_narrative_title'] || 'Narrative Diplomacy'}</h4>
                             <p className="text-sm text-muted-foreground">{config?.['about_role_narrative_desc'] || "Amplifying Africa's voice with rigor."}</p>
                         </div>
-                        <div className="p-6 border border-border rounded-lg bg-card">
+                        <div className="p-6 border border-border rounded-3xl bg-card">
                             <h4 className="font-bold text-primary mb-2">{config?.['about_role_gateway_title'] || 'Business Gateway'}</h4>
                             <p className="text-sm text-muted-foreground">{config?.['about_role_gateway_desc'] || 'Trusted portal for opportunity.'}</p>
                         </div>
