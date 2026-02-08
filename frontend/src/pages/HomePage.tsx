@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 import { GlobeIcon, ArrowRightIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
 import type { Dashboard } from '../types';
+import { LiquidMetal } from '../components/LiquidMetal';
 
 export const HomePage: React.FC = () => {
     const { data: config } = useSystemConfig();
@@ -40,9 +41,12 @@ export const HomePage: React.FC = () => {
     return (
         <Layout>
             {/* 1. HERO SECTION: The Narrative Engine */}
-            <div className="border-b border-border bg-background relative overflow-hidden">
+            <div className="border-b border-border bg-background relative overflow-hidden min-h-[600px] flex flex-col">
+                <LiquidMetal />
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-0 pointer-events-none"></div>
+
                 {/* Live Market Pulse Ticker (New 'Personality' Element) */}
-                <div className="w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex">
+                <div className="relative z-10 w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex">
                     <div className="flex gap-8 items-center text-[10px] font-bold uppercase tracking-widest text-primary/80 overflow-x-auto no-scrollbar animate-pulse">
                         {dashboards.slice(0, 6).map((d, i) => (
                             <span key={i} className={`flex items-center gap-1 ${d.key_metrics?.articles_24h > 0 ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -54,12 +58,12 @@ export const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="container py-12 md:py-32">
+                <div className="relative z-10 container py-12 md:py-32">
                     <div className="max-w-4xl">
                         <div className="mb-6 flex items-center gap-2 text-xs md:text-sm font-bold text-primary uppercase tracking-widest">
                             <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
                         </div>
-                        <h1 className="mb-6 font-serif text-3xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-foreground">
+                        <h1 className="relative z-10 mb-6 font-serif text-3xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-foreground drop-shadow-sm">
                             {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
                         </h1>
                         <p className="mb-8 md:mb-10 text-lg md:text-xl leading-relaxed text-muted-foreground max-w-2xl">

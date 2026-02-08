@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { Country } from '../types';
 import { Card, CardContent } from '@/components/ui/card';
+import { StrategicMap } from '../components/StrategicMap';
 
 export const CountriesPage: React.FC = () => {
     const [data, setData] = useState<{ by_region: Record<string, { countries: Country[], ai_insight: string }> } | null>(null);
@@ -33,14 +34,7 @@ export const CountriesPage: React.FC = () => {
 
     if (!data) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div></Layout>;
 
-    // Hex Map Coordinates (Abstract Layout)
-    const hexLayout = [
-        { id: 'North', x: 150, y: 50 },
-        { id: 'West', x: 60, y: 120 },
-        { id: 'Central', x: 150, y: 120 },
-        { id: 'East', x: 240, y: 120 },
-        { id: 'Southern', x: 150, y: 190 }
-    ];
+
 
     return (
         <Layout>
@@ -58,59 +52,13 @@ export const CountriesPage: React.FC = () => {
                         </p>
                     </div>
 
-                    {/* Digital Hex Atlas */}
-                    <div className="relative h-[260px] w-[320px] shrink-0">
-                        <svg width="320" height="260" viewBox="0 0 300 240">
-                            <defs>
-                                <filter id="glow">
-                                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                    </feMerge>
-                                </filter>
-                            </defs>
-                            {hexLayout.map(region => {
-                                const isSelected = selectedRegion === region.id;
-                                const count = data.by_region[region.id]?.countries?.length || 0;
-                                return (
-                                    <g
-                                        key={region.id}
-                                        onClick={() => setSelectedRegion(isSelected ? null : region.id)}
-                                        onMouseEnter={() => setSelectedRegion(region.id)}
-                                        onMouseLeave={() => setSelectedRegion(null)}
-                                        className="cursor-pointer transition-all duration-300 group"
-                                    >
-                                        {/* Hexagon Shape */}
-                                        <path
-                                            d={`M${region.x} ${region.y - 35} L${region.x + 40} ${region.y - 15} L${region.x + 40} ${region.y + 25} L${region.x} ${region.y + 45} L${region.x - 40} ${region.y + 25} L${region.x - 40} ${region.y - 15} Z`}
-                                            className={isSelected ? "fill-primary stroke-none" : "fill-background stroke-primary"}
-                                            strokeWidth={isSelected ? '0' : '2'}
-                                            filter={isSelected ? 'url(#glow)' : ''}
-                                            style={{ transition: 'all 0.3s ease' }}
-                                        />
-                                        {/* Label */}
-                                        <text
-                                            x={region.x}
-                                            y={region.y - 5}
-                                            textAnchor="middle"
-                                            className={isSelected ? "fill-primary-foreground font-extrabold uppercase text-[10px]" : "fill-primary font-extrabold uppercase text-[10px]"}
-                                        >
-                                            {region.id}
-                                        </text>
-                                        {/* Count */}
-                                        <text
-                                            x={region.x}
-                                            y={region.y + 15}
-                                            textAnchor="middle"
-                                            className={isSelected ? "fill-primary font-bold text-sm" : "fill-muted-foreground font-bold text-sm"}
-                                        >
-                                            {count}
-                                        </text>
-                                    </g>
-                                );
-                            })}
-                        </svg>
+                    {/* Digital Hex Atlas (3D) */}
+                    <div className="relative w-full max-w-[400px] h-[300px] shrink-0 mx-auto lg:mx-0">
+                        <StrategicMap
+                            selectedRegion={selectedRegion}
+                            onSelectRegion={setSelectedRegion}
+                            regionData={data.by_region}
+                        />
                     </div>
                 </header>
 
@@ -133,7 +81,7 @@ export const CountriesPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                                 {(regionData.countries || []).map(country => (
                                     <Link to={`/countries/${country.code}`} key={country.code} className="group">
                                         <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/50 group-hover:shadow-lg rounded-3xl">

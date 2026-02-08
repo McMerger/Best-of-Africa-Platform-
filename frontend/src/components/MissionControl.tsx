@@ -54,7 +54,7 @@ export const MissionControl: React.FC = () => {
                     <MixerHorizontalIcon className="h-3 w-3 opacity-50 ml-1" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0 rounded-3xl overflow-hidden" align="end">
+            <PopoverContent className="w-[90vw] sm:w-[400px] p-0 rounded-3xl overflow-hidden" align="end">
                 <div className="flex flex-col h-[600px] bg-card border border-border/50 shadow-2xl">
 
                     {/* Header */}

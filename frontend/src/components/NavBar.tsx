@@ -50,7 +50,7 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-4 z-50 w-full px-4 mb-4">
+        <header className="sticky top-2 md:top-4 z-50 w-full px-2 md:px-4 mb-4">
             <div className="container flex h-16 items-center justify-between rounded-full border border-border/40 bg-background/95 backdrop-blur shadow-sm pl-6 pr-2">
                 {/* Brand */}
                 <div className="flex items-center gap-4">
