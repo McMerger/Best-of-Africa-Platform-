@@ -116,11 +116,11 @@ export const NavBar: React.FC = () => {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right">
-                            <SheetHeader className="border-b pb-4 mb-4">
+                            <SheetHeader className="border-b pb-4 mb-4 flex flex-row items-center justify-between">
                                 <SheetTitle className="text-left font-serif font-black text-2xl tracking-tight">Best of Africa</SheetTitle>
-                                {/* <SheetDescription className="text-left text-xs uppercase tracking-widest text-primary font-bold">
-                                    Command Center
-                                </SheetDescription> */}
+                                <div className="flex items-center gap-2">
+                                    <DensityToggle />
+                                </div>
                             </SheetHeader>
                             <div className="grid gap-6 py-2 overflow-y-auto max-h-[calc(100vh-8rem)] pr-2">
                                 {/* Section 1: Main Intelligence */}

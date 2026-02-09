@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
+import { HeroBackground } from '../components/3D/HeroBackground';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
@@ -42,8 +43,11 @@ export const HomePage: React.FC = () => {
         <Layout>
             {/* 1. HERO SECTION: The Narrative Engine */}
             <div className="border-b border-border bg-background relative overflow-hidden">
-                {/* Live Market Pulse Ticker (New 'Personality' Element) */}
-                <div className="w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex">
+                {/* 3D Cinematic Background (African Topography) */}
+                <HeroBackground />
+
+                {/* Live Market Pulse Ticker */}
+                <div className="relative z-10 w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex backdrop-blur-sm">
                     <div className="flex gap-8 items-center text-[10px] font-bold uppercase tracking-widest text-primary/80 overflow-x-auto no-scrollbar animate-pulse">
                         {dashboards.slice(0, 6).map((d, i) => (
                             <span key={i} className={`flex items-center gap-1 ${d.key_metrics?.articles_24h > 0 ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -55,34 +59,27 @@ export const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="container py-12 md:py-20">
-                    <div className="relative rounded-3xl bg-card border border-border/40 p-8 md:p-16 shadow-lg overflow-hidden">
-                        {/* Abstract Africa Watermark */}
-                        <div className="absolute top-0 right-0 -m-16 opacity-[0.03] pointer-events-none">
-                            <svg width="400" height="400" viewBox="0 0 100 100" fill="currentColor" className="text-foreground">
-                                <path d="M50 0 C20 0 0 20 0 50 C0 80 20 100 50 100 C80 100 100 80 100 50 C100 20 80 0 50 0 Z M50 90 C30 90 10 70 10 50 C10 30 30 10 50 10 C70 10 90 30 90 50 C90 70 70 90 50 90 Z" />
-                                {/* Placeholder for complex map shape - using simple concentric circles for now */}
-                            </svg>
-                        </div>
+                <div className="container py-12 md:py-20 relative z-10">
+                    <div className="relative rounded-3xl bg-card/10 backdrop-blur-md border border-white/10 p-8 md:p-16 shadow-2xl overflow-hidden">
 
                         <div className="relative z-10 max-w-4xl">
-                            <div className="mb-6 flex items-center gap-2 text-sm font-bold text-primary uppercase tracking-widest">
+                            <div className="mb-6 flex items-center gap-2 text-sm font-bold text-primary uppercase tracking-widest animate-in fade-in slide-in-from-bottom-4 duration-700">
                                 <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
                             </div>
-                            <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-card-foreground md:text-7xl">
+                            <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-7xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
                                 {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
                             </h1>
-                            <p className="mb-10 text-xl leading-relaxed text-muted-foreground max-w-2xl text-balance">
+                            <p className="mb-10 text-xl leading-relaxed text-muted-foreground max-w-2xl text-balance animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                                 {config?.['home_hero_subhead'] || "A unified public relations and strategic narrative engine for the continent."}
                             </p>
-                            <div className="flex flex-wrap items-center gap-4">
+                            <div className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
                                 <LiquidChromeButton
-                                    className="w-56 h-16 text-lg"
+                                    className="w-56 h-16 text-lg shadow-lg shadow-primary/20"
                                     onClick={() => window.location.href = '/countries'}
                                 >
                                     {config?.['home_cta_primary'] || "Explore Intelligence v2"}
                                 </LiquidChromeButton>
-                                <Button variant="outline" size="lg" className="h-16 px-8 text-lg font-medium rounded-full border-2 border-primary/20 text-card-foreground hover:bg-muted/50">
+                                <Button variant="outline" size="lg" className="h-16 px-8 text-lg font-medium rounded-full border-2 border-primary/20 text-foreground hover:bg-white/50 backdrop-blur-sm transition-all hover:scale-105">
                                     <Link to="/countries">View Countries</Link>
                                 </Button>
                             </div>
