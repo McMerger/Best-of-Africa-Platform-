@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { MissionControl } from './MissionControl';
+import { DensityToggle } from './DensityToggle';
 
 import {
     Sheet,
@@ -63,6 +64,7 @@ export const NavBar: React.FC = () => {
                 {/* Desktop Actions */}
                 <div className="flex items-center gap-2">
                     <div className="hidden md:flex md:items-center md:gap-1">
+                        <DensityToggle />
                         <MissionControl />
                         <Button variant="ghost" size="icon" asChild>
                             <Link to="/search">

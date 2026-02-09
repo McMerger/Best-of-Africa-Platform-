@@ -7,10 +7,10 @@ import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRightIcon, ArrowTopRightIcon, GlobeIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
-import { GlobeIcon, ArrowRightIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
+import { LiquidChromeButton } from "@/components/ui/liquid-chrome-button";
 import type { Dashboard } from '../types';
-import { LiquidMetal } from '../components/LiquidMetal';
 
 export const HomePage: React.FC = () => {
     const { data: config } = useSystemConfig();
@@ -36,17 +36,14 @@ export const HomePage: React.FC = () => {
         fetchData();
     }, []);
 
-    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-3xl" /></div></Layout>;
+    if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
 
     return (
         <Layout>
             {/* 1. HERO SECTION: The Narrative Engine */}
-            <div className="border-b border-border bg-background relative overflow-hidden min-h-[600px] flex flex-col">
-                <LiquidMetal />
-                <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-0 pointer-events-none"></div>
-
+            <div className="border-b border-border bg-background relative overflow-hidden">
                 {/* Live Market Pulse Ticker (New 'Personality' Element) */}
-                <div className="relative z-10 w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex">
+                <div className="w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex">
                     <div className="flex gap-8 items-center text-[10px] font-bold uppercase tracking-widest text-primary/80 overflow-x-auto no-scrollbar animate-pulse">
                         {dashboards.slice(0, 6).map((d, i) => (
                             <span key={i} className={`flex items-center gap-1 ${d.key_metrics?.articles_24h > 0 ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -58,24 +55,37 @@ export const HomePage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="relative z-10 container py-12 md:py-32">
-                    <div className="max-w-4xl">
-                        <div className="mb-6 flex items-center gap-2 text-xs md:text-sm font-bold text-primary uppercase tracking-widest">
-                            <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
+                <div className="container py-12 md:py-20">
+                    <div className="relative rounded-3xl bg-card border border-border/40 p-8 md:p-16 shadow-lg overflow-hidden">
+                        {/* Abstract Africa Watermark */}
+                        <div className="absolute top-0 right-0 -m-16 opacity-[0.03] pointer-events-none">
+                            <svg width="400" height="400" viewBox="0 0 100 100" fill="currentColor" className="text-foreground">
+                                <path d="M50 0 C20 0 0 20 0 50 C0 80 20 100 50 100 C80 100 100 80 100 50 C100 20 80 0 50 0 Z M50 90 C30 90 10 70 10 50 C10 30 30 10 50 10 C70 10 90 30 90 50 C90 70 70 90 50 90 Z" />
+                                {/* Placeholder for complex map shape - using simple concentric circles for now */}
+                            </svg>
                         </div>
-                        <h1 className="relative z-10 mb-6 font-serif text-3xl md:text-5xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-foreground drop-shadow-sm">
-                            {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
-                        </h1>
-                        <p className="mb-8 md:mb-10 text-lg md:text-xl leading-relaxed text-muted-foreground max-w-2xl">
-                            {config?.['home_hero_subhead'] || "A unified public relations and strategic narrative engine for the continent."}
-                        </p>
-                        <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <Button size="lg" className="w-full sm:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-bold shadow-sm">
-                                {config?.['home_cta_primary'] || "Explore Intelligence"}
-                            </Button>
-                            <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 md:h-14 px-8 text-base md:text-lg font-medium">
-                                <Link to="/countries">View Countries</Link>
-                            </Button>
+
+                        <div className="relative z-10 max-w-4xl">
+                            <div className="mb-6 flex items-center gap-2 text-sm font-bold text-primary uppercase tracking-widest">
+                                <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
+                            </div>
+                            <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-card-foreground md:text-7xl">
+                                {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
+                            </h1>
+                            <p className="mb-10 text-xl leading-relaxed text-muted-foreground max-w-2xl text-balance">
+                                {config?.['home_hero_subhead'] || "A unified public relations and strategic narrative engine for the continent."}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <LiquidChromeButton
+                                    className="w-56 h-16 text-lg"
+                                    onClick={() => window.location.href = '/countries'}
+                                >
+                                    {config?.['home_cta_primary'] || "Explore Intelligence v2"}
+                                </LiquidChromeButton>
+                                <Button variant="outline" size="lg" className="h-16 px-8 text-lg font-medium rounded-full border-2 border-primary/20 text-card-foreground hover:bg-muted/50">
+                                    <Link to="/countries">View Countries</Link>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -97,10 +107,10 @@ export const HomePage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {featured.slice(0, 6).map((article, i) => (
-                            <Link key={article.id || i} to={`/articles/${article.slug}`} className="group relative overflow-hidden block p-6 rounded-3xl border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
+                            <Link key={article.id || i} to={`/articles/${article.slug}`} className="group relative overflow-hidden block p-6 rounded-lg border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
                                 <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors relative z-10">
+                                    <div className="p-3 rounded-md bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors relative z-10">
                                         <GlobeIcon className="h-6 w-6" />
                                     </div>
                                     <Badge variant="outline" className="text-xs font-bold text-muted-foreground border-border relative z-10">
@@ -118,7 +128,7 @@ export const HomePage: React.FC = () => {
 
                 {/* 3. INTELLIGENCE STREAM (Flat, No blinking lights) */}
                 <section className="mb-24">
-                    <div className="rounded-3xl border border-border bg-muted/30 p-8">
+                    <div className="rounded-lg border border-border bg-muted/30 p-8">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
@@ -138,66 +148,36 @@ export const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 4. UPCOMING EVENTS (New) */}
-                <section className="mb-24">
-                    <div className="flex items-end justify-between mb-8 border-b border-border pb-4">
-                        <div>
-                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary mb-2">
-                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                                Live Agenda
-                            </div>
-                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground">Strategic Summits</h2>
-                        </div>
-                        <Button variant="ghost" className="text-primary font-bold hidden md:flex" asChild>
-                            <Link to="/events">View All Events <ArrowRightIcon className="ml-2 h-4 w-4" /></Link>
-                        </Button>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {/* We'll fetch these dynamically later, for now linking to the events page */}
-                        <div className="md:col-span-3 rounded-3xl border border-border bg-muted/20 p-12 text-center">
-                            <h3 className="text-2xl font-serif font-bold mb-4">Where Power Meets Purpose</h3>
-                            <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-                                Access the continent's most consequential investment forums, policy dialogues, and private delegations.
-                            </p>
-                            <Button asChild size="lg" className="font-bold">
-                                <Link to="/events">Explore the 2026 Calendar</Link>
-                            </Button>
-                        </div>
-                    </div>
-                </section>
-
-                {/* 5. BUSINESS TRAVEL */}
+                {/* 4. BUSINESS TRAVEL */}
                 <section className="border-t border-border bg-card py-24">
                     <div className="container">
                         <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
                             <div>
                                 <h2 className="mb-6 text-4xl font-serif font-black tracking-tight lg:text-5xl">
-                                    <span dangerouslySetInnerHTML={{ __html: config?.['home_mission_headline'] || 'Mission Support & <br /> Logistics.' }} />
+                                    Mission Support & <br /> Logistics.
                                 </h2>
                                 <p className="mb-8 text-lg font-medium leading-relaxed text-muted-foreground">
-                                    {config?.['home_mission_body'] || "We don't just provide intelligence; we enable presence. From secure aviation to expedited visas and security details, we ensure your team lands, operates, and succeeds in any jurisdiction."}
+                                    We don't just provide intelligence; we enable presence. From secure aviation to expedited visas and security details, we ensure your team lands, operates, and succeeds in any jurisdiction.
                                 </p>
                                 <Button asChild size="lg" className="h-12 px-8 font-bold text-base shadow-lg shadow-primary/20">
-                                    <Link to="/travel">{config?.['home_mission_cta'] || 'Secure Mobility Support'}</Link>
+                                    <Link to="/travel">Secure Mobility Support</Link>
                                 </Button>
                             </div>
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="space-y-6">
-                                    <div className="rounded-3xl border border-border bg-background p-8 shadow-sm flex flex-col justify-center h-full">
-                                        <div className="mb-2 text-4xl font-black text-primary">{config?.['home_stat_countries'] || '54'}</div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_countries_label'] || 'Countries Covered'}</div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-4">
+                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
+                                        <div className="mb-2 text-2xl font-black text-primary">54</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Countries Covered</div>
                                     </div>
-                                    <div className="rounded-3xl border border-border bg-background p-8 shadow-sm flex flex-col justify-center h-full">
-                                        <div className="mb-2 text-4xl font-black text-primary">{config?.['home_stat_security'] || '24/7'}</div>
-                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{config?.['home_stat_security_label'] || 'Security Overwatch'}</div>
+                                    <div className="rounded-xl border border-border bg-background p-6 shadow-sm">
+                                        <div className="mb-2 text-2xl font-black text-primary">24/7</div>
+                                        <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Security Overwatch</div>
                                     </div>
                                 </div>
-                                <div className="rounded-3xl border border-border bg-muted/30 p-8 flex flex-col justify-end">
-                                    <div className="text-lg font-serif font-medium italic text-foreground leading-relaxed">
-                                        "{config?.['home_testimonial_quote'] || 'The only partner we trust for Sahel transitions.'}"
+                                <div className="rounded-xl border border-border bg-muted/20 p-6 flex flex-col justify-end">
+                                    <div className="text-sm font-medium italic text-muted-foreground">
+                                        "The only partner we trust for Sahel transitions."
                                     </div>
-                                    <div className="text-xs font-bold text-muted-foreground/70 mt-4 uppercase tracking-wider">— {config?.['home_testimonial_author'] || 'Fortune 500 Security Director'}</div>
                                 </div>
                             </div>
                         </div>

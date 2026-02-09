@@ -63,8 +63,6 @@ export const LoginPage: React.FC = () => {
         <Layout>
             <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-background px-4 md:px-0">
                 {/* ... (background code) ... */}
-                <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1)_0%,hsl(var(--background))_70%)]"></div>
-                <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(hsl(var(--muted-foreground)/0.03)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--muted-foreground)/0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
                 <div className="relative z-10 w-full max-w-[420px]">
                     {/* ... (Badge Header code) ... */}

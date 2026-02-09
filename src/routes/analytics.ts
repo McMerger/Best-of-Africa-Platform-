@@ -285,4 +285,93 @@ router.get('/content-gaps', requireAuth, async (c) => {
     });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /analytics/intelligence - 3D Visualization Data Feed ("The Brain")
+// Returns: Country Heat, Sentiment, Global Pulse for live 3D rendering
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/intelligence', async (c) => {
+    const data = await getCached(
+        c.env,
+        'intelligence-feed',
+        async () => {
+            // 1. Articles per country (last 7 days) - for Map Pillar Height
+            const countryHeat = await c.env.DB.prepare(`
+                SELECT 
+                    country_code,
+                    COUNT(*) as article_count,
+                    AVG(ai_sentiment_score) as avg_sentiment,
+                    MAX(published_at) as last_article_at
+                FROM articles
+                WHERE status = 'published' 
+                  AND published_at > datetime('now', '-7 days')
+                  AND country_code IS NOT NULL
+                GROUP BY country_code
+            `).all();
+
+            // 2. Global Pulse - articles per hour (last 24h) - for GoldenPulse speed
+            const pulseData = await c.env.DB.prepare(`
+                SELECT COUNT(*) as article_count
+                FROM articles
+                WHERE status = 'published' 
+                  AND published_at > datetime('now', '-24 hours')
+            `).first() as any;
+
+            const articlesLast24h = pulseData?.article_count || 0;
+            const articlesPerHour = articlesLast24h / 24;
+
+            // 3. Sector Distribution (for potential future use)
+            const sectorDist = await c.env.DB.prepare(`
+                SELECT 
+                    sector_id,
+                    COUNT(*) as count,
+                    AVG(ai_sentiment_score) as avg_sentiment
+                FROM articles
+                WHERE status = 'published' 
+                  AND published_at > datetime('now', '-7 days')
+                  AND sector_id IS NOT NULL
+                GROUP BY sector_id
+            `).all();
+
+            // 4. Overall Sentiment Trend
+            const sentimentTrend = await c.env.DB.prepare(`
+                SELECT 
+                    DATE(published_at) as date,
+                    AVG(ai_sentiment_score) as avg_sentiment,
+                    COUNT(*) as volume
+                FROM articles
+                WHERE status = 'published' 
+                  AND published_at > datetime('now', '-7 days')
+                GROUP BY date
+                ORDER BY date ASC
+            `).all();
+
+            // Normalize country heat to 0-1 scale for 3D rendering
+            const maxCount = Math.max(...(countryHeat.results as any[]).map(c => c.article_count), 1);
+            const normalizedCountries = (countryHeat.results as any[]).map(country => ({
+                code: country.country_code,
+                heat: country.article_count / maxCount,
+                sentiment: country.avg_sentiment || 0.5,
+                volume: country.article_count,
+                last_activity: country.last_article_at,
+            }));
+
+            return {
+                countries: normalizedCountries,
+                sectors: sectorDist.results || [],
+                global_pulse: {
+                    articles_24h: articlesLast24h,
+                    rate_per_hour: parseFloat(articlesPerHour.toFixed(2)),
+                    // Intensity: 0-1 scale, where 24+ articles/day = 1.0
+                    intensity: Math.min(1, articlesLast24h / 24),
+                },
+                sentiment_trend: sentimentTrend.results || [],
+                generated_at: new Date().toISOString(),
+            };
+        },
+        { ttl: 60 } // Cache for 1 minute
+    );
+
+    return c.json(data);
+});
+
 export { router as analyticsRouter };

@@ -173,7 +173,7 @@ export function BookingRequestPage() {
     }
 
     return (
-        <div className="min-h-screen bg-muted/30 py-12 px-4">
+        <div className="min-h-screen bg-background py-12 px-4">
             <div className="container mx-auto max-w-3xl">
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-serif font-bold mb-3">{config?.['booking_hero_headline'] || "Concierge Request"}</h1>
@@ -182,258 +182,246 @@ export function BookingRequestPage() {
                     </p>
                 </div>
 
-                {/* Steps */}
-                <div className="flex items-center justify-between mb-10 px-12">
-                    {STEPS.map((step, idx) => {
-                        const isActive = step.id === currentStep;
-                        const isCompleted = step.id < currentStep;
-                        const Icon = step.icon;
-
-                        return (
-                            <div key={step.id} className="flex flex-col items-center relative z-10">
-                                <div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-300 ${isActive
-                                        ? 'bg-primary border-primary text-primary-foreground'
-                                        : isCompleted
-                                            ? 'bg-primary/20 border-primary text-primary'
-                                            : 'bg-background border-muted text-muted-foreground'
-                                        }`}
-                                >
-                                    <Icon className="w-5 h-5" />
-                                </div>
-                                <span className={`text-xs font-medium mt-2 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                                    {step.title}
-                                </span>
-
-                                {/* Connector Line */}
-                                {idx !== STEPS.length - 1 && (
-                                    <div className="absolute top-5 left-1/2 w-full h-[2px] -z-10 bg-muted">
-                                        <div
-                                            className="h-full bg-primary transition-all duration-300"
-                                            style={{ width: isCompleted ? '100%' : '0%' }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <Card className="shadow-lg border-muted">
-                    <CardContent className="p-8">
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
-                                {/* Step 1: Service Type */}
-                                {currentStep === 1 && (
-                                    <div className="space-y-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {[
-                                                { id: 'market_entry', label: 'Market Entry Strategy', icon: BarChartIcon },
-                                                { id: 'due_diligence', label: 'Partner Due Diligence', icon: CheckCircledIcon },
-                                                { id: 'government_relations', label: 'Government Relations', icon: HomeIcon },
-                                                { id: 'executive_travel', label: 'Executive Travel', icon: RocketIcon },
-                                                { id: 'trade_mission', label: 'Trade Mission Support', icon: BackpackIcon },
-                                            ].map((service) => (
-                                                <div key={service.id} className="relative">
-                                                    <input
-                                                        type="radio"
-                                                        id={service.id}
-                                                        value={service.id}
-                                                        {...form.register('service_type')}
-                                                        className="peer sr-only"
-                                                    />
-                                                    <label
-                                                        htmlFor={service.id}
-                                                        className="flex flex-col items-center justify-center p-6 bg-background border-2 rounded-3xl cursor-pointer hover:bg-muted/50 peer-checked:border-primary peer-checked:bg-primary/5 transition-all text-center h-full"
-                                                    >
-                                                        <service.icon className="w-8 h-8 mb-3 text-muted-foreground peer-checked:text-primary" />
-                                                        <span className="font-medium text-sm">{service.label}</span>
-                                                    </label>
-                                                </div>
-                                            ))}
+                {/* White Card with Progress Line (Spec 9.6) */}
+                <div className="rounded-3xl border border-border bg-card shadow-lg shadow-black/5 overflow-hidden">
+                    {/* Progress Header */}
+                    <div className="border-b border-border bg-background px-8 py-6">
+                        <div className="flex items-center justify-between">
+                            {STEPS.map((step, idx) => {
+                                const isActive = step.id === currentStep;
+                                const isCompleted = step.id < currentStep;
+                                return (
+                                    <div key={step.id} className="flex items-center gap-3">
+                                        <div className={`relative flex items-center justify-center w-8 h-8 rounded-full border text-xs font-bold transition-colors ${isActive ? 'border-primary bg-primary text-primary-foreground' : isCompleted ? 'border-primary text-primary' : 'border-muted text-muted-foreground'}`}>
+                                            {isCompleted ? <CheckCircledIcon className="w-5 h-5" /> : step.id}
+                                            {isActive && <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background animate-pulse"></span>}
                                         </div>
+                                        <span className={`text-sm font-bold uppercase tracking-widest ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{step.title}</span>
+                                        {idx !== STEPS.length - 1 && (
+                                            <div className="w-12 h-[1px] bg-border mx-2 hidden md:block"></div>
+                                        )}
                                     </div>
-                                )}
+                                )
+                            })}
+                        </div>
+                    </div>
 
-                                {/* Step 2: Requirements */}
-                                {currentStep === 2 && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                        <FormField
-                                            control={form.control}
-                                            name="country_code"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Target Country</FormLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select a country" />
-                                                            </SelectTrigger>
-                                                        </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="NG">Nigeria</SelectItem>
-                                                            <SelectItem value="ZA">South Africa</SelectItem>
-                                                            <SelectItem value="EG">Egypt</SelectItem>
-                                                            <SelectItem value="KE">Kenya</SelectItem>
-                                                            <SelectItem value="GH">Ghana</SelectItem>
-                                                            <SelectItem value="RW">Rwanda</SelectItem>
-                                                            <SelectItem value="MA">Morocco</SelectItem>
-                                                            <SelectItem value="Other">Other / Multi-Country</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                    <Card className="border-0 shadow-none bg-transparent">
+                        <CardContent className="p-8 md:p-12">
+                            <Form {...form}>
+                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
 
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormField
-                                                control={form.control}
-                                                name="dates"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Preferred Dates (Optional)</FormLabel>
-                                                        <FormControl>
-                                                            <Input placeholder="e.g. March 2026" {...field} />
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                            <FormField
-                                                control={form.control}
-                                                name="budget_range"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Budget Range (USD)</FormLabel>
-                                                        <FormControl>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Select range" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="<10k">Under $10k</SelectItem>
-                                                                    <SelectItem value="10k-50k">$10k - $50k</SelectItem>
-                                                                    <SelectItem value="50k-100k">$50k - $100k</SelectItem>
-                                                                    <SelectItem value="100k+">$100k+</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </FormControl>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </div>
-
-                                        <FormField
-                                            control={form.control}
-                                            name="requirements"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Specific Requirements</FormLabel>
-                                                    <FormControl>
-                                                        <Textarea
-                                                            placeholder="Please describe your objectives, constraints, and any specific support needed..."
-                                                            className="h-32 resize-none"
-                                                            {...field}
+                                    {/* Step 1: Service Type */}
+                                    {currentStep === 1 && (
+                                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[
+                                                    { id: 'market_entry', label: 'Market Entry Strategy', icon: BarChartIcon },
+                                                    { id: 'due_diligence', label: 'Partner Due Diligence', icon: CheckCircledIcon },
+                                                    { id: 'government_relations', label: 'Government Relations', icon: HomeIcon },
+                                                    { id: 'executive_travel', label: 'Executive Travel', icon: RocketIcon },
+                                                    { id: 'trade_mission', label: 'Trade Mission Support', icon: BackpackIcon },
+                                                ].map((service) => (
+                                                    <div key={service.id} className="relative group">
+                                                        <input
+                                                            type="radio"
+                                                            id={service.id}
+                                                            value={service.id}
+                                                            {...form.register('service_type')}
+                                                            className="peer sr-only"
                                                         />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                )}
+                                                        <label
+                                                            htmlFor={service.id}
+                                                            className="flex flex-col items-center justify-center p-6 bg-background border rounded-2xl cursor-pointer hover:border-primary/50 hover:shadow-md peer-checked:border-primary peer-checked:bg-primary/5 peer-checked:text-primary transition-all text-center h-full"
+                                                        >
+                                                            <service.icon className="w-8 h-8 mb-3 text-muted-foreground group-hover:text-primary peer-checked:text-primary transition-colors" />
+                                                            <span className="font-bold text-sm">{service.label}</span>
+                                                        </label>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                {/* Step 3: Contact */}
-                                {currentStep === 3 && (
-                                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                        <FormField
-                                            control={form.control}
-                                            name="user_name"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Full Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="John Doe" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        <FormField
-                                            control={form.control}
-                                            name="user_email"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Business Email</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="john@company.com" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        <div className="grid grid-cols-2 gap-4">
+                                    {/* Step 2: Requirements */}
+                                    {currentStep === 2 && (
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                                             <FormField
                                                 control={form.control}
-                                                name="user_organization"
+                                                name="country_code"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Organization</FormLabel>
-                                                        <FormControl>
-                                                            <Input placeholder="Company Name" {...field} />
-                                                        </FormControl>
+                                                        <FormLabel>Target Country</FormLabel>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a country" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="NG">Nigeria</SelectItem>
+                                                                <SelectItem value="ZA">South Africa</SelectItem>
+                                                                <SelectItem value="EG">Egypt</SelectItem>
+                                                                <SelectItem value="KE">Kenya</SelectItem>
+                                                                <SelectItem value="GH">Ghana</SelectItem>
+                                                                <SelectItem value="RW">Rwanda</SelectItem>
+                                                                <SelectItem value="MA">Morocco</SelectItem>
+                                                                <SelectItem value="Other">Other / Multi-Country</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="dates"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Preferred Dates (Optional)</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="e.g. March 2026" {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="budget_range"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Budget Range (USD)</FormLabel>
+                                                            <FormControl>
+                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Select range" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="<10k">Under $10k</SelectItem>
+                                                                        <SelectItem value="10k-50k">$10k - $50k</SelectItem>
+                                                                        <SelectItem value="50k-100k">$50k - $100k</SelectItem>
+                                                                        <SelectItem value="100k+">$100k+</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+
                                             <FormField
                                                 control={form.control}
-                                                name="user_phone"
+                                                name="requirements"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Phone (Optional)</FormLabel>
+                                                        <FormLabel>Specific Requirements</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="+1 ..." {...field} />
+                                                            <Textarea
+                                                                placeholder="Please describe your objectives, constraints, and any specific support needed..."
+                                                                className="h-32 resize-none"
+                                                                {...field}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
                                         </div>
-                                    </div>
-                                )}
-
-                                {/* Navigation Buttons */}
-                                <div className="flex justify-between pt-6 border-t mt-8">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={prevStep}
-                                        disabled={currentStep === 1 || isSubmitting}
-                                    >
-                                        Back
-                                    </Button>
-
-                                    {currentStep < 3 ? (
-                                        <Button type="button" onClick={nextStep}>
-                                            Next Step <ArrowRightIcon className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    ) : (
-                                        <Button type="submit" disabled={isSubmitting}>
-                                            {isSubmitting ? 'Submitting...' : 'Submit Request'}
-                                            {!isSubmitting && <StarFilledIcon className="w-4 h-4 ml-2" />}
-                                        </Button>
                                     )}
-                                </div>
-                            </form>
-                        </Form>
-                    </CardContent>
-                </Card>
+
+                                    {/* Step 3: Contact */}
+                                    {currentStep === 3 && (
+                                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                            <FormField
+                                                control={form.control}
+                                                name="user_name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Full Name</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="John Doe" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <FormField
+                                                control={form.control}
+                                                name="user_email"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Business Email</FormLabel>
+                                                        <FormControl>
+                                                            <Input placeholder="john@company.com" {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="user_organization"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Organization</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="Company Name" {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                                <FormField
+                                                    control={form.control}
+                                                    name="user_phone"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Phone (Optional)</FormLabel>
+                                                            <FormControl>
+                                                                <Input placeholder="+1 ..." {...field} />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Navigation Buttons */}
+                                    <div className="flex justify-between pt-6 border-t mt-8">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={prevStep}
+                                            disabled={currentStep === 1 || isSubmitting}
+                                        >
+                                            Back
+                                        </Button>
+
+                                        {currentStep < 3 ? (
+                                            <Button type="button" size="lg" onClick={nextStep} className="rounded-full px-8 font-bold">
+                                                Next Step <ArrowRightIcon className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        ) : (
+                                            <Button type="submit" size="lg" disabled={isSubmitting} variant="secondary" className="rounded-full px-8 font-bold shadow-lg shadow-secondary/25">
+                                                {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                                                {!isSubmitting && <StarFilledIcon className="w-4 h-4 ml-2" />}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </form>
+                            </Form>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

@@ -5,13 +5,12 @@ import { api } from '../services/api';
 import { ArticleCard } from '../components/ArticleCard';
 import { Badge } from '@/components/ui/badge';
 import type { Country, ArticleListItem, CountryStats } from '../types';
-import { cn } from '@/lib/utils';
 import { ArrowRightIcon, PersonIcon, InfoCircledIcon, ArrowTopRightIcon, PieChartIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { ActivityLogIcon, PlayIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
+import { ActivityLogIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
 
 
 
@@ -88,53 +87,48 @@ export const CountryDetailPage: React.FC = () => {
             {/* Hero Section: Editorial Dynamic Context (Always Visible) */}
             <div className="container pt-8 md:pt-12 pb-6">
                 <div className="rounded-xl bg-card border border-border p-8 shadow-sm md:p-12 relative overflow-hidden">
-                    {/* Ambient Background Gradient */}
-                    <div className={cn(
-                        "absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-10 pointer-events-none",
-                        stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "bg-emerald-500" : "bg-red-500"
-                    )} />
+                    {/* Ambient Background Gradient - Subtle Navy/Gold */}
+                    <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-5 pointer-events-none bg-primary" />
 
                     {/* Top Row: Status & Actions */}
-                    <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-                        <div className="flex flex-wrap items-center gap-4">
-                            <div className="rounded-full border border-border bg-background/50 backdrop-blur px-4 py-1.5 text-xs font-bold text-muted-foreground shadow-sm">
+                    <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Date Pill */}
+                            <div className="rounded-full border border-border/50 bg-white/80 backdrop-blur px-4 py-1.5 text-xs font-bold tracking-widest text-muted-foreground shadow-sm uppercase">
                                 {(new Date()).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
                             </div>
-                            <div className={cn(
-                                "flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold border shadow-sm backdrop-blur",
-                                stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B')
-                                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                                    : "bg-red-500/10 text-red-600 border-red-500/20"
-                            )}>
-                                <ActivityLogIcon className="h-3.5 w-3.5" />
-                                {stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "STABLE MARKET" : "VOLATILE MARKET"}
+
+                            {/* Market Status Pill - Gold Outline */}
+                            <div className="flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold tracking-widest border border-primary text-foreground shadow-sm backdrop-blur uppercase">
+                                <ActivityLogIcon className="h-3.5 w-3.5 text-primary" />
+                                {stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "Stable Market" : "Volatile Market"}
                             </div>
                         </div>
 
-                        <Button variant="outline" className="rounded-full h-10 px-4 gap-2 border-border bg-background/50 backdrop-blur shadow-sm hover:bg-muted font-bold text-xs uppercase tracking-wider transition-all hover:scale-105">
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background">
-                                <PlayIcon className="h-3 w-3 ml-0.5" />
-                            </div>
-                            <div className="flex flex-col items-start leading-none gap-0.5">
-                                <span className="text-[8px] text-muted-foreground font-bold">MULTIMODAL</span>
-                                <span>Listen to Briefing</span>
-                            </div>
-                            <SpeakerLoudIcon className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+                        {/* Audio Briefing Button */}
+                        <Button variant="outline" className="rounded-full h-9 px-4 gap-2 border-primary/20 bg-white hover:bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest shadow-sm transition-all hover:scale-105">
+                            <SpeakerLoudIcon className="h-3.5 w-3.5" />
+                            Audio Briefing
                         </Button>
                     </div>
 
                     {/* Editorial Headline */}
-                    <h1 className="mb-6 text-xl font-normal leading-tight tracking-tight text-foreground md:text-3xl lg:text-4xl max-w-6xl relative z-10 font-serif">
-                        {data.ai_situation_report ? (
-                            <span className="italic text-foreground">"{data.ai_situation_report}"</span>
-                        ) : (
-                            <span>
-                                The {country.name} market is <span className={cn("font-serif italic",
-                                    stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "text-emerald-600" : "text-red-600"
-                                )}>{stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "stable" : "volatile"}</span> today.
-                            </span>
-                        )}
-                    </h1>
+                    <div className="flex flex-col gap-2 relative z-10">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary/80">
+                            Situation Report
+                        </div>
+                        <h1 className="text-xl font-normal leading-tight tracking-tight text-foreground md:text-3xl lg:text-4xl max-w-6xl font-serif">
+                            {data.ai_situation_report ? (
+                                <span className="italic text-foreground">"{data.ai_situation_report}"</span>
+                            ) : (
+                                <span>
+                                    The {country.name} market is <span className="font-serif italic text-foreground border-b-2 border-primary/20">
+                                        {stats.risk_rating?.includes('A') || stats.risk_rating?.includes('B') ? "stable" : "volatile"}
+                                    </span> today.
+                                </span>
+                            )}
+                        </h1>
+                    </div>
                 </div>
             </div>
 
@@ -309,7 +303,7 @@ export const CountryDetailPage: React.FC = () => {
                                                             Active Coverage
                                                         </div>
                                                         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                                            {sectorData.ai_sentiment_score !== undefined ? "Analyst Sentiment Analysis" : "Market Sentiment"} in {sectorName.toLowerCase()}.
+                                                            {sectorData.ai_sentiment_score !== undefined ? "Strategic Sentiment" : "Market Sentiment"} in {sectorName.toLowerCase()}.
                                                         </p>
                                                     </CardContent>
                                                 </Card>

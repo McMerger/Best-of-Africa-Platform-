@@ -258,98 +258,104 @@ export const ArticleDetailPage: React.FC = () => {
                                 <Skeleton className="h-40 rounded-3xl" />
                             </div>
                         ) : unifiedBriefing && (
-                            <div className="grid gap-4 md:grid-cols-3 mb-10">
-                                {/* INVESTMENT SIGNAL */}
-                                <div className="rounded-3xl border border-green-500/30 bg-green-500/5 p-5">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-lg">📊</span>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-green-600">Investment Signal</h3>
+                            <div className="grid gap-6 md:grid-cols-3 mb-12">
+                                {/* INVESTMENT SIGNAL - White Card with Green Accent */}
+                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-emerald-500">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg">📊</div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-600">Investment Signal</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.investment.summary}</p>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <Badge variant="outline" className="border-green-500/50 text-green-600 font-bold">{unifiedBriefing.investment.verdict}</Badge>
-                                        <span className="text-muted-foreground">Risk: <strong>{unifiedBriefing.investment.risk}</strong></span>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.investment.summary}</p>
+                                    <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
+                                        <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 font-bold bg-emerald-500/5">{unifiedBriefing.investment.verdict}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Risk: <strong className="text-foreground">{unifiedBriefing.investment.risk}</strong></span>
                                     </div>
                                 </div>
 
-                                {/* OPERATIONAL BRIEF */}
-                                <div className="rounded-3xl border border-blue-500/30 bg-blue-500/5 p-5">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-lg">⚙️</span>
+                                {/* OPERATIONAL BRIEF - White Card with Blue Accent */}
+                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-blue-500">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-lg">⚙️</div>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-blue-600">Operational Brief</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.operations.summary}</p>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <Badge variant="outline" className="border-blue-500/50 text-blue-600 font-bold">{unifiedBriefing.operations.action}</Badge>
-                                        <span className="text-muted-foreground">Timeline: <strong>{unifiedBriefing.operations.timeline}</strong></span>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.operations.summary}</p>
+                                    <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
+                                        <Badge variant="outline" className="border-blue-500/50 text-blue-600 font-bold bg-blue-500/5">{unifiedBriefing.operations.action}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Timeline: <strong className="text-foreground">{unifiedBriefing.operations.timeline}</strong></span>
                                     </div>
                                 </div>
 
-                                {/* POLICY CONTEXT */}
-                                <div className="rounded-3xl border border-purple-500/30 bg-purple-500/5 p-5">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-lg">📜</span>
+                                {/* POLICY CONTEXT - White Card with Purple Accent */}
+                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-purple-500">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center text-lg">📜</div>
                                         <h3 className="text-xs font-bold uppercase tracking-widest text-purple-600">Policy Context</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-4">{unifiedBriefing.policy.summary}</p>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <Badge variant="outline" className="border-purple-500/50 text-purple-600 font-bold">{unifiedBriefing.policy.engagement}</Badge>
-                                        <span className="text-muted-foreground">SDG: <strong>{unifiedBriefing.policy.sdg_alignment}</strong></span>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.policy.summary}</p>
+                                    <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
+                                        <Badge variant="outline" className="border-purple-500/50 text-purple-600 font-bold bg-purple-500/5">{unifiedBriefing.policy.engagement}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">SDG: <strong className="text-foreground">{unifiedBriefing.policy.sdg_alignment}</strong></span>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* Executive Summary - High Visibility Box */}
+                        {/* Executive Summary - High Visibility Box (White Card + Gold Accent) */}
                         {(article.ai_investor_brief || article.summary) && (
-                            <div className="bg-secondary/10 border-l-4 border-secondary p-8 mb-8">
-                                <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-secondary">
+                            <div className="bg-card border-l-4 border-secondary p-8 mb-10 shadow-sm rounded-r-3xl border-y border-r border-border/50">
+                                <h3 className="mb-4 text-[10px] font-bold uppercase tracking-widest text-secondary flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-secondary"></span>
                                     Analyst Executive Brief
                                 </h3>
                                 <p className="text-xl font-serif font-medium leading-relaxed text-foreground italic">
-                                    {(article.ai_investor_brief || article.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                    "{(article.ai_investor_brief || article.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}"
                                 </p>
                             </div>
                         )}
 
-
-
                         {/* Generated Delivery Assets (Flash & Social) */}
-                        <div className="grid gap-6 md:grid-cols-2 mb-10">
-                            {/* Mobile Flash Alert Preview */}
+                        <div className="grid gap-8 md:grid-cols-2 mb-12">
+                            {/* Mobile Flash Alert Preview - White Card */}
                             {article.ai_push_message && (
-                                <div className="rounded-3xl border border-border bg-background shadow-sm overflow-hidden">
-                                    <div className="bg-muted/30 px-4 py-2 border-b border-border flex items-center justify-between">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                                            Mobile Flash Alert
+                                <div className="rounded-3xl border border-border bg-card shadow-sm hover:shadow-md transition-all overflow-hidden relative group">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-red-500/80"></div>
+                                    <div className="bg-white px-6 py-4 border-b border-border/50 flex items-center justify-between">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-red-600 flex items-center gap-2">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                            </span>
+                                            Direct Flash Alert
                                         </div>
-                                        <div className="text-[10px] text-muted-foreground">Now</div>
+                                        <div className="text-[10px] text-muted-foreground font-mono">LIVE</div>
                                     </div>
-                                    <div className="p-4">
-                                        <div className="flex gap-3">
-                                            <div className="h-8 w-8 rounded bg-primary/20 flex-shrink-0 flex items-center justify-center text-primary font-bold text-xs">BA</div>
+                                    <div className="p-6">
+                                        <div className="flex gap-4">
+                                            <div className="h-10 w-10 rounded-xl bg-primary flex-shrink-0 flex items-center justify-center text-primary-foreground font-bold text-xs shadow-md">BA</div>
                                             <div>
-                                                <div className="text-xs font-bold text-foreground">Best of Africa Intelligence</div>
-                                                <p className="text-xs text-muted-foreground leading-snug mt-0.5">{article.ai_push_message}</p>
+                                                <div className="text-sm font-bold text-foreground mb-1">Best of Africa Intelligence</div>
+                                                <p className="text-sm text-foreground/80 leading-snug">{article.ai_push_message}</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Social Intelligence Brief */}
+                            {/* Social Intelligence Brief - White Card */}
                             {article.ai_social_post && (
-                                <div className="rounded-3xl border border-border bg-card shadow-sm p-4">
-                                    <div className="mb-3 flex items-center gap-2">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-blue-500">LinkedIn / Social Brief</div>
+                                <div className="rounded-3xl border border-border bg-card shadow-sm hover:shadow-md transition-all p-6 relative">
+                                    <div className="absolute top-6 right-6 opacity-10">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" /></svg>
                                     </div>
-                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium whitespace-pre-wrap">
+                                    <div className="mb-4 flex items-center gap-2">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-blue-600">LinkedIn / Strategic Brief</div>
+                                    </div>
+                                    <p className="text-sm text-foreground leading-relaxed font-medium whitespace-pre-wrap mb-6">
                                         {article.ai_social_post.replace(/^"|"$/g, '')}
                                     </p>
-                                    <div className="mt-3 flex gap-2">
-                                        <Button variant="outline" size="sm" className="h-6 text-[10px] uppercase">Copy</Button>
-                                        <Button variant="ghost" size="sm" className="h-6 text-[10px] uppercase">Schedule</Button>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" className="h-7 text-[10px] uppercase font-bold rounded-full border-border hover:bg-muted">Copy Brief</Button>
+                                        <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold text-muted-foreground hover:text-foreground">Schedule</Button>
                                     </div>
                                 </div>
                             )}

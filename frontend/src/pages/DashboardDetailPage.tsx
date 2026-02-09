@@ -20,7 +20,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 
+import { useDensity } from '@/context/DensityContext';
+
 export const DashboardDetailPage: React.FC = () => {
+    const { density } = useDensity();
     const { region } = useParams<{ region: string }>();
     const isContinental = region?.toLowerCase() === 'continental';
 
@@ -77,29 +80,44 @@ export const DashboardDetailPage: React.FC = () => {
     if (isContinental && continentalData) {
         return (
             <Layout>
-                <div className="container py-10">
+                <div className={`container transition-all duration-300 ${density === 'compact' ? 'py-4' : 'py-10'}`}>
                     {/* Command Center Header */}
-                    <header className="mb-10 border-b border-border pb-8">
-                        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+                    <header className={`border-b border-border transition-all duration-300 ${density === 'compact' ? 'mb-4 pb-4' : 'mb-10 pb-8'}`}>
+                        <div className={`flex flex-col justify-between md:flex-row md:items-end ${density === 'compact' ? 'mb-4 gap-2' : 'mb-8 gap-4'}`}>
                             <div>
                                 <div className="mb-2 text-xs font-bold uppercase tracking-widest text-primary">
                                     Pan-African Intelligence
                                 </div>
-                                <h1 className="text-4xl font-serif font-extrabold leading-tight tracking-tight text-foreground md:text-5xl">Continental Overview</h1>
+                                <h1 className={`font-serif font-extrabold leading-tight tracking-tight text-foreground transition-all duration-300 ${density === 'compact' ? 'text-2xl md:text-3xl' : 'text-4xl md:text-5xl'}`}>Continental Overview</h1>
                             </div>
-                            <div className="text-right">
-                                <div className="text-xs font-bold uppercase text-muted-foreground">Last Updated</div>
-                                <div className="text-sm font-bold text-foreground">
-                                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {/* Dashboard Navigation / Filters */}
+                            <div className={`flex items-center justify-between ${density === 'compact' ? 'mb-4' : 'mb-8'}`}>
+                                <div className={`inline-flex items-center justify-center rounded-full bg-secondary text-muted-foreground ${density === 'compact' ? 'h-8 p-0.5' : 'h-10 p-1'}`}>
+                                    <button className={`inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background text-foreground shadow-sm ${density === 'compact' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'}`}>
+                                        Overview
+                                    </button>
+                                    <button className={`inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-background/10 hover:text-secondary-foreground text-secondary-foreground/60 ${density === 'compact' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'}`}>
+                                        Sectors
+                                    </button>
+                                    <button className={`inline-flex items-center justify-center whitespace-nowrap rounded-full font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-background/10 hover:text-secondary-foreground text-secondary-foreground/60 ${density === 'compact' ? 'px-3 py-1 text-xs' : 'px-4 py-1.5 text-sm'}`}>
+                                        Themes
+                                    </button>
+                                </div>
+                                <div className="text-right hidden md:block ml-4">
+                                    <div className="text-xs font-bold uppercase text-muted-foreground">Last Updated</div>
+                                    <div className="text-sm font-bold text-foreground">
+                                        {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
+
                         {/* Situation Report (AI Summary & Stability Index) */}
-                        <div className="grid gap-6 md:grid-cols-[3fr_1fr]">
+                        <div className={`grid md:grid-cols-[3fr_1fr] transition-all duration-300 ${density === 'compact' ? 'gap-3' : 'gap-6'}`}>
                             {/* Executive Summary */}
                             <Card className="relative overflow-hidden border-border shadow-sm">
-                                <CardContent className="p-6">
+                                <CardContent className={`transition-all duration-300 ${density === 'compact' ? 'p-4' : 'p-6'}`}>
                                     <div className="mb-4 flex items-center justify-between">
                                         <span className="flex items-center gap-2 rounded bg-primary px-2 py-1 text-[11px] font-bold uppercase text-primary-foreground">
                                             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-foreground"></span>

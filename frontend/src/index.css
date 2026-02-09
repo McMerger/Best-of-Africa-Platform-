@@ -5,8 +5,8 @@
 @layer base {
   :root {
     /* Davos White Theme (Light Mode) */
-    /* Subtle Cool Grey Background #F8FAFC for Depth */
-    --background: 210 20% 98%;
+    /* Pure White Background for "Premium White" Aesthetic */
+    --background: 0 0% 100%;
     /* Midnight Navy Text #020C17 */
     --foreground: 215 85% 10%;
 
@@ -38,7 +38,25 @@
     /* Ring: Gold for Premium Focus States */
     --ring: 45 90% 55%;
 
-    --radius: 2rem;
+    --radius: 0.5rem;
+
+    /* Density Tokens (Default: Comfortable) */
+    --density-gap: 2rem;
+    /* gap-8 */
+    --density-padding: 2rem;
+    /* p-8 */
+    --density-text-base: 1rem;
+    /* text-base */
+  }
+
+  /* Compact Mode Overrides */
+  body[data-density='compact'] {
+    --density-gap: 1rem;
+    /* gap-4 */
+    --density-padding: 1rem;
+    /* p-4 */
+    --density-text-base: 0.875rem;
+    /* text-sm */
   }
 
   .dark {
@@ -164,5 +182,14 @@
   /* Text Balance Utility */
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Force High Contrast Prose for Reading */
+  .prose p {
+    @apply text-foreground font-medium text-base leading-relaxed;
+  }
+
+  .prose li {
+    @apply text-foreground font-medium;
   }
 }

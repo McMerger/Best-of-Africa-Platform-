@@ -3,7 +3,7 @@ import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { RocketIcon, GlobeIcon, LockClosedIcon, BackpackIcon } from '@radix-ui/react-icons';
+import { RocketIcon, GlobeIcon, LockClosedIcon, BackpackIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -30,7 +30,7 @@ export const TravelPage: React.FC = () => {
                     </p>
 
                     <div className="flex justify-center gap-4">
-                        <Button size="lg" className="h-12 px-8 font-bold shadow-lg shadow-primary/25" asChild>
+                        <Button size="lg" variant="secondary" className="h-12 px-8 font-bold shadow-lg shadow-secondary/25" asChild>
                             <Link to="/request-consultation?type=travel">
                                 <RocketIcon className="mr-2 h-4 w-4" /> Start Mission Request
                             </Link>
@@ -47,41 +47,50 @@ export const TravelPage: React.FC = () => {
                 <div className="grid gap-12 md:grid-cols-3">
 
                     {/* Service 1 */}
-                    <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
+                    <Card className="group relative overflow-hidden rounded-3xl border border-border bg-card shadow-md transition-all hover:border-primary/50 hover:shadow-lg hover:-translate-y-1">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                <GlobeIcon className="h-6 w-6" />
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                                <GlobeIcon className="h-5 w-5" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_1_title'] || 'Executive Mobility'}</h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <h3 className="mb-3 text-xl font-bold font-serif text-foreground">{config?.['travel_service_1_title'] || 'Executive Mobility'}</h3>
+                            <p className="text-sm font-medium leading-relaxed text-muted-foreground mb-6">
                                 {config?.['travel_service_1_desc'] || 'Private aviation charters, expedited visa processing, and VIP ground transport coordination across 54 jurisdictions.'}
                             </p>
+                            <Button variant="link" className="p-0 h-auto font-bold uppercase tracking-widest text-xs text-primary group-hover:text-primary/80">
+                                Learn More <ArrowTopRightIcon className="ml-1 h-3.5 w-3.5" />
+                            </Button>
                         </CardContent>
                     </Card>
 
                     {/* Service 2 */}
-                    <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
+                    <Card className="group relative overflow-hidden rounded-3xl border border-border bg-card shadow-md transition-all hover:border-primary/50 hover:shadow-lg hover:-translate-y-1">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                <LockClosedIcon className="h-6 w-6" />
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                                <LockClosedIcon className="h-5 w-5" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_2_title'] || 'Security Intelligence'}</h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <h3 className="mb-3 text-xl font-bold font-serif text-foreground">{config?.['travel_service_2_title'] || 'Security Intelligence'}</h3>
+                            <p className="text-sm font-medium leading-relaxed text-muted-foreground mb-6">
                                 {config?.['travel_service_2_desc'] || 'Real-time threat assessments, secure routing, and close protection detail for high-stakes environments.'}
                             </p>
+                            <Button variant="link" className="p-0 h-auto font-bold uppercase tracking-widest text-xs text-primary group-hover:text-primary/80">
+                                Learn More <ArrowTopRightIcon className="ml-1 h-3.5 w-3.5" />
+                            </Button>
                         </CardContent>
                     </Card>
 
                     {/* Service 3 */}
-                    <Card className="group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-xl">
+                    <Card className="group relative overflow-hidden rounded-3xl border border-border bg-card shadow-md transition-all hover:border-primary/50 hover:shadow-lg hover:-translate-y-1">
                         <CardContent className="p-8">
-                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                                <BackpackIcon className="h-6 w-6" />
+                            <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                                <BackpackIcon className="h-5 w-5" />
                             </div>
-                            <h3 className="mb-3 text-xl font-bold font-serif">{config?.['travel_service_3_title'] || 'Logistics & Fixers'}</h3>
-                            <p className="text-muted-foreground leading-relaxed">
+                            <h3 className="mb-3 text-xl font-bold font-serif text-foreground">{config?.['travel_service_3_title'] || 'Logistics & Fixers'}</h3>
+                            <p className="text-sm font-medium leading-relaxed text-muted-foreground mb-6">
                                 {config?.['travel_service_3_desc'] || 'Local "fixers" to navigate bureaucracy, equipment importation, and regulatory compliance on the ground.'}
                             </p>
+                            <Button variant="link" className="p-0 h-auto font-bold uppercase tracking-widest text-xs text-primary group-hover:text-primary/80">
+                                Learn More <ArrowTopRightIcon className="ml-1 h-3.5 w-3.5" />
+                            </Button>
                         </CardContent>
                     </Card>
 

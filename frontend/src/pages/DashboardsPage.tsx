@@ -7,8 +7,13 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { ChevronRightIcon, BarChartIcon, ActivityLogIcon, ArrowTopRightIcon } from '@radix-ui/react-icons';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { DensityToggle } from '@/components/DensityToggle';
+
+import { useDensity } from '@/context/DensityContext';
 
 export const DashboardsPage: React.FC = () => {
+    const { density } = useDensity();
     const [dashboards, setDashboards] = useState<Dashboard[]>([]);
     const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
@@ -29,37 +34,86 @@ export const DashboardsPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className="container py-8 md:py-12">
+            <div className={`container transition-all duration-300 ${density === 'compact' ? 'py-4' : 'py-8 md:py-12'}`}>
                 {/* 2026 Trend: Data Storytelling Header */}
 
                 {loading ? (
                     <Skeleton className="h-64 w-full rounded-xl mb-12" />
                 ) : (
-                    <div className="mb-12 rounded-xl bg-card border border-border p-8 shadow-sm md:p-12">
-                        {/* Date & Status Pills */}
-                        <div className="mb-8 flex flex-wrap items-center gap-4">
-                            <div className="rounded-full border border-border bg-background px-4 py-1.5 text-xs font-bold text-muted-foreground shadow-sm">
-                                {currentDate}
+                    <div className={`mb-12 rounded-xl bg-card border border-border shadow-sm transition-all duration-300 ${density === 'compact' ? 'p-4' : 'p-8 md:p-12'}`}>
+                        {/* Date & Status Pills & Density Toggle */}
+                        <div className={`flex flex-wrap items-center justify-between transition-all duration-300 ${density === 'compact' ? 'mb-4 gap-2' : 'mb-8 gap-4'}`}>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <div className="rounded-full border border-border bg-background px-4 py-1.5 text-xs font-bold text-muted-foreground shadow-sm uppercase tracking-widest">
+                                    {currentDate}
+                                </div>
+                                <div className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold border shadow-sm uppercase tracking-widest ${analytics?.stability_index === 'HIGH' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : analytics?.stability_index === 'MODERATE' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                                    <ActivityLogIcon className="h-3.5 w-3.5" /> {analytics?.stability_index || 'STABLE'} MARKET
+                                </div>
                             </div>
-                            <div className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold border shadow-sm ${analytics?.stability_index === 'HIGH' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : analytics?.stability_index === 'MODERATE' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'}`}>
-                                <ActivityLogIcon className="h-3.5 w-3.5" /> {analytics?.stability_index || 'STABLE'} MARKET
+
+                            {/* Spec 9.4: Density Toggle */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hidden md:block">Display Density</span>
+                                <DensityToggle />
                             </div>
                         </div>
 
-                        {/* Editorial Headline */}
-                        <h1 className="mb-6 text-4xl font-serif font-normal leading-tight tracking-tight text-foreground md:text-5xl lg:text-7xl max-w-5xl">
-                            The Continental market is <span className={`italic ${analytics?.stability_index === 'HIGH' ? 'text-emerald-600' : 'text-blue-600'}`}>{analytics?.stability_index === 'HIGH' ? 'stable' : analytics?.stability_index === 'MODERATE' ? 'steady' : 'evolving'}</span> today, driven by dynamic shifts in <Link to={`/market-intel/sectors/${analytics?.sector_trends[0]?.id || 'tech'}`} className="border-b-2 border-foreground/20 hover:border-foreground transition-colors pb-1 decoration-skip-ink-none">{analytics?.sector_trends[0]?.name || 'Technology'}</Link>.
-                        </h1>
+                        {/* Top Filters (Visual Only as per Spec 9.4) */}
+                        <div className={`inline-flex rounded-full bg-muted p-1 border border-border transition-all duration-300 ${density === 'compact' ? 'mb-4' : 'mb-8'}`}>
+                            {['Regions', 'Sectors', 'Themes'].map((filter, i) => (
+                                <button key={filter} className={`px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${i === 0 ? 'bg-background text-foreground shadow-sm ring-1 ring-black/5' : 'text-muted-foreground hover:text-foreground'}`}>
+                                    {filter}
+                                </button>
+                            ))}
+                        </div>
 
-                        {/* Subtext */}
-                        <p className="mb-12 max-w-3xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                            Our systems have analyzed <strong className="text-foreground font-semibold">{analytics?.total_articles_7d || 0} active reports</strong> in the last 7 days. The primary narrative thread is <strong className="text-foreground font-semibold">{analytics?.sector_trends[0]?.name || 'Technology'}</strong>, which is currently outpacing broader regional currents.
-                        </p>
+                        <div className="grid lg:grid-cols-2 gap-12 items-end mb-12">
+                            <div>
+                                {/* Editorial Headline */}
+                                <h1 className="mb-6 text-4xl font-serif font-normal leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                                    The Continental market is <span className={`italic ${analytics?.stability_index === 'HIGH' ? 'text-emerald-600' : 'text-blue-600'}`}>{analytics?.stability_index === 'HIGH' ? 'stable' : analytics?.stability_index === 'MODERATE' ? 'steady' : 'evolving'}</span> today, driven by dynamic shifts in <Link to={`/market-intel/sectors/${analytics?.sector_trends[0]?.id || 'tech'}`} className="border-b-2 border-foreground/20 hover:border-foreground transition-colors pb-1 decoration-skip-ink-none">{analytics?.sector_trends[0]?.name || 'Technology'}</Link>.
+                                </h1>
+
+                                {/* Subtext */}
+                                <p className="text-lg leading-relaxed text-muted-foreground md:text-xl">
+                                    Our systems have analyzed <strong className="text-foreground font-semibold">{analytics?.total_articles_7d || 0} active reports</strong> in the last 7 days. The primary narrative thread is <strong className="text-foreground font-semibold">{analytics?.sector_trends[0]?.name || 'Technology'}</strong>, which is currently outpacing broader regional currents.
+                                </p>
+                            </div>
+
+                            {/* Spec 9.4: Global Pulse Chart (Dual Line) */}
+                            <div className="h-[200px] w-full relative">
+                                <div className="absolute top-0 right-0 flex gap-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-primary" /> Volatility</div>
+                                    <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500/50" /> Baseline</div>
+                                </div>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={[
+                                        { name: 'Mon', uv: 4000, pv: 2400 },
+                                        { name: 'Tue', uv: 3000, pv: 1398 },
+                                        { name: 'Wed', uv: 2000, pv: 9800 },
+                                        { name: 'Thu', uv: 2780, pv: 3908 },
+                                        { name: 'Fri', uv: 1890, pv: 4800 },
+                                        { name: 'Sat', uv: 2390, pv: 3800 },
+                                        { name: 'Sun', uv: 3490, pv: 4300 },
+                                    ]}>
+                                        <defs>
+                                            <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1} />
+                                                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <Area type="monotone" dataKey="pv" stroke="var(--primary)" strokeWidth={2} fillOpacity={1} fill="url(#colorPv)" />
+                                        <Area type="monotone" dataKey="uv" stroke="var(--blue-500)" strokeWidth={2} strokeOpacity={0.3} fill="transparent" strokeDasharray="5 5" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
 
                         {/* Key Metrics Grid */}
                         <div className="grid gap-6 md:grid-cols-3">
                             {/* Stability Index */}
-                            <div className="rounded-lg border border-border bg-muted/20 p-6">
+                            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
                                 <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stability Index</div>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-4xl font-black text-foreground">{analytics?.stability_score || 750}</span>
@@ -68,17 +122,17 @@ export const DashboardsPage: React.FC = () => {
                             </div>
 
                             {/* Dominant Sector */}
-                            <div className="rounded-lg border border-border bg-muted/20 p-6">
+                            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
                                 <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dominant Sector</div>
                                 <div className="text-xl font-bold text-foreground">{analytics?.sector_trends[0]?.name || 'Technology'}</div>
                             </div>
 
                             {/* Emerging Narratives */}
-                            <div className="rounded-lg border border-border bg-muted/20 p-6">
+                            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
                                 <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Emerging Narratives</div>
                                 <div className="flex flex-wrap gap-2">
                                     {analytics?.sector_trends.slice(1, 4).map(s => (
-                                        <span key={s.id} className="inline-flex items-center gap-1 rounded bg-background px-2 py-1 text-[10px] font-bold text-secondary-foreground border border-border">
+                                        <span key={s.id} className="inline-flex items-center gap-1 rounded-full bg-muted/30 px-2.5 py-1 text-[10px] font-bold text-secondary-foreground border border-border/50">
                                             {s.name} <ArrowTopRightIcon className="h-3 w-3 opacity-50" />
                                         </span>
                                     ))}

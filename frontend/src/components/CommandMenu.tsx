@@ -169,7 +169,7 @@ export const CommandMenu = () => {
                                 index === selectedIndex ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
                             )}
                         >
-                            <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-primary/20 bg-primary/20 text-primary")}>
+                            <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-amber-500/50 bg-amber-50 text-amber-900")}>
                                 {item.type === 'country' && <GlobeIcon className="h-4 w-4" />}
                                 {item.type === 'sector' && <GridIcon className="h-4 w-4" />}
                                 {item.type === 'article' && <FileTextIcon className="h-4 w-4" />}

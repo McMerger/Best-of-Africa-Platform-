@@ -280,4 +280,13 @@ export const api = {
         total_reports: number;
         updated_at: string;
     }>('/dashboards/stats/platform-impact'),
+
+    // 3D Visualization Data Feed ("The Brain")
+    getIntelligence: () => request<{
+        countries: { code: string; heat: number; sentiment: number; volume: number; last_activity: string }[];
+        sectors: { sector_id: string; count: number; avg_sentiment: number }[];
+        global_pulse: { articles_24h: number; rate_per_hour: number; intensity: number };
+        sentiment_trend: { date: string; avg_sentiment: number; volume: number }[];
+        generated_at: string;
+    }>('/analytics/intelligence'),
 };
