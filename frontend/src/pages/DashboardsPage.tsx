@@ -12,7 +12,7 @@ import { DensityToggle } from '@/components/DensityToggle';
 
 import { useDensity } from '@/context/DensityContext';
 
-import { DashboardScene } from '../components/3D/DashboardScene';
+
 
 export const DashboardsPage: React.FC = () => {
     const { density } = useDensity();
@@ -37,8 +37,12 @@ export const DashboardsPage: React.FC = () => {
     return (
         <Layout>
             <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
-                {/* 3D Strategic Constellation Background */}
-                <DashboardScene />
+                {/* Strategic Constellation Background */}
+                <div className="absolute inset-0 z-0 opacity-60 pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#020C17] via-[#0a1628] to-[#0f1f35]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(212,175,55,0.08)_1px,transparent_1px)] bg-[size:32px_32px]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,var(--background)_90%)]" />
+                </div>
 
                 <div className={`container relative z-10 transition-all duration-300 ${density === 'compact' ? 'py-4' : 'py-8 md:py-12'}`}>
                     {/* 2026 Trend: Data Storytelling Header */}

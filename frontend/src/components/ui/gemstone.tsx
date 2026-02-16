@@ -1,76 +1,76 @@
-import React, { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { MeshTransmissionMaterial, Float } from '@react-three/drei';
-import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
-import { Environment } from '@react-three/drei';
+import React from 'react';
 
 interface GemstoneProps {
     type: 'explorer' | 'professional' | 'corporate';
     className?: string;
 }
 
-const GemMesh: React.FC<{ type: 'explorer' | 'professional' | 'corporate' }> = ({ type }) => {
-    const mesh = useRef<THREE.Mesh>(null);
-
-    useFrame((state) => {
-        if (!mesh.current) return;
-        mesh.current.rotation.y += 0.005;
-        mesh.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.5) * 0.1;
-    });
-
-    const config = {
-        explorer: {
-            geometry: <dodecahedronGeometry args={[1, 0]} />, // Rougher
-            color: "#3b82f6", // Blue
-            roughness: 0.2,
-        },
-        professional: {
-            geometry: <octahedronGeometry args={[1, 0]} />, // Cleaner
-            color: "#10b981", // Emerald
-            roughness: 0.1,
-        },
-        corporate: {
-            geometry: <icosahedronGeometry args={[1, 0]} />, // Complex
-            color: "#D4AF37", // Gold/Diamond
-            roughness: 0.05,
-        }
-    }[type];
-
-    return (
-        <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
-            <mesh ref={mesh}>
-                {config.geometry}
-                <MeshTransmissionMaterial
-                    backside
-                    samples={4}
-                    thickness={0.5}
-                    chromaticAberration={0.4}
-                    anisotropy={0.3}
-                    distortion={0.1}
-                    distortionScale={0.3}
-                    temporalDistortion={0.5}
-                    iridescence={1}
-                    iridescenceIOR={1}
-                    iridescenceThicknessRange={[0, 1400]}
-                    roughness={config.roughness}
-                    color={config.color}
-                    metalness={0.1}
-                />
-            </mesh>
-        </Float>
-    );
+const GEM_CONFIG = {
+    explorer: {
+        gradient: 'linear-gradient(135deg, #93c5fd 0%, #3b82f6 40%, #1e40af 100%)',
+        glow: 'rgba(59, 130, 246, 0.3)',
+        clipPath: 'polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)', // Rough octagon
+        shadow: '0 8px 32px rgba(59, 130, 246, 0.25)',
+        label: '◇',
+    },
+    professional: {
+        gradient: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 30%, #d97706 70%, #92400e 100%)',
+        glow: 'rgba(251, 191, 36, 0.35)',
+        clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)', // Diamond
+        shadow: '0 8px 32px rgba(251, 191, 36, 0.3)',
+        label: '◆',
+    },
+    corporate: {
+        gradient: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 20%, #d1d5db 40%, #9ca3af 60%, #D4AF37 100%)',
+        glow: 'rgba(212, 175, 55, 0.3)',
+        clipPath: 'polygon(50% 0%, 80% 10%, 100% 40%, 95% 70%, 70% 100%, 30% 100%, 5% 70%, 0% 40%, 20% 10%)', // Complex gem
+        shadow: '0 8px 32px rgba(212, 175, 55, 0.25)',
+        label: '♦',
+    },
 };
 
 export const Gemstone: React.FC<GemstoneProps> = ({ type, className }) => {
+    const config = GEM_CONFIG[type];
+
     return (
-        <div className={className}>
-            <Canvas camera={{ position: [0, 0, 3], fov: 45 }} gl={{ alpha: true }}>
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} intensity={1.5} />
-                <Environment preset="studio" />
-                <GemMesh type={type} />
-            </Canvas>
+        <div className={`relative flex items-center justify-center ${className}`}>
+            {/* Ambient glow */}
+            <div
+                className="absolute w-24 h-24 rounded-full blur-2xl opacity-50 animate-pulse"
+                style={{ background: config.glow }}
+            />
+
+            {/* Main gem shape */}
+            <div
+                className="relative w-20 h-20 transition-transform duration-700 hover:scale-110"
+                style={{
+                    clipPath: config.clipPath,
+                    background: config.gradient,
+                    boxShadow: config.shadow,
+                    animation: 'gem-float 4s ease-in-out infinite',
+                }}
+            >
+                {/* Inner sparkle overlay */}
+                <div
+                    className="absolute inset-0 opacity-40"
+                    style={{
+                        background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.8) 50%, transparent 70%)',
+                        animation: 'gem-shimmer 3s ease-in-out infinite',
+                    }}
+                />
+            </div>
+
+            {/* CSS keyframes (injected via style tag, safe for SSR) */}
+            <style>{`
+                @keyframes gem-float {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-6px); }
+                }
+                @keyframes gem-shimmer {
+                    0%, 100% { opacity: 0.2; transform: translateX(-100%); }
+                    50% { opacity: 0.6; transform: translateX(100%); }
+                }
+            `}</style>
         </div>
     );
 };

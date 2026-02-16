@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
-import { HeroBackground } from '../components/3D/HeroBackground';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
@@ -43,8 +43,12 @@ export const HomePage: React.FC = () => {
         <Layout>
             {/* 1. HERO SECTION: The Narrative Engine */}
             <div className="border-b border-border bg-background relative overflow-hidden">
-                {/* 3D Cinematic Background (African Topography) */}
-                <HeroBackground />
+                {/* Cinematic Gradient Background */}
+                <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#020C17] via-[#0a1628] to-[#1a0e05]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--background)_100%)]" />
+                </div>
 
                 {/* Live Market Pulse Ticker */}
                 <div className="relative z-10 w-full bg-primary/5 border-b border-primary/10 py-2 overflow-hidden flex backdrop-blur-sm">

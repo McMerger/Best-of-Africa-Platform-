@@ -18,7 +18,7 @@ import {
 } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 import type { Country, Sector } from '../types';
-import { GoldenPulse } from './GoldenPulse';
+
 
 export const MissionControl: React.FC = () => {
     const {
@@ -58,9 +58,10 @@ export const MissionControl: React.FC = () => {
             <PopoverContent className="w-[90vw] sm:w-[400px] p-0 rounded-3xl overflow-hidden border-border shadow-2xl" align="end">
                 <div className="relative flex flex-col h-[600px] bg-background/95 backdrop-blur-xl border border-white/20 text-foreground">
 
-                    {/* Golden Pulse Background (Light Mode) */}
+                    {/* Golden Pulse Background (CSS) */}
                     <div className="absolute inset-0 z-0 opacity-40">
-                        <GoldenPulse theme="light" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/20" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(251,191,36,0.12)_0%,transparent_50%)]" />
                     </div>
 
                     {/* Content Layer */}
