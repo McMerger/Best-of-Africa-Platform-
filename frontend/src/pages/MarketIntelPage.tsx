@@ -9,12 +9,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getSectorIcon } from '@/lib/icons';
+import { useLens } from '@/context/LensContext';
 interface SectorPerformance {
     sector_id: string;
     sector_name: string;
     growth_yoy: number;
     volatility: string;
     article_count: number;
+    ai_insight?: string | null;
 }
 
 export const MarketIntelPage: React.FC = () => {
@@ -23,12 +25,12 @@ export const MarketIntelPage: React.FC = () => {
     const [opportunities, setOpportunities] = useState<any[]>([]); // New state
     const [lastUpdated, setLastUpdated] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const { lens } = useLens();
 
     useEffect(() => {
-
         Promise.all([
             api.getSectors(),
-            api.getSectorPerformance(),
+            api.getSectorPerformance(lens),
             api.getStrategicOpportunities() // Fetch opportunities
         ]).then(([sectorsRes, perfRes, oppsRes]) => {
             setSectors(sectorsRes.data);
@@ -41,12 +43,12 @@ export const MarketIntelPage: React.FC = () => {
             }
         }).catch(console.error)
             .finally(() => setLoading(false));
-    }, []);
+    }, [lens]);
 
     // Get performance for a sector from API data
     const getPerformance = (id: string) => {
         const perf = performance.find(p => p.sector_id === id);
-        return perf ? { growth: perf.growth_yoy, vol: perf.volatility } : { growth: 0, vol: '--' };
+        return perf ? { growth: perf.growth_yoy, vol: perf.volatility, articles: perf.article_count, insight: perf.ai_insight } : { growth: 0, vol: '--', articles: 0, insight: null };
     };
 
     if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[400px] w-full rounded-3xl" /></div></Layout>;
@@ -60,7 +62,7 @@ export const MarketIntelPage: React.FC = () => {
                         <div>
                             <div>
                                 <Badge variant="outline" className="mb-4 border-primary/20 bg-primary/5 text-primary">
-                                    Strategic Analysis
+                                    {lens === 'investor' ? 'Value Analysis' : lens === 'government' ? 'Policy Analysis' : 'Explorer Analysis'}
                                 </Badge>
                                 <h1 className="font-serif text-6xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
                                     Market <br /><span className="text-primary italic">Intelligence.</span>
@@ -81,7 +83,7 @@ export const MarketIntelPage: React.FC = () => {
 
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6" role="list">
                         {sectors.map(sector => {
-                            const { growth, vol } = getPerformance(sector.id);
+                            const { growth, vol, articles, insight } = getPerformance(sector.id);
                             return (
                                 <Link
                                     to={`/market-intel/sectors/${sector.id}`}
@@ -100,18 +102,21 @@ export const MarketIntelPage: React.FC = () => {
                                                     <div className={cn("text-xl font-bold", growth > 60 ? 'text-emerald-500' : growth < 40 ? 'text-destructive' : 'text-yellow-500')}>
                                                         {growth}/100
                                                     </div>
-                                                    <div className="text-[10px] font-bold uppercase text-muted-foreground">Analyst Sentiment</div>
+                                                    <div className="text-[10px] font-bold uppercase text-muted-foreground">
+                                                        {lens === 'investor' ? 'Value Score' : lens === 'government' ? 'Policy Score' : 'Appeal Score'}
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             <h3 className="mb-2 text-2xl font-black leading-tight text-foreground">{sector.name}</h3>
+                                            {insight && <p className="mb-3 text-xs italic text-muted-foreground leading-snug">{insight}</p>}
 
                                             <div className="mb-6 flex gap-4 text-xs font-medium text-muted-foreground">
                                                 <span className="flex items-center gap-1.5" aria-label={`Volatility: ${vol}`}>
                                                     <ExclamationTriangleIcon className="h-3 w-3" aria-hidden="true" /> Vol: {vol}
                                                 </span>
-                                                <span className="flex items-center gap-1.5" aria-label="Market Cap: Large">
-                                                    <BarChartIcon className="h-3 w-3" aria-hidden="true" /> Cap: Large
+                                                <span className="flex items-center gap-1.5" aria-label={`Reports: ${articles}`}>
+                                                    <BarChartIcon className="h-3 w-3" aria-hidden="true" /> Reports: {articles}
                                                 </span>
                                             </div>
 

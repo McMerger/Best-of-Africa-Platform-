@@ -43,6 +43,7 @@ import { TravelPage } from './pages/TravelPage';
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
+import { LensProvider } from './context/LensContext';
 import { AuthProvider } from './context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -53,54 +54,56 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <MissionProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/intelligence-briefings" element={<ArticlesPage />} />
-                <Route path="/articles/:slug" element={<ArticleDetailPage />} />
-                <Route path="/countries" element={<CountriesPage />} />
-                <Route path="/countries/:code" element={<CountryDetailPage />} />
-                <Route path="/dashboards" element={<DashboardsPage />} />
-                <Route path="/dashboards/:region" element={<DashboardDetailPage />} />
-                <Route path="/market-intel" element={<MarketIntelPage />} />
-                <Route path="/market-intel/sectors/:id" element={<SectorDetailPage />} />
-                <Route path="/market-intel/reports" element={<ReportsPage />} />
-                <Route path="/market-intel/reports/:id" element={<ReportDetailPage />} />
-                <Route path="/market-intel/country/:code" element={<CountryOutlookPage />} />
-                <Route path="/market-intel/country/:code/premium" element={<PremiumCountryAnalysisPage />} />
-                <Route path="/market-intel/audience" element={<AudienceInsightsPage />} />
-                <Route path="/market-intel/sectors/:id/trends" element={<PremiumSectorTrendsPage />} />
-                <Route path="/feed" element={<PersonalizedFeedPage />} />
-                <Route path="/narratives" element={<NarrativesPage />} />
-                <Route path="/narratives/country/:code" element={<CountryNarrativePage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/sponsored" element={<SponsoredPage />} />
-                <Route path="/market-intel/reports/sector/:sectorId" element={<ReportsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/guidelines" element={<EditorialGuidelinesPage />} />
-                {/* Services Removed */}
-                <Route path="/travel" element={<TravelPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/events/:id" element={<EventDetailPage />} />
-                <Route path="/request-consultation" element={<BookingRequestPage />} />
+          <LensProvider>
+            <MissionProvider>
+              <Router>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/intelligence-briefings" element={<ArticlesPage />} />
+                  <Route path="/articles/:slug" element={<ArticleDetailPage />} />
+                  <Route path="/countries" element={<CountriesPage />} />
+                  <Route path="/countries/:code" element={<CountryDetailPage />} />
+                  <Route path="/dashboards" element={<DashboardsPage />} />
+                  <Route path="/dashboards/:region" element={<DashboardDetailPage />} />
+                  <Route path="/market-intel" element={<MarketIntelPage />} />
+                  <Route path="/market-intel/sectors/:id" element={<SectorDetailPage />} />
+                  <Route path="/market-intel/reports" element={<ReportsPage />} />
+                  <Route path="/market-intel/reports/:id" element={<ReportDetailPage />} />
+                  <Route path="/market-intel/country/:code" element={<CountryOutlookPage />} />
+                  <Route path="/market-intel/country/:code/premium" element={<PremiumCountryAnalysisPage />} />
+                  <Route path="/market-intel/audience" element={<AudienceInsightsPage />} />
+                  <Route path="/market-intel/sectors/:id/trends" element={<PremiumSectorTrendsPage />} />
+                  <Route path="/feed" element={<PersonalizedFeedPage />} />
+                  <Route path="/narratives" element={<NarrativesPage />} />
+                  <Route path="/narratives/country/:code" element={<CountryNarrativePage />} />
+                  <Route path="/search" element={<SearchPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/sponsored" element={<SponsoredPage />} />
+                  <Route path="/market-intel/reports/sector/:sectorId" element={<ReportsPage />} />
+                  <Route path="/privacy" element={<PrivacyPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
+                  <Route path="/guidelines" element={<EditorialGuidelinesPage />} />
+                  {/* Services Removed */}
+                  <Route path="/travel" element={<TravelPage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/events/:id" element={<EventDetailPage />} />
+                  <Route path="/request-consultation" element={<BookingRequestPage />} />
 
-                <Route path="/membership" element={<MembershipPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/analyst" element={<AnalystPage />} />
-                <Route path="/impact" element={<ImpactPage />} />
-                <Route path="/library" element={<LibraryPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-              <Toaster />
-              <CommandMenu />
-            </Router>
-          </MissionProvider>
+                  <Route path="/membership" element={<MembershipPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/analyst" element={<AnalystPage />} />
+                  <Route path="/impact" element={<ImpactPage />} />
+                  <Route path="/library" element={<LibraryPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+                <Toaster />
+                <CommandMenu />
+              </Router>
+            </MissionProvider>
+          </LensProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </AuthProvider>

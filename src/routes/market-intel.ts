@@ -417,9 +417,13 @@ router.get('/reports/sector/:id', requireApiKey, rateLimit, async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /market-intel/performance - Sector performance data (for MarketIntelPage)
+// GET /market-intel/performance - AI-Powered Sector Performance (for MarketIntelPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/performance', async (c) => {
+    // Parse lens (defaults to investor)
+    const lens = (c.req.query('lens') || 'investor') as string;
+    const validLenses = ['investor', 'government', 'explorer'];
+    const activeLens = validLenses.includes(lens) ? lens : 'investor';
     // 1. Get base sector data with article stats
     const sectors = await c.env.DB.prepare(`
         SELECT s.id, s.name,
@@ -431,7 +435,7 @@ router.get('/performance', async (c) => {
         GROUP BY s.id
     `).all();
 
-    // 2. Get financial metrics for "Hard Data" performance
+    // 2. Get financial metrics for data-grounded scoring
     const metrics = await c.env.DB.prepare(`
         SELECT sector_id, growth_rate, regulatory_outlook 
         FROM market_metrics 
@@ -443,44 +447,211 @@ router.get('/performance', async (c) => {
         metricMap.set(m.sector_id, m);
     });
 
-    // Generate performance metrics based on real data
-    const performance = (sectors.results || []).map((s: any) => {
+    // 3. Generate AI-powered performance metrics per sector (RAG-enhanced)
+    const performance = await Promise.all((sectors.results || []).map(async (s: any) => {
         const metric = metricMap.get(s.id);
 
-        // Calculate Score: Mix of Real Growth Rate and Engagement
-        // If we have hard growth data (e.g. 8.5%), map it to a 0-100 score (approx 8.5 * 8 + base). 
-        // Real GDP growth of 8% is massive, so that's a 90/100. 2% is a 50/100.
-        let performanceScore = 50;
+        // --- RAG-Enhanced AI Sector Analysis (cached 6h per sector) ---
+        const aiResult = await getCached(
+            c.env,
+            `perf:rag:${s.id}:${activeLens}:v3`,
+            async () => {
+                // 1. Get recent articles with titles + summaries for context depth
+                const recentArticles = await c.env.DB.prepare(`
+                    SELECT title, summary, engagement_score, published_at FROM articles
+                    WHERE sector_id = ? AND status = 'published'
+                    ORDER BY published_at DESC
+                    LIMIT 8
+                `).bind(s.id).all();
 
+                const articles = (recentArticles.results || []) as any[];
+                if (articles.length === 0) {
+                    return { score: null, volatility: null, insight: null };
+                }
+
+                // 2. RAG: Vector search for the most investment-relevant content in this sector
+                let ragContext = '';
+                try {
+                    const lensQueries: Record<string, string> = {
+                        investor: `${s.name} Africa intrinsic value earnings stability margin of safety investment outlook`,
+                        government: `${s.name} Africa governance regulatory policy development impact trade integration`,
+                        explorer: `${s.name} Africa tourism hospitality destinations safety cultural experiences`
+                    };
+                    const query = lensQueries[activeLens];
+                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+                    const vector = (embedding as any).data[0];
+                    const relevant = await c.env.VECTORS.query(vector, {
+                        topK: 5,
+                        returnMetadata: 'all',
+                        filter: { sector_id: s.id }
+                    });
+                    ragContext = relevant.matches
+                        .map(m => (m.metadata as any)?.text || (m.metadata as any)?.title || '')
+                        .filter(Boolean)
+                        .join('\n---\n')
+                        .slice(0, 2000);
+                } catch (e) { /* RAG unavailable, proceed with DB data */ }
+
+                // 3. Calculate engagement variance for volatility signal
+                const scores = articles.map(a => a.engagement_score || 0).filter(s => s > 0);
+                const avgEng = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+                const variance = scores.length > 1
+                    ? Math.sqrt(scores.reduce((sum, sc) => sum + Math.pow(sc - avgEng, 2), 0) / scores.length)
+                    : 0;
+
+                // 4. Build rich context for AI
+                const articleContext = articles.map((a, i) =>
+                    `${i + 1}. "${a.title}" — ${(a.summary || '').slice(0, 150)} [Engagement: ${a.engagement_score || 'N/A'}]`
+                ).join('\n');
+
+                const financialContext = metric
+                    ? `Growth Rate: ${metric.growth_rate}%, Regulatory Outlook: ${metric.regulatory_outlook}`
+                    : 'No financial data available';
+
+                try {
+                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        messages: [
+                            {
+                                role: 'system',
+                                content: activeLens === 'investor'
+                                    ? `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.
+
+Analyze the "${s.name}" sector using ALL provided data:
+- Recent article headlines and summaries (signal quality)
+- Engagement variance (${variance.toFixed(1)} stddev — high variance = volatile sentiment)
+- Financial metrics when available
+- RAG-retrieved deep context from the knowledge base
+
+Produce a GRAHAM-STYLE assessment:
+
+1. **Score (0-100)**: Based on VALUE INVESTMENT thesis. Consider:
+   - Does the sector exhibit stable, predictable earnings patterns?
+   - Is the sector trading below intrinsic value (margin of safety)?
+   - Are financial fundamentals strong (low debt, high dividends)?
+   - Is there defensive value (pension-grade) or enterprising value?
+   Score guide: 80+ = Strong intrinsic value with margin of safety. 60-79 = Enterprising value, requires monitoring. 40-59 = Speculative, insufficient margin. <40 = Overvalued or deteriorating.
+
+2. **Volatility ("Low"/"Med"/"High")**: Based on earnings consistency, NOT price momentum.
+   - Stable earnings across articles = Low. Mixed signals = Med. Erratic/conflicting = High.
+
+3. **Insight**: One precise sentence (max 15 words) stating the Graham-style value assessment.
+
+Respond ONLY with valid JSON:
+{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
+                                    : activeLens === 'government'
+                                        ? `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.
+
+Analyze the "${s.name}" sector using ALL provided data:
+- Recent article headlines and summaries
+- Engagement variance (${variance.toFixed(1)} stddev)
+- Financial metrics when available
+- RAG-retrieved deep context
+
+Produce a GOVERNANCE ASSESSMENT:
+
+1. **Score (0-100)**: Based on GOVERNANCE & POLICY outlook. Consider:
+   - Is the regulatory environment supportive or restrictive?
+   - What is the development impact (jobs, GDP contribution, SDG alignment)?
+   - Is there political stability and policy continuity in this sector?
+   Score guide: 80+ = Priority sector, strong governance support. 60-79 = Strategic potential, some regulatory gaps. 40-59 = Monitor, governance risks present. <40 = Diplomatic caution, significant policy risk.
+
+2. **Volatility ("Low"/"Med"/"High")**: Based on regulatory certainty and political stability.
+
+3. **Insight**: One precise sentence (max 15 words) summarizing the governance/policy take.
+
+Respond ONLY with valid JSON:
+{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
+                                        : `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.
+
+Analyze the "${s.name}" sector using ALL provided data:
+- Recent article headlines and summaries
+- Engagement variance (${variance.toFixed(1)} stddev)
+- Financial metrics when available
+- RAG-retrieved deep context
+
+Produce an EXPLORER ASSESSMENT:
+
+1. **Score (0-100)**: Based on TOURISM & EXPLORER appeal. Consider:
+   - Does this sector enhance travel experiences (hospitality, infrastructure, culture)?
+   - Is there visitor-relevant safety and accessibility?
+   - Are there unique, world-class experiences in this sector?
+   Score guide: 80+ = Unmissable, world-class tourism relevance. 60-79 = Highly recommended for travelers. 40-59 = Worth exploring if combined with other sectors. <40 = Limited traveler relevance.
+
+2. **Volatility ("Low"/"Med"/"High")**: Based on travel safety consistency and seasonal variations.
+
+3. **Insight**: One precise sentence (max 15 words) summarizing the explorer/tourism take.
+
+Respond ONLY with valid JSON:
+{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
+                            },
+                            {
+                                role: 'user',
+                                content: `SECTOR: ${s.name}
+ARTICLES (${articles.length} recent):
+                            ${articleContext}
+
+FINANCIAL DATA: ${financialContext}
+ARTICLE COUNT: ${s.article_count} total | AVG ENGAGEMENT: ${Math.round(avgEng)} / 100 | ENGAGEMENT STDDEV: ${variance.toFixed(1)}
+TOTAL VIEWS: ${s.total_views || 0}
+
+${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`
+                            }
+                        ]
+                    });
+
+                    const raw = (aiResponse as any)?.response || '';
+                    const match = raw.match(/\{.*\}/s);
+                    if (match) {
+                        const parsed = JSON.parse(match[0]);
+                        const score = typeof parsed.score === 'number' ? Math.min(98, Math.max(5, parsed.score)) : null;
+                        const vol = ['Low', 'Med', 'High'].includes(parsed.volatility) ? parsed.volatility : null;
+                        const insight = typeof parsed.insight === 'string' ? parsed.insight.slice(0, 100) : null;
+                        return { score, volatility: vol, insight };
+                    }
+                    return { score: null, volatility: null, insight: null };
+                } catch (e) {
+                    return { score: null, volatility: null, insight: null };
+                }
+            },
+            { ttl: 3600 * 6 } // Cache AI results for 6 hours
+        );
+
+        // --- Blend AI score with data-grounded score (70% AI, 30% data) ---
+        let dataScore = 50;
         if (metric?.growth_rate) {
-            // Growth rate mapping: 2% -> 50, 10% -> 90
-            performanceScore = Math.min(98, Math.max(40, 40 + (metric.growth_rate * 5)));
+            dataScore = Math.min(98, Math.max(40, 40 + (metric.growth_rate * 5)));
         } else if (s.avg_engagement) {
-            // Fallback to engagement if no financial data
-            performanceScore = s.avg_engagement;
-        } else {
-            // Deterministic Fallback based on name length (so it's not all 50)
-            performanceScore = 50 + (s.name.length * 3) % 30;
+            dataScore = Math.round(s.avg_engagement);
         }
 
-        // Volatility
-        let volatility = 'Med';
-        if (metric?.regulatory_outlook) {
-            volatility = metric.regulatory_outlook === 'Positive' ? 'Low' :
-                metric.regulatory_outlook === 'Volatile' ? 'High' : 'Med';
+        let finalScore: number;
+        if (aiResult.score !== null) {
+            finalScore = Math.round(aiResult.score * 0.7 + dataScore * 0.3);
         } else {
-            volatility = s.article_count > 20 ? 'Low' : s.article_count > 5 ? 'Med' : 'High';
+            finalScore = dataScore;
+        }
+
+        // --- Volatility: prefer AI, fallback to data ---
+        let volatility = aiResult.volatility || 'Med';
+        if (!aiResult.volatility) {
+            if (metric?.regulatory_outlook) {
+                volatility = metric.regulatory_outlook === 'Positive' ? 'Low' :
+                    metric.regulatory_outlook === 'Volatile' ? 'High' : 'Med';
+            } else {
+                volatility = s.article_count > 20 ? 'Low' : s.article_count > 5 ? 'Med' : 'High';
+            }
         }
 
         return {
             sector_id: s.id,
             sector_name: s.name,
-            growth_yoy: Math.round(performanceScore),
+            growth_yoy: finalScore,
             volatility,
             article_count: s.article_count || 0,
-            total_views: s.total_views || 0
+            total_views: s.total_views || 0,
+            ai_insight: aiResult.insight || null
         };
-    });
+    }));
 
     return c.json({
         data: performance,
@@ -494,8 +665,8 @@ router.get('/performance', async (c) => {
 router.get('/leading-sector', async (c) => {
     const result = await c.env.DB.prepare(`
         SELECT s.name,
-               SUM(a.view_count) as total_views,
-               COUNT(a.id) as article_count
+                        SUM(a.view_count) as total_views,
+                        COUNT(a.id) as article_count
         FROM sectors s
         INNER JOIN articles a ON a.sector_id = s.id 
         WHERE a.status = 'published' 
@@ -503,7 +674,7 @@ router.get('/leading-sector', async (c) => {
         GROUP BY s.id
         ORDER BY total_views DESC
         LIMIT 1
-    `).first();
+                        `).first();
 
     if (!result) {
         return c.json({
@@ -530,16 +701,16 @@ router.get('/leading-sector', async (c) => {
 router.get('/sentiment-divergence', async (c) => {
     const countries = await c.env.DB.prepare(`
         SELECT c.code, c.name,
-               c.diplomacy_score,
-               c.image_strength_score,
-               COUNT(a.id) as article_count,
-               AVG(a.engagement_score) as avg_engagement
+                        c.diplomacy_score,
+                        c.image_strength_score,
+                        COUNT(a.id) as article_count,
+                        AVG(a.engagement_score) as avg_engagement
         FROM countries c
         LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
         GROUP BY c.code
         ORDER BY article_count DESC
         LIMIT 5
-    `).all();
+                        `).all();
 
     const divergence = await Promise.all((countries.results || []).map(async (c: any) => {
         // AI Reality Check (RAG)
@@ -557,7 +728,7 @@ router.get('/sentiment-divergence', async (c) => {
                     const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: 'You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.' },
-                            { role: 'user', content: `Country: ${c.name}. Recent News:\n${context}` }
+                            { role: 'user', content: `Country: ${c.name}.Recent News: \n${context}` }
                         ]
                     });
                     const score = parseInt((aiResponse as any).response.replace(/[^0-9]/g, ''));
@@ -602,7 +773,7 @@ router.get('/sector/:id/analytics', async (c) => {
             SELECT COUNT(*) as count, AVG(engagement_score) as avg_engagement
             FROM articles 
             WHERE sector_id = ? AND status = 'published'
-        `).bind(sectorId).first(),
+                        `).bind(sectorId).first(),
 
         c.env.DB.prepare(`
             SELECT engagement_score FROM articles 
@@ -610,7 +781,7 @@ router.get('/sector/:id/analytics', async (c) => {
             AND published_at > datetime('now', '-30 days')
             ORDER BY published_at DESC
             LIMIT 20
-        `).bind(sectorId).all()
+                        `).bind(sectorId).all()
     ]);
 
     const stats = articleStats as any;
@@ -644,7 +815,7 @@ router.get('/sector/:id/analytics', async (c) => {
                 const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}' },
-                        { role: 'user', content: `Sector Context:\n${context}` }
+                        { role: 'user', content: `Sector Context: \n${context}` }
                     ],
                     response_format: { type: 'json_object' }
                 });
@@ -688,15 +859,15 @@ router.get('/sector/:id/trend-history', async (c) => {
     const weeklyData = await c.env.DB.prepare(`
         SELECT 
             strftime('%W', published_at) as week,
-            COUNT(*) as count,
-            AVG(engagement_score) as avg_engagement
+                        COUNT(*) as count,
+                        AVG(engagement_score) as avg_engagement
         FROM articles 
         WHERE sector_id = ? AND status = 'published' 
         AND published_at > datetime('now', '-35 days')
         GROUP BY week
         ORDER BY week ASC
         LIMIT 5
-    `).bind(sectorId).all();
+                        `).bind(sectorId).all();
 
     const data = (weeklyData.results || []) as any[];
 
@@ -731,9 +902,9 @@ router.get('/sector/:id/velocity', async (c) => {
         SELECT growth_rate, investment_volume_usd, market_size_usd
         FROM market_metrics
         WHERE sector_id = ?
-        ORDER BY year DESC
+                        ORDER BY year DESC
         LIMIT 1
-    `).bind(sectorId).first() as any;
+                        `).bind(sectorId).first() as any;
 
     // Get article count for "active projects"
     const articleStats = await c.env.DB.prepare(`
@@ -741,7 +912,7 @@ router.get('/sector/:id/velocity', async (c) => {
         FROM articles
         WHERE sector_id = ? AND status = 'published'
         AND published_at > datetime('now', '-30 days')
-    `).bind(sectorId).first() as any;
+                        `).bind(sectorId).first() as any;
 
     // Calculate 5-year CAGR from available data or use growth rate
     const cagr = metrics?.growth_rate || 8.5;
@@ -763,14 +934,14 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     const opportunities = await c.env.DB.prepare(`
         SELECT 
-            c.code as country_code, 
-            c.name as country_name,
-            s.id as sector_id,
-            s.name as sector_name,
-            COUNT(a.id) as article_count,
-            AVG(a.engagement_score) as avg_score,
-            (SELECT title FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_title,
-            (SELECT summary FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_summary
+            c.code as country_code,
+                        c.name as country_name,
+                        s.id as sector_id,
+                        s.name as sector_name,
+                        COUNT(a.id) as article_count,
+                        AVG(a.engagement_score) as avg_score,
+                        (SELECT title FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_title,
+                    (SELECT summary FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_summary
         FROM articles a
         JOIN countries c ON a.country_code = c.code
         JOIN sectors s ON a.sector_id = s.id

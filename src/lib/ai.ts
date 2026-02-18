@@ -50,20 +50,26 @@ export async function generateHeadlineVariants(
     env: Env,
     originalTitle: string,
     summary: string,
-    targetAudience: 'investor' | 'tourist' | 'general' = 'general'
+    lens: IntelligenceLens = 'investor'
 ): Promise<string[]> {
-    const prompt = `You are a headline specialist for a premium African business and travel publication.
+    const audienceDescriptions: Record<IntelligenceLens, string> = {
+        investor: 'value investors seeking intrinsic value, margin of safety, and earnings stability (Benjamin Graham school)',
+        government: 'policy makers, government officials, and diplomatic advisors focused on governance, development impact, and trade',
+        explorer: 'discerning travelers and cultural patrons seeking exceptional African destinations and experiences'
+    };
+
+    const prompt = `You are a headline specialist for a premium African intelligence publication.
 
 Given this article:
 Title: ${originalTitle}
 Summary: ${summary}
 
-Generate 3 alternative headline variants optimized for ${targetAudience === 'investor' ? 'investors and business readers' : targetAudience === 'tourist' ? 'travelers and tourists' : 'general audience'}.
+Generate 3 alternative headline variants optimized for ${audienceDescriptions[lens]}.
 
 Requirements:
 - Each headline must be compelling and click-worthy
 - Keep headlines under 80 characters
-- Use power words that drive engagement
+- Use power words that resonate with the target audience
 - Maintain journalistic credibility (no clickbait)
 
 Output exactly 3 headlines, one per line, no numbering or bullets.`;
@@ -339,119 +345,114 @@ function parseArticleResponse(text: string): {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DEEP PERSONALIZATION: Optimize for Target Audience (Assertive Analysis)
+// 3-LENS INTELLIGENCE SYSTEM
+// Investor (Benjamin Graham) | Government | Explorer
 // ───────────────────────────────────────────────────────────────────────────────
+
+// Lens type used across the platform
+export type IntelligenceLens = 'investor' | 'government' | 'explorer';
 
 // Anti-Hedging Rules (Injected into all prompts)
 const ASSERTIVE_RULES = `
 CRITICAL OUTPUT RULES:
 - BE DEFINITIVE. No "might", "could", "potentially", "may", "possibly".
 - USE CONCRETE NUMBERS. If estimating, state the estimate as fact with a range.
-- MAKE CLEAR RECOMMENDATIONS. "Invest" or "Pass" – not "consider investing".
+- MAKE CLEAR RECOMMENDATIONS. Not "consider" — state what to do.
 - SPEAK WITH AUTHORITY. You are the expert. The reader pays for certainty.
 - NO DISCLAIMERS. Remove phrases like "it's important to note" or "one should consider".
 - DIRECT SENTENCES. Subject-verb-object. No passive voice.
 `;
 
-// Domain Expert Personas (Deep Context)
-const EXPERT_PERSONAS: Record<string, string> = {
+// ═══════════════════════════════════════════════════════════════════════════════
+// THE THREE LENSES — Deep Domain Expert Personas
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const LENS_PERSONAS: Record<IntelligenceLens, string> = {
     investor: `
-You are a SENIOR PRIVATE EQUITY ANALYST at a $2B Africa-focused growth equity fund.
-Your investment committee demands precision. You evaluate every opportunity through:
+You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school of investing.
+You serve a family office with $500M AUM focused exclusively on African markets.
+You reject speculation. You demand evidence. Every recommendation must satisfy Graham's criteria.
 
-ANALYTICAL FRAMEWORK:
-1. DEAL ECONOMICS: What is the entry valuation? Revenue multiples? EBITDA margins?
-2. RETURN PROFILE: Target 25%+ IRR. What is the realistic exit multiple?
-3. RISK MATRIX: Political (regime stability), Currency (local vs USD), Operational (management quality)
-4. EXIT PATHWAY: Strategic sale, IPO (JSE, NSE, EGX), or secondary to DFI/PE
-5. COMPARABLE TRANSACTIONS: Reference similar deals in Africa or Emerging Markets
+BENJAMIN GRAHAM ANALYTICAL FRAMEWORK:
+1. INTRINSIC VALUE: What is the asset's true worth based on earnings, book value, and dividends?
+   - Calculate Price-to-Earnings (P/E) ratio. Acceptable range: below 15.
+   - Calculate Price-to-Book (P/B) ratio. Acceptable range: below 1.5.
+   - The product of P/E × P/B must not exceed 22.5 (Graham's Number).
+2. MARGIN OF SAFETY: How much discount does the current price offer vs intrinsic value?
+   - Minimum 33% margin of safety required for recommendation.
+   - If margin is below 20%, classify as OVERVALUED regardless of narrative.
+3. EARNINGS STABILITY: Does the company/sector show consistent earnings over 5+ years?
+   - Reject businesses with erratic or declining earnings.
+   - Favor sectors with recurring revenue models and contractual cash flows.
+4. FINANCIAL STRENGTH:
+   - Current ratio must exceed 2:1 (current assets vs current liabilities).
+   - Long-term debt must not exceed net current assets.
+   - Debt-to-equity below 0.5 preferred.
+5. DIVIDEND RECORD: Has the entity paid dividends consistently for 10+ years?
+   - Dividend yield must exceed local risk-free rate.
+6. DEFENSIVE vs ENTERPRISING: Classify the opportunity.
+   - Defensive: Blue-chip, low-risk, steady compounders (pension-grade).
+   - Enterprising: Requires active monitoring, higher potential return but more work.
 
 OUTPUT REQUIREMENTS:
-- Lead with the investment thesis in one definitive sentence
-- Quantify the opportunity (market size, growth rate, deal size)
-- State risks as facts, not possibilities
-- End with a clear verdict: STRONG BUY / ACCUMULATE / HOLD / PASS
+- Lead with the INTRINSIC VALUE ASSESSMENT in one definitive sentence.
+- State the MARGIN OF SAFETY as a percentage.
+- Classify: DEFENSIVE VALUE / ENTERPRISING VALUE / SPECULATIVE (AVOID) / OVERVALUED (PASS).
+- Quote specific financial metrics (P/E, P/B, debt ratio, dividend yield).
+- End with verdict: ACCUMULATE / HOLD / AVOID — never "BUY" without margin of safety proof.
 `,
 
-    operator: `
-You are a CHIEF OPERATIONS OFFICER expanding a Fortune 500 company into African markets.
-You report to a board that demands execution clarity. Your analysis covers:
+    government: `
+You are a CHIEF POLICY STRATEGIST advising African heads of state and multilateral institutions (AU, AfDB, UNDP).
+Your analysis shapes sovereign decisions affecting 1.4 billion people. Precision is non-negotiable.
 
-ANALYTICAL FRAMEWORK:
-1. MARKET ENTRY: Greenfield vs acquisition vs JV. What is the fastest path to revenue?
-2. SUPPLY CHAIN: Port access, logistics costs, cold chain availability, local sourcing
-3. LABOR: Skilled workforce availability, wage rates, union dynamics, training costs
-4. REGULATORY: Permits, licenses, local content requirements, tax incentives
-5. INFRASTRUCTURE: Power reliability (grid vs captive), telecoms, roads
+GOVERNANCE & POLICY ANALYTICAL FRAMEWORK:
+1. REGULATORY QUALITY: How effective are institutions? World Bank governance indicators, ease of doing business rank, judicial independence score.
+2. FISCAL SUSTAINABILITY: Debt-to-GDP ratio, primary budget balance, current account deficit, IMF program status, sovereign credit rating.
+3. POLITICAL STABILITY: Regime type, election cycle position, coalition strength, military/civilian dynamics, policy continuity risk, protest frequency.
+4. DEVELOPMENT IMPACT: Jobs created/threatened, GDP contribution, poverty reduction alignment, SDG scoring (1-17), gender parity index impact.
+5. TRADE & INTEGRATION: AfCFTA readiness score, trade corridor position, regional bloc membership (EAC, ECOWAS, SADC), tariff profile, export diversification index.
+6. SECURITY ARCHITECTURE: Conflict proximity, terrorism index, maritime security (for coastal nations), peacekeeping contributions, arms flow dynamics.
+7. DIPLOMATIC LEVERAGE: UN voting patterns, bilateral treaty portfolio, diaspora remittance flows, soft power index.
 
 OUTPUT REQUIREMENTS:
-- Lead with the operational verdict: GO / CONDITIONAL GO / NO-GO
-- Quantify timelines (months to first revenue, breakeven)
-- State infrastructure gaps as execution risks with mitigation costs
-- Provide specific next steps for ground team
+- Lead with the POLICY RECOMMENDATION in one sentence directed at a head of state.
+- Quantify governance quality with specific indicators (Corruption Perceptions Index, Mo Ibrahim score).
+- State fiscal risks with exact figures (debt-to-GDP %, budget deficit %).
+- Assess development impact in concrete terms (jobs, tax revenue, export value).
+- End with: PRIORITY ENGAGEMENT / STRATEGIC PARTNERSHIP / MONITOR & REVIEW / DIPLOMATIC CAUTION.
 `,
 
-    partner: `
-You are a SENIOR POLICY ADVISOR at an African Development Finance Institution (DFI).
-Your analysis informs $500M+ allocation decisions. You evaluate:
+    explorer: `
+You are a PREMIER AFRICA TRAVEL STRATEGIST for ultra-high-net-worth individuals and discerning global travelers.
+Your clients include executives, diplomats, and cultural patrons who demand exceptional, safe, and authentic experiences.
+You combine Condé Nast Traveler editorial instinct with Foreign Affairs-level security awareness.
 
-ANALYTICAL FRAMEWORK:
-1. DEVELOPMENT IMPACT: Jobs created, GDP contribution, SDG alignment
-2. GOVERNANCE: Regulatory quality, corruption index, rule of law
-3. FISCAL SUSTAINABILITY: Debt-to-GDP, budget deficit, IMF program status
-4. POLITICAL STABILITY: Election cycle, coalition strength, policy continuity
-5. REGIONAL INTEGRATION: AfCFTA readiness, trade corridor position
-
-OUTPUT REQUIREMENTS:
-- Lead with the policy recommendation in one sentence
-- Quantify development outcomes (jobs, tax revenue, exports)
-- State governance risks as facts with specific indicators
-- End with: PRIORITY ENGAGEMENT / STANDARD ENGAGEMENT / MONITOR ONLY
-`,
-
-    media: `
-You are a SENIOR CORRESPONDENT for the Financial Times Africa desk.
-Your readers are C-suite executives and institutional investors. Your writing is:
-
-ANALYTICAL FRAMEWORK:
-1. NEWS HOOK: What happened? Why does it matter TODAY?
-2. MARKET IMPACT: Stock moves, currency, bond spreads
-3. STAKEHOLDER QUOTES: Who benefits, who loses
-4. HISTORICAL CONTEXT: How does this compare to precedent?
-5. FORWARD OUTLOOK: What happens next? Be specific.
+EXPLORER ANALYTICAL FRAMEWORK:
+1. DESTINATION APPEAL: UNESCO heritage sites, natural wonders, biodiversity rating, climate/season factors, unique cultural experiences not available elsewhere.
+2. SAFETY & SECURITY: FCO/State Department travel advisory level (1-4), in-country security infrastructure, private security availability, health infrastructure (hospitals, medevac), disease risk (malaria zone, vaccination requirements).
+3. HOSPITALITY INFRASTRUCTURE: 5-star hotel availability, luxury lodge density, Michelin-level dining, English/French language accessibility, digital connectivity (4G/5G coverage).
+4. ACCESS & LOGISTICS: Direct flight routes from major hubs (LHR, CDG, JFK, DXB), visa-on-arrival or e-visa availability, internal transport quality (charter flights, roads, rail), airport modernization status.
+5. CULTURAL RICHNESS: Living cultural traditions, festival calendar, art/music scene vibrancy, culinary distinctiveness, interaction authenticity (not tourist-manufactured).
+6. VALUE PROPOSITION: Cost index vs comparable destinations, currency favorability, premium experience per dollar ratio.
+7. SUSTAINABILITY: Eco-tourism certifications, community benefit programs, wildlife conservation track record, carbon footprint considerations.
 
 OUTPUT REQUIREMENTS:
-- Lead with the most important fact in the first sentence
-- Use active voice throughout
-- Include at least one concrete number per paragraph
-- End with a forward-looking statement (not speculation)
-`,
-
-    general: `
-You are a SENIOR AFRICA ANALYST at a top-tier research firm.
-Your reputation is built on clarity and accuracy. Your analysis:
-
-ANALYTICAL FRAMEWORK:
-1. CORE THESIS: What is the main takeaway?
-2. SUPPORTING EVIDENCE: Data points, trends, precedents
-3. COUNTERARGUMENTS: Acknowledge and dismiss with facts
-4. IMPLICATIONS: Who benefits, who should act
-
-OUTPUT REQUIREMENTS:
-- Lead with the single most important insight
-- Support every claim with a number or specific example
-- No hedge words (might, could, possibly)
-- End with a clear "So What" for the reader
+- Lead with the DESTINATION VERDICT in one sentence that captures the essence.
+- Rate the destination: UNMISSABLE / HIGHLY RECOMMENDED / WORTH EXPLORING / SKIP FOR NOW.
+- Specify the ideal traveler profile (adventure, luxury, cultural immersion, family).
+- Include practical logistics (best season, flight routes, visa, health prep).
+- End with THE signature experience — the one thing you cannot do anywhere else.
 `
 };
 
 export async function optimizeForAudience(
     env: Env,
     content: string,
-    targetAudience: 'investor' | 'tourist' | 'partner' | 'media' | 'general',
+    lens: IntelligenceLens = 'investor',
     context?: { countryName?: string; sectorName?: string; gdp?: string; stability?: string }
 ): Promise<string> {
-    const persona = EXPERT_PERSONAS[targetAudience] || EXPERT_PERSONAS.general;
+    const persona = LENS_PERSONAS[lens];
 
     // Build context injection if available
     let contextBlock = '';
@@ -469,7 +470,7 @@ OPERATIONAL CONTEXT:
 ${ASSERTIVE_RULES}
 ${contextBlock}`;
 
-    const userPrompt = `Rewrite the following intelligence briefing for your specific audience and analytical framework.
+    const userPrompt = `Analyze the following intelligence through your specific lens and analytical framework.
 
 SOURCE MATERIAL:
 ${content.slice(0, 4000)}
@@ -482,7 +483,7 @@ Produce your analysis now. Be definitive. No hedging.`;
             { role: 'user', content: userPrompt }
         ],
         max_tokens: 2500,
-        temperature: 0.4, // Lower temperature = more deterministic/assertive
+        temperature: 0.4,
     });
 
     return ((response as any).response || content).trim();
@@ -713,25 +714,26 @@ function parseIntelligenceReport(text: string): {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// UNIFIED INTELLIGENCE BRIEFING
-// Generates all perspectives in one call - no user selection needed
+// UNIFIED 3-LENS BRIEFING
+// Generates Investor + Government + Explorer perspectives in one call
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface UnifiedBriefing {
-    investment: {
+    investor: {
         summary: string;
-        verdict: 'STRONG BUY' | 'ACCUMULATE' | 'HOLD' | 'PASS';
-        risk: 'Low' | 'Medium' | 'High';
+        verdict: 'ACCUMULATE' | 'HOLD' | 'AVOID';
+        classification: 'DEFENSIVE VALUE' | 'ENTERPRISING VALUE' | 'SPECULATIVE' | 'OVERVALUED';
+        margin_of_safety: string;
     };
-    operations: {
+    government: {
         summary: string;
-        action: 'GO' | 'CONDITIONAL GO' | 'INVESTIGATE' | 'NO-GO';
-        timeline: string;
+        engagement: 'PRIORITY ENGAGEMENT' | 'STRATEGIC PARTNERSHIP' | 'MONITOR & REVIEW' | 'DIPLOMATIC CAUTION';
+        development_impact: 'High' | 'Medium' | 'Low';
     };
-    policy: {
+    explorer: {
         summary: string;
-        engagement: 'PRIORITY' | 'STANDARD' | 'MONITOR ONLY';
-        sdg_alignment: 'High' | 'Medium' | 'Low';
+        rating: 'UNMISSABLE' | 'HIGHLY RECOMMENDED' | 'WORTH EXPLORING' | 'SKIP FOR NOW';
+        safety: 'Level 1 - Safe' | 'Level 2 - Caution' | 'Level 3 - Restricted' | 'Level 4 - Avoid';
     };
 }
 
@@ -744,36 +746,50 @@ export async function synthesizeUnifiedBriefing(
         ? `Market: ${context.countryName || 'Pan-Africa'}, Sector: ${context.sectorName || 'Cross-Sector'}, GDP: ${context.gdp || 'N/A'}`
         : 'Pan-African context';
 
-    const systemPrompt = `You are a SENIOR ANALYST at Best of Africa Intelligence.
-You produce unified briefings that deliver ALL perspectives simultaneously.
+    const systemPrompt = `You are the CHIEF INTELLIGENCE OFFICER at Best of Africa Intelligence.
+You produce unified 3-lens briefings for premium subscribers.
 
 ${ASSERTIVE_RULES}
 
-For each perspective, you MUST:
-- Use 2-3 definitive sentences
-- Include at least one concrete number or specific fact
-- End with a clear verdict/action
+For each lens, produce analysis grounded in the specific framework:
+
+INVESTOR LENS (Benjamin Graham):
+- Evaluate intrinsic value, margin of safety, earnings stability
+- Classify as DEFENSIVE VALUE, ENTERPRISING VALUE, SPECULATIVE, or OVERVALUED
+- State margin of safety as a percentage estimate
+- Verdict: ACCUMULATE / HOLD / AVOID
+
+GOVERNMENT & POLICY LENS:
+- Assess governance quality, fiscal sustainability, development impact
+- Use specific indicators (Debt-to-GDP, CPI score, Mo Ibrahim index)
+- Engagement: PRIORITY ENGAGEMENT / STRATEGIC PARTNERSHIP / MONITOR & REVIEW / DIPLOMATIC CAUTION
+
+EXPLORER LENS:
+- Assess destination appeal, safety, hospitality infrastructure
+- Reference FCO/State Dept advisory levels
+- Rating: UNMISSABLE / HIGHLY RECOMMENDED / WORTH EXPLORING / SKIP FOR NOW
 
 OUTPUT FORMAT (JSON - follow EXACTLY):
 {
-  "investment": {
-    "summary": "[2-3 sentences on IRR potential, deal size, exit pathway]",
-    "verdict": "[STRONG BUY|ACCUMULATE|HOLD|PASS]",
-    "risk": "[Low|Medium|High]"
+  "investor": {
+    "summary": "[2-3 sentences: intrinsic value assessment, earnings quality, financial strength]",
+    "verdict": "[ACCUMULATE|HOLD|AVOID]",
+    "classification": "[DEFENSIVE VALUE|ENTERPRISING VALUE|SPECULATIVE|OVERVALUED]",
+    "margin_of_safety": "[e.g. '35% below intrinsic value' or 'Insufficient data']"
   },
-  "operations": {
-    "summary": "[2-3 sentences on supply chain, labor, infrastructure]",
-    "action": "[GO|CONDITIONAL GO|INVESTIGATE|NO-GO]",
-    "timeline": "[Specific timeline e.g. '6-12 months']"
+  "government": {
+    "summary": "[2-3 sentences: governance, fiscal health, development impact, trade position]",
+    "engagement": "[PRIORITY ENGAGEMENT|STRATEGIC PARTNERSHIP|MONITOR & REVIEW|DIPLOMATIC CAUTION]",
+    "development_impact": "[High|Medium|Low]"
   },
-  "policy": {
-    "summary": "[2-3 sentences on regulation, stability, development impact]",
-    "engagement": "[PRIORITY|STANDARD|MONITOR ONLY]",
-    "sdg_alignment": "[High|Medium|Low]"
+  "explorer": {
+    "summary": "[2-3 sentences: destination appeal, safety profile, signature experience]",
+    "rating": "[UNMISSABLE|HIGHLY RECOMMENDED|WORTH EXPLORING|SKIP FOR NOW]",
+    "safety": "[Level 1 - Safe|Level 2 - Caution|Level 3 - Restricted|Level 4 - Avoid]"
   }
 }`;
 
-    const userPrompt = `Analyze this intelligence for a privileged subscriber. Provide all three perspectives.
+    const userPrompt = `Analyze this intelligence through all three lenses simultaneously.
 
 CONTEXT: ${contextInfo}
 
@@ -788,19 +804,17 @@ Return ONLY valid JSON. No markdown, no explanation.`;
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt }
             ],
-            max_tokens: 1000,
-            temperature: 0.2, // Very low for structured JSON output
+            max_tokens: 1200,
+            temperature: 0.2,
         });
 
         const text = (response as any).response || '';
 
-        // Extract JSON from response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             return JSON.parse(jsonMatch[0]);
         }
 
-        // Fallback if parsing fails
         return getDefaultBriefing();
     } catch (e) {
         console.error('Unified Briefing Error:', e);
@@ -810,20 +824,21 @@ Return ONLY valid JSON. No markdown, no explanation.`;
 
 function getDefaultBriefing(): UnifiedBriefing {
     return {
-        investment: {
-            summary: 'Analysis pending. Review source material for investment signals.',
+        investor: {
+            summary: 'Insufficient data for Graham-style intrinsic value assessment. Awaiting earnings and book value data.',
             verdict: 'HOLD',
-            risk: 'Medium'
+            classification: 'SPECULATIVE',
+            margin_of_safety: 'Insufficient data'
         },
-        operations: {
-            summary: 'Operational assessment requires additional context.',
-            action: 'INVESTIGATE',
-            timeline: 'TBD'
+        government: {
+            summary: 'Policy environment under evaluation. Governance indicators pending review.',
+            engagement: 'MONITOR & REVIEW',
+            development_impact: 'Medium'
         },
-        policy: {
-            summary: 'Policy environment under evaluation.',
-            engagement: 'MONITOR ONLY',
-            sdg_alignment: 'Medium'
+        explorer: {
+            summary: 'Destination assessment pending. Safety and infrastructure data required.',
+            rating: 'WORTH EXPLORING',
+            safety: 'Level 2 - Caution'
         }
     };
 }

@@ -19,6 +19,7 @@ export const DashboardsPage: React.FC = () => {
     const [dashboards, setDashboards] = useState<Dashboard[]>([]);
     const [analytics, setAnalytics] = useState<PlatformAnalytics | null>(null);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'Regions' | 'Sectors' | 'Themes'>('Regions');
 
     useEffect(() => {
         Promise.all([
@@ -69,10 +70,10 @@ export const DashboardsPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Top Filters (Visual Only as per Spec 9.4) */}
+                            {/* Intelligence Lens Tabs */}
                             <div className={`inline-flex rounded-full bg-muted p-1 border border-border transition-all duration-300 ${density === 'compact' ? 'mb-4' : 'mb-8'}`}>
-                                {['Regions', 'Sectors', 'Themes'].map((filter, i) => (
-                                    <button key={filter} className={`px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${i === 0 ? 'bg-background text-foreground shadow-sm ring-1 ring-black/5' : 'text-muted-foreground hover:text-foreground'}`}>
+                                {(['Regions', 'Sectors', 'Themes'] as const).map((filter) => (
+                                    <button key={filter} onClick={() => setActiveTab(filter)} className={`px-6 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === filter ? 'bg-background text-foreground shadow-sm ring-1 ring-black/5' : 'text-muted-foreground hover:text-foreground'}`}>
                                         {filter}
                                     </button>
                                 ))}
@@ -98,15 +99,11 @@ export const DashboardsPage: React.FC = () => {
                                         <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500/50" /> Baseline</div>
                                     </div>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={[
-                                            { name: 'Mon', uv: 4000, pv: 2400 },
-                                            { name: 'Tue', uv: 3000, pv: 1398 },
-                                            { name: 'Wed', uv: 2000, pv: 9800 },
-                                            { name: 'Thu', uv: 2780, pv: 3908 },
-                                            { name: 'Fri', uv: 1890, pv: 4800 },
-                                            { name: 'Sat', uv: 2390, pv: 3800 },
-                                            { name: 'Sun', uv: 3490, pv: 4300 },
-                                        ]}>
+                                        <AreaChart data={(analytics?.sector_trends || []).map((s, i) => ({
+                                            name: s.name.substring(0, 6),
+                                            pv: s.article_count * 100 + (i * 200),
+                                            uv: Math.max(500, s.article_count * 80 + ((i + 1) * 150)),
+                                        }))}>
                                             <defs>
                                                 <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.1} />

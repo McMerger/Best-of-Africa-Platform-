@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { MissionControl } from './MissionControl';
 import { DensityToggle } from './DensityToggle';
+import { LensSwitcher } from './LensSwitcher';
 
 import {
     Sheet,
@@ -64,6 +65,7 @@ export const NavBar: React.FC = () => {
                 {/* Desktop Actions */}
                 <div className="flex items-center gap-2">
                     <div className="hidden md:flex md:items-center md:gap-1">
+                        <LensSwitcher />
                         <DensityToggle />
                         <MissionControl />
                         <Button variant="ghost" size="icon" asChild>
@@ -119,6 +121,7 @@ export const NavBar: React.FC = () => {
                             <SheetHeader className="border-b pb-4 mb-4 flex flex-row items-center justify-between">
                                 <SheetTitle className="text-left font-serif font-black text-2xl tracking-tight">Best of Africa</SheetTitle>
                                 <div className="flex items-center gap-2">
+                                    <LensSwitcher />
                                     <DensityToggle />
                                 </div>
                             </SheetHeader>

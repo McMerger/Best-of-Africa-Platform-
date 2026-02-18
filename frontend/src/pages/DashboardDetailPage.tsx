@@ -21,9 +21,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 
 import { useDensity } from '@/context/DensityContext';
+import { useLens } from '@/context/LensContext';
 
 export const DashboardDetailPage: React.FC = () => {
     const { density } = useDensity();
+    const { lens } = useLens();
     const { region } = useParams<{ region: string }>();
     const isContinental = region?.toLowerCase() === 'continental';
 
@@ -57,7 +59,7 @@ export const DashboardDetailPage: React.FC = () => {
         if (isContinental) {
             Promise.all([
                 api.getContinentalOverview(),
-                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/dashboards/analytics/summary`).then(r => r.json())
+                fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/dashboards/analytics/summary?lens=${lens}`).then(r => r.json())
             ])
                 .then(([overviewRes, analyticsRes]) => {
                     setContinentalData(overviewRes);
@@ -71,7 +73,7 @@ export const DashboardDetailPage: React.FC = () => {
                 .catch(console.error)
                 .finally(() => setLoading(false));
         }
-    }, [region, isContinental]);
+    }, [region, isContinental, lens]);
 
     // ... (in component)
     if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
@@ -121,10 +123,10 @@ export const DashboardDetailPage: React.FC = () => {
                                     <div className="mb-4 flex items-center justify-between">
                                         <span className="flex items-center gap-2 rounded bg-primary px-2 py-1 text-[11px] font-bold uppercase text-primary-foreground">
                                             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary-foreground"></span>
-                                            Market Updates
+                                            {lens === 'investor' ? 'Investment Pulse' : lens === 'government' ? 'Policy Pulse' : 'Explorer Pulse'}
                                         </span>
                                         <span className="font-mono text-xs text-muted-foreground">
-                                            SOURCE: INTELLIGENCE BUREAU
+                                            LENS: {lens.toUpperCase()}
                                         </span>
                                     </div>
                                     <p className="font-mono text-lg leading-relaxed text-foreground">
@@ -141,7 +143,9 @@ export const DashboardDetailPage: React.FC = () => {
                                     <div className="text-5xl font-black leading-none text-primary drop-shadow-sm">
                                         {analytics?.stability_index || 'HIGH'}
                                     </div>
-                                    <div className="mt-2 text-xs font-bold text-primary">STABLE / POSITIVE</div>
+                                    <div className="mt-2 text-xs font-bold text-primary">
+                                        {lens === 'investor' ? 'VALUE OUTLOOK' : lens === 'government' ? 'GOVERNANCE INDEX' : 'TRAVEL SAFETY'}
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>

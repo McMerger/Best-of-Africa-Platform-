@@ -149,7 +149,7 @@ export const api = {
     }>('/intel/audience'),
 
     // Analyst Lens (Real-time AI Rewriting)
-    reframeArticle: (articleId: string, targetAudience: 'investor' | 'tourist' | 'partner' | 'general') =>
+    reframeArticle: (articleId: string, targetAudience: 'investor' | 'government' | 'explorer') =>
         request<{ content: string; audience: string }>('/intel/reframe', {
             method: 'POST',
             body: JSON.stringify({ articleId, targetAudience })
@@ -160,15 +160,15 @@ export const api = {
             body: JSON.stringify({ articleId, format })
         }),
 
-    // Unified Intelligence Briefing (Zero-Friction - All Perspectives)
+    // Unified Intelligence Briefing (3-Lens)
     getUnifiedBriefing: (articleId: string) =>
         request<{
             article_id: string;
             title: string;
             briefing: {
-                investment: { summary: string; verdict: string; risk: string };
-                operations: { summary: string; action: string; timeline: string };
-                policy: { summary: string; engagement: string; sdg_alignment: string };
+                investor: { summary: string; verdict: string; classification: string; margin_of_safety: string };
+                government: { summary: string; verdict: string; classification: string; development_impact: string };
+                explorer: { summary: string; verdict: string; classification: string; signature_experience: string };
             };
         }>('/intel/synthesize-unified', {
             method: 'POST',
@@ -224,10 +224,10 @@ export const api = {
     }),
 
     // Analytics
-    getSectorPerformance: () => request<{
-        data: { sector_id: string; sector_name: string; growth_yoy: number; volatility: string; article_count: number }[];
+    getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => request<{
+        data: { sector_id: string; sector_name: string; growth_yoy: number; volatility: string; article_count: number; ai_insight?: string }[];
         updated_at: string;
-    }>('/market-intel/performance'),
+    }>(`/market-intel/performance${lens ? `?lens=${lens}` : ''}`),
 
     getLeadingSector: () => request<{
         name: string;
@@ -242,7 +242,7 @@ export const api = {
         updated_at: string;
     }>('/market-intel/sentiment-divergence'),
 
-    getPlatformAnalytics: () => request<{
+    getPlatformAnalytics: (lens?: 'investor' | 'government' | 'explorer') => request<{
         market_summary: string;
         stability_index: string;
         stability_score: number;
@@ -251,7 +251,7 @@ export const api = {
         sector_trends: { id: string; name: string; trend: string; article_count: number }[];
         total_articles_7d: number;
         updated_at: string;
-    }>('/dashboards/analytics/summary'),
+    }>(`/dashboards/analytics/summary${lens ? `?lens=${lens}` : ''}`),
 
     getStrategicOpportunities: () => request<{
         data: {

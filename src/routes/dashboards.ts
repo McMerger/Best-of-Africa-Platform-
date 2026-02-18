@@ -105,7 +105,11 @@ router.get('/:region', async (c) => {
 
     // AI Regional Insight (RAG)
     let aiInsight = "Region is stable.";
-    const cacheKey = `insight:region:${region}`;
+    // Parse lens for AI context
+    const lensParam = (c.req.query('lens') || 'investor') as string;
+    const activeLens = ['investor', 'government', 'explorer'].includes(lensParam) ? lensParam : 'investor';
+
+    const cacheKey = `insight:region:${region}:${activeLens}`;
     try {
         const cached = await c.env.CACHE.get(cacheKey);
         if (cached) {
@@ -116,7 +120,13 @@ router.get('/:region', async (c) => {
             // For now, simpler fallback or quick gen
             const aiRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
-                    { role: 'system', content: 'You are a Regional Strategist. Write a 1-sentence situational overview.' },
+                    {
+                        role: 'system', content: activeLens === 'investor'
+                            ? 'You are a Value Investment Strategist (Benjamin Graham school). Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
+                            : activeLens === 'government'
+                                ? 'You are a Chief Policy Strategist advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
+                                : 'You are a Premier Africa Travel Strategist. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.'
+                    },
                     { role: 'user', content: `Region: ${region}. Trends: ${JSON.stringify(trendingCountries)}` }
                 ]
             });
@@ -313,6 +323,9 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
 // GET /dashboards/analytics - Platform-wide analytics (for Continental Overview)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/analytics/summary', async (c) => {
+    // Parse lens
+    const lensParam = (c.req.query('lens') || 'investor') as string;
+    const activeLens = ['investor', 'government', 'explorer'].includes(lensParam) ? lensParam : 'investor';
     // Aggregate platform metrics
     const [articleStats, sentimentData, sectorTrends] = await Promise.all([
         c.env.DB.prepare(`
@@ -345,14 +358,69 @@ router.get('/analytics/summary', async (c) => {
     const sentiment = sentimentData as any;
     const sectors = (sectorTrends.results || []) as any[];
 
-    // Calculate stability index from engagement and sentiment
+    // --- AI-Driven Stability Index ---
     const avgEngagement = stats?.avg_engagement || 50;
-    const avgSentiment = (sentiment?.avg_sentiment || 0.5) * 100;
-    const stabilityScore = Math.round((avgEngagement + avgSentiment) / 2);
+    const avgSentiment = sentiment?.avg_sentiment || 50;
+    const dataBasedScore = Math.min(1000, Math.round(((avgEngagement + avgSentiment) / 2) * 10));
 
-    const stabilityIndex = stabilityScore > 70 ? 'HIGH'
-        : stabilityScore > 50 ? 'MODERATE'
-            : 'VOLATILE';
+    // Fetch recent headlines for AI context
+    const recentHeadlines = await c.env.DB.prepare(`
+        SELECT title FROM articles 
+        WHERE status = 'published' 
+        ORDER BY published_at DESC 
+        LIMIT 8
+    `).all();
+    const headlineContext = (recentHeadlines.results || []).map((a: any) => a.title).join('\n- ');
+
+    const aiStability = await getCached(
+        c.env,
+        `dashboard:ai_stability:${activeLens}`,
+        async () => {
+            if (!headlineContext) return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 500 ? 'MODERATE' : 'VOLATILE' };
+            try {
+                const lensInstruction = activeLens === 'investor'
+                    ? 'Focus on intrinsic value signals, earnings stability, and margin of safety across African markets. HIGH = strong fundamentals with value opportunities, VOLATILE = speculative, overvalued, or erratic earnings.'
+                    : activeLens === 'government'
+                        ? 'Focus on governance quality, fiscal sustainability, political stability, and development impact. HIGH = strong institutions and policy continuity, VOLATILE = regime instability, fiscal distress, or security risks.'
+                        : 'Focus on travel safety, hospitality infrastructure, and tourism appeal. HIGH = safe, accessible, and world-class experiences, VOLATILE = travel advisories, infrastructure gaps, or safety concerns.';
+
+                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a Market Stability Analyst for African markets. ${lensInstruction}
+
+Return ONLY valid JSON: {"score": <0-1000>, "index": "<HIGH|MODERATE|VOLATILE>"}
+
+Scoring guide:
+- 700-1000: HIGH stability (positive outlook, strong fundamentals)
+- 400-699: MODERATE stability (mixed signals, watchful)  
+- 0-399: VOLATILE (significant risks, uncertainty)`
+                        },
+                        {
+                            role: 'user',
+                            content: `Platform Metrics: ${stats?.total_articles || 0} articles this week, avg engagement ${Math.round(avgEngagement)}/100, avg sentiment ${Math.round(avgSentiment)}/100.\n\nLatest Headlines:\n- ${headlineContext}`
+                        }
+                    ]
+                });
+                const raw = (aiResponse as any)?.response || '';
+                const match = raw.match(/\{.*\}/s);
+                if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    const score = typeof parsed.score === 'number' ? Math.min(1000, Math.max(0, parsed.score)) : dataBasedScore;
+                    const index = ['HIGH', 'MODERATE', 'VOLATILE'].includes(parsed.index) ? parsed.index : (score > 700 ? 'HIGH' : score > 400 ? 'MODERATE' : 'VOLATILE');
+                    return { score, index };
+                }
+                return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 400 ? 'MODERATE' : 'VOLATILE' };
+            } catch (e) {
+                return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 400 ? 'MODERATE' : 'VOLATILE' };
+            }
+        },
+        { ttl: CACHE_TTL.DASHBOARD } // ~10 min cache
+    );
+
+    const stabilityScore = aiStability.score;
+    const stabilityIndex = aiStability.index;
 
     // Calculate overall sentiment percentage
     const sentimentPct = Math.round(avgSentiment);
@@ -382,17 +450,22 @@ router.get('/analytics/summary', async (c) => {
 
     const marketSummary = await getCached(
         c.env,
-        'dashboard_market_summary_ai',
+        `dashboard_market_summary_ai:${activeLens}`,
         async () => {
+            const lensRole = activeLens === 'investor'
+                ? 'You are a Value Investment Strategist (Benjamin Graham school) for Best of Africa. Write a 2-sentence "Investment Pulse" focusing on intrinsic value signals, margin of safety, and earnings stability across African markets.'
+                : activeLens === 'government'
+                    ? 'You are a Chief Policy Strategist for Best of Africa. Write a 2-sentence "Policy Pulse" focusing on governance quality, fiscal sustainability, and development impact across African nations.'
+                    : 'You are a Premier Travel Strategist for Best of Africa. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
+
             try {
                 const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         {
                             role: 'system',
-                            content: `You are the Chief Intelligence Analyst for Best of Africa. 
-                            Write a concise, 2-sentence "Executive Market Pulse" based on the platform data provided. 
-                            Tone: Professional, Insightful, Forward-looking. 
-                            Do NOT use "Based on the data" or generic openers.`
+                            content: `${lensRole}
+Tone: Professional, Insightful, Forward-looking.
+Do NOT use "Based on the data" or generic openers.`
                         },
                         {
                             role: 'user',

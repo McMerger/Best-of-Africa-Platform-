@@ -22,9 +22,9 @@ export const ArticleDetailPage: React.FC = () => {
 
     // UNIFIED BRIEFING STATE (Zero-Friction - No Selection Needed)
     const [unifiedBriefing, setUnifiedBriefing] = useState<{
-        investment: { summary: string; verdict: string; risk: string };
-        operations: { summary: string; action: string; timeline: string };
-        policy: { summary: string; engagement: string; sdg_alignment: string };
+        investor: { summary: string; verdict: string; classification: string; margin_of_safety: string };
+        government: { summary: string; verdict: string; classification: string; development_impact: string };
+        explorer: { summary: string; verdict: string; classification: string; signature_experience: string };
     } | null>(null);
     const [briefingLoading, setBriefingLoading] = useState(false);
 
@@ -259,42 +259,42 @@ export const ArticleDetailPage: React.FC = () => {
                             </div>
                         ) : unifiedBriefing && (
                             <div className="grid gap-6 md:grid-cols-3 mb-12">
-                                {/* INVESTMENT SIGNAL - White Card with Green Accent */}
+                                {/* INVESTOR SIGNAL - White Card with Green Accent */}
                                 <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-emerald-500">
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-lg">📊</div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-600">Investment Signal</h3>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-600">Investor Signal</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.investment.summary}</p>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.investor.summary}</p>
                                     <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
-                                        <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 font-bold bg-emerald-500/5">{unifiedBriefing.investment.verdict}</Badge>
-                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Risk: <strong className="text-foreground">{unifiedBriefing.investment.risk}</strong></span>
+                                        <Badge variant="outline" className="border-emerald-500/50 text-emerald-600 font-bold bg-emerald-500/5">{unifiedBriefing.investor.verdict}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Safety: <strong className="text-foreground">{unifiedBriefing.investor.margin_of_safety}</strong></span>
                                     </div>
                                 </div>
 
-                                {/* OPERATIONAL BRIEF - White Card with Blue Accent */}
-                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-blue-500">
+                                {/* GOVERNMENT BRIEF - White Card with Indigo Accent */}
+                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-indigo-500">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-lg">⚙️</div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-blue-600">Operational Brief</h3>
+                                        <div className="h-8 w-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-lg">🏛️</div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-indigo-600">Government Brief</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.operations.summary}</p>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.government.summary}</p>
                                     <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
-                                        <Badge variant="outline" className="border-blue-500/50 text-blue-600 font-bold bg-blue-500/5">{unifiedBriefing.operations.action}</Badge>
-                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Timeline: <strong className="text-foreground">{unifiedBriefing.operations.timeline}</strong></span>
+                                        <Badge variant="outline" className="border-indigo-500/50 text-indigo-600 font-bold bg-indigo-500/5">{unifiedBriefing.government.verdict}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Impact: <strong className="text-foreground">{unifiedBriefing.government.development_impact}</strong></span>
                                     </div>
                                 </div>
 
-                                {/* POLICY CONTEXT - White Card with Purple Accent */}
-                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-purple-500">
+                                {/* EXPLORER CONTEXT - White Card with Amber Accent */}
+                                <div className="group rounded-3xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-all border-l-4 border-l-amber-500">
                                     <div className="flex items-center gap-3 mb-4">
-                                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center text-lg">📜</div>
-                                        <h3 className="text-xs font-bold uppercase tracking-widest text-purple-600">Policy Context</h3>
+                                        <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center text-lg">🧭</div>
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-amber-600">Explorer Context</h3>
                                     </div>
-                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.policy.summary}</p>
+                                    <p className="text-sm text-foreground leading-relaxed mb-6 font-medium">{unifiedBriefing.explorer.summary}</p>
                                     <div className="flex items-center justify-between text-xs border-t border-border pt-4 mt-auto">
-                                        <Badge variant="outline" className="border-purple-500/50 text-purple-600 font-bold bg-purple-500/5">{unifiedBriefing.policy.engagement}</Badge>
-                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">SDG: <strong className="text-foreground">{unifiedBriefing.policy.sdg_alignment}</strong></span>
+                                        <Badge variant="outline" className="border-amber-500/50 text-amber-600 font-bold bg-amber-500/5">{unifiedBriefing.explorer.verdict}</Badge>
+                                        <span className="text-muted-foreground uppercase tracking-wider text-[10px]">Experience: <strong className="text-foreground">{unifiedBriefing.explorer.signature_experience}</strong></span>
                                     </div>
                                 </div>
                             </div>

@@ -201,7 +201,7 @@ router.get('/sector/:id/trends', async (c) => {
           try {
             const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
               messages: [
-                { role: 'system', content: `You are a Senior Investment Analyst. Write a "Deep Dive Market Analysis" for the ${sector.name} sector in Africa.` },
+                { role: 'system', content: `You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as any).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.` },
                 { role: 'user', content: `Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.` }
               ]
             });
@@ -453,10 +453,11 @@ router.post('/ai-chat', async (c) => {
 // DEEP PERSONALIZATION: Now injects country/sector context
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/reframe', async (c) => {
-  const { articleId, targetAudience } = await c.req.json();
+  const { articleId, lens } = await c.req.json();
+  const validLenses = ['investor', 'government', 'explorer'];
 
-  if (!articleId || !targetAudience) {
-    return c.json({ error: 'Missing articleId or targetAudience' }, 400);
+  if (!articleId || !lens || !validLenses.includes(lens)) {
+    return c.json({ error: 'Missing articleId or invalid lens. Valid: investor, government, explorer' }, 400);
   }
 
   // 1. Fetch Article with Context (Country + Sector)
@@ -488,19 +489,18 @@ router.post('/reframe', async (c) => {
       : undefined
   };
 
-  // 3. Call AI Service with Context
   try {
     const { optimizeForAudience } = await import('../lib/ai');
     const rewrittenContent = await optimizeForAudience(
       c.env,
       (article as any).content,
-      targetAudience as any,
-      contextData // <-- NEW: Inject context
+      lens as any,
+      contextData
     );
 
     return c.json({
       original_id: articleId,
-      audience: targetAudience,
+      lens,
       context: contextData,
       content: rewrittenContent
     });
