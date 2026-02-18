@@ -93,19 +93,9 @@ export async function getCommodityPrices(env: Env): Promise<CommodityPrice[]> {
                 console.error('Failed to fetch commodity prices:', error);
             }
 
-            // Fallback: Add placeholder data if API fails
+            // Fallback: Return empty if API fails (no mock data)
             if (prices.length === 0) {
-                for (const commodity of AFRICAN_COMMODITIES.slice(0, 4)) {
-                    prices.push({
-                        name: commodity.name,
-                        symbol: commodity.symbol,
-                        price: 0,
-                        currency: 'USD',
-                        change_24h: 0,
-                        change_percent: 0,
-                        updated_at: new Date().toISOString(),
-                    });
-                }
+                return [];
             }
 
             return prices;
@@ -193,22 +183,8 @@ export async function getStockIndices(env: Env): Promise<StockIndex[]> {
         env,
         'stocks:african_indices',
         async () => {
-            const indices: StockIndex[] = [];
-
-            // These would be scraped from exchange websites or free APIs
-            // For now, return structure without live data
-            for (const index of AFRICAN_INDICES) {
-                indices.push({
-                    name: index.name,
-                    country_code: index.country_code,
-                    value: 0,
-                    change: 0,
-                    change_percent: 0,
-                    updated_at: new Date().toISOString(),
-                });
-            }
-
-            return indices;
+            // Pending integration with live stock API
+            return [];
         },
         { ttl: 3600 }
     );

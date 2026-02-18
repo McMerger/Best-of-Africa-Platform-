@@ -274,14 +274,10 @@ router.get('/audience', async (c) => {
     `).all<{ topic: string; score: number }>(),
   ]);
 
-  // Generate mock demographics (would be from analytics in production)
-  const demographics = [
-    { age_group: '25-34', percentage: 38 },
-    { age_group: '35-44', percentage: 28 },
-    { age_group: '45-54', percentage: 18 },
-    { age_group: '18-24', percentage: 10 },
-    { age_group: '55+', percentage: 6 },
-  ];
+
+  // Real demographics data pending analytics integration
+  const demographics: any[] = [];
+
 
   // Get real engagement trends based on content publication
   const trendData = await c.env.DB.prepare(`
@@ -573,7 +569,7 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
     return text.split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
 
   } catch (e) {
-    return ["Monitor currency fluctuations.", "Engage local legal counsel.", "Verify supply chain resilience."];
+    return [];
   }
 }
 

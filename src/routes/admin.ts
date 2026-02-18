@@ -123,6 +123,26 @@ router.post('/articles', async (c) => {
     }, 201);
 });
 
+// GET /admin/articles/:id - Get single article details
+router.get('/articles/:id', async (c) => {
+    const id = c.req.param('id');
+
+    // Fetch article with country and sector names joined
+    const article = await c.env.DB.prepare(`
+        SELECT a.*, c.name as country_name, s.name as sector_name
+        FROM articles a
+        LEFT JOIN countries c ON a.country_code = c.code
+        LEFT JOIN sectors s ON a.sector_id = s.id
+        WHERE a.id = ?
+    `).bind(id).first();
+
+    if (!article) {
+        return c.json({ error: 'not_found', message: 'Article not found' }, 404);
+    }
+
+    return c.json(article);
+});
+
 // PUT /admin/articles/:id - Update article
 router.put('/articles/:id', async (c) => {
     const id = c.req.param('id');
@@ -333,9 +353,9 @@ router.get('/intelligence/recommendations', async (c) => {
                 const raw = (aiResponse as any).response;
                 const match = raw.match(/\[.*\]/s);
                 return match ? JSON.parse(match[0]) : [];
-
             } catch (e) {
-                return ["Focus on Sahel security updates", "Cover the new Fintech unicorn in Egypt", "Analyze lithium mining in Zimbabwe"];
+                console.error("Failed to generate recommendations:", e);
+                return [];
             }
         },
         { ttl: 3600 } // 1 hour
