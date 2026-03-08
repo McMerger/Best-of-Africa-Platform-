@@ -38,7 +38,7 @@ export async function detectTrends(env: Env): Promise<TrendSignal[]> {
     `).all();
 
     for (const row of countryTrends.results || []) {
-        const r = row as any;
+        const r = row as Record<string, any>;
         const velocity = r.count_7d / 7;
         const prevVelocity = r.count_prev_7d / 7;
         const changePercent = prevVelocity > 0 ? ((velocity - prevVelocity) / prevVelocity) * 100 : 100;
@@ -76,7 +76,7 @@ export async function detectTrends(env: Env): Promise<TrendSignal[]> {
     `).all();
 
     for (const row of sectorTrends.results || []) {
-        const r = row as any;
+        const r = row as Record<string, any>;
         const velocity = r.count_7d / 7;
         const prevVelocity = r.count_prev_7d / 7;
         const changePercent = prevVelocity > 0 ? ((velocity - prevVelocity) / prevVelocity) * 100 : 100;
@@ -114,7 +114,7 @@ export async function analyzeSentiment(
     content: string
 ): Promise<SentimentResult> {
     try {
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
@@ -196,7 +196,7 @@ export async function getCoverageHeatmap(env: Env): Promise<CoverageCell[]> {
     `).all();
 
     for (const row of data.results || []) {
-        const r = row as any;
+        const r = row as Record<string, any>;
 
         // Coverage score based on: article count, recency, engagement
         const countScore = Math.min(100, r.article_count * 10);

@@ -130,7 +130,7 @@ router.get('/featured', async (c) => {
             if (!headlines) return "Monitor global markets for emerging trends.";
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are a Global Editor. Write a 1-sentence "World View" synthesizing these top stories.' },
                         { role: 'user', content: headlines }
@@ -283,7 +283,7 @@ router.get('/sector/:id', async (c) => {
             if (!headlines) return "No sufficient data for trend analysis.";
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are a Sector Specialist. Synthesize a 2-sentence "Sector Trend Pulse" based on these headlines.' },
                         { role: 'user', content: headlines }
@@ -389,7 +389,7 @@ router.get('/:slug', async (c) => {
              `;
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are a Senior Market Analyst. Provide high-signal executive briefs.' },
                         { role: 'user', content: prompt }
@@ -427,7 +427,7 @@ router.post('/:slug/audio', async (c) => {
     const article = await c.env.DB.prepare(`
         SELECT id, slug, title, summary, content, audio_url, audio_duration_seconds
         FROM articles WHERE slug = ? AND status = 'published'
-    `).bind(slug).first() as any;
+    `).bind(slug).first() as Record<string, any>;
 
     if (!article) {
         return c.json({
@@ -507,7 +507,7 @@ router.get('/:slug/audio', async (c) => {
     const article = await c.env.DB.prepare(`
         SELECT audio_url, audio_duration_seconds
         FROM articles WHERE slug = ?
-    `).bind(slug).first() as any;
+    `).bind(slug).first() as Record<string, any>;
 
     if (!article) {
         return c.json({

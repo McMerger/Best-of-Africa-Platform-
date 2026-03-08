@@ -219,7 +219,7 @@ export async function checkArticleAlerts(
     `).all<CustomAlert>();
 
     for (const alert of alerts.results || []) {
-        const a = alert as any;
+        const a = alert as Record<string, any>;
         let triggered = false;
 
         switch (a.trigger_type) {
@@ -266,7 +266,7 @@ export async function runSavedSearches(env: Env): Promise<void> {
     `).all<SavedSearch>();
 
     for (const search of searches.results || []) {
-        const s = search as any;
+        const s = search as Record<string, any>;
         const filters = JSON.parse(s.filters);
 
         // Build query
@@ -297,7 +297,7 @@ export async function runSavedSearches(env: Env): Promise<void> {
                 await env.DB.prepare(`
                     INSERT INTO search_notifications (id, saved_search_id, article_id, created_at)
                     VALUES (?, ?, ?, datetime('now'))
-                `).bind(crypto.randomUUID(), s.id, (match as any).id).run();
+                `).bind(crypto.randomUUID(), s.id, (match as Record<string, any>).id).run();
             }
         }
 

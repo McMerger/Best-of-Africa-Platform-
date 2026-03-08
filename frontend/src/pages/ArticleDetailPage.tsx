@@ -12,13 +12,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { ActionBar } from '@/components/ActionBar';
 import { SEO } from '@/components/SEO';
-// useMission removed - unified briefing replaces role selection
+import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 
 export const ArticleDetailPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [data, setData] = useState<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] } | null>(null);
     const [loading, setLoading] = useState(true);
     const [economics, setEconomics] = useState<{ gdp_growth: string; stability: string } | null>(null);
+
+    // LANGUAGE RESOLUTION (Moved to top to avoid conditional hook error)
+    const { language, dir } = useLanguage();
 
     // UNIFIED BRIEFING STATE (Zero-Friction - No Selection Needed)
     const [unifiedBriefing, setUnifiedBriefing] = useState<{
@@ -28,23 +32,11 @@ export const ArticleDetailPage: React.FC = () => {
     } | null>(null);
     const [briefingLoading, setBriefingLoading] = useState(false);
 
-    // PAYWALL STATE - Connected to real auth
-    const [scrollProgress, setScrollProgress] = useState(0);
-
-    // Auth integration - check real subscription status
-    const getAuthState = () => {
-        try {
-            const userJson = localStorage.getItem('boa_user');
-            if (userJson) {
-                const user = JSON.parse(userJson);
-                return user?.tier === 'premium' || user?.tier === 'enterprise';
-            }
-        } catch { /* ignore */ }
-        return false;
-    };
-    const isSubscribed = getAuthState();
+    // Auth integration - use AuthContext instead of direct localStorage
+    const { isSubscribed } = useAuth();
 
     // Scroll tracking for paywall
+    const [scrollProgress, setScrollProgress] = useState(0);
     useEffect(() => {
         const handleScroll = () => {
             const scrollTop = window.scrollY;
@@ -66,8 +58,7 @@ export const ArticleDetailPage: React.FC = () => {
                     setData(res);
                     // Fetch economics for the country
                     if (res.country?.code) {
-                        fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1'}/countries/${res.country.code}/economics`)
-                            .then(r => r.json())
+                        api.getCountryEconomics(res.country.code)
                             .then(econ => setEconomics(econ))
                             .catch(() => { });
                     }
@@ -93,12 +84,32 @@ export const ArticleDetailPage: React.FC = () => {
     const { article, country, sector } = data;
 
     // Trigger point: 60% - using scrollProgress from top-level state
+    // Trigger point: 60% - using scrollProgress from top-level state
     const showPaywall = !isSubscribed && scrollProgress > 0.6;
+
+    // Helper to get localized field or fallback to English
+    // Assuming backend returns: article.title_fr, article.content_fr OR article.variants = { tourist_fr: ... }
+
+    // We will cast to 'any' to access potential dynamic fields for this step without breaking strict types yet.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const localArticle = article as any;
+    const title = localArticle[`title_${language}`] || article.title;
+    const content = localArticle[`content_${language}`]
+        || (localArticle.variants && localArticle.variants[`variant_tourist_${language}`])
+        || article.content;
+
+    const isTranslated = language !== 'en' && Boolean(localArticle[`title_${language}`] || (localArticle.variants && localArticle.variants[`variant_tourist_${language}`]));
 
     return (
         <Layout>
-            <ActionBar title={article.title} type="article" />
-            <div className="container py-12 relative">
+            <ActionBar title={title} type="article" />
+            <div className="container py-12 relative" dir={dir}>
+                {/* Fallback Notice */}
+                {language !== 'en' && !isTranslated && (
+                    <div className="mb-6 p-3 bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 rounded-lg text-xs font-bold text-center uppercase tracking-widest">
+                        Translation pending for {language.toUpperCase()} • Showing English Original
+                    </div>
+                )}
                 {/* PAYWALL OVERLAY */}
                 {showPaywall && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-gradient-to-t from-background via-background/90 to-transparent pb-32 pointer-events-auto backdrop-blur-[2px] transition-all duration-700 animate-in fade-in">
@@ -135,17 +146,12 @@ export const ArticleDetailPage: React.FC = () => {
                                 </span>
                             </div>
 
-                            {/* GLOBAL OPERATIONS: Language Switcher (Visualization of autoTranslateArticle) */}
+                            {/* GLOBAL OPERATIONS: Translation Status */}
                             <div className="absolute top-8 right-8 flex gap-2">
-                                <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground border-primary/20 text-[10px] font-bold uppercase transition-colors">
-                                    EN
+                                <Badge variant="outline" className="border-primary/20 text-[10px] font-bold uppercase">
+                                    {language.toUpperCase()}
                                 </Badge>
-                                <Badge variant="outline" className="cursor-pointer opacity-50 hover:opacity-100 hover:bg-primary hover:text-primary-foreground border-border text-[10px] font-bold uppercase transition-colors" title="Neural Translation Available">
-                                    FR
-                                </Badge>
-                                <Badge variant="outline" className="cursor-pointer opacity-50 hover:opacity-100 hover:bg-primary hover:text-primary-foreground border-border text-[10px] font-bold uppercase transition-colors" title="Neural Translation Available">
-                                    PT
-                                </Badge>
+                                {/* We could show available translations here based on article.translation_status if available in API response */}
                             </div>
 
                             <SEO
@@ -171,7 +177,7 @@ export const ArticleDetailPage: React.FC = () => {
                             )}
 
                             <h1 className="mb-4 font-serif text-4xl font-bold leading-tight tracking-tight text-foreground md:text-5xl lg:text-6xl">
-                                {(article.title || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                {(title || '').replace(/\*\*/g, '').replace(/##/g, '')}
                             </h1>
 
                             <div className="flex flex-col gap-4 text-xs font-bold text-muted-foreground border-t border-border pt-4 mt-6">
@@ -364,7 +370,7 @@ export const ArticleDetailPage: React.FC = () => {
                         {/* Main Analysis Body - Direct Content (No Selection Needed) */}
                         <div className="p-8 leading-relaxed text-foreground">
                             <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary max-w-none dark:prose-invert">
-                                <MarkdownRenderer content={article.content} />
+                                <MarkdownRenderer content={content} />
                             </div>
                         </div>
                     </article>

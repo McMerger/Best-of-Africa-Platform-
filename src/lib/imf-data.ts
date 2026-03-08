@@ -102,7 +102,7 @@ export async function fetchIMFData(
             return null;
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
 
         const economicData: IMFEconomicData = {
             country: countryName,
@@ -168,7 +168,7 @@ export async function getGDPForecast(
         const response = await fetch(url);
         if (!response.ok) return null;
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const values = data.values?.NGDP_RPCH?.[countryCode] || {};
 
         const currentYear = new Date().getFullYear();
@@ -223,7 +223,7 @@ export async function getDebtMetrics(
         const response = await fetch(url);
         if (!response.ok) return null;
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const values = data.values?.GGXWDG_NGDP?.[countryCode] || {};
 
         const currentYear = new Date().getFullYear();
@@ -275,7 +275,7 @@ export async function compareAfricanEconomies(
         const response = await fetch(url);
         if (!response.ok) return [];
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const indicatorData = data.values?.[indicator] || {};
 
         const currentYear = new Date().getFullYear();

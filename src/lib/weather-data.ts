@@ -116,7 +116,7 @@ export async function getCurrentWeather(
         const response = await fetch(url.toString());
         if (!response.ok) return null;
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const current = data.current;
 
         const weather: CurrentWeather = {
@@ -172,7 +172,7 @@ export async function getAgriculturalConditions(
         const response = await fetch(url.toString());
         if (!response.ok) return null;
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const daily = data.daily;
 
         // Calculate metrics
@@ -244,7 +244,7 @@ export async function getSeasonalForecast(
         const response = await fetch(url.toString());
         if (!response.ok) return null;
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const daily = data.daily;
 
         const minTemp = Math.min(...daily.temperature_2m_min);

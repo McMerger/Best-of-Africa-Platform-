@@ -52,7 +52,7 @@ router.post('/login', async (c) => {
             }, 401);
         }
 
-        const clientData = client as any;
+        const clientData = client as Record<string, any>;
 
         // Check if client is active
         if (!clientData.is_active) {
@@ -243,7 +243,7 @@ router.post('/refresh', async (c) => {
             }, 401);
         }
 
-        const clientData = client as any;
+        const clientData = client as Record<string, any>;
 
         // Issue new token
         const newToken = await createJWT(clientData.id, c.env.JWT_SECRET, 86400);
@@ -299,9 +299,9 @@ router.post('/validate', async (c) => {
         return c.json({
             valid: true,
             client: {
-                id: (client as any).id,
-                name: (client as any).name,
-                tier: (client as any).tier
+                id: (client as Record<string, any>).id,
+                name: (client as Record<string, any>).name,
+                tier: (client as Record<string, any>).tier
             }
         });
 

@@ -107,10 +107,10 @@ router.get('/insight', requireAuth, async (c) => {
     const topContext = (topArticles.results as any[]).map(a => `"${a.title}": ${a.views} views`).join(', ');
 
     try {
-        const response = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 { role: 'system', content: 'You are a Data Journalist. Explain the traffic trend based on the top stories. Be concise.' },
-                { role: 'user', content: `Traffic Stats: ${(traffic as any).views} views. Top Stories: ${topContext}` }
+                { role: 'user', content: `Traffic Stats: ${(traffic as Record<string, any>).views} views. Top Stories: ${topContext}` }
             ]
         });
         insight = response?.response?.trim();
@@ -263,7 +263,7 @@ router.get('/content-gaps', requireAuth, async (c) => {
             if (!gapContext) return "Coverage is balanced.";
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are a Content Strategist. Advise on filling content gaps.' },
                         { role: 'user', content: `We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.` }
@@ -314,7 +314,7 @@ router.get('/intelligence', async (c) => {
                 FROM articles
                 WHERE status = 'published' 
                   AND published_at > datetime('now', '-24 hours')
-            `).first() as any;
+            `).first() as Record<string, any>;
 
             const articlesLast24h = pulseData?.article_count || 0;
             const articlesPerHour = articlesLast24h / 24;

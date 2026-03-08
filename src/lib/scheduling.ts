@@ -60,7 +60,7 @@ export async function publishScheduledArticles(env: Env): Promise<number> {
     let published = 0;
 
     for (const article of dueArticles.results || []) {
-        const a = article as any;
+        const a = article as Record<string, any>;
 
         try {
             // Publish the article

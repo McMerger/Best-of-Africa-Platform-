@@ -113,7 +113,7 @@ export async function notifyMatchingUsers(
 
     // Store notifications for matched users
     for (const user of users.results || []) {
-        const u = user as any;
+        const u = user as Record<string, any>;
         await env.DB.prepare(`
             INSERT INTO user_notifications (id, user_preference_id, article_id, is_read, created_at)
             VALUES (?, ?, ?, 0, datetime('now'))
@@ -158,12 +158,12 @@ export async function onArticlePublished(
 
     // Generate AI Push Message
     // Optimize for lock screen: < 120 chars, urgent, actionable
-    let pushMessage = (article as any).ai_push_message || article.title;
+    let pushMessage = (article as Record<string, any>).ai_push_message || article.title;
 
     // Fallback: Generate if missing (e.g. old article)
     if (!pushMessage || pushMessage === article.title) {
         try {
-            const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     {
                         role: 'system',

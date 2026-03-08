@@ -289,4 +289,7 @@ export const api = {
         sentiment_trend: { date: string; avg_sentiment: number; volume: number }[];
         generated_at: string;
     }>('/analytics/intelligence'),
+
+    // Country Economics
+    getCountryEconomics: (code: string) => request<{ gdp_growth: string; stability: string }>(`/countries/${code}/economics`),
 };

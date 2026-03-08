@@ -38,13 +38,13 @@ export async function translateText(
 
     try {
         // Workers AI translation model
-        const response = await (env.AI as any).run('@cf/meta/m2m100-1.2b', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/m2m100-1.2b', {
             text: text.slice(0, 5000), // Limit input size
             source_lang: sourceLang,
             target_lang: targetLang,
         });
 
-        return (response as any).translated_text || text;
+        return (response as Record<string, any>).translated_text || text;
     } catch (error) {
         console.error(`Translation failed (${sourceLang} → ${targetLang}):`, error);
         return text; // Return original on failure
@@ -144,7 +144,7 @@ export async function getTranslation(
 
     if (!result) return null;
 
-    const r = result as any;
+    const r = result as Record<string, any>;
     return {
         title: r.title,
         subtitle: r.subtitle,

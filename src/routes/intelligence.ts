@@ -21,6 +21,12 @@ router.use('/sector/*', rateLimit);
 router.use('/campaigns/*', requireApiKey);
 router.use('/campaigns/*', rateLimit);
 
+// Rate-limit AI-heavy public endpoints to prevent quota exhaustion
+router.use('/reframe', rateLimit);
+router.use('/reformat', rateLimit);
+router.use('/synthesize-unified', rateLimit);
+router.use('/ai-chat', rateLimit);
+
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /intel/country/:code/report - Deep country analysis (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
@@ -97,7 +103,7 @@ router.get('/country/:code/report', async (c) => {
       `).bind(code).all<{ name: string }>();
 
       // Calculate scores
-      const engagementScore = (viewStats as any)?.avg_engagement || 0;
+      const engagementScore = (viewStats as Record<string, any>)?.avg_engagement || 0;
       const investmentScore = Math.min(100, (articleCount?.total || 0) * 10 + engagementScore * 20);
       const tourismScore = topSectors.results?.some((s: any) => s.id === 'tourism')
         ? Math.min(100, engagementScore * 30 + 50)
@@ -115,7 +121,7 @@ router.get('/country/:code/report', async (c) => {
         investment_readiness_score: Math.round(investmentScore),
         tourism_appeal_score: Math.round(tourismScore),
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
-        recommendations: await generateAIRecommendations(c.env, (country as any).name, recentArticles.results || []),
+        recommendations: await generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []),
       } as CountryReport;
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -199,9 +205,9 @@ router.get('/sector/:id/trends', async (c) => {
           if (!headlines) return "Insufficient data for deep analysis.";
 
           try {
-            const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
               messages: [
-                { role: 'system', content: `You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as any).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.` },
+                { role: 'system', content: `You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as Record<string, any>).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.` },
                 { role: 'user', content: `Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.` }
               ]
             });
@@ -343,7 +349,7 @@ router.get('/campaigns/:id', async (c) => {
   return c.json({
     campaign: {
       ...campaign,
-      ai_roi_projection: (campaign as any).ai_predicted_roi || "Calculating..."
+      ai_roi_projection: (campaign as Record<string, any>).ai_predicted_roi || "Calculating..."
     },
     articles: articles.results || [],
   });
@@ -400,7 +406,7 @@ router.post('/ai-chat', async (c) => {
     const embeddingResponse = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', {
       text: [message]
     });
-    const queryVector = (embeddingResponse as any).data[0];
+    const queryVector = (embeddingResponse as Record<string, any>).data[0];
 
     // 2. Search Vector Database (RAG)
     // Query best-of-africa-content index
@@ -412,7 +418,7 @@ router.post('/ai-chat', async (c) => {
     // 3. Retrieve Context
     const matches = vectorResults.matches || [];
     const contextDocs = matches.map(m => {
-      const meta = m.metadata as any;
+      const meta = m.metadata as Record<string, any>;
       return `Title: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nDate: ${meta.published_at}`;
     }).join('\n---\n');
 
@@ -426,7 +432,7 @@ router.post('/ai-chat', async (c) => {
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
-    const llmResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+    const llmResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: message }
@@ -434,8 +440,8 @@ router.post('/ai-chat', async (c) => {
     });
 
     return c.json({
-      response: (llmResponse as any).response,
-      sources: matches.map(m => (m.metadata as any).title)
+      response: (llmResponse as Record<string, any>).response,
+      sources: matches.map(m => (m.metadata as Record<string, any>).title)
     });
 
   } catch (error) {
@@ -477,11 +483,11 @@ router.post('/reframe', async (c) => {
 
   // 2. Build Context Object for Deep Personalization
   const contextData = {
-    countryName: (article as any).country_name || undefined,
-    sectorName: (article as any).sector_name || undefined,
-    gdp: (article as any).gdp_growth ? `${(article as any).gdp_growth}% YoY` : undefined,
-    stability: (article as any).investment_score
-      ? `${(article as any).investment_score}/100 (Investment Score)`
+    countryName: (article as Record<string, any>).country_name || undefined,
+    sectorName: (article as Record<string, any>).sector_name || undefined,
+    gdp: (article as Record<string, any>).gdp_growth ? `${(article as Record<string, any>).gdp_growth}% YoY` : undefined,
+    stability: (article as Record<string, any>).investment_score
+      ? `${(article as Record<string, any>).investment_score}/100 (Investment Score)`
       : undefined
   };
 
@@ -489,7 +495,7 @@ router.post('/reframe', async (c) => {
     const { optimizeForAudience } = await import('../lib/ai');
     const rewrittenContent = await optimizeForAudience(
       c.env,
-      (article as any).content,
+      (article as Record<string, any>).content,
       lens as any,
       contextData
     );
@@ -528,7 +534,7 @@ router.post('/reformat', async (c) => {
     const { adaptContentFormat } = await import('../lib/ai');
     const reformattedContent = await adaptContentFormat(
       c.env,
-      (article as any).content,
+      (article as Record<string, any>).content,
       format as any
     );
 
@@ -551,7 +557,7 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
   try {
     const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
 
-    const aiRes = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct' as any, {
+    const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct' as any, {
       messages: [
         {
           role: 'system',
@@ -565,7 +571,7 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
     });
 
     // Parse response (simple heuristic)
-    const text = (aiRes as any).response;
+    const text = (aiRes as Record<string, any>).response;
     return text.split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
 
   } catch (e) {
@@ -607,17 +613,17 @@ router.post('/synthesize-unified', async (c) => {
 
     const briefing = await synthesizeUnifiedBriefing(
       c.env,
-      (article as any).content,
+      (article as Record<string, any>).content,
       {
-        countryName: (article as any).country_name || undefined,
-        sectorName: (article as any).sector_name || undefined,
-        gdp: (article as any).gdp_growth ? `${(article as any).gdp_growth}%` : undefined
+        countryName: (article as Record<string, any>).country_name || undefined,
+        sectorName: (article as Record<string, any>).sector_name || undefined,
+        gdp: (article as Record<string, any>).gdp_growth ? `${(article as Record<string, any>).gdp_growth}%` : undefined
       }
     );
 
     return c.json({
       article_id: articleId,
-      title: (article as any).title,
+      title: (article as Record<string, any>).title,
       briefing
     });
   } catch (e) {

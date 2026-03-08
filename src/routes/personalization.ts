@@ -104,7 +104,7 @@ router.get('/preferences', async (c) => {
         return c.json({ preferences: null });
     }
 
-    const prefsData = prefs as any;
+    const prefsData = prefs as Record<string, any>;
     return c.json({
         preferences: {
             ...prefsData,
@@ -149,7 +149,7 @@ router.post('/track', async (c) => {
         ).bind(article_id).first();
 
         if (article) {
-            const a = article as any;
+            const a = article as Record<string, any>;
             if (a.country_code) {
                 await c.env.DB.prepare(`
                     UPDATE user_preferences 
@@ -237,7 +237,7 @@ router.get('/recommended', async (c) => {
         });
     }
 
-    const prefsData = prefs as any;
+    const prefsData = prefs as Record<string, any>;
     const countries = prefsData.countries_of_interest ? JSON.parse(prefsData.countries_of_interest) : [];
     const sectors = prefsData.sectors_of_interest ? JSON.parse(prefsData.sectors_of_interest) : [];
     const articlesRead = prefsData.articles_read ? JSON.parse(prefsData.articles_read) : [];
@@ -318,7 +318,7 @@ router.get('/feed/ai-curated', async (c) => {
     if (!prefs) {
         return c.json({ error: 'no_prefs', message: 'Set preferences to enable AI curation' }, 400);
     }
-    const prefsData = prefs as any;
+    const prefsData = prefs as Record<string, any>;
     const countries = prefsData.countries_of_interest ? JSON.parse(prefsData.countries_of_interest) : [];
     const sectors = prefsData.sectors_of_interest ? JSON.parse(prefsData.sectors_of_interest) : [];
 
@@ -366,7 +366,7 @@ router.get('/feed/ai-curated', async (c) => {
              `;
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are a Personal Intelligence Officer. Curate a briefing.' },
                         { role: 'user', content: prompt }

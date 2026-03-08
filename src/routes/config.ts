@@ -17,7 +17,7 @@ router.get('/system', async (c) => {
     // Reduce to key-value object
     const map: Record<string, string> = {};
     for (const row of (config.results || [])) {
-        map[(row as any).key] = (row as any).value;
+        map[(row as Record<string, any>).key] = (row as Record<string, any>).value;
     }
 
     return c.json(map);

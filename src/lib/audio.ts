@@ -20,7 +20,7 @@ export async function generateAudioNarration(
         const narrationText = createNarrationScript(title, content);
 
         // Use Workers AI TTS model
-        const response = await (env.AI as any).run('@cf/microsoft/speecht5-tts', {
+        const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
             text: narrationText.slice(0, 5000), // Limit to avoid timeout
         });
 
@@ -123,7 +123,7 @@ export async function generateBriefAudio(
             const transcript = `Good morning. This is your ${country?.name || countryCode} market briefing for ${date}. Today's top stories: ${headlines}. That's your briefing. Visit Best of Africa for full coverage.`;
 
             // Generate audio
-            const response = await (env.AI as any).run('@cf/microsoft/speecht5-tts', {
+            const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
                 text: transcript,
             });
 

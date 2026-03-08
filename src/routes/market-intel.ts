@@ -98,7 +98,7 @@ router.get('/sector/:id', async (c) => {
     if (recentArticles.results && recentArticles.results.length > 0) {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
         try {
-            const response = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const response = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.' },
                     { role: 'user', content: `Sector: ${sector.name}\nHeadlines: ${headlines}` }
@@ -119,18 +119,18 @@ router.get('/sector/:id', async (c) => {
             `sector:${sectorId}:trend_analysis`,
             async () => {
                 try {
-                    const query = `${(sector as any).name} Africa sector trends outlook`;
+                    const query = `${(sector as Record<string, any>).name} Africa sector trends outlook`;
                     const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as any).data[0];
+                    const vector = (embedding as Record<string, any>).data[0];
                     const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-                    const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+                    const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
                     if (!context) return "Sector data currently being aggregated.";
 
-                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: 'Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.' },
-                            { role: 'user', content: `Sector: ${(sector as any).name}. recent Context:\n${context}` }
+                            { role: 'user', content: `Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}` }
                         ]
                     });
                     return aiResponse?.response?.trim();
@@ -179,7 +179,7 @@ router.get('/sector/:id/trends', async (c) => {
     // Extract top companies from most recent year
     let topCompanies: string[] = [];
     if (metrics.results && metrics.results.length > 0) {
-        const latestMetric = metrics.results[0] as any;
+        const latestMetric = metrics.results[0] as Record<string, any>;
         if (latestMetric.top_companies_json) {
             try {
                 topCompanies = JSON.parse(latestMetric.top_companies_json);
@@ -256,7 +256,7 @@ router.get('/country/:code/outlook', async (c) => {
         `).bind(code).first(),
     ]);
 
-    const countryData = country as any;
+    const countryData = country as Record<string, any>;
 
     // Generate AI Investment Commentary
     const investmentCommentary = await getCached(
@@ -268,7 +268,7 @@ router.get('/country/:code/outlook', async (c) => {
             const context = (recent.results || []).map((a: any) => a.title).join('; ');
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         {
                             role: 'system',
@@ -293,9 +293,9 @@ router.get('/country/:code/outlook', async (c) => {
         country: countryData,
         outlook: {
             investment_readiness: Math.round((countryData.image_strength_score || 50) * 2),
-            narrative_strength: (narrativeStrength as any)?.avg_effectiveness || 0,
-            media_presence: (articleStats as any)?.total_articles || 0,
-            engagement_level: (articleStats as any)?.avg_engagement || 0,
+            narrative_strength: (narrativeStrength as Record<string, any>)?.avg_effectiveness || 0,
+            media_presence: (articleStats as Record<string, any>)?.total_articles || 0,
+            engagement_level: (articleStats as Record<string, any>)?.avg_engagement || 0,
             investment_commentary: investmentCommentary
         },
         sector_opportunities: sectorOpportunities.results || [],
@@ -366,7 +366,7 @@ router.get('/reports/:id', requireApiKey, rateLimit, async (c) => {
         return c.json({ error: 'not_found', message: 'Report not found' }, 404);
     }
 
-    const reportData = report as any;
+    const reportData = report as Record<string, any>;
 
     if (reportData.is_premium && clientTier === 'basic') {
         return c.json({
@@ -407,7 +407,7 @@ router.get('/reports/sector/:id', requireApiKey, rateLimit, async (c) => {
         }, 404);
     }
 
-    const reportData = report as any;
+    const reportData = report as Record<string, any>;
     return c.json({
         ...reportData,
         key_findings: reportData.key_findings ? JSON.parse(reportData.key_findings) : [],
@@ -479,14 +479,14 @@ router.get('/performance', async (c) => {
                     };
                     const query = lensQueries[activeLens];
                     const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as any).data[0];
+                    const vector = (embedding as Record<string, any>).data[0];
                     const relevant = await c.env.VECTORS.query(vector, {
                         topK: 5,
                         returnMetadata: 'all',
                         filter: { sector_id: s.id }
                     });
                     ragContext = relevant.matches
-                        .map(m => (m.metadata as any)?.text || (m.metadata as any)?.title || '')
+                        .map(m => (m.metadata as Record<string, any>)?.text || (m.metadata as Record<string, any>)?.title || '')
                         .filter(Boolean)
                         .join('\n---\n')
                         .slice(0, 2000);
@@ -509,7 +509,7 @@ router.get('/performance', async (c) => {
                     : 'No financial data available';
 
                 try {
-                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             {
                                 role: 'system',
@@ -599,7 +599,7 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`
                         ]
                     });
 
-                    const raw = (aiResponse as any)?.response || '';
+                    const raw = (aiResponse as Record<string, any>)?.response || '';
                     const match = raw.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
@@ -684,7 +684,7 @@ router.get('/leading-sector', async (c) => {
         });
     }
 
-    const data = result as any;
+    const data = result as Record<string, any>;
     const growth = Math.min(5 + (data.article_count * 0.8), 20);
 
     return c.json({
@@ -721,17 +721,17 @@ router.get('/sentiment-divergence', async (c) => {
                 const query = `political stability economic outlook ${c.name}`;
                 try {
                     const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as any).data[0];
+                    const vector = (embedding as Record<string, any>).data[0];
                     const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                    const context = relevant.matches.map((m: any) => (m.metadata as any).title).join('\n');
+                    const context = relevant.matches.map((m: any) => (m.metadata as Record<string, any>).title).join('\n');
 
-                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: 'You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.' },
                             { role: 'user', content: `Country: ${c.name}.Recent News: \n${context}` }
                         ]
                     });
-                    const score = parseInt((aiResponse as any).response.replace(/[^0-9]/g, ''));
+                    const score = parseInt((aiResponse as Record<string, any>).response.replace(/[^0-9]/g, ''));
                     return isNaN(score) ? 50 : score;
                 } catch (e) { return 50; }
             },
@@ -763,6 +763,56 @@ router.get('/sentiment-divergence', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// POST /market-intel/metrics - Update market metrics (Agent use only)
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/metrics', requireApiKey, async (c) => {
+    // Check for ADMIN key specifically to ensure only authorized agents update data
+    const key = c.req.header('x-api-key');
+    if (key !== c.env.ADMIN_API_KEY) {
+        return c.json({ error: 'forbidden', message: 'Admin access required' }, 403);
+    }
+
+    try {
+        const body = await c.req.json();
+        const { sector_id, country_code, year, market_size_usd, growth_rate, investment_volume_usd, regulatory_outlook, top_companies, source_urls } = body;
+
+        // Validate required fields
+        if (!sector_id || !country_code || !year) {
+            return c.json({ error: 'bad_request', message: 'Missing required fields: sector_id, country_code, year' }, 400);
+        }
+
+        const id = crypto.randomUUID();
+
+        await c.env.DB.prepare(`
+            INSERT INTO market_metrics (
+                id, sector_id, country_code, year, market_size_usd, growth_rate, 
+                investment_volume_usd, regulatory_outlook, top_companies_json, 
+                source_urls, last_updated_by, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'agent', datetime('now'))
+            ON CONFLICT(sector_id, country_code, year) DO UPDATE SET
+                market_size_usd = COALESCE(excluded.market_size_usd, market_metrics.market_size_usd),
+                growth_rate = excluded.growth_rate,
+                investment_volume_usd = COALESCE(excluded.investment_volume_usd, market_metrics.investment_volume_usd),
+                regulatory_outlook = COALESCE(excluded.regulatory_outlook, market_metrics.regulatory_outlook),
+                top_companies_json = COALESCE(excluded.top_companies_json, market_metrics.top_companies_json),
+                source_urls = excluded.source_urls,
+                last_updated_by = 'agent',
+                updated_at = datetime('now')
+        `).bind(
+            id,
+            sector_id, country_code, year,
+            market_size_usd, growth_rate, investment_volume_usd,
+            regulatory_outlook, JSON.stringify(top_companies || []),
+            JSON.stringify(source_urls || [])
+        ).run();
+
+        return c.json({ success: true, message: `metrics updated for ${sector_id}-${country_code}` });
+    } catch (e) {
+        return c.json({ error: 'server_error', message: String(e) }, 500);
+    }
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
 // GET /market-intel/sector/:id/analytics - Sector volatility and supply chain
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sector/:id/analytics', async (c) => {
@@ -784,7 +834,7 @@ router.get('/sector/:id/analytics', async (c) => {
                         `).bind(sectorId).all()
     ]);
 
-    const stats = articleStats as any;
+    const stats = articleStats as Record<string, any>;
     const articles = (recentArticles.results || []) as any[];
 
     // Calculate volatility from engagement variance
@@ -808,11 +858,11 @@ router.get('/sector/:id/analytics', async (c) => {
             const query = `supply chain logistics disruption shortage ${sectorId}`; // simplified query using sectorId as keyword proxy
             try {
                 const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                const vector = (embedding as any).data[0];
+                const vector = (embedding as Record<string, any>).data[0];
                 const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+                const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}' },
                         { role: 'user', content: `Sector Context: \n${context}` }
@@ -820,7 +870,7 @@ router.get('/sector/:id/analytics', async (c) => {
                     response_format: { type: 'json_object' }
                 });
 
-                const raw = (aiResponse as any).response;
+                const raw = (aiResponse as Record<string, any>).response;
                 const match = raw.match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
             } catch (e) {
@@ -904,7 +954,7 @@ router.get('/sector/:id/velocity', async (c) => {
         WHERE sector_id = ?
                         ORDER BY year DESC
         LIMIT 1
-                        `).bind(sectorId).first() as any;
+                        `).bind(sectorId).first() as Record<string, any>;
 
     // Get article count for "active projects"
     const articleStats = await c.env.DB.prepare(`
@@ -912,7 +962,7 @@ router.get('/sector/:id/velocity', async (c) => {
         FROM articles
         WHERE sector_id = ? AND status = 'published'
         AND published_at > datetime('now', '-30 days')
-                        `).bind(sectorId).first() as any;
+                        `).bind(sectorId).first() as Record<string, any>;
 
     // Calculate 5-year CAGR from available data or use growth rate
     const cagr = metrics?.growth_rate || 8.5;

@@ -64,7 +64,7 @@ export async function getHDIData(
                     return { hdi: null, hdi_rank: null, hdi_category: 'unknown' };
                 }
 
-                const data = await response.json() as any;
+                const data = await response.json() as Record<string, any>;
 
                 const hdi = data.hdi || null;
                 let category = 'unknown';
@@ -159,7 +159,7 @@ export async function getDemographics(
 
                 if (!response.ok) return null;
 
-                const data = await response.json() as any;
+                const data = await response.json() as Record<string, any>;
 
                 // Parse and return
                 return {

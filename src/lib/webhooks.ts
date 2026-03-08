@@ -133,7 +133,7 @@ export async function dispatchWebhookEvent(
     };
 
     for (const webhook of webhooks.results || []) {
-        const w = webhook as any;
+        const w = webhook as Record<string, any>;
 
         try {
             const headers: Record<string, string> = {

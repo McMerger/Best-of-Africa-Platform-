@@ -89,5 +89,11 @@ class PostgresDB implements DB {
 }
 
 // Factory to export the right instance
+// Factory to export the right instance
 const dbUrl = process.env.DATABASE_URL;
-export const db: DB = dbUrl ? new PostgresDB(dbUrl) : new SQLiteDB();
+
+if (!dbUrl) {
+    throw new Error("DATABASE_URL is required. Video Agent must connect to the production Postgres database.");
+}
+
+export const db: DB = new PostgresDB(dbUrl);

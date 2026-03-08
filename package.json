@@ -16,7 +16,8 @@
         "install:all": "npm install && cd frontend && npm install"
     },
     "dependencies": {
-        "hono": "^4.6.0"
+        "hono": "^4.6.0",
+        "zod": "^4.3.6"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20241127.0",

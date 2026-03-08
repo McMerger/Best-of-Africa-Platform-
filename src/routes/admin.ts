@@ -18,14 +18,14 @@ import { generateSummary, analyzeSentiment } from '../lib/ai';
 
 async function generateTags(env: Env, content: string): Promise<string[]> {
     try {
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 { role: 'system', content: 'Generate 5 SEO tags for this content. Return JSON array of strings.' },
                 { role: 'user', content: content.slice(0, 1000) }
             ],
             response_format: { type: 'json_object' }
         });
-        const prev = (response as any).response;
+        const prev = (response as Record<string, any>).response;
         const match = prev.match(/\[.*\]/s);
         return match ? JSON.parse(match[0]) : ['African Business', 'News'];
     } catch { return []; }
@@ -180,7 +180,7 @@ router.put('/articles/:id', async (c) => {
     if (body.content && (body.summary === undefined || body.tags === undefined)) {
         // Only run if content is being updated and fields are missing/requested
         // This logic allows explicit "reset" if user sends empty string, so we check for undefined
-        const prevArticle = existing as any;
+        const prevArticle = existing as Record<string, any>;
         const contentToAnalyze = body.content || prevArticle.content;
 
         if (contentToAnalyze) {
@@ -342,7 +342,7 @@ router.get('/intelligence/recommendations', async (c) => {
             // Ideally: We search the `articles` table for "Emerging Tech" and see low results.
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are an Editor-in-Chief. Identify content gaps.' },
                         { role: 'user', content: `Our Recent Articles: ${internalContext}\n\nTask: Compare this against top current trends in African AgriTech, Fintech, and Mining. Identify 3 specific "Missed Content Opportunities" that are trending globally but missing from our list. Return JSON array.` }
@@ -350,7 +350,7 @@ router.get('/intelligence/recommendations', async (c) => {
                     response_format: { type: 'json_object' }
                 });
 
-                const raw = (aiResponse as any).response;
+                const raw = (aiResponse as Record<string, any>).response;
                 const match = raw.match(/\[.*\]/s);
                 return match ? JSON.parse(match[0]) : [];
             } catch (e) {
@@ -430,7 +430,7 @@ router.post('/fix-sectors', async (c) => {
     const results = { fixed: 0, failed: 0, details: [] as { id: string; sector: string | null; country: string | null }[] };
 
     for (const article of (articles.results || [])) {
-        const a = article as any;
+        const a = article as Record<string, any>;
         try {
             let newSector = a.sector_id;
             let newCountry = a.country_code;
@@ -497,7 +497,7 @@ router.post('/generate-images', async (c) => {
     const results = { generated: 0, failed: 0, details: [] as any[] };
 
     for (const article of (articles.results || [])) {
-        const a = article as any;
+        const a = article as Record<string, any>;
         try {
             // Construct Prompt
             const context = [a.country_name, a.sector_name].filter(Boolean).join(', ');

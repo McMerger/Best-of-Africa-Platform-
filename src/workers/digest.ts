@@ -89,13 +89,13 @@ export async function generateDailyDigest(
         let globalContext = '';
         try {
             const query = "Africa business headlines global market trends today";
-            const embedding = await (env.AI as any).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-            const vector = (embedding as any).data[0];
+            const embedding = await (env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as Record<string, any>).data[0];
             const relevant = await env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-            globalContext = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+            globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
@@ -169,13 +169,13 @@ export async function generateWeeklyDigest(
         let globalContext = '';
         try {
             const query = "Africa business headlines major events this week";
-            const embedding = await (env.AI as any).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-            const vector = (embedding as any).data[0];
+            const embedding = await (env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as Record<string, any>).data[0];
             const relevant = await env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-            globalContext = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+            globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
@@ -215,7 +215,7 @@ export async function sendDigestEmail(
     text: string
 ): Promise<boolean> {
     // Check for Resend API key
-    const resendKey = (env as any).RESEND_API_KEY;
+    const resendKey = (env as Record<string, any>).RESEND_API_KEY;
 
     if (resendKey) {
         try {

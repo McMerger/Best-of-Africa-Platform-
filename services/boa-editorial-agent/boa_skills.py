@@ -1,6 +1,8 @@
 import json
+import shutil
 import sqlite3
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, List
 
@@ -128,6 +130,7 @@ class StoreAuditResultTool(Tool):
                 audit_report JSON,
                 variants JSON,
                 metadata JSON,
+                confidence_score REAL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -170,29 +173,83 @@ class StoreAuditResultTool(Tool):
                     },
                     "required": ["variant_tourist", "variant_investor_graham", "variant_policy"]
                 },
+                "confidence_score": {
+                    "type": "number",
+                    "description": "Agent's self-assessed confidence in this audit (0.0 = uncertain, 1.0 = certain). Audits below 0.6 are flagged for human review."
+                },
                 "metadata": {"type": "object"}
             },
             "required": ["article_id", "country", "topic", "audit_report", "variants"]
         }
 
-    async def execute(self, article_id: str, country: str, topic: str, audit_report: dict, variants: dict, metadata: dict = None) -> str:
+    async def execute(self, article_id: str, country: str, topic: str, audit_report: dict, variants: dict, confidence_score: float = None, metadata: dict = None) -> str:
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT OR REPLACE INTO article_audits (article_id, country, topic, audit_report, variants, metadata) VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    article_id,
-                    country,
-                    topic,
-                    json.dumps(audit_report),
-                    json.dumps(variants),
-                    json.dumps(metadata or {})
-                )
-            )
-            conn.commit()
-            conn.close()
-            return f"Successfully stored audit result for article {article_id}."
+            # We use asyncpg if available, or sqlite for dev. 
+            # The plan is to MIGRATE to Postgres.
+            # Assuming the agent environment has DATABASE_URL.
+            
+            # For this step, let's assume we are replacing SQLite with Postgres logic IF configured, 
+            # or we keep SQLite for legacy dev but ideally switch.
+            # User said: "Migrate from SQLite to Postgres... table article_audits (New in Postgres)"
+            
+            import os
+            import asyncpg
+            import json
+            
+            db_url = os.environ.get("DATABASE_URL")
+            if not db_url:
+                return "Error: DATABASE_URL not set. cannot store to Postgres."
+
+            conn = await asyncpg.connect(db_url)
+            try:
+                # 1. Store Audit
+                # We need to map the variants to the new namespaced keys if they aren't already.
+                # The agent generates "variant_tourist". We should store as "variant_tourist_en".
+                
+                final_variants = {}
+                for k, v in variants.items():
+                    if not k.endswith("_en") and not k.endswith("_fr"): # heuristic
+                         final_variants[f"{k}_en"] = v
+                    else:
+                        final_variants[k] = v
+                
+                await conn.execute("""
+                    INSERT INTO article_audits (article_id, country, topic, audit_report, variants, metadata, confidence_score)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (article_id) 
+                    DO UPDATE SET 
+                        audit_report = EXCLUDED.audit_report,
+                        variants = article_audits.variants || EXCLUDED.variants,
+                        confidence_score = EXCLUDED.confidence_score,
+                        updated_at = NOW()
+                """, article_id, country, topic, json.dumps(audit_report), json.dumps(final_variants), json.dumps(metadata or {}), confidence_score)
+                
+                # Log confidence for observability
+                if confidence_score is not None and confidence_score < 0.6:
+                    from loguru import logger
+                    logger.warning(f"Low-confidence audit for {article_id}: {confidence_score:.2f} — flagging for human review")
+
+                # 2. Enqueue Translations
+                # We trigger for all enabled languages except 'en'
+                enabled_langs = ["fr", "de", "ar", "hi", "zh", "pt"]
+                
+                # Batch insert into translation_queue
+                # "INSERT INTO translation_queue (article_id, target_lang) VALUES ..."
+                qs = []
+                for lang in enabled_langs:
+                     qs.append((article_id, lang))
+                
+                await conn.executemany("""
+                    INSERT INTO translation_queue (article_id, target_lang, status)
+                    VALUES ($1, $2, 'pending')
+                    ON CONFLICT (article_id, target_lang) DO NOTHING
+                """, qs)
+
+                return f"Successfully stored audit result and queued {len(enabled_langs)} translations."
+
+            finally:
+                await conn.close()
+                
         except Exception as e:
             return f"Error storing result: {str(e)}"
 
@@ -309,9 +366,92 @@ class EvolveInstructionsTool(Tool):
         
         if new_rules:
             learned_path = Path(__file__).parent / "instructions" / "learned.md"
+            
+            # Backup before writing — enables rollback of bad rules
+            if learned_path.exists():
+                backup_dir = learned_path.parent / "backups"
+                backup_dir.mkdir(exist_ok=True)
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                shutil.copy2(learned_path, backup_dir / f"learned_{timestamp}.md")
+            
             with open(learned_path, "a") as f:
                 f.write(f"\n{new_rules}")
-            return f"Updated instructions with {len(new_rules.splitlines())} new rules."
+            return f"Updated instructions with {len(new_rules.splitlines())} new rules. Backup saved."
         return "No new rules generated."
 
 
+
+class UpdateMarketMetricsTool(Tool):
+    """
+    Updates market metrics for a sector/country pair in the database.
+    Designed for the agent to use after researching live data.
+    """
+    @property
+    def name(self) -> str:
+        return "update_market_metrics"
+
+    @property
+    def description(self) -> str:
+        return (
+            "Updates the market_metrics table with new research data. "
+            "Use this after researching sector performance to keep data live."
+        )
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "sector_id": {"type": "string"},
+                "country_code": {"type": "string"},
+                "year": {"type": "integer"},
+                "market_size_usd": {"type": "integer", "description": "Estimated market size in USD"},
+                "growth_rate": {"type": "number", "description": "Percentage growth rate (e.g. 5.4)"},
+                "investment_volume_usd": {"type": "integer"},
+                "regulatory_outlook": {"type": "string", "enum": ["Positive", "Neutral", "Negative", "Volatile"]},
+                "top_companies": {"type": "array", "items": {"type": "string"}},
+                "source_urls": {"type": "array", "items": {"type": "string"}}
+            },
+            "required": ["sector_id", "country_code", "year", "growth_rate"]
+        }
+
+    async def execute(self, sector_id: str, country_code: str, year: int, growth_rate: float, 
+                      market_size_usd: int = None, investment_volume_usd: int = None, 
+                      regulatory_outlook: str = None, top_companies: list = None, source_urls: list = None) -> str:
+        
+        # Use API endpoint for D1 updates
+        import aiohttp
+        import os
+        
+        api_base = os.environ.get("API_BASE_URL", "http://localhost:8787")
+        admin_key = os.environ.get("ADMIN_API_KEY", "dev-admin-key") # Fallback for dev
+
+        url = f"{api_base}/market-intel/metrics"
+        
+        payload = {
+            "sector_id": sector_id,
+            "country_code": country_code,
+            "year": year,
+            "market_size_usd": market_size_usd,
+            "growth_rate": growth_rate,
+            "investment_volume_usd": investment_volume_usd,
+            "regulatory_outlook": regulatory_outlook,
+            "top_companies": top_companies,
+            "source_urls": source_urls
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": admin_key
+        }
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, headers=headers) as response:
+                    if response.status == 200:
+                        return f"Successfully updated market metrics for {sector_id} in {country_code} ({year}) via API."
+                    else:
+                        text = await response.text()
+                        return f"Error updating metrics (Status {response.status}): {text}"
+        except Exception as e:
+            return f"Error calling API: {str(e)}"

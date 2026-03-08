@@ -105,7 +105,7 @@ export function createSSEStream(
                         const event = formatSSE({
                             event: 'article_published',
                             data: article,
-                            id: (article as any).id,
+                            id: (article as Record<string, any>).id,
                         });
                         controller.enqueue(encoder.encode(event));
                     }

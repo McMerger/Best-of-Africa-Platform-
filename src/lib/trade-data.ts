@@ -114,7 +114,7 @@ export async function fetchTradeData(
             return [];
         }
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const flows: TradeFlow[] = [];
 
         if (data.data) {
@@ -180,8 +180,8 @@ export async function getTradeBalance(
             fetch(importsUrl.toString())
         ]);
 
-        const exportsData = await exportsRes.json() as any;
-        const importsData = await importsRes.json() as any;
+        const exportsData = await exportsRes.json() as Record<string, any>;
+        const importsData = await importsRes.json() as Record<string, any>;
 
         let totalExports = 0;
         let totalImports = 0;
@@ -280,7 +280,7 @@ export async function getCommodityTrade(
             try {
                 const response = await fetch(url.toString());
                 if (response.ok) {
-                    const data = await response.json() as any;
+                    const data = await response.json() as Record<string, any>;
                     let exports = 0;
                     let imports = 0;
 

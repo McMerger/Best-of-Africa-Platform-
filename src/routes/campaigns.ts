@@ -74,9 +74,9 @@ router.get('/:id', async (c) => {
         WHERE sponsor_id = ? AND is_sponsored = 1
         ORDER BY published_at DESC
         LIMIT 20
-    `).bind((campaign as any).sponsor_id).all();
+    `).bind((campaign as Record<string, any>).sponsor_id).all();
 
-    const data = campaign as any;
+    const data = campaign as Record<string, any>;
 
     return c.json({
         success: true,
@@ -224,7 +224,7 @@ router.post('/:id/launch', async (c) => {
         }, 404);
     }
 
-    if ((campaign as any).status === 'active') {
+    if ((campaign as Record<string, any>).status === 'active') {
         return c.json({
             success: false,
             error: 'already_active',
@@ -296,7 +296,7 @@ router.get('/:id/analytics', async (c) => {
         }, 404);
     }
 
-    const data = campaign as any;
+    const data = campaign as Record<string, any>;
 
     // Calculate CTR
     const ctr = data.impressions > 0

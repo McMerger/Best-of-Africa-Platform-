@@ -43,7 +43,7 @@ export async function searchAfricanResearch(
 
         if (!response.ok) return [];
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
         const papers: ResearchPaper[] = (data.results || []).map((work: any) => ({
             id: work.id,
             title: work.title || 'Untitled',

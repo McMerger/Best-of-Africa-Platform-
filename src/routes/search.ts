@@ -29,11 +29,11 @@ router.get('/', async (c) => {
 
     if (type === 'semantic' || type === 'hybrid') {
         // Generate embedding for query using Workers AI
-        const embeddingResponse = await (c.env.AI as any).run('@cf/baai/bge-base-en-v1.5', {
+        const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
             text: q,
         });
 
-        const queryVector = (embeddingResponse as any).data[0];
+        const queryVector = (embeddingResponse as Record<string, any>).data[0];
 
         // Search Vectorize
         let vectorResults;
@@ -58,7 +58,7 @@ router.get('/', async (c) => {
                     bestMatches.set(articleId, {
                         id: match.id,
                         score: match.score,
-                        text: (match.metadata as any)?.text // Capture chunk text
+                        text: (match.metadata as Record<string, any>)?.text // Capture chunk text
                     });
                 }
             }
@@ -131,7 +131,7 @@ router.get('/', async (c) => {
             if (searchResults.length > 0) {
                 const context = searchResults.slice(0, 3).map(r => `Title: ${r.article.title}\nSummary: ${r.article.summary}`).join('\n---\n');
                 try {
-                    const ansRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const ansRes = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: 'You are an Intelligent Search Assistant. Synthesize the provided context to answer the user query directly in 2 sentences.' },
                             { role: 'user', content: `Query: ${q}\n\nContext:\n${context}` }
@@ -176,7 +176,7 @@ router.get('/', async (c) => {
             if (!vectorMatches.has(articleId) || match.score > vectorMatches.get(articleId)!.score) {
                 vectorMatches.set(articleId, {
                     score: match.score,
-                    text: (match.metadata as any)?.text
+                    text: (match.metadata as Record<string, any>)?.text
                 });
             }
         }
@@ -196,8 +196,8 @@ router.get('/', async (c) => {
 
         // Add full-text results
         for (const article of fullTextResults.results || []) {
-            if (!seen.has((article as any).id)) {
-                seen.add((article as any).id);
+            if (!seen.has((article as Record<string, any>).id)) {
+                seen.add((article as Record<string, any>).id);
                 merged.push({
                     ...article,
                     relevance_score: 0.5,
@@ -227,7 +227,7 @@ router.get('/', async (c) => {
                             return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 400)}`; // Increased context limit
                         }).join('\n\n');
 
-                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                             messages: [
                                 {
                                     role: 'system',
@@ -346,10 +346,10 @@ router.get('/semantic', async (c) => {
 
     try {
         // 1. Generate Embedding for User Query (bge-base-en-v1.5 on Workers AI)
-        const embeddingResponse = await (c.env.AI as any).run('@cf/baai/bge-base-en-v1.5', {
+        const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
             text: q,
         });
-        const queryVector = (embeddingResponse as any).data[0];
+        const queryVector = (embeddingResponse as Record<string, any>).data[0];
 
         // 2. Query Vectorize index for nearest article chunks
         let vectorResults;
@@ -370,7 +370,7 @@ router.get('/semantic', async (c) => {
                 bestMatches.set(articleId, {
                     id: match.id,
                     score: match.score,
-                    text: (match.metadata as any)?.text
+                    text: (match.metadata as Record<string, any>)?.text
                 });
             }
         }
@@ -424,7 +424,7 @@ router.get('/semantic', async (c) => {
                             return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 500)}`; // Increased context
                         }).join('\n\n');
 
-                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                             messages: [
                                 {
                                     role: 'system',

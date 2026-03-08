@@ -3,6 +3,7 @@ import { db } from './core/db';
 import { SeedanceClient } from './clients/seedance';
 import { BoaContentClient } from './clients/boa';
 import { PromptBuilder } from './core/promptBuilder';
+import { translator } from './core/translator';
 import pino from 'pino';
 
 // Configuration
@@ -85,19 +86,55 @@ async function processPendingJobs() {
             return;
         }
 
-        // 2. Build Prompt
+        // 2. Build Prompt (English)
         const prompt = PromptBuilder.build(metadata);
         logger.info({ event: 'prompt_built', article_id: job.article_id, prompt_preview: prompt.slice(0, 50) });
 
+        // 2b. Generate Localized Metadata (Async/Parallel)
+        // We do this while calling Seedance or before? 
+        // Seedance takes ~10-60s. Translation takes ~2-5s.
+        // Let's do it in parallel with Seedance generation to save time.
+
+        const enabledLangs = ['fr', 'de', 'ar', 'hi', 'zh', 'pt'];
+        const localizedMeta: Record<string, any> = {};
+
+        const translationPromise = (async () => {
+            // We only translate title and description (from tourist variant or base)
+            const title = metadata.title;
+            const desc = metadata.description || metadata.variants?.tourist || "";
+
+            await Promise.all(enabledLangs.map(async (lang) => {
+                const tTitle = await translator.translate(title, lang);
+                const tDesc = await translator.translate(desc, lang);
+                if (tTitle) localizedMeta[`title_${lang}`] = tTitle;
+                if (tDesc) localizedMeta[`description_${lang}`] = tDesc;
+            }));
+            // Also store English explicitly
+            localizedMeta['title_en'] = title;
+            localizedMeta['description_en'] = desc;
+        })();
+
         // 3. Call Seedance
         try {
-            const videoId = await seedance.generateVideo(prompt);
+            const [videoId, _] = await Promise.all([
+                seedance.generateVideo(prompt),
+                translationPromise
+            ]);
+
+            // Merge new metadata with existing if any (postgres jsonb_set or just overwrite field)
+            // We need to update the `metadata` column in `article_videos`
+            // Current schema has `metadata` JSONB? Yes, migration 0002 added it.
 
             await db.run(`
                 UPDATE article_videos 
-                SET status = 'generating', seedance_video_id = ?, prompt_used = ?, last_attempt_at = CURRENT_TIMESTAMP, attempts = attempts + 1 
+                SET status = 'generating', 
+                    seedance_video_id = ?, 
+                    prompt_used = ?, 
+                    last_attempt_at = CURRENT_TIMESTAMP, 
+                    attempts = attempts + 1,
+                    metadata = ?
                 WHERE article_id = ?
-            `, [videoId, prompt, job.article_id]);
+            `, [videoId, prompt, JSON.stringify(localizedMeta), job.article_id]);
 
             logger.info({ event: 'generation_started', article_id: job.article_id, seedance_id: videoId });
 

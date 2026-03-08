@@ -35,12 +35,12 @@ router.get('/:id', async (c) => {
         return c.json({ error: 'not_found', message: 'Event not found' }, 404);
     }
 
-    const eventData = event as any;
+    const eventData = event as Record<string, any>;
 
     // Lazy Generate AI Value Proposition if missing
     if (!eventData.ai_value_proposition) {
         try {
-            const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'You are an Event Promoter. Write 3 compelling bullet points on why a business leader should attend this event.' },
                     { role: 'user', content: `Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}` }

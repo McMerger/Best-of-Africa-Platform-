@@ -61,11 +61,11 @@ class FallbackProvider(LLMProvider):
 
 # Import our custom skills
 try:
-    from services.boa_editorial_agent.boa_skills import StoreAuditResultTool, EnqueueAuditTool, ReflectTool, EvolveInstructionsTool
+    from services.boa_editorial_agent.boa_skills import StoreAuditResultTool, EnqueueAuditTool, ReflectTool, EvolveInstructionsTool, UpdateMarketMetricsTool
 except ImportError:
     # Handle if running from services/boa-editorial-agent directly
     sys.path.append(str(Path(__file__).parent))
-    from boa_skills import StoreAuditResultTool, EnqueueAuditTool, ReflectTool, EvolveInstructionsTool
+    from boa_skills import StoreAuditResultTool, EnqueueAuditTool, ReflectTool, EvolveInstructionsTool, UpdateMarketMetricsTool
 
 
 # Import OpenSkills logic (Proactive Scanner)
@@ -98,6 +98,7 @@ class FeedbackRequest(BaseModel):
 # --- Globals ---
 agent = None
 bus = None
+AUDIT_LOG_PATH = Path(__file__).parent / "audit_log.jsonl"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -167,22 +168,22 @@ async def lifespan(app: FastAPI):
         response = await provider.chat(messages=messages)
         return response.content
         
-    # Register BoA Skills manually
-    # Note: Nanobot's ToolRegistry.register() expects an instance
-    db_path = str(Path(__file__).parent / "boa_content.db")
-    agent.tools.register(StoreAuditResultTool(db_path=db_path))
+    # Register BoA Skills
+    # Use Postgres-aware tool
+    agent.tools.register(StoreAuditResultTool(db_path="")) # path ignored for Postgres logic
     agent.tools.register(EnqueueAuditTool())
     # PASS THE LIVE LLM FUNCTION
     agent.tools.register(ReflectTool(llm_func=llm_generate))
     agent.tools.register(EvolveInstructionsTool(llm_func=llm_generate))
+    agent.tools.register(UpdateMarketMetricsTool())
 
-    logger.info("BoA Agent initialized with StoreAuditResultTool, EnqueueAuditTool, ReflectTool, EvolveInstructionsTool (LIVE LLM)")
+    logger.info("BoA Agent initialized with StoreAuditResultTool, EnqueueAuditTool, UpdateMarketMetricsTool, ReflectTool (LIVE LLM)")
     
     # Start Agent Loop in background
     agent_task = asyncio.create_task(agent.run())
 
     # Start Proactive Loop
-    proactive_task = asyncio.create_task(proactive_loop(db_path))
+    proactive_task = asyncio.create_task(proactive_loop(db_path=""))
     
     # Start Self-Improvement Loop (simulated via cron-like task)
     learning_task = asyncio.create_task(learning_loop())
@@ -234,6 +235,13 @@ async def proactive_loop(db_path: str):
                 # Fire and forget (or await if we want serial processing)
                 if agent:
                     await agent.process_direct(instruction, session_key=session_id)
+                    
+                    # Track audit cycle
+                    import json as _json
+                    from datetime import datetime as _dt
+                    log_entry = {"article_id": item['article_id'], "source": "proactive", "timestamp": _dt.now().isoformat(), "country": item.get('country', ''), "topic": item.get('topic', '')}
+                    with open(AUDIT_LOG_PATH, "a") as _f:
+                        _f.write(_json.dumps(log_entry) + "\n")
             
             await asyncio.sleep(10) # Scan every 10 seconds for demo
         except asyncio.CancelledError:
@@ -275,6 +283,13 @@ async def trigger_audit(request: ArticleAuditRequest, background_tasks: Backgrou
         # Trigger Reflection (Fire & Forget or Background)
         background_tasks.add_task(trigger_reflection, request.article_id)
         
+        # Track audit cycle
+        import json as _json
+        from datetime import datetime as _dt
+        log_entry = {"article_id": request.article_id, "source": "manual", "timestamp": _dt.now().isoformat(), "country": request.country, "topic": request.topic}
+        with open(AUDIT_LOG_PATH, "a") as _f:
+            _f.write(_json.dumps(log_entry) + "\n")
+        
         return {"status": "success", "agent_response": response}
     except Exception as e:
         logger.error(f"Audit failed: {e}")
@@ -285,54 +300,30 @@ async def get_country_metrics(country_code: str):
     """
     Returns metrics for a country.
     """
-    # 1. Query DB for audit stats
-    db_path = str(Path(__file__).parent / "boa_content.db")
+    # 1. Query Postgres for audit stats
     audit_count = 0
-    avg_score = 0
     
     try:
-        import sqlite3
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        # Count audits for this country
-        # We need to join with a hypothetical articles table or parse it from JSON? 
-        # For simplicity in this iteration, we'll just count total audits if we don't have country column in audits.
-        # Wait, ArticleAuditRequest has country. StoreAuditResultTool stores it?
-        # Let's check StoreAuditResultTool schema.
-        # If not, we return synthetic data mixed with real system stats if possible.
-        
-        # Let's assume we can get a count.
-        cursor.execute("SELECT COUNT(*) FROM article_audits")
-        row = cursor.fetchone()
-        if row:
-            audit_count = row[0]
-        conn.close()
+        import asyncpg
+        conn = await asyncpg.connect(os.getenv("DATABASE_URL"))
+        # Count audits from Postgres
+        audit_count = await conn.fetchval("SELECT COUNT(*) FROM article_audits")
+        await conn.close()
     except Exception as e:
         logger.error(f"DB Error getting metrics: {e}")
 
-    # 2. Page Views / Bounce Rate
-    # [LIVE] Metric: Real Audit Count is fetched above.
-    # [LIVE] Metric: Traffic data should come from Analytics DB.
-    # For now, return 0 if not connected.
-    
-    page_views = 0
-    bounce_rate = 0.0
-    
-    # Try to fetch from DB if table exists (assuming 'analytics' table for future)
-    try:
-        pass # Placeholder for real analytics query
-    except Exception:
-        pass
+    # 2. Real Metrics (No Mocks)
+    # If we don't have real analytics data yet, return 0/None rather than fake values.
     
     return {
         "countryCode": country_code,
-        "pageViews": page_views, 
-        "bounceRate": round(bounce_rate, 1),
-        "avgTimeOnPage": 120,
+        "pageViews": 0, 
+        "bounceRate": 0,
+        "avgTimeOnPage": 0,
         "lastAuditDate": None, 
         "campaignActive": False,
-        "totalAudits": audit_count, # [LIVE] Real count from SQLite
-        "dataSource": "live_db" # Indicates real DB data (or empty)
+        "totalAudits": audit_count,
+        "dataSource": "postgres" 
     }
 
 class StewardStatus(BaseModel):

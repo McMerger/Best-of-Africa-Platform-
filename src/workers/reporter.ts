@@ -18,7 +18,7 @@ export async function runDailyReporting(env: Env) {
         `).first();
 
         // Default to 'NG' (Nigeria) or 'ZA' if no news today
-        const targetCountry = (topCountry as any)?.country_code || 'NG';
+        const targetCountry = (topCountry as Record<string, any>)?.country_code || 'NG';
 
         console.log(`Generating Country Brief for ${targetCountry} (Trending Topic)...`);
         const countryReport = await generateCountryBrief(env, targetCountry);
@@ -29,7 +29,7 @@ export async function runDailyReporting(env: Env) {
         // 2. Generate a Sector Analysis (Randomly selected)
         const sectors = await env.DB.prepare('SELECT id FROM sectors').all();
         if (sectors.results && sectors.results.length > 0) {
-            const randomSector = sectors.results[Math.floor(Math.random() * sectors.results.length)] as any;
+            const randomSector = sectors.results[Math.floor(Math.random() * sectors.results.length)] as Record<string, any>;
 
             console.log(`Generating Sector Analysis for ${randomSector.id}...`);
             const sectorReport = await generateSectorAnalysis(env, randomSector.id);

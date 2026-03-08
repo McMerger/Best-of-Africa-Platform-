@@ -64,10 +64,10 @@ export async function postToTwitter(
     tweet: string
 ): Promise<{ success: boolean; tweet_id?: string; error?: string }> {
     // Check for Twitter credentials
-    const twitterApiKey = (env as any).TWITTER_API_KEY;
-    const twitterApiSecret = (env as any).TWITTER_API_SECRET;
-    const twitterAccessToken = (env as any).TWITTER_ACCESS_TOKEN;
-    const twitterAccessSecret = (env as any).TWITTER_ACCESS_SECRET;
+    const twitterApiKey = (env as Record<string, any>).TWITTER_API_KEY;
+    const twitterApiSecret = (env as Record<string, any>).TWITTER_API_SECRET;
+    const twitterAccessToken = (env as Record<string, any>).TWITTER_ACCESS_TOKEN;
+    const twitterAccessSecret = (env as Record<string, any>).TWITTER_ACCESS_SECRET;
 
     if (!twitterApiKey || !twitterAccessToken) {
         console.log('[TWITTER] No API keys configured, skipping post');
@@ -166,9 +166,9 @@ export async function processSocialQueue(
         FROM articles a
         LEFT JOIN sectors s ON a.sector_id = s.id
         WHERE a.id = ?
-    `).bind(message.article_id).first();
+    `).bind(message.article_id).first<Parameters<typeof autoPostArticle>[1]>();
 
     if (article) {
-        await autoPostArticle(env, article as any);
+        await autoPostArticle(env, article);
     }
 }

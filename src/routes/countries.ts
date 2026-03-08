@@ -61,12 +61,12 @@ router.get('/', async (c) => {
                 // RAG Search
                 const query = `${region} Africa business investment stability trends`;
                 const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                const vector = (embedding as any).data[0];
+                const vector = (embedding as Record<string, any>).data[0];
                 const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+                const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
                 if (context) {
-                    const aiRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const aiRes = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: 'Summarize the current business climate for this region in 1 sentence. Focus on key opportunities.' },
                             { role: 'user', content: `Region: ${region}. News: ${context}` }
@@ -151,8 +151,8 @@ router.get('/stats', async (c) => {
 
     return c.json({
         total_countries: countryCount?.total || 54,
-        total_articles: (articleStats as any)?.total_articles || 0,
-        total_views: (articleStats as any)?.total_views || 0,
+        total_articles: (articleStats as Record<string, any>)?.total_articles || 0,
+        total_views: (articleStats as Record<string, any>)?.total_views || 0,
         regions: regionCount?.regions || 5,
     });
 });
@@ -225,7 +225,7 @@ router.get('/:code', async (c) => {
                 const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
                 if (!headlines) return "Monitoring situation.";
                 try {
-                    const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                         messages: [
                             { role: 'system', content: `SitRep Officer for ${country.name}. 1-sentence current status.` },
                             { role: 'user', content: headlines }
@@ -336,7 +336,7 @@ router.get('/:code/economics', async (c) => {
         return c.json({ error: 'not_found', message: 'Country not found' }, 404);
     }
 
-    const data = country as any;
+    const data = country as Record<string, any>;
 
     // Calculate derived metrics
     const gdpGrowth = null; // No mocked data
@@ -346,7 +346,7 @@ router.get('/:code/economics', async (c) => {
     return c.json({
         code: data.code,
         name: data.name,
-        gdp_growth: `+${gdpGrowth}%`,
+        gdp_growth: gdpGrowth !== null ? `+${gdpGrowth}%` : 'N/A',
         stability: stability,
         gdp_usd: data.gdp_usd,
         population: data.population
@@ -368,7 +368,7 @@ router.get('/:code/relationships', async (c) => {
         return c.json({ error: 'not_found' }, 404);
     }
 
-    const data = country as any;
+    const data = country as Record<string, any>;
     const diplomacyScore = data.diplomacy_score || 0.5;
 
     // Relationships: Removed mocked logic. In future, use real AI analysis.
@@ -379,22 +379,22 @@ router.get('/:code/relationships', async (c) => {
             // SEARCH: Find news about relationships
             const query = `diplomatic relations trade agreement partnership ${data.name}`;
             const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-            const vector = (embedding as any).data[0];
+            const vector = (embedding as Record<string, any>).data[0];
             const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
 
-            const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+            const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
             if (!context) return [];
 
             // AI: Extract Partners
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: `Extract diplomatic/trade partners for ${data.name} from the news. Return JSON array: [{ "partner": "China", "type": "Trade", "context": "Infrastructure deal" }]` },
                         { role: 'user', content: context }
                     ],
                     response_format: { type: 'json_object' }
                 });
-                const jsonMatch = (aiResponse as any).response.match(/\[.*\]/s);
+                const jsonMatch = (aiResponse as Record<string, any>).response.match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {
                 return [];

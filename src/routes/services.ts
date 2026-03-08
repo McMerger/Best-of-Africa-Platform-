@@ -49,13 +49,13 @@ router.post('/booking', async (c) => {
         // Quick RAG-lite
         const keywords = `${service_type} ${destination_country || ''} ${budget_range}`.trim();
         const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [keywords] });
-        const vector = (embedding as any).data[0];
+        const vector = (embedding as Record<string, any>).data[0];
 
         const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-        const context = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
 
         if (context) {
-            const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'You are a Concierge Director. Write a 1-sentence "Preliminary Note" connecting the user request to recent platform news.' },
                     { role: 'user', content: `Request: ${keywords}. News: ${context}` }
@@ -221,13 +221,13 @@ router.get('/events/:id', async (c) => {
                     const topic = `${data.title} ${data.country_name || ''} business`;
                     try {
                         const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [topic] });
-                        const vector = (embedding as any).data[0];
+                        const vector = (embedding as Record<string, any>).data[0];
                         const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                        const context = relevant.matches.map(m => (m.metadata as any).title).join('; ');
+                        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
 
                         if (!context) return "Connecting event to regional trends...";
 
-                        const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                        const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                             messages: [
                                 { role: 'system', content: 'Explain why this event matters given current news. 1-2 sentences.' },
                                 { role: 'user', content: `Event: ${data.title}. News: ${context}` }

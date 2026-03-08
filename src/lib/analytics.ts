@@ -92,10 +92,10 @@ export async function updateArticleEngagement(env: Env, articleId: string): Prom
     if (!article) return;
 
     const score = calculateEngagementScore(
-        (article as any).view_count || 0,
-        (article as any).avg_read_time_seconds || 0,
-        (article as any).share_count || 0,
-        (article as any).reading_time_minutes || 3
+        (article as Record<string, any>).view_count || 0,
+        (article as Record<string, any>).avg_read_time_seconds || 0,
+        (article as Record<string, any>).share_count || 0,
+        (article as Record<string, any>).reading_time_minutes || 3
     );
 
     await env.DB.prepare(`

@@ -44,7 +44,7 @@ export async function generateArticleFromQueue(
       UPDATE ingested_items SET status = 'processing' WHERE id = ?
     `).bind(message.ingested_item_id).run();
 
-        const itemData = item as any;
+        const itemData = item as Record<string, any>;
 
         // Identify country and sector if not provided by source
         let countryCode = itemData.source_country;
@@ -64,12 +64,12 @@ export async function generateArticleFromQueue(
 
         if (countryCode) {
             const country = await env.DB.prepare('SELECT name FROM countries WHERE code = ?').bind(countryCode).first();
-            countryName = (country as any)?.name;
+            countryName = (country as Record<string, any>)?.name;
         }
 
         if (sectorId) {
             const sector = await env.DB.prepare('SELECT name FROM sectors WHERE id = ?').bind(sectorId).first();
-            sectorName = (sector as any)?.name;
+            sectorName = (sector as Record<string, any>)?.name;
         }
 
         // Generate article using AI
@@ -105,7 +105,7 @@ export async function generateArticleFromQueue(
         // We generate these NOW so they are ready for instant delivery later
         const [pushMsg, socialPost, investorBrief] = await Promise.all([
             // 1. Push Notification
-            (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'You are a Mobile Notification Editor. Write a <120 char urgent, actionable push notification for this article.' },
                     { role: 'user', content: `Title: ${generated.title}\nSummary: ${generated.summary}` }
@@ -113,7 +113,7 @@ export async function generateArticleFromQueue(
             }).then((res: any) => res?.response?.trim().replace(/^"|"$/g, '') || generated.title),
 
             // 2. Social Post (LinkedIn)
-            (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'Write a professional LinkedIn post for this article. Include 2 hashtags. Max 280 chars.' },
                     { role: 'user', content: `Title: ${generated.title}\nSummary: ${generated.summary}` }
@@ -121,7 +121,7 @@ export async function generateArticleFromQueue(
             }).then((res: any) => res?.response?.trim() || ''),
 
             // 3. Investor Brief
-            (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     { role: 'system', content: 'Write a 1-sentence "Investment Impact" analysis for this news.' },
                     { role: 'user', content: `Title: ${generated.title}\nContent: ${generated.content.slice(0, 1000)}` }

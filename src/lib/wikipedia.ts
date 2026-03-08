@@ -51,7 +51,7 @@ export async function getWikiSummary(
 
                 if (!response.ok) return null;
 
-                const data = await response.json() as any;
+                const data = await response.json() as Record<string, any>;
 
                 return {
                     title: data.title,
@@ -141,7 +141,7 @@ export async function searchWiki(
 
         if (!response.ok) return [];
 
-        const data = await response.json() as any;
+        const data = await response.json() as Record<string, any>;
 
         return (data.query?.search || []).map((item: any) => ({
             title: item.title,

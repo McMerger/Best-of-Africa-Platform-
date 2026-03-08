@@ -35,7 +35,7 @@ export async function moderateContent(
     }
 ): Promise<ModerationResult> {
     try {
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',

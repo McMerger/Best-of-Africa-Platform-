@@ -79,18 +79,18 @@ export async function requireApiKey(c: AppContext, next: Next) {
         return c.json({ error: 'unauthorized', message: 'Invalid API key' }, 401);
     }
 
-    if (!(client as any).is_active) {
+    if (!(client as Record<string, any>).is_active) {
         return c.json({ error: 'forbidden', message: 'API key is deactivated' }, 403);
     }
 
-    if ((client as any).expires_at && new Date((client as any).expires_at) < new Date()) {
+    if ((client as Record<string, any>).expires_at && new Date((client as Record<string, any>).expires_at) < new Date()) {
         return c.json({ error: 'forbidden', message: 'API key has expired' }, 403);
     }
 
     // Set client info in context
-    c.set('clientId', (client as any).id);
-    c.set('clientTier', (client as any).tier);
-    c.set('rateLimit', (client as any).rate_limit_per_hour);
+    c.set('clientId', (client as Record<string, any>).id);
+    c.set('clientTier', (client as Record<string, any>).tier);
+    c.set('rateLimit', (client as Record<string, any>).rate_limit_per_hour);
 
     await next();
 }

@@ -19,7 +19,7 @@ export async function postToLinkedIn(
         sector_name: string | null;
     }
 ): Promise<{ success: boolean; post_id?: string }> {
-    const accessToken = (env as any).LINKEDIN_ACCESS_TOKEN;
+    const accessToken = (env as Record<string, any>).LINKEDIN_ACCESS_TOKEN;
 
     if (!accessToken) {
         console.log('[LINKEDIN] No access token configured');
@@ -98,7 +98,7 @@ export async function sendSlackAlert(
         sector_name: string | null;
     }
 ): Promise<boolean> {
-    const webhookUrl = (env as any).SLACK_WEBHOOK_URL;
+    const webhookUrl = (env as Record<string, any>).SLACK_WEBHOOK_URL;
 
     if (!webhookUrl) {
         console.log('[SLACK] No webhook URL configured');
@@ -187,7 +187,7 @@ export async function sendTeamsAlert(
         sector_name: string | null;
     }
 ): Promise<boolean> {
-    const webhookUrl = (env as any).TEAMS_WEBHOOK_URL;
+    const webhookUrl = (env as Record<string, any>).TEAMS_WEBHOOK_URL;
 
     if (!webhookUrl) return true;
 

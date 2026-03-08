@@ -68,7 +68,7 @@ export async function getRedditPosts(
 
                 if (!response.ok) return [];
 
-                const data = await response.json() as any;
+                const data = await response.json() as Record<string, any>;
                 const posts: SocialPost[] = [];
 
                 for (const child of data.data?.children || []) {
@@ -179,7 +179,7 @@ export async function getHNAfricaMentions(
 
                 if (!response.ok) return [];
 
-                const data = await response.json() as any;
+                const data = await response.json() as Record<string, any>;
                 const posts: SocialPost[] = [];
 
                 for (const hit of data.hits || []) {

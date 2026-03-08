@@ -96,7 +96,7 @@ router.get('/country/:code', async (c) => {
         GROUP BY s.id
     `).bind(code).all();
 
-    const countryData = country as any;
+    const countryData = country as Record<string, any>;
 
     // AI Narrative Synthesis (The "Story So Far")
     const narrativeArc = await getCached(
@@ -108,7 +108,7 @@ router.get('/country/:code', async (c) => {
             const context = (articles.results as any[]).map(a => `- ${a.title} (Tone: ${a.tone})`).join('\n');
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-70b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-70b-instruct', {
                     messages: [
                         {
                             role: 'system',
@@ -277,7 +277,7 @@ router.get('/country/:code/index', async (c) => {
         return c.json({ error: 'not_found' }, 404);
     }
 
-    const data = country as any;
+    const data = country as Record<string, any>;
 
     // Calculate narrative index from multiple factors
     const diplomacyScore = (data.diplomacy_score || 0.5) * 100;

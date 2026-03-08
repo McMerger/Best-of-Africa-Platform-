@@ -41,7 +41,7 @@ export async function generateCountryBrief(
 
     if (!country) throw new Error('Country not found');
 
-    const c = country as any;
+    const c = country as Record<string, any>;
 
     // Get recent articles
     const articles = await env.DB.prepare(`
@@ -72,7 +72,7 @@ export async function generateCountryBrief(
 
     let aiSummary = '';
     try {
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',
@@ -146,7 +146,7 @@ export async function generateSectorAnalysis(
     ).bind(sectorId).first();
 
     if (!sector) throw new Error('Sector not found');
-    const s = sector as any;
+    const s = sector as Record<string, any>;
 
     // Country breakdown
     const countryBreakdown = await env.DB.prepare(`
@@ -177,7 +177,7 @@ export async function generateSectorAnalysis(
             `${a.title} (${a.country_name})`
         ).join('\n');
 
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 {
                     role: 'system',

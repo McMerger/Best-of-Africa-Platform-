@@ -63,7 +63,7 @@ router.get('/:region', async (c) => {
     }
 
     // Get featured articles details
-    const dashboardData = dashboard as any;
+    const dashboardData = dashboard as Record<string, any>;
     let featuredArticles: unknown[] = [];
 
     if (dashboardData?.featured_articles) {
@@ -118,7 +118,7 @@ router.get('/:region', async (c) => {
             // Generate if missing
             // We reuse the logic from countries.ts efficiently via cache check or generate
             // For now, simpler fallback or quick gen
-            const aiRes = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+            const aiRes = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [
                     {
                         role: 'system', content: activeLens === 'investor'
@@ -264,8 +264,8 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
 
     const dashboardId = crypto.randomUUID();
     const keyMetrics = {
-        articles_24h: (metrics as any)?.articles_24h || 0,
-        total_views: (metrics as any)?.total_views || 0,
+        articles_24h: (metrics as Record<string, any>)?.articles_24h || 0,
+        total_views: (metrics as Record<string, any>)?.total_views || 0,
         trending_countries: (trendingCountries.results || []).map((c: any) => c.code),
         top_sectors: (topSectors.results || []).map((s: any) => s.id),
     };
@@ -275,12 +275,12 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
     try {
         const query = `${region} Africa business political economic developments last 24h`;
         const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-        const vector = (embedding as any).data[0];
+        const vector = (embedding as Record<string, any>).data[0];
         const relevant = await env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-        const context = relevant.matches.map(m => (m.metadata as any).title).join('\n');
+        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
         if (context) {
-            const aiResponse = await (env.AI as any).run('@cf/meta/llama-3.1-70b-instruct', {
+            const aiResponse = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-70b-instruct', {
                 messages: [
                     {
                         role: 'system',
@@ -354,8 +354,8 @@ router.get('/analytics/summary', async (c) => {
         `).all()
     ]);
 
-    const stats = articleStats as any;
-    const sentiment = sentimentData as any;
+    const stats = articleStats as Record<string, any>;
+    const sentiment = sentimentData as Record<string, any>;
     const sectors = (sectorTrends.results || []) as any[];
 
     // --- AI-Driven Stability Index ---
@@ -384,7 +384,7 @@ router.get('/analytics/summary', async (c) => {
                         ? 'Focus on governance quality, fiscal sustainability, political stability, and development impact. HIGH = strong institutions and policy continuity, VOLATILE = regime instability, fiscal distress, or security risks.'
                         : 'Focus on travel safety, hospitality infrastructure, and tourism appeal. HIGH = safe, accessible, and world-class experiences, VOLATILE = travel advisories, infrastructure gaps, or safety concerns.';
 
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         {
                             role: 'system',
@@ -403,7 +403,7 @@ Scoring guide:
                         }
                     ]
                 });
-                const raw = (aiResponse as any)?.response || '';
+                const raw = (aiResponse as Record<string, any>)?.response || '';
                 const match = raw.match(/\{.*\}/s);
                 if (match) {
                     const parsed = JSON.parse(match[0]);
@@ -459,7 +459,7 @@ Scoring guide:
                     : 'You are a Premier Travel Strategist for Best of Africa. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
 
             try {
-                const aiResponse = await (c.env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         {
                             role: 'system',
@@ -522,9 +522,9 @@ router.get('/stats/platform-impact', async (c) => {
         `).first()
     ]);
 
-    const fdi = fdiStats as any;
-    const coverage = coverageStats as any;
-    const reports = articleStats as any;
+    const fdi = fdiStats as Record<string, any>;
+    const coverage = coverageStats as Record<string, any>;
+    const reports = articleStats as Record<string, any>;
 
     return c.json({
         total_fdi_usd: fdi?.total_fdi || 0,
