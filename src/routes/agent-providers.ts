@@ -1,0 +1,282 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// AGENT PROVIDERS ROUTER
+// Manage AI provider credentials that power ZeroClaw agents.
+// Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Cloudflare Workers AI
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { Hono } from 'hono';
+import type { Env, Variables } from '../types';
+
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'openrouter', 'workers_ai'] as const;
+type ProviderName = typeof VALID_PROVIDERS[number];
+
+const PROVIDER_DEFAULTS: Record<ProviderName, { model: string; label: string; base_url?: string }> = {
+    openai:     { model: 'gpt-4o',                        label: 'OpenAI',         base_url: 'https://api.openai.com/v1' },
+    anthropic:  { model: 'claude-sonnet-4-6',              label: 'Anthropic',      base_url: 'https://api.anthropic.com' },
+    gemini:     { model: 'gemini-2.5-pro',                 label: 'Google Gemini',  base_url: 'https://generativelanguage.googleapis.com/v1beta' },
+    openrouter: { model: 'anthropic/claude-sonnet-4-6',    label: 'OpenRouter',     base_url: 'https://openrouter.ai/api/v1' },
+    workers_ai: { model: '@cf/meta/llama-3.1-70b-instruct',label: 'Cloudflare Workers AI' },
+};
+
+// Admin-only auth
+router.use('/*', async (c, next) => {
+    const auth = c.req.header('Authorization');
+    if (!auth || auth !== `Bearer ${c.env.ADMIN_API_KEY}`) {
+        return c.json({ error: 'unauthorized' }, 401);
+    }
+    await next();
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/providers — list all configured providers (API key redacted)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/', async (c) => {
+    const rows = await c.env.DB.prepare(`
+        SELECT id, provider, label, model, base_url, is_active, is_default,
+               last_tested_at, last_test_status, last_test_error, created_at, updated_at
+        FROM ai_providers
+        ORDER BY is_default DESC, created_at ASC
+    `).all<Record<string, unknown>>();
+
+    return c.json({ data: rows.results });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /agent/providers — add or update a provider
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/', async (c) => {
+    const body = await c.req.json<{
+        provider: string;
+        api_key?: string;
+        model?: string;
+        label?: string;
+        base_url?: string;
+        is_default?: boolean;
+    }>();
+
+    if (!body.provider || !VALID_PROVIDERS.includes(body.provider as ProviderName)) {
+        return c.json({ error: 'invalid_provider', message: `Provider must be one of: ${VALID_PROVIDERS.join(', ')}` }, 400);
+    }
+
+    if (body.provider !== 'workers_ai' && !body.api_key) {
+        return c.json({ error: 'api_key_required', message: 'api_key is required for this provider' }, 400);
+    }
+
+    const prov = body.provider as ProviderName;
+    const defaults = PROVIDER_DEFAULTS[prov];
+    const id = crypto.randomUUID();
+
+    // If setting as default, unset all others first
+    if (body.is_default) {
+        await c.env.DB.prepare('UPDATE ai_providers SET is_default = 0').run();
+    }
+
+    await c.env.DB.prepare(`
+        INSERT INTO ai_providers (id, provider, label, api_key, model, base_url, is_active, is_default, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, 1, ?, datetime('now'), datetime('now'))
+    `).bind(
+        id,
+        prov,
+        body.label || defaults.label,
+        body.api_key || null,
+        body.model || defaults.model,
+        body.base_url || defaults.base_url || null,
+        body.is_default ? 1 : 0
+    ).run();
+
+    // Sync to ZeroClaw config KV so the agent picks it up immediately
+    await syncProvidersToKV(c.env);
+
+    return c.json({ success: true, id, provider: prov }, 201);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// PATCH /agent/providers/:id — update a specific provider
+// ───────────────────────────────────────────────────────────────────────────────
+router.patch('/:id', async (c) => {
+    const id = c.req.param('id');
+    const body = await c.req.json<{
+        api_key?: string;
+        model?: string;
+        label?: string;
+        base_url?: string;
+        is_active?: boolean;
+        is_default?: boolean;
+    }>();
+
+    const existing = await c.env.DB.prepare('SELECT id FROM ai_providers WHERE id = ?').bind(id).first();
+    if (!existing) return c.json({ error: 'not_found' }, 404);
+
+    const updates: string[] = [];
+    const vals: unknown[] = [];
+
+    if (body.api_key !== undefined)  { updates.push('api_key = ?');   vals.push(body.api_key); }
+    if (body.model !== undefined)    { updates.push('model = ?');      vals.push(body.model); }
+    if (body.label !== undefined)    { updates.push('label = ?');      vals.push(body.label); }
+    if (body.base_url !== undefined) { updates.push('base_url = ?');   vals.push(body.base_url); }
+    if (body.is_active !== undefined){ updates.push('is_active = ?');  vals.push(body.is_active ? 1 : 0); }
+    if (body.is_default) {
+        await c.env.DB.prepare('UPDATE ai_providers SET is_default = 0').run();
+        updates.push('is_default = 1');
+    }
+
+    if (!updates.length) return c.json({ success: true, message: 'Nothing to update' });
+
+    updates.push('updated_at = datetime(\'now\')');
+    vals.push(id);
+
+    await c.env.DB.prepare(`UPDATE ai_providers SET ${updates.join(', ')} WHERE id = ?`).bind(...vals).run();
+    await syncProvidersToKV(c.env);
+
+    return c.json({ success: true });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// DELETE /agent/providers/:id — remove a provider
+// ───────────────────────────────────────────────────────────────────────────────
+router.delete('/:id', async (c) => {
+    const id = c.req.param('id');
+    await c.env.DB.prepare('DELETE FROM ai_providers WHERE id = ?').bind(id).run();
+    await syncProvidersToKV(c.env);
+    return c.json({ success: true });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /agent/providers/:id/test — verify an API key works
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/:id/test', async (c) => {
+    const id = c.req.param('id');
+    const row = await c.env.DB.prepare(
+        'SELECT provider, api_key, model, base_url FROM ai_providers WHERE id = ?'
+    ).bind(id).first<{ provider: string; api_key: string; model: string; base_url: string }>();
+
+    if (!row) return c.json({ error: 'not_found' }, 404);
+
+    let testStatus: 'ok' | 'error' = 'error';
+    let testError = '';
+
+    try {
+        if (row.provider === 'workers_ai') {
+            // Workers AI is always available — test via binding
+            await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+                messages: [{ role: 'user', content: 'ping' }],
+                max_tokens: 5
+            });
+            testStatus = 'ok';
+        } else if (row.provider === 'openai' || row.provider === 'openrouter') {
+            const baseUrl = row.base_url || PROVIDER_DEFAULTS[row.provider as ProviderName].base_url;
+            const res = await fetch(`${baseUrl}/models`, {
+                headers: { Authorization: `Bearer ${row.api_key}` }
+            });
+            testStatus = res.ok ? 'ok' : 'error';
+            if (!res.ok) testError = `HTTP ${res.status}`;
+        } else if (row.provider === 'anthropic') {
+            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'x-api-key': row.api_key,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    model: 'claude-haiku-4-5-20251001',
+                    max_tokens: 5,
+                    messages: [{ role: 'user', content: 'ping' }]
+                })
+            });
+            testStatus = res.ok ? 'ok' : 'error';
+            if (!res.ok) testError = `HTTP ${res.status}`;
+        } else if (row.provider === 'gemini') {
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models?key=${row.api_key}`
+            );
+            testStatus = res.ok ? 'ok' : 'error';
+            if (!res.ok) testError = `HTTP ${res.status}`;
+        }
+    } catch (e: unknown) {
+        testError = e instanceof Error ? e.message : 'Connection failed';
+    }
+
+    await c.env.DB.prepare(`
+        UPDATE ai_providers
+        SET last_tested_at = datetime('now'), last_test_status = ?, last_test_error = ?, updated_at = datetime('now')
+        WHERE id = ?
+    `).bind(testStatus, testError || null, id).run();
+
+    return c.json({ success: testStatus === 'ok', status: testStatus, error: testError || null });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/providers/config — get the active zeroclaw-compatible provider config
+// (used by ZeroClaw at startup to pick up credentials dynamically)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/config', async (c) => {
+    // Reuse KV-cached config if fresh (updated within last 5 minutes)
+    const cached = await c.env.CACHE.get('zeroclaw:provider_config', 'json');
+    if (cached) return c.json(cached);
+
+    const config = await buildProviderConfig(c.env);
+    return c.json(config);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ───────────────────────────────────────────────────────────────────────────────
+
+async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
+    const rows = await env.DB.prepare(`
+        SELECT provider, api_key, model, base_url, is_default
+        FROM ai_providers WHERE is_active = 1
+        ORDER BY is_default DESC, created_at ASC
+    `).all<{ provider: string; api_key: string; model: string; base_url: string; is_default: number }>();
+
+    const providers: Record<string, unknown> = {};
+    let defaultProvider = 'workers_ai';
+    let defaultModel = '@cf/meta/llama-3.1-70b-instruct';
+
+    for (const row of rows.results) {
+        if (row.provider === 'workers_ai') {
+            providers.workers_ai = { type: 'workers_ai' };
+        } else if (row.provider === 'openai') {
+            providers.openai = { api_key: row.api_key, base_url: row.base_url };
+        } else if (row.provider === 'anthropic') {
+            providers.anthropic = { api_key: row.api_key };
+        } else if (row.provider === 'gemini') {
+            providers.gemini = { api_key: row.api_key };
+        } else if (row.provider === 'openrouter') {
+            providers.openrouter = { api_key: row.api_key, base_url: row.base_url || 'https://openrouter.ai/api/v1' };
+        }
+
+        if (row.is_default) {
+            defaultProvider = row.provider;
+            defaultModel = row.model;
+        }
+    }
+
+    // Workers AI always available as a fallback
+    if (!providers.workers_ai) {
+        providers.workers_ai = { type: 'workers_ai' };
+    }
+    if (!rows.results.length) {
+        defaultProvider = 'workers_ai';
+    }
+
+    return {
+        providers,
+        agents: { defaults: { provider: defaultProvider, model: defaultModel } },
+    };
+}
+
+async function syncProvidersToKV(env: Env): Promise<void> {
+    try {
+        const config = await buildProviderConfig(env);
+        // Cache for 5 minutes — ZeroClaw polls this on each cron run
+        await env.CACHE.put('zeroclaw:provider_config', JSON.stringify(config), { expirationTtl: 300 });
+    } catch {
+        // Non-critical — don't fail the main request
+    }
+}
+
+export { router as agentProvidersRouter };

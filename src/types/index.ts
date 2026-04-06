@@ -36,6 +36,13 @@ export interface Env {
     JWT_SECRET: string;
     NEWS_API_KEY: string;
     ADMIN_API_KEY: string;
+
+    // Optional AI Provider keys (set via `wrangler secret put`)
+    // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)
+    OPENAI_API_KEY?: string;
+    ANTHROPIC_API_KEY?: string;
+    GOOGLE_AI_API_KEY?: string;
+    OPENROUTER_API_KEY?: string;
 }
 
 // Context variables for Hono middleware

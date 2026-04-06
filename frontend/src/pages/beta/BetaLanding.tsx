@@ -2,14 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Lock, ArrowRight } from 'lucide-react';
-import { 
-  BetaNav, 
-  GoldButton, 
-  AnimatedHeadline, 
-  SectionLabel, 
-  CardReveal, 
-  GoldDivider, 
-  StatCounter 
+import {
+  BetaNav,
+  GoldButton,
+  AnimatedHeadline,
+  SectionLabel,
+  CardReveal,
+  GoldDivider,
+  StatCounter,
+  AgentStatusPanel
 } from '../../components/beta';
 
 export const BetaLanding = () => {
@@ -83,7 +84,19 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 3. STORIES PREVIEW (STAGGERED CARDS WITH BLUR) */}
+      {/* 3. LIVE AGENT INTELLIGENCE PANEL */}
+      <section className="py-20 px-6 border-b border-white/5 bg-[#080D1A]">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10">
+            <SectionLabel text="AI Intelligence Engine" />
+            <h2 className="font-serif text-[2rem] md:text-[2.75rem] leading-tight text-white">Live from the newsroom</h2>
+            <p className="text-white/50 mt-3 text-base max-w-xl mx-auto">Our ZeroClaw agents work around the clock — generating, auditing, and improving every article on this platform.</p>
+          </div>
+          <AgentStatusPanel />
+        </div>
+      </section>
+
+      {/* 4. STORIES PREVIEW (STAGGERED CARDS WITH BLUR) */}
       <section className="py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center md:text-left mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
@@ -172,7 +185,7 @@ export const BetaLanding = () => {
 
       <GoldDivider />
 
-      {/* 4. MISSION BLOCK */}
+      {/* 5. MISSION BLOCK */}
       <section className="py-32 px-6 container mx-auto max-w-4xl text-center">
         <CardReveal>
           <span className="text-6xl mb-8 block opacity-80">🌍</span>
@@ -186,7 +199,7 @@ export const BetaLanding = () => {
         </CardReveal>
       </section>
 
-      {/* 5. MEMBERSHIP TIERS */}
+      {/* 6. MEMBERSHIP TIERS */}
       <section className="py-32 bg-[#050810] border-y border-white/5 relative overflow-hidden">
         {/* Subtle backdrop glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[400px] bg-[#C9A84C] opacity-5 blur-[150px] pointer-events-none rounded-full" />
@@ -260,7 +273,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 6. TRANSPARENCY SECTION */}
+      {/* 7. TRANSPARENCY SECTION */}
       <section className="py-24 px-6 container mx-auto max-w-5xl text-center">
         <h3 className="font-sans font-medium text-white/50 uppercase tracking-widest text-sm mb-12">Where early support goes</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">

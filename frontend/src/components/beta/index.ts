@@ -5,3 +5,4 @@ export * from './CardReveal';
 export * from './GoldDivider';
 export * from './StatCounter';
 export * from './BetaNav';
+export { AgentStatusPanel } from './AgentStatusPanel';
