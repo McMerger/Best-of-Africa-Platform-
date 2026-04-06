@@ -92,13 +92,13 @@ export const BetaArticle = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
             <h2 className="font-serif text-[32px] text-white">More Stories</h2>
-            <Link to="/beta/stories" className="text-[#C9A84C] font-semibold text-sm tracking-wider uppercase hover:text-white transition-colors">
+            <Link to="/stories" className="text-[#C9A84C] font-semibold text-sm tracking-wider uppercase hover:text-white transition-colors">
               View All →
             </Link>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link to="/beta/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
+            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
               <div className="p-6">
                 <span className="text-2xl mb-4 block">🇷🇼</span>
                 <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">
@@ -107,7 +107,7 @@ export const BetaArticle = () => {
                 <p className="text-sm text-white/50">8 min read</p>
               </div>
             </Link>
-            <Link to="/beta/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
+            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
               <div className="p-6">
                 <span className="text-2xl mb-4 block">🇬🇭</span>
                 <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">
@@ -116,7 +116,7 @@ export const BetaArticle = () => {
                 <p className="text-sm text-white/50">5 min read</p>
               </div>
             </Link>
-            <Link to="/beta/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
+            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
               <div className="p-6">
                 <span className="text-2xl mb-4 block">🇰🇪</span>
                 <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">

@@ -35,7 +35,7 @@ export const BetaNav = () => {
           <NavigationMenu.Root className="hidden md:flex relative justify-center z-10">
             <NavigationMenu.List className="flex gap-8 items-center m-0 p-0 list-none">
               {links.map((link) => {
-                const isActive = location.pathname.startsWith(link.path) && link.path !== '/';
+                const isActive = link.path === '/' ? location.pathname === '/' : location.pathname.startsWith(link.path);
                 return (
                   <NavigationMenu.Item key={link.path}>
                     <NavigationMenu.Link asChild active={isActive}>

@@ -128,7 +128,7 @@ export const BetaStories = () => {
             return (
               <Link 
                 key={article.slug} 
-                to={`/beta/articles/${article.slug}`}
+                to={`/stories/${article.slug}`}
                 className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[380px] transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/40"
               >
                 <div className="p-6 pb-2 flex-grow relative z-10 bg-[#111827]">
