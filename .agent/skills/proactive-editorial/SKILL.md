@@ -20,4 +20,5 @@ The `scanner.py` module provides a function `scan_for_pending_audits(db_path, li
 
 ## Integration
 
-The Nanobot Agent should call this via a `Cron` job or a background loop in `boa_agent.py`.
+The ZeroClaw agent runs this skill on a 5-minute cron cycle (configured in `.zeroclaw/config.json`).
+The full runtime skill definition (with API integration steps) lives at `.zeroclaw/skills/proactive-editorial.md`.

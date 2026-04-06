@@ -50,7 +50,8 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                     content: "I encountered an issue processing your request. Please try again."
                 }]);
             }
-        } catch (error) {
+        } catch (err) {
+            console.error('AI chat error:', err);
             setChatHistory(prev => [...prev, {
                 role: 'assistant',
                 content: "Connection error. The intelligence service may be temporarily unavailable."

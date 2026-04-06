@@ -16,6 +16,7 @@ export async function indexArticle(
     content: string,
     metadata: {
         country_code?: string;
+        region?: string;
         sector_id?: string;
         published_at?: string;
         ai_investor_brief?: string;
@@ -37,6 +38,7 @@ export async function indexArticle(
     const baseMetadata = {
         title,
         country_code: metadata.country_code || '',
+        region: metadata.region || '',
         sector_id: metadata.sector_id || '',
         published_at: metadata.published_at || '',
         type: 'document'
@@ -112,6 +114,7 @@ export async function searchSimilar(
         topK?: number;
         filter?: {
             country_code?: string;
+            region?: string;
             sector_id?: string;
         };
     } = {}
@@ -124,6 +127,7 @@ export async function searchSimilar(
     // Build filter if provided
     const vectorizeFilter: Record<string, string> = {};
     if (filter?.country_code) vectorizeFilter.country_code = filter.country_code;
+    if (filter?.region) vectorizeFilter.region = filter.region;
     if (filter?.sector_id) vectorizeFilter.sector_id = filter.sector_id;
 
     // Query Vectorize
@@ -199,6 +203,7 @@ export async function batchIndexArticles(
         title: string;
         content: string;
         country_code?: string;
+        region?: string;
         sector_id?: string;
         published_at?: string;
     }>
@@ -216,6 +221,7 @@ export async function batchIndexArticles(
                 metadata: {
                     title: article.title,
                     country_code: article.country_code || '',
+                    region: article.region || '',
                     sector_id: article.sector_id || '',
                     published_at: article.published_at || '',
                 },

@@ -10,22 +10,14 @@ import { secureHeaders } from 'hono/secure-headers';
 import { prettyJSON } from 'hono/pretty-json';
 
 import type { Env, Variables } from './types';
-import { articlesRouter } from './routes/articles';
-import { countriesRouter } from './routes/countries';
-import { searchRouter } from './routes/search';
-import { analyticsRouter } from './routes/analytics';
-import { intelligenceRouter } from './routes/intelligence';
-import { adminRouter } from './routes/admin';
-import { dashboardsRouter } from './routes/dashboards';
-import { narrativesRouter } from './routes/narratives';
-import { servicesRouter } from './routes/services';
-import { marketIntelRouter } from './routes/market-intel';
-import { personalizationRouter } from './routes/personalization';
-import { authRouter } from './routes/auth-router';
-import { eventsRouter } from './routes/events';
-import { campaignsRouter } from './routes/campaigns';
+import {
+    articlesRouter, countriesRouter, searchRouter, analyticsRouter,
+    intelligenceRouter, adminRouter, dashboardsRouter, narrativesRouter,
+    servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
+    eventsRouter, campaignsRouter, configRouter, devRouter,
+    bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter
+} from './routes';
 import { LiveCounter } from './durable-objects/live-counter';
-import { configRouter } from './routes/config';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // App Initialization
@@ -88,6 +80,9 @@ api.route('/search', searchRouter);
 api.route('/analytics', analyticsRouter);
 api.route('/intel', intelligenceRouter);
 api.route('/admin', adminRouter);
+api.route('/agent', agentWebhooksRouter);
+api.route('/audit', auditRouter);
+api.route('/self-improve', selfImproveRouter);
 
 // Vision-aligned routes (narrative diplomacy & intelligence)
 api.route('/dashboards', dashboardsRouter);
@@ -100,13 +95,10 @@ api.route('/events', eventsRouter);
 api.route('/campaigns', campaignsRouter);
 api.route('/config', configRouter);
 
-import { devRouter } from './routes/dev';
-import { bookmarksRouter } from './routes/bookmarks';
-import { systemRouter } from './routes/system';
-
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
 api.route('/', systemRouter);
+api.route('/docs', openapiRouter);
 
 app.route('/api/v1', api);
 
@@ -164,8 +156,8 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     const { cron } = event;
 
     switch (cron) {
-        case '*/15 * * * *':
-            // Ingestion: every 15 minutes
+        case '* * * * *':
+            // Ingestion: every minute
             console.log('Running ingestion worker...');
             await runIngestion(env);
             break;

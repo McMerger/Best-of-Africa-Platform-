@@ -60,15 +60,26 @@ The Best of Africa platform operates an **autonomous AI content engine** that co
 
 **Trigger**: Queue message `generate_article`
 
-**AI Operations**:
+**Flow**:
 
-1. **Identify Country** - Extracts ISO code from content
-2. **Identify Sector** - Classifies into 8 sector categories
-3. **Generate Article** - Rewrites as premium Guardian-style content
-4. **Generate Embedding** - Creates vector for semantic search
-5. **Index in Vectorize** - Stores for RAG queries
+1. **Identify Country** — extracts ISO code from content using Workers AI
+2. **Identify Sector** — classifies into 8 sector categories
+3. **Queue for agent** — writes a row to `agent_tasks` with type=`generate_article`
+4. ZeroClaw picks up the task and generates the Guardian-style article using Gemini
 
-### 3. Optimizer Worker (`src/workers/optimizer.ts`)
+### 3. ZeroClaw Agent (`zeroclaw/` + `.zeroclaw/`)
+
+**Runtime**: ZeroClaw — Rust-based autonomous agent CLI  
+**Provider**: Gemini (Google OAuth — no API key required)  
+**Launch**: `.zeroclaw/run.bat`
+
+**Skills & Schedules**:
+
+| Skill | Frequency | Description |
+|-------|-----------|-------------|
+| `article-generator` | Every 60s | Polls `agent_tasks`, generates Guardian-style articles, publishes back |
+| `proactive-editorial` | Every 5m | Scans for `pending_audit` or stale articles, runs quality audits |
+| `self-improving-editorial` | 3am daily | Reflects on audit results, evolves editorial rules in `learned.md` |
 
 **Trigger**: Cron every 6 hours
 
@@ -85,8 +96,9 @@ The Best of Africa platform operates an **autonomous AI content engine** that co
 
 | Model | Purpose | Provider |
 |-------|---------|----------|
-| `llama-3.1-70b-instruct` | Article generation, headlines | Workers AI |
-| `bge-base-en-v1.5` | Embeddings for search | Workers AI |
+| `llama-3.1-70b-instruct` | Country/sector classification, embeddings | Workers AI |
+| `bge-base-en-v1.5` | Embeddings for semantic search | Workers AI |
+| `gemini-2.5-pro` | Article generation, editorial audits, self-improvement | ZeroClaw + Gemini OAuth |
 
 ---
 

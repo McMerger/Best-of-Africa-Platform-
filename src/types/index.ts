@@ -45,6 +45,7 @@ export interface Variables {
     clientTier: string;
     rateLimit: number;
     requestId: string;
+    logger: import('../lib/logger').Logger;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -65,6 +66,10 @@ export interface Country {
     tourism_highlights: string[] | null;
     flag_emoji: string | null;
     hero_image_url: string | null;
+    visa_portal_url: string | null;
+    business_portal_url: string | null;
+    tourism_portal_url: string | null;
+    history_baobab_content: string | null;
     diplomacy_score: number | null;
     image_strength_score: number | null;
     fdi_inflow_usd: number | null;

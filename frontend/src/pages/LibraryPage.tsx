@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Layout } from '../components/Layout';
+import type { ArticleListItem } from '../types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
 export const LibraryPage: React.FC = () => {
-    const [savedItems, setSavedItems] = useState<any[]>([]);
+    const [savedItems, setSavedItems] = useState<ArticleListItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

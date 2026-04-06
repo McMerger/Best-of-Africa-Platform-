@@ -1,11 +1,11 @@
 -- System Configuration for Dynamic UI Strings & AI Content
-CREATE TABLE system_config (
+CREATE TABLE IF NOT EXISTS system_config (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 -- Seed initial values (so UI doesn't break before first AI run)
-INSERT INTO system_config (key, value)
+INSERT OR IGNORE INTO system_config (key, value)
 VALUES (
         'sector_energy_desc',
         'Oil, Gas, Critical Minerals'

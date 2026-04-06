@@ -6,7 +6,9 @@
 import { Hono } from 'hono';
 import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
+import { validate, CountryCodeParamSchema, UuidParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
+import { z } from 'zod';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -30,8 +32,8 @@ router.use('/ai-chat', rateLimit);
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /intel/country/:code/report - Deep country analysis (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/country/:code/report', async (c) => {
-  const code = c.req.param('code').toUpperCase();
+router.get('/country/:code/report', validate('param', CountryCodeParamSchema), async (c) => {
+  const { code } = (c.req as any).valid('param');
 
   // Get country first (quick lookup, no cache needed)
   const country = await c.env.DB.prepare(
@@ -133,8 +135,8 @@ router.get('/country/:code/report', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /intel/sector/:id/trends - Sector intelligence (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/sector/:id/trends', async (c) => {
-  const sectorId = c.req.param('id');
+router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) => {
+  const { id: sectorId } = (c.req as any).valid('param');
 
   const sector = await c.env.DB.prepare(
     'SELECT * FROM sectors WHERE id = ?'
@@ -397,8 +399,8 @@ router.get('/audience/reach', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /intel/ai-chat - RAG-powered AI Consultant
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/ai-chat', async (c) => {
-  const { message } = await c.req.json();
+router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
+  const { message } = (c.req as any).valid('json');
   if (!message) return c.json({ error: 'Message required' }, 400);
 
   try {
@@ -454,13 +456,8 @@ router.post('/ai-chat', async (c) => {
 // POST /intel/reframe - Rewrite article for specific audience (Analyst Lens)
 // DEEP PERSONALIZATION: Now injects country/sector context
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/reframe', async (c) => {
-  const { articleId, lens } = await c.req.json();
-  const validLenses = ['investor', 'government', 'explorer'];
-
-  if (!articleId || !lens || !validLenses.includes(lens)) {
-    return c.json({ error: 'Missing articleId or invalid lens. Valid: investor, government, explorer' }, 400);
-  }
+router.post('/reframe', validate('json', AiReframeSchema), async (c) => {
+  const { articleId, lens } = (c.req as any).valid('json');
 
   // 1. Fetch Article with Context (Country + Sector)
   const article = await c.env.DB.prepare(`
@@ -515,12 +512,8 @@ router.post('/reframe', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /intel/reformat - Adapt content format (Briefing Mode)
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/reformat', async (c) => {
-  const { articleId, format } = await c.req.json();
-
-  if (!articleId || !format) {
-    return c.json({ error: 'Missing articleId or format' }, 400);
-  }
+router.post('/reformat', validate('json', AiReformatSchema), async (c) => {
+  const { articleId, format } = (c.req as any).valid('json');
 
   const article = await c.env.DB.prepare(
     'SELECT content FROM articles WHERE id = ?'
@@ -583,8 +576,8 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
 // POST /intel/synthesize-unified - Generate all perspectives in one call
 // ZERO-FRICTION: No user selection needed - delivers complete analysis
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/synthesize-unified', async (c) => {
-  const { articleId } = await c.req.json();
+router.post('/synthesize-unified', validate('json', z.object({ articleId: z.string().uuid() })), async (c) => {
+  const { articleId } = (c.req as any).valid('json');
 
   if (!articleId) {
     return c.json({ error: 'Missing articleId' }, 400);

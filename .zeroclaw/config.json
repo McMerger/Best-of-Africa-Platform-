@@ -1,0 +1,36 @@
+{
+  "providers": {
+    "gemini": {}
+  },
+  "agents": {
+    "defaults": {
+      "provider": "gemini",
+      "model": "gemini-2.5-pro"
+    }
+  },
+  "skills": {
+    "dir": ".zeroclaw/skills"
+  },
+  "cron": {
+    "jobs": [
+      {
+        "name": "article-generator",
+        "skill": "article-generator",
+        "every": 60,
+        "message": "Poll the BoA backend for agent_tasks with type='generate_article' and status='pending'. For each pending task, generate a Guardian-style article using the article-generator skill, then POST the result back to the BoA API to publish it."
+      },
+      {
+        "name": "proactive-editorial",
+        "skill": "proactive-editorial",
+        "every": 300,
+        "message": "Scan the BoA content database for articles with status='pending_audit' or articles that have not been audited in more than 7 days. Report findings and queue any work needed."
+      },
+      {
+        "name": "self-improving-editorial",
+        "skill": "self-improving-editorial",
+        "cron": "0 3 * * *",
+        "message": "Run the nightly instruction evolution cycle: reflect on recent audits and human feedback, synthesize new editorial rules, and append them to the learned.md knowledge base."
+      }
+    ]
+  }
+}

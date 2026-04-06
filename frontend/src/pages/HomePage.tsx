@@ -1,23 +1,32 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Layout } from '../components/Layout';
-
+import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '../services/api';
 import type { ArticleListItem } from '../types';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRightIcon, ArrowTopRightIcon, GlobeIcon } from '@radix-ui/react-icons';
+import { ArrowLeftIcon, ArrowRightIcon, ArrowTopRightIcon, GlobeIcon, PauseIcon, PlayIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
 import { LiquidChromeButton } from "@/components/ui/liquid-chrome-button";
 import type { Dashboard } from '../types';
+import { cn } from "@/lib/utils";
+import { PartnerPromo } from '../components/PartnerPromo';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const HomePage: React.FC = () => {
     const { data: config } = useSystemConfig();
+    const { t } = useLanguage();
     const [featured, setFeatured] = useState<ArticleListItem[]>([]);
     const [dashboards, setDashboards] = useState<Dashboard[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Carousel State
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+    const [direction, setDirection] = useState(1);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,7 +46,48 @@ export const HomePage: React.FC = () => {
         fetchData();
     }, []);
 
+    // Carousel Auto-play Logic
+    const goToNext = useCallback(() => {
+        setDirection(1);
+        setCurrentIndex((prev) => (prev + 1) % Math.max(featured.length, 1));
+    }, [featured.length]);
+
+    const goToPrev = useCallback(() => {
+        setDirection(-1);
+        setCurrentIndex((prev) => (prev - 1 + Math.max(featured.length, 1)) % Math.max(featured.length, 1));
+    }, [featured.length]);
+
+    useEffect(() => {
+        let timer: ReturnType<typeof setInterval>;
+        if (isAutoPlaying && featured.length > 1) {
+            timer = setInterval(goToNext, 6000); // 6 seconds per slide
+        }
+        return () => clearInterval(timer);
+    }, [isAutoPlaying, goToNext, featured.length]);
+
     if (loading) return <Layout><div className="container py-20"><Skeleton className="h-[500px] w-full rounded-xl" /></div></Layout>;
+
+    // Framer Motion Animation Variants for Carousel
+    const slideVariants = {
+        enter: (direction: number) => ({
+            x: direction > 0 ? 1000 : -1000,
+            opacity: 0,
+            scale: 0.95,
+        }),
+        center: {
+            zIndex: 1,
+            x: 0,
+            opacity: 1,
+            scale: 1,
+        },
+        exit: (direction: number) => ({
+            zIndex: 0,
+            x: direction < 0 ? 1000 : -1000,
+            opacity: 0,
+            scale: 0.95,
+        })
+    };
+
 
     return (
         <Layout>
@@ -56,10 +106,10 @@ export const HomePage: React.FC = () => {
                         {dashboards.slice(0, 6).map((d, i) => (
                             <span key={i} className={`flex items-center gap-1 ${d.key_metrics?.articles_24h > 0 ? 'text-green-600' : 'text-yellow-600'}`}>
                                 <ArrowTopRightIcon className="h-3 w-3" />
-                                {d.region?.toUpperCase()}: {d.key_metrics?.articles_24h || 0} NEW
+                                {d.region?.toUpperCase()}: {d.key_metrics?.articles_24h || 0} {t("intel.new_articles", "NEW")}
                             </span>
                         ))}
-                        {dashboards.length === 0 && <span className="text-muted-foreground">Loading market data...</span>}
+                        {dashboards.length === 0 && <span className="text-muted-foreground">{t("intel.loading_market", "Loading market data...")}</span>}
                     </div>
                 </div>
 
@@ -68,7 +118,7 @@ export const HomePage: React.FC = () => {
 
                         <div className="relative z-10 max-w-4xl">
                             <div className="mb-6 flex items-center gap-2 text-sm font-bold text-primary uppercase tracking-widest animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <GlobeIcon className="h-4 w-4" /> Premium Pan-African Intelligence
+                                <GlobeIcon className="h-4 w-4" /> {t("home.badge", "Premium Pan-African Intelligence")}
                             </div>
                             <h1 className="mb-6 font-serif text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-7xl animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
                                 {config?.['home_hero_headline'] || "Strategic Narrative Engine."}
@@ -81,10 +131,10 @@ export const HomePage: React.FC = () => {
                                     className="w-56 h-16 text-lg shadow-lg shadow-primary/20"
                                     onClick={() => window.location.href = '/countries'}
                                 >
-                                    {config?.['home_cta_primary'] || "Explore Intelligence v2"}
+                                    {config?.['home_cta_primary'] || t("home.cta_primary", "Explore Intelligence v2")}
                                 </LiquidChromeButton>
                                 <Button variant="outline" size="lg" className="h-16 px-8 text-lg font-medium rounded-full border-2 border-primary/20 text-foreground hover:bg-white/50 backdrop-blur-sm transition-all hover:scale-105">
-                                    <Link to="/countries">View Countries</Link>
+                                    <Link to="/countries">{t("home.cta_secondary", "View Countries")}</Link>
                                 </Button>
                             </div>
                         </div>
@@ -94,56 +144,173 @@ export const HomePage: React.FC = () => {
 
             <div className="container py-16">
 
-                {/* 2. STRATEGIC OPPORTUNITIES (Sector x Country Focus) */}
+                {/* 2. STRATEGIC OPPORTUNITIES: AI News Carousel */}
                 <section className="mb-24">
-                    <div className="flex items-end justify-between mb-8 border-b border-border pb-4">
+                    <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 pb-4">
                         <div>
-                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground mb-2">Strategic Opportunities</h2>
-                            <p className="text-muted-foreground">High-priority narrative tracking organized by <span className="font-bold text-primary">Sector × Country</span>.</p>
+                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground mb-2 flex items-center gap-3">
+                                <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse inline-block" /> {t("home.top_intel", "Top Intelligence")}
+                            </h2>
+                            <p className="text-muted-foreground">{t("home.top_intel_sub", "High-priority strategic intelligence briefs, driven by AI.")}</p>
                         </div>
-                        <Button variant="ghost" className="text-primary font-bold hidden md:flex">
-                            View All Markets <ArrowRightIcon className="ml-2 h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2 mt-4 md:mt-0">
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm" onClick={() => setIsAutoPlaying(!isAutoPlaying)} title={isAutoPlaying ? "Pause Autoplay" : "Start Autoplay"}>
+                                {isAutoPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+                            </Button>
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToPrev}>
+                                <ArrowLeftIcon className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToNext}>
+                                <ArrowRightIcon className="h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {featured.slice(0, 6).map((article, i) => (
-                            <Link key={article.id || i} to={`/articles/${article.slug}`} className="group relative overflow-hidden block p-6 rounded-lg border border-border bg-card transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50">
-                                <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="p-3 rounded-md bg-primary/5 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors relative z-10">
-                                        <GlobeIcon className="h-6 w-6" />
+                    <div
+                        className="relative w-full h-[500px] md:h-[600px] overflow-hidden rounded-3xl border border-border/50 shadow-2xl bg-black"
+                        onMouseEnter={() => setIsAutoPlaying(false)}
+                        onMouseLeave={() => setIsAutoPlaying(true)}
+                    >
+                        {featured.length > 0 ? (
+                            <AnimatePresence initial={false} custom={direction}>
+                                <motion.div
+                                    key={currentIndex}
+                                    custom={direction}
+                                    variants={slideVariants}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{
+                                        x: { type: "spring", stiffness: 300, damping: 30 },
+                                        opacity: { duration: 0.2 }
+                                    }}
+                                    className="absolute inset-0 w-full h-full"
+                                >
+                                    {/* AI Background Image or Gradient Fallback */}
+                                    <div className="absolute inset-0 w-full h-full">
+                                        {featured[currentIndex].ai_image_url ? (
+                                            <img
+                                                src={featured[currentIndex].ai_image_url}
+                                                alt={featured[currentIndex].title}
+                                                className="w-full h-full object-cover opacity-60 mix-blend-screen scale-105 transition-transform duration-[10000ms] ease-linear origin-center hover:scale-100"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-secondary/20 opacity-80" />
+                                        )}
+                                        {/* Overlay Gradients for text readability */}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
                                     </div>
-                                    <Badge variant="outline" className="text-xs font-bold text-muted-foreground border-border relative z-10">
-                                        {article.sector_name || 'Intel'}
-                                    </Badge>
-                                </div>
-                                <h3 className="relative z-10 text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-2">
-                                    {article.sector_name || 'Market'} <span className="text-muted-foreground font-normal">in</span> {article.country_name || 'Africa'}
-                                </h3>
-                                <div className="relative z-10 text-sm font-medium text-muted-foreground line-clamp-1">{(article.title || '').replace(/\*\*/g, '').replace(/##/g, '')}</div>
-                            </Link>
-                        ))}
+
+                                    {/* Article Content */}
+                                    <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-16 z-10 w-full md:w-3/4 lg:w-2/3">
+                                        <div className="flex gap-3 mb-6 flex-wrap">
+                                            <Badge variant="default" className="bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider px-3 py-1">
+                                                {featured[currentIndex].sector_name || 'Market'}
+                                            </Badge>
+                                            <Badge variant="outline" className="border-primary/50 text-foreground text-xs font-medium backdrop-blur-md bg-background/50 px-3 py-1">
+                                                {featured[currentIndex].country_name || 'Africa'}
+                                            </Badge>
+                                        </div>
+
+                                        <Link to={`/articles/${featured[currentIndex].slug}`} className="group block">
+                                            <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight group-hover:text-primary transition-colors drop-shadow-lg">
+                                                {(featured[currentIndex].title || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                            </h3>
+                                            <p className="text-lg md:text-xl text-gray-300 max-w-2xl line-clamp-3 leading-relaxed drop-shadow-md border-l-2 border-primary/50 pl-4">
+                                                {(featured[currentIndex].summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                            </p>
+
+                                            <div className="mt-8 flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">
+                                                {t("home.read_brief", "Read Full Intelligence Brief")} <ArrowTopRightIcon className="h-5 w-5" />
+                                            </div>
+                                        </Link>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-muted/20 text-muted-foreground">
+                                <Skeleton className="h-[400px] w-[80%] rounded-xl opacity-20" />
+                                <p className="mt-4 font-mono uppercase tracking-widest text-sm">{t("intel.processing", "Processing Intelligence Stream...")}</p>
+                            </div>
+                        )}
+
+                        {/* Pagination Dots */}
+                        <div className="absolute bottom-6 right-8 z-20 flex gap-2">
+                            {featured.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        setDirection(index > currentIndex ? 1 : -1);
+                                        setCurrentIndex(index);
+                                    }}
+                                    className={cn(
+                                        "h-1.5 rounded-full transition-all duration-300",
+                                        index === currentIndex ? "w-8 bg-primary" : "w-2 bg-white/30 hover:bg-white/50"
+                                    )}
+                                    aria-label={`Go to slide ${index + 1}`}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </section>
 
-                {/* 3. INTELLIGENCE STREAM (Flat, No blinking lights) */}
+                {/* 3. STRATEGIC PARTNERS (NEW Advertising Layer) */}
+                <section className="mb-24 py-12 border-y border-border/50 bg-muted/5 relative overflow-hidden rounded-3xl">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+
+                    <div className="flex flex-col md:flex-row items-center justify-between mb-12 px-8">
+                        <div>
+                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground mb-1">{t("home.partners", "Strategic Partners")}</h2>
+                            <p className="text-muted-foreground">{t("home.partners_sub", "Global organizations aligned with African growth.")}</p>
+                        </div>
+                        <Button variant="ghost" asChild className="text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary/10 mt-4 md:mt-0">
+                            <Link to="/sponsored">{t("home.partner_with_us", "Partner with us")} &rarr;</Link>
+                        </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8">
+                        <PartnerPromo
+                            title="River Bridge Investment"
+                            category="Infrastructure Fund"
+                            description="Driving cross-border connectivity through strategic rail and port infrastructure across the Southern Africa Development Community."
+                            ctaText="Explore Fund"
+                            imageUrl="https://images.unsplash.com/photo-1473842106208-8e68e4ca4515?auto=format&fit=crop&q=80&w=800"
+                        />
+                        <PartnerPromo
+                            title="Pan-African Tech Hub"
+                            category="Innovation Partner"
+                            description="The premier ecosystem for high-growth African startups. Scale your venture with specialized capital and market access."
+                            ctaText="Join Ecosystem"
+                            imageUrl="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&q=80&w=800"
+                        />
+                        <PartnerPromo
+                            title="Green Sahara Initiative"
+                            category="ESG / Sustainability"
+                            description="Revolutionizing renewable energy in the Sahel. Partnering for a carbon-neutral industrial revolution on the continent."
+                            ctaText="View Projects"
+                            imageUrl="https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=800"
+                        />
+                    </div>
+                </section>
+
+                {/* 4. INTELLIGENCE STREAM (Flat, No blinking lights) */}
                 <section className="mb-24">
                     <div className="rounded-lg border border-border bg-muted/30 p-8">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
-                                    Latest Sector Analysis
+                                    {t("home.latest_analysis", "Latest Sector Analysis")}
                                 </div>
                                 <h3 className="text-2xl font-bold text-foreground">
-                                    {(featured[0]?.title || "Loading Sector Analysis...").replace(/\*\*/g, '').replace(/##/g, '')}
+                                    {(featured[1]?.title || "Loading Sector Analysis...").replace(/\*\*/g, '').replace(/##/g, '')}
                                 </h3>
                                 <p className="text-muted-foreground max-w-3xl truncate">
-                                    {(featured[0]?.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                    {(featured[1]?.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
                                 </p>
                             </div>
                             <Button variant="outline" asChild className="shrink-0 bg-background font-bold">
-                                <Link to="/dashboards">Open Command Center &rarr;</Link>
+                                <Link to={`/articles/${featured[1]?.slug}`}>{t("home.read_analysis", "Read Analysis")} &rarr;</Link>
                             </Button>
                         </div>
                     </div>
@@ -184,8 +351,6 @@ export const HomePage: React.FC = () => {
                         </div>
                     </div>
                 </section>
-
-                {/* 5. STRATEGIC SERVICES (REMOVED - Pure Intel Focus) */}
             </div>
         </Layout>
     );

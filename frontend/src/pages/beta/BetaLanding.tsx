@@ -1,0 +1,299 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Lock, ArrowRight } from 'lucide-react';
+import { 
+  BetaNav, 
+  GoldButton, 
+  AnimatedHeadline, 
+  SectionLabel, 
+  CardReveal, 
+  GoldDivider, 
+  StatCounter 
+} from '../../components/beta';
+
+export const BetaLanding = () => {
+  return (
+    <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] overflow-x-hidden">
+      <BetaNav />
+
+      {/* 1. HERO SECTION */}
+      <section className="relative min-h-[90vh] flex items-center justify-center pt-20 pb-32 overflow-hidden border-b border-white/5">
+        {/* Background Gradients & Glows */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.15, scale: 1 }}
+            transition={{ duration: 3, ease: "easeOut" }}
+            className="w-[600px] h-[600px] bg-[#C9A84C] rounded-full blur-[120px]"
+          />
+        </div>
+
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
+          <SectionLabel text="Beta Access" />
+          
+          <AnimatedHeadline 
+            text="Africa without the filter." 
+            className="font-serif text-[clamp(3.5rem,8vw,6rem)] leading-[1.05] tracking-tight mb-6"
+          />
+
+          <motion.p 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            className="text-white/70 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
+          >
+            The intelligence and storytelling platform for the continent's next era. No narratives. Just the reality on the ground.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-6"
+          >
+            <Link to="/membership" className="w-full sm:w-auto">
+              <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8">
+                Become a Founding Member
+              </GoldButton>
+            </Link>
+            <Link to="/stories" className="w-full sm:w-auto">
+              <GoldButton variant="ghost" className="w-full sm:w-auto text-lg py-4 px-8 border-white/20 text-white hover:bg-white/5 hover:text-[#C9A84C] transition-colors">
+                Explore the Beta
+              </GoldButton>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 2. STATS BAR */}
+      <section className="bg-[#111827] py-20 border-b border-white/5 relative z-20">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 divide-y divide-white/10 md:divide-y-0 md:divide-x">
+            <div className="pt-8 md:pt-0">
+              <StatCounter value={1.4} label="Billion People" suffix="B" />
+            </div>
+            <div className="pt-8 md:pt-0">
+              <StatCounter value={19} label="Median Age" />
+            </div>
+            <div className="pt-8 md:pt-0">
+              <StatCounter value={6} label="Of the 10 fastest growing economies" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. STORIES PREVIEW (STAGGERED CARDS WITH BLUR) */}
+      <section className="py-32 px-6 container mx-auto max-w-7xl">
+        <div className="text-center md:text-left mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <SectionLabel text="Original Reporting" />
+            <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] leading-tight">Stories that shape markets</h2>
+          </div>
+          <Link to="/stories" className="text-[#C9A84C] font-semibold tracking-wider uppercase text-sm hover:opacity-80 transition-opacity flex items-center gap-2">
+            View all stories <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Unlocked Card */}
+          <CardReveal delay={0}>
+            <Link to="/beta/articles/tech-talent-lagos" className="group block bg-[#111827] rounded-xl border border-white/10 overflow-hidden h-full transform transition-all duration-300 hover:-translate-y-2 hover:border-[#C9A84C]/40 hover:shadow-2xl">
+              <div className="p-8 h-full flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="text-4xl">🇳🇬</span>
+                    <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase bg-[#C9A84C]/10 px-3 py-1 rounded-full border border-[#C9A84C]/20">Technology</span>
+                  </div>
+                  <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-white group-hover:text-[#C9A84C] transition-colors">The Silent Exodus Reversing Course in Lagos</h3>
+                  <p className="text-white/60 text-[0.9375rem] leading-relaxed line-clamp-3">A new wave of capitalized local funds is convincing Nigeria's diaspora engineers that building at home is no longer a compromise.</p>
+                </div>
+                <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center text-xs font-medium text-white/40">
+                  <span>6 min read</span>
+                  <span className="text-[#C9A84C] font-semibold uppercase tracking-widest flex items-center gap-1 group-hover:gap-2 transition-all">Read freely <ArrowRight size={14} /></span>
+                </div>
+              </div>
+            </Link>
+          </CardReveal>
+
+          {/* Locked Card 1 */}
+          <CardReveal delay={0.2}>
+            <div className="group block bg-[#111827] rounded-xl border border-white/10 overflow-hidden h-full relative h-[420px]">
+              <div className="p-8 pb-2">
+                <div className="flex justify-between items-center mb-6">
+                   <span className="text-4xl">🇰🇪</span>
+                   <span className="text-xs font-semibold tracking-wider text-white/50 uppercase">Energy</span>
+                </div>
+                <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-white">The Geothermal Advantage Quietly Powering Nairobi</h3>
+                <p className="text-white/50 text-[0.9375rem] leading-relaxed line-clamp-3">How Kenya bypassed fossil fuel dependency to build a tech ecosystem running almost entirely on renewable, geothermal power.</p>
+              </div>
+
+              {/* Lock Overlay */}
+              <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-white/5 flex flex-col items-center justify-center">
+                 <div className="absolute inset-0 backdrop-blur-[6px] bg-[#0A0F1E]/60 transition-opacity duration-300" />
+                 <div className="relative z-30 flex flex-col items-center text-center p-6 transform transition-transform duration-300 group-hover:-translate-y-2">
+                   <div className="bg-[#0A0F1E] p-4 rounded-full border border-[#C9A84C]/40 shadow-[0_4px_32px_rgba(201,168,76,0.3)] mb-4">
+                     <Lock className="w-6 h-6 text-[#C9A84C]" />
+                   </div>
+                   <span className="font-serif text-[1.25rem] text-white font-medium mb-2">Founding Members</span>
+                   <Link to="/membership" className="text-sm text-[#C9A84C] font-semibold hover:underline">Unlock Access</Link>
+                 </div>
+              </div>
+            </div>
+          </CardReveal>
+          
+          {/* Locked Card 2 */}
+          <CardReveal delay={0.4}>
+            <div className="group block bg-[#111827] rounded-xl border border-white/10 overflow-hidden h-full relative h-[420px]">
+              <div className="p-8 pb-2">
+                <div className="flex justify-between items-center mb-6">
+                   <span className="text-4xl">🇿🇦</span>
+                   <span className="text-xs font-semibold tracking-wider text-white/50 uppercase">Healthcare</span>
+                </div>
+                <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-white">The Biotech Engineers Redefining Medicine at the Cape</h3>
+                <p className="text-white/50 text-[0.9375rem] leading-relaxed line-clamp-3">South African laboratories are shifting from manufacturing generic drugs to patenting breakthrough mRNA applications for the global market.</p>
+              </div>
+
+              {/* Lock Overlay */}
+              <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-white/5 flex flex-col items-center justify-center">
+                 <div className="absolute inset-0 backdrop-blur-[6px] bg-[#0A0F1E]/60 transition-opacity duration-300" />
+                 <div className="relative z-30 flex flex-col items-center text-center p-6 transform transition-transform duration-300 group-hover:-translate-y-2">
+                   <div className="bg-[#0A0F1E] p-4 rounded-full border border-[#C9A84C]/40 shadow-[0_4px_32px_rgba(201,168,76,0.3)] mb-4">
+                     <Lock className="w-6 h-6 text-[#C9A84C]" />
+                   </div>
+                   <span className="font-serif text-[1.25rem] text-white font-medium mb-2">Founding Members</span>
+                   <Link to="/membership" className="text-sm text-[#C9A84C] font-semibold hover:underline">Unlock Access</Link>
+                 </div>
+              </div>
+            </div>
+          </CardReveal>
+        </div>
+      </section>
+
+      <GoldDivider />
+
+      {/* 4. MISSION BLOCK */}
+      <section className="py-32 px-6 container mx-auto max-w-4xl text-center">
+        <CardReveal>
+          <span className="text-6xl mb-8 block opacity-80">🌍</span>
+          <h2 className="font-serif text-[2.5rem] md:text-[4rem] leading-tight mb-8">We're building Africa's story. Properly.</h2>
+          <p className="text-white/80 text-xl font-serif italic mx-auto leading-relaxed mb-12">
+            The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.
+          </p>
+          <Link to="/about">
+            <GoldButton variant="ghost">Read our manifesto</GoldButton>
+          </Link>
+        </CardReveal>
+      </section>
+
+      {/* 5. MEMBERSHIP TIERS */}
+      <section className="py-32 bg-[#050810] border-y border-white/5 relative overflow-hidden">
+        {/* Subtle backdrop glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[400px] bg-[#C9A84C] opacity-5 blur-[150px] pointer-events-none rounded-full" />
+        
+        <div className="container mx-auto px-6 max-w-6xl relative z-10">
+          <div className="text-center mb-20">
+            <SectionLabel text="Support the Beta" />
+            <h2 className="font-serif text-[3rem] md:text-[4.5rem] leading-[1.1] mb-6">Join before launch</h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto">Your support right now covers domains, tools, and the time to report and ship. Join the founding cohort.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {/* Supporter */}
+            <CardReveal delay={0}>
+              <div className="bg-[#111827] border border-white/10 rounded-2xl p-10 h-full flex flex-col hover:border-white/30 transition-colors">
+                <h3 className="font-serif text-2xl mb-2">Supporter</h3>
+                <div className="flex items-baseline gap-2 mb-8">
+                  <span className="text-[#C9A84C] font-serif text-4xl">$5</span>
+                  <span className="text-white/40 text-sm">/mo</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1 text-sm text-white/70">
+                  <li className="flex gap-3"><span className="text-[#C9A84C]">✓</span> Unlimited access to stories</li>
+                  <li className="flex gap-3"><span className="text-[#C9A84C]">✓</span> Exclusive community newsletters</li>
+                </ul>
+                <a href="https://ko-fi.com/boastory" target="_blank" rel="noopener noreferrer">
+                  <GoldButton variant="ghost" className="w-full">Support</GoldButton>
+                </a>
+              </div>
+            </CardReveal>
+
+            {/* Founding Member */}
+            <CardReveal delay={0.2} className="relative z-10">
+              <div className="bg-[#0A0F1E] border-2 border-[#C9A84C] rounded-2xl p-10 h-full flex flex-col transform md:-translate-y-4 shadow-[0_20px_50px_rgba(201,168,76,0.15)] relative">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#0A0F1E] text-xs font-bold uppercase tracking-widest py-1.5 px-6 rounded-full shadow-lg">
+                  Recommended
+                </div>
+                <h3 className="font-serif text-2xl mb-2 mt-2">Founding Member</h3>
+                <div className="flex items-baseline gap-2 mb-8">
+                  <span className="text-[#C9A84C] font-serif text-5xl">$15</span>
+                  <span className="text-white/40 text-sm">/mo</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1 text-sm text-white/90">
+                  <li className="flex gap-3"><span className="text-[#C9A84C] font-bold">✓</span> Everything in Supporter</li>
+                  <li className="flex gap-3"><span className="text-[#C9A84C] font-bold">✓</span> Full access to the beta platform hub</li>
+                  <li className="flex gap-3"><span className="text-[#C9A84C] font-bold">✓</span> Direct input on future coverage priorities</li>
+                </ul>
+                <a href="https://ko-fi.com/boastory" target="_blank" rel="noopener noreferrer">
+                  <GoldButton variant="primary" className="w-full shadow-[0_0_20px_rgba(201,168,76,0.3)]">Join as Member</GoldButton>
+                </a>
+              </div>
+            </CardReveal>
+
+            {/* Partner */}
+            <CardReveal delay={0.4}>
+               <div className="bg-[#111827] border border-white/10 rounded-2xl p-10 h-full flex flex-col hover:border-white/30 transition-colors">
+                <h3 className="font-serif text-2xl mb-2">Partner</h3>
+                <div className="flex items-baseline gap-2 mb-8">
+                  <span className="text-[#C9A84C] font-serif text-4xl">$50</span>
+                  <span className="text-white/40 text-sm">/mo</span>
+                </div>
+                <ul className="space-y-4 mb-10 flex-1 text-sm text-white/70">
+                  <li className="flex gap-3"><span className="text-[#C9A84C]">✓</span> Everything in Founding Member</li>
+                  <li className="flex gap-3"><span className="text-[#C9A84C]">✓</span> Executive intelligence briefing access</li>
+                </ul>
+                <a href="https://ko-fi.com/boastory" target="_blank" rel="noopener noreferrer">
+                  <GoldButton variant="ghost" className="w-full border-white/20 text-white/80 hover:text-white">Partner</GoldButton>
+                </a>
+              </div>
+            </CardReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. TRANSPARENCY SECTION */}
+      <section className="py-24 px-6 container mx-auto max-w-5xl text-center">
+        <h3 className="font-sans font-medium text-white/50 uppercase tracking-widest text-sm mb-12">Where early support goes</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <CardReveal delay={0}>
+            <div className="text-3xl mb-4">🌐</div>
+            <div className="text-sm font-semibold mb-2">Domain & Hosting</div>
+            <div className="text-xs text-white/40">Keeping it fast</div>
+          </CardReveal>
+          <CardReveal delay={0.1}>
+            <div className="text-3xl mb-4">🛠️</div>
+            <div className="text-sm font-semibold mb-2">Premium Tech</div>
+            <div className="text-xs text-white/40">Architecting at scale</div>
+          </CardReveal>
+          <CardReveal delay={0.2}>
+            <div className="text-3xl mb-4">✍️</div>
+            <div className="text-sm font-semibold mb-2">Research Time</div>
+            <div className="text-xs text-white/40">Uncovering real stories</div>
+          </CardReveal>
+          <CardReveal delay={0.3}>
+            <div className="text-3xl mb-4">⚙️</div>
+            <div className="text-sm font-semibold mb-2">Intelligence Core</div>
+            <div className="text-xs text-white/40">Backend models</div>
+          </CardReveal>
+        </div>
+      </section>
+
+      {/* CTA Footer */}
+      <footer className="py-20 border-t border-white/5 text-center">
+        <div className="mb-8">
+          <span className="font-serif text-xl font-bold">Best of <span className="text-[#C9A84C]">Africa</span></span>
+        </div>
+        <Link to="/newsletter" className="text-white/60 hover:text-white transition-colors text-sm">Subscribe to the free dispatch</Link>
+      </footer>
+    </div>
+  );
+};

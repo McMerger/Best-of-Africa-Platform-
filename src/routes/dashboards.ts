@@ -57,8 +57,10 @@ router.get('/:region', async (c) => {
         LIMIT 1
     `).bind(region).first();
 
-    // If no dashboard exists or expired, generate one
-    if (!dashboard) {
+    // If no dashboard exists or expired (24h), generate one
+    const isExpired = dashboard && (Date.now() - new Date((dashboard as any).generated_at).getTime() > 24 * 60 * 60 * 1000);
+
+    if (!dashboard || isExpired) {
         dashboard = await generateDashboard(c.env, region);
     }
 
@@ -273,11 +275,19 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
     // AI Executive Brief (RAG)
     let executiveBrief = "Regional data updating...";
     try {
-        const query = `${region} Africa business political economic developments last 24h`;
+        const query = `${region} Africa key events economics politics last 24h`;
         const embedding = await env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
         const vector = (embedding as Record<string, any>).data[0];
-        const relevant = await env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
+        // Query both articles and narrative vectors if available
+        const relevant = await env.VECTORS.query(vector, {
+            topK: 10,
+            returnMetadata: true,
+            filter: { region: region } // Apply regional filter in vector space
+        });
+        const context = relevant.matches
+            .filter(m => (m.metadata as any).published_at > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+            .map(m => (m.metadata as Record<string, any>).title)
+            .join('\n');
 
         if (context) {
             const aiResponse = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-70b-instruct', {

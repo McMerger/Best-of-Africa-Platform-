@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --navy: #0A0F1E;
+  --navy-surface: #111827;
+  --navy-card: rgba(255,255,255,0.03);
+  --gold: #C9A84C;
+  --gold-light: #E8C96A;
+  --gold-muted: rgba(201,168,76,0.12);
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.7);
+  --text-muted: rgba(255,255,255,0.4);
+  --border-subtle: rgba(255,255,255,0.08);
+  --border-gold: rgba(201,168,76,0.3);
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-gold: 0 8px 40px rgba(201,168,76,0.2);
+}
+
+body {
+  background-color: #0A0F1E;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
 @layer base {
   :root {
     /* Davos White Theme (Light Mode) */

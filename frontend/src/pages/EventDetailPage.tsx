@@ -17,16 +17,18 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { EventRegistrationForm } from '@/components/EventRegistrationForm';
 
-interface Event {
+interface EventDetail {
     id: string;
     title: string;
     date: string;
     date_end?: string;
     location: string;
     country_name?: string;
+    country_code?: string;
     category: string;
     description: string;
     ai_context_brief?: string;
+    registration_url?: string;
     agenda?: Array<{ time: string; activity: string; speaker?: string }>;
     speakers?: Array<{ name: string; role: string; organization: string; image?: string }>;
     spots_remaining?: number;
@@ -44,7 +46,7 @@ export function EventDetailPage() {
     const params = useParams<{ id: string }>();
     const id = params.id;
 
-    const [event, setEvent] = useState<Event | null>(null);
+    const [event, setEvent] = useState<EventDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -60,8 +62,8 @@ export function EventDetailPage() {
                 }
                 const json = await res.json();
                 setEvent(json.data);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'An unknown error occurred');
             } finally {
                 setLoading(false);
             }
@@ -245,7 +247,7 @@ export function EventDetailPage() {
 
                     {/* Sidebar - Registration */}
                     <div className="lg:col-span-1">
-                        <div className="sticky top-24">
+                        <div className="sticky top-24 space-y-6">
                             <Card className="shadow-lg border-muted">
                                 <div className="bg-primary/5 p-6 border-b">
                                     <h3 className="font-serif font-bold text-xl mb-1">
@@ -266,6 +268,20 @@ export function EventDetailPage() {
                                         </span>
                                     </div>
 
+                                    {event.registration_url && (
+                                        <>
+                                            <a
+                                                href={event.registration_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center w-full rounded-full bg-primary text-primary-foreground py-3 px-6 text-sm font-bold uppercase tracking-wider hover:bg-primary/90 transition-colors mb-4 shadow-sm"
+                                            >
+                                                Register on Official Site &rarr;
+                                            </a>
+                                            <div className="text-center text-[10px] text-muted-foreground uppercase tracking-widest mb-4">or register below</div>
+                                        </>
+                                    )}
+
                                     <Separator className="my-6" />
 
                                     <EventRegistrationForm eventId={event.id} />
@@ -275,6 +291,23 @@ export function EventDetailPage() {
                                     </p>
                                 </CardContent>
                             </Card>
+
+                            {event.country_code && (
+                                <Card className="rounded-3xl border-border">
+                                    <CardContent className="p-5">
+                                        <Link
+                                            to={`/countries/${event.country_code}`}
+                                            className="flex items-center gap-3 text-sm font-bold text-foreground hover:text-primary transition-colors"
+                                        >
+                                            <span className="text-xl">🌍</span>
+                                            <div>
+                                                <div>Explore {event.country_name || event.country_code}</div>
+                                                <span className="text-xs font-normal text-muted-foreground">Visa, business portals & investment intel</span>
+                                            </div>
+                                        </Link>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     </div>
                 </div>

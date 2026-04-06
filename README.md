@@ -10,9 +10,9 @@ Although it presents itself publicly as a **human-curated brand** to preserve au
 
 This internal **intelligence loop** allows the platform to:
 
-- Identify and correct narrative gaps
-- Self-improve its editorial product
-- Transform knowledge into high-value strategic services
+- Identify and correct narrative gaps via the **Proactive Audit Scanner**
+- Self-improve its editorial product via the **Human-in-the-Loop Feedback Loop**
+- Transform knowledge into high-value strategic services through autonomous agent protocols
 
 The platform serves **governments**, **investors**, and **institutional partners** seeking to leverage our reach, credibility, and intelligence—positioning itself not just as a media outlet, but as an **instrument of narrative diplomacy and market intelligence**.
 
@@ -22,10 +22,11 @@ The platform serves **governments**, **investors**, and **institutional partners
 
 ### Autonomous Content Engine
 
-- **Real-time data collection** from African news sources (RSS, NewsAPI)
-- **AI-powered article generation** maintaining Guardian-style editorial voice
-- **Continuous optimization** of format, headlines, and language
-- **Narrative gap detection** and automatic content filling
+- **Real-time data collection** from 50+ African news sources (RSS, NewsAPI)
+- **Hybrid Agent Pipeline** - Decoupled queue-based generation using `automaton` and `nanobot` Python logic
+- **AI-powered article generation** maintaining Guardian-style editorial voice and institutional tone
+- **Continuous optimization** of format, headlines, and photorealistic R2-stored media
+- **Narrative gap detection** and automatic content filling via autonomous audits
 
 ### Intelligence Services
 
@@ -53,12 +54,13 @@ The platform serves **governments**, **investors**, and **institutional partners
 | Database | D1 (SQLite) |
 | Cache | KV |
 | Storage | R2 |
-| AI | Workers AI (Llama 3.1 70B) |
-| Embeddings | BGE Base EN v1.5 |
-| Semantic Search | Vectorize |
-| Job Queue | Cloudflare Queues |
-| Real-time | Durable Objects |
+| AI (Generative) | Workers AI (Llama 3.1 70B & Stable Diffusion XL) |
+| AI (Agentic) | `nanobot` (Python) + `openskills` orchestrated by `automaton` bridge |
+| Semantic Search | Vectorize (BGE Base v1.5) |
+| Job Queue | Cloudflare Queues + D1 Agent Tasks |
+| Real-time | Durable Objects (Live Counters) |
 | Analytics | Analytics Engine |
+| Localization | LanguageContext (EN, PT, FR, AR, ZH, HI, DE) |
 
 ---
 
@@ -68,37 +70,36 @@ The platform serves **governments**, **investors**, and **institutional partners
 # Install dependencies
 npm install
 
-# Run locally
+# Run Frontend
+cd frontend && npm run dev
+
+# Run Backend (Worker)
 npm run dev
 
 # Deploy to Cloudflare
 npm run deploy
 ```
 
-## Setup Cloudflare Resources
+## Infrastructure & Governance
 
-```bash
-# Create D1 database
-npx wrangler d1 create best-of-africa-db
+### 1. Contribution Workflow
 
-# Apply migrations
-npx wrangler d1 migrations apply best-of-africa-db --local
+The development process follows a strict branching and review model to ensure stability for institutional partners.
 
-# Create KV namespaces
-npx wrangler kv:namespace create CACHE
-npx wrangler kv:namespace create RATE_LIMIT
+- **Primary Repo**: GitHub (Private)
+- **Workflow**: See [Contribution Workflow](.gemini/antigravity/brain/7c4e9f4f-645c-4b04-8742-d65855e493e0/contribution_workflow.md)
 
-# Create R2 bucket
-npx wrangler r2 bucket create best-of-africa-media
+### 2. Multi-Region Backup
 
-# Create Vectorize index
-npx wrangler vectorize create best-of-africa-content --dimensions=768 --metric=cosine
+To ensure narrative sovereignty and data persistence, the platform implements a daily cross-bucket and cross-jurisdictional backup strategy.
 
-# Set secrets
-npx wrangler secret put JWT_SECRET
-npx wrangler secret put NEWS_API_KEY
-npx wrangler secret put ADMIN_API_KEY
-```
+- **Strategy**: See [Multi-Region Backup Strategy](.gemini/antigravity/brain/7c4e9f4f-645c-4b04-8742-d65855e493e0/backup_strategy.md)
+
+### 3. Security Hardening
+
+- **Authentication**: JWT & Admin API Key enforcement on all management endpoints.
+- **Dev Guards**: `X-Dev-Secret` required for all operational triggers.
+- **Content Trust**: Integrated fact-checking and moderation pipeline.
 
 ---
 
@@ -111,10 +112,8 @@ npx wrangler secret put ADMIN_API_KEY
 | GET | `/api/v1/articles` | List articles |
 | GET | `/api/v1/articles/:slug` | Single article |
 | GET | `/api/v1/countries` | All 54 African nations |
-| GET | `/api/v1/dashboards` | Regional dashboards |
-| GET | `/api/v1/dashboards/:region` | Region-specific dashboard |
+| GET | `/api/v1/market-intel/sectors` | All sector analyses |
 | GET | `/api/v1/search?q=...` | Semantic search |
-| GET | `/api/v1/narratives` | Narrative strategies |
 
 ### Intelligence APIs (API Key Required)
 
@@ -122,25 +121,17 @@ npx wrangler secret put ADMIN_API_KEY
 |--------|----------|-------------|
 | GET | `/api/v1/intel/country/:code/report` | Country intelligence report |
 | GET | `/api/v1/intel/sector/:id/trends` | Sector trend analysis |
-| GET | `/api/v1/intel/audience` | Audience insights |
-| GET | `/api/v1/market-intel/sectors` | All sector analyses |
 | GET | `/api/v1/market-intel/reports/:id` | Premium reports |
-
-### Personalization
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/personalization/preferences` | Save user preferences |
-| GET | `/api/v1/personalization/recommended` | Personalized content |
 
 ### Admin (Auth Required)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | CRUD | `/api/v1/admin/articles` | Article management |
-| CRUD | `/api/v1/admin/narratives` | Narrative strategy management |
 | POST | `/api/v1/admin/trigger/ingestion` | Manual ingestion trigger |
 | POST | `/api/v1/admin/trigger/optimization` | Manual optimization trigger |
+| POST | `/api/v1/audit/scan` | Trigger proactive content audit |
+| POST | `/api/v1/self-improve/evolve` | Trigger agent instruction evolution |
 
 ---
 
@@ -148,11 +139,12 @@ npx wrangler secret put ADMIN_API_KEY
 
 | Schedule | Worker | Purpose |
 |----------|--------|---------|
-| Every 30 min | Ingestion | Collect news from sources |
-| Every 6 hours | Optimization | Self-improve content, refresh dashboards |
+| Every 1 min | Ingestion | Collect news from 50+ Pan-African sources |
+| Every 2 min | Optimization | Self-improve content, refresh dashboards |
+| Daily 5am | Reporting | Generate daily intelligence summaries |
 
 ---
 
 ## License
 
-Proprietary - Best of Africa
+Proprietary - Best of Africa (2026)

@@ -16,6 +16,7 @@ import { MissionControl } from './MissionControl';
 import { DensityToggle } from './DensityToggle';
 import { LensSwitcher } from './LensSwitcher';
 import { LanguageSelector } from './LanguageSelector';
+import { useLanguage } from '@/context/LanguageContext';
 
 import {
     Sheet,
@@ -37,19 +38,20 @@ import {
 
 export const NavBar: React.FC = () => {
     const location = useLocation();
+    const { t } = useLanguage();
 
     const navLinks = [
-        { href: "/", label: "Home" },
-        { href: "/feed", label: "Daily Briefing" },
-        { href: "/market-intel", label: "Sectors" },
-        { href: "/countries", label: "Countries" },
-        { href: "/dashboards", label: "Risk Dashboards" },
-        { href: "/market-intel/reports", label: "Reports" },
-        { href: "/events", label: "Summits" },
-        { href: "/request-consultation", label: "Concierge" },
-        { href: "/travel", label: "Travel" },
-        { href: "/search", label: "Search" },
-        { href: "/settings", label: "Settings" },
+        { href: "/", label: t("nav.home", "Home") },
+        { href: "/feed", label: t("nav.feed", "Daily Briefing") },
+        { href: "/market-intel", label: t("nav.sectors", "Sectors") },
+        { href: "/countries", label: t("nav.countries", "Countries") },
+        { href: "/dashboards", label: t("nav.dashboards", "Risk Dashboards") },
+        { href: "/market-intel/reports", label: t("nav.reports", "Reports") },
+        { href: "/events", label: t("nav.summits", "Summits") },
+        { href: "/request-consultation", label: t("nav.concierge", "Concierge") },
+        { href: "/travel", label: t("nav.travel", "Travel") },
+        { href: "/search", label: t("nav.search", "Search") },
+        { href: "/settings", label: t("nav.settings", "Settings") },
     ];
 
     return (
@@ -133,7 +135,7 @@ export const NavBar: React.FC = () => {
                                 <div>
                                     <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Intelligence</div>
                                     <div className="space-y-1">
-                                        {navLinks.filter(l => !['/events', '/request-consultation', '/travel', '/settings', '/search', '/analyst', '/membership', '/library'].includes(l.href)).map((link) => (
+                                        {navLinks.filter(l => !['/request-consultation', '/travel', '/settings', '/search', '/analyst', '/membership', '/library'].includes(l.href)).map((link) => (
                                             <Link
                                                 key={link.href}
                                                 to={link.href}
@@ -243,11 +245,80 @@ export const NavBar: React.FC = () => {
                                 </NavigationMenuContent>
                             </NavigationMenuItem>
 
-                            {/* COUNTRIES */}
+                            {/* COUNTRIES & PORTALS */}
                             <NavigationMenuItem>
-                                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                    <Link to="/countries">Countries</Link>
-                                </NavigationMenuLink>
+                                <NavigationMenuTrigger>Countries & Portals</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                                        <li className="col-span-2 border-b pb-2 mb-2">
+                                            <NavigationMenuLink asChild>
+                                                <Link
+                                                    to="/countries"
+                                                    className="flex items-center gap-2 select-none rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                                                >
+                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Regional Intelligence Map</div>
+                                                    <span className="text-xs text-muted-foreground">Browse all 54 African markers &rarr;</span>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/MZ" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 border border-primary/20">
+                                                    <div className="text-sm font-bold leading-none text-primary">Invest in Mozambique 🇲🇿</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Visa, Company Registration & Energy Summits.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/ZA" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">South Africa 🇿🇦</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Mining Indaba & financial markets.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/NG" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">Nigeria 🇳🇬</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Fintech, oil & gas, startup capital.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/KE" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">Kenya 🇰🇪</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Silicon Savannah & M-Pesa ecosystem.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/EG" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">Egypt 🇪🇬</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Suez Economic Zone & gas exports.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/RW" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">Rwanda 🇷🇼</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Tech hub & Africa CEO Forum host.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries/GH" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
+                                                    <div className="text-sm font-bold leading-none">Ghana 🇬🇭</div>
+                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">AfCFTA HQ & Year of Return.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                    </ul>
+                                </NavigationMenuContent>
                             </NavigationMenuItem>
 
                             {/* INTELLIGENCE & SERVICES MENU */}

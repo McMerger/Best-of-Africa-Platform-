@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { getSectorIcon } from '@/lib/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { PartnerPromo } from '../components/PartnerPromo';
 
 interface SectorDetailData {
     sector: Sector;
@@ -162,6 +163,21 @@ export const SectorDetailPage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* SECTOR SPONSORED PROMOTION (Contextual Ad) */}
+                        {sector.id && (['finance', 'infrastructure', 'energy'].includes(sector.id.toLowerCase())) && (
+                            <div className="mt-12 mb-12">
+                                <PartnerPromo
+                                    variant="horizontal"
+                                    title="The River Bridge Strategy"
+                                    category="Strategic Investment"
+                                    description={`As we analyze the ${sector.name} sector, River Bridge provides the capital and connectivity required to scale industrial footprints across developing trade corridors.`}
+                                    ctaText="Review Investment Brief"
+                                    imageUrl="https://images.unsplash.com/photo-1454165833767-02acd3546342?auto=format&fit=crop&q=80&w=1200"
+                                    className="border-primary/40 bg-primary/5"
+                                />
+                            </div>
+                        )}
                     </TabsContent>
 
                     {/* TAB 2: AI OUTLOOK */}

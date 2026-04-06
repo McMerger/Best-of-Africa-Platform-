@@ -1,22 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { MissionRole, MissionFormat, MissionState } from '../types';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MISSION CONTROL: The Global Operational Context
-// This dictates HOW the platform presents data to the user.
-// ─────────────────────────────────────────────────────────────────────────────
-
-export type MissionRole = 'standard' | 'investor' | 'operator' | 'policy';
-export type MissionFormat = 'brief' | 'deep' | 'audio';
-
-export interface MissionState {
-    role: MissionRole;
-    focus: {
-        countries: string[]; // ISO codes
-        sectors: string[];   // Sector IDs
-    };
-    format: MissionFormat;
-    isOpen: boolean; // Is the control panel open?
-}
 
 interface MissionContextType extends MissionState {
     setRole: (role: MissionRole) => void;
@@ -33,12 +19,22 @@ export const MissionProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Initialize from Storage or Default
     const [state, setState] = useState<MissionState>(() => {
         const saved = localStorage.getItem('boa_mission_state');
-        return saved ? JSON.parse(saved) : {
-            role: 'standard',
-            focus: { countries: [], sectors: [] },
-            format: 'deep', // Default to deep for "in-depth delivery"
-            isOpen: false
-        };
+        try {
+            return saved ? JSON.parse(saved) : {
+                role: 'standard',
+                focus: { countries: [], sectors: [] },
+                format: 'deep', // Default to deep for "in-depth delivery"
+                isOpen: false
+            };
+        } catch (e) {
+            console.warn('Failed to parse mission state:', e);
+            return {
+                role: 'standard',
+                focus: { countries: [], sectors: [] },
+                format: 'deep',
+                isOpen: false
+            };
+        }
     });
 
     // Persistence Layer

@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS market_metrics (
 );
 -- 2. Seed Baseline Data (2024-2025)
 -- We use INSERT OR IGNORE or ON CONFLICT to allow agents to overwrite later.
-INSERT INTO market_metrics (
+INSERT OR IGNORE INTO market_metrics (
         id,
         sector_id,
         year,

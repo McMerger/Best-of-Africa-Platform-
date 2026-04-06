@@ -10,6 +10,7 @@ import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
 import { onArticlePublished } from '../lib/alerts';
 import { autoPostArticle } from '../lib/social';
+import { checkContentIntegrity } from '../lib';
 
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -72,197 +73,35 @@ export async function generateArticleFromQueue(
             sectorName = (sector as Record<string, any>)?.name;
         }
 
-        // Generate article using AI
-        let generated;
-        try {
-            console.log('Attempting generation with Llama-3.1-70b...');
-            generated = await generateArticleContent(
-                env,
-                itemData.title,
-                itemData.content || '',
-                countryName,
-                sectorName,
-                '@cf/meta/llama-3.1-70b-instruct'
-            );
-        } catch (err: any) {
-            console.warn('70b model failed, falling back to 8b:', err);
-            // Fallback to 8b model which is more reliable
-            generated = await generateArticleContent(
-                env,
-                itemData.title,
-                itemData.content || '',
-                countryName,
-                sectorName,
-                '@cf/meta/llama-3.1-8b-instruct'
-            );
-        }
-
-        // Analyze Sentiment (True AI)
-        // Analyze Sentiment (True AI)
-        const sentiment = await analyzeSentiment(env, generated.title, generated.content);
-
-        // Pre-Calculate Delivery Assets (Left-Shifted Intelligence)
-        // We generate these NOW so they are ready for instant delivery later
-        const [pushMsg, socialPost, investorBrief] = await Promise.all([
-            // 1. Push Notification
-            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'You are a Mobile Notification Editor. Write a <120 char urgent, actionable push notification for this article.' },
-                    { role: 'user', content: `Title: ${generated.title}\nSummary: ${generated.summary}` }
-                ]
-            }).then((res: any) => res?.response?.trim().replace(/^"|"$/g, '') || generated.title),
-
-            // 2. Social Post (LinkedIn)
-            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'Write a professional LinkedIn post for this article. Include 2 hashtags. Max 280 chars.' },
-                    { role: 'user', content: `Title: ${generated.title}\nSummary: ${generated.summary}` }
-                ]
-            }).then((res: any) => res?.response?.trim() || ''),
-
-            // 3. Investor Brief
-            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'Write a 1-sentence "Investment Impact" analysis for this news.' },
-                    { role: 'user', content: `Title: ${generated.title}\nContent: ${generated.content.slice(0, 1000)}` }
-                ]
-            }).then((res: any) => res?.response?.trim() || '')
-        ]);
-
-        // Create article
-        const articleId = crypto.randomUUID();
-        const slug = generateSlug(generated.title);
-
-        // Estimate reading time (average 200 words per minute)
-        const wordCount = generated.content.split(/\s+/).length;
-        const readingTime = Math.max(1, Math.ceil(wordCount / 200));
-
+        // Queue task for the external Autonomous Agent to generate the article
+        console.log(`Queuing generation task for agent...`);
+        const taskId = crypto.randomUUID();
+        
         await env.DB.prepare(`
-      INSERT INTO articles (
-        id, slug, title, subtitle, content, summary,
-        country_code, sector_id, tags,
-        meta_title, meta_description,
-        reading_time_minutes,
-        source_url, source_title, source_published_at,
-        ai_push_message, ai_social_post, ai_investor_brief,
-        generation_model, generation_prompt_version,
-        ai_sentiment_score, ai_sentiment_label,
-        status, published_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
-    `).bind(
-            articleId,
-            slug,
-            generated.title,
-            generated.subtitle,
-            generated.content,
-            generated.summary,
-            countryCode,
-            sectorId,
-            JSON.stringify(generated.tags),
-            generated.title,
-            generated.summary?.slice(0, 160),
-            readingTime,
-            itemData.url,
-            itemData.title,
-            itemData.published_at,
-            pushMsg,           // AI Push Message
-            socialPost,        // AI Social Post
-            investorBrief,     // AI Investor Brief
-            '@cf/meta/llama-3.1-70b-instruct' as any,
-            'v1',
-            sentiment.score,
-            sentiment.label
+            INSERT INTO agent_tasks (id, type, payload, status)
+            VALUES (?, ?, ?, 'pending')
+        `).bind(
+            taskId,
+            'generate_article',
+            JSON.stringify({
+                ingested_item_id: message.ingested_item_id,
+                title: itemData.title,
+                content: itemData.content,
+                country_code: countryCode, 
+                country_name: countryName,
+                sector_id: sectorId,
+                sector_name: sectorName,
+                url: itemData.url,
+                published_at: itemData.published_at
+            })
         ).run();
 
-        // ═══════════════════════════════════════════════════════════════════════
-        // IMAGE GENERATION (Stable Diffusion XL)
-        // ═══════════════════════════════════════════════════════════════════════
-        try {
-            const context = [countryName, sectorName].filter(Boolean).join(', ');
-            const prompt = `Photorealistic journalism style photo of ${generated.title}. Context: ${context}. High quality, 4k, award winning photography, dramatic lighting, highly detailed, news editorial style. No text.`;
-
-            console.log(`Generating image for ${articleId}`);
-            const imageBuffer = await generateArticleImage(env, prompt);
-
-            if (imageBuffer) {
-                const key = `hero/${articleId}.png`;
-                const publicUrl = await uploadImage(env, key, imageBuffer, 'image/png');
-
-                await env.DB.prepare(`UPDATE articles SET hero_image_url = ? WHERE id = ?`)
-                    .bind(publicUrl, articleId).run();
-
-                console.log(`Image generated and stored: ${publicUrl}`);
-            }
-        } catch (imgError) {
-            console.error('Auto-image generation failed:', imgError);
-            // Non-critical, continue
-        }
-
-        // Index in Vectorize for semantic search (returns generated chunk count)
-        const chunkCount = await indexArticle(env, articleId, generated.title, generated.content, {
-            country_code: countryCode,
-            sector_id: sectorId,
-            published_at: new Date().toISOString(),
-        });
-
-        // Update embedding_id reference and store chunk_count
+        // Update the item status to reflect it's waiting for the agent
         await env.DB.prepare(`
-        UPDATE articles SET embedding_id = ?, chunk_count = ? WHERE id = ?
-        `).bind(articleId, chunkCount, articleId).run();
+            UPDATE ingested_items SET status = 'queued_for_agent' WHERE id = ?
+        `).bind(message.ingested_item_id).run();
 
-        // Mark ingested item as completed
-        await env.DB.prepare(`
-      UPDATE ingested_items SET status = 'completed', article_id = ? WHERE id = ?
-    `).bind(articleId, message.ingested_item_id).run();
-
-        console.log(`Successfully generated article: ${articleId} (${generated.title})`);
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // POST-PUBLISH AUTOMATION
-        // These run asynchronously to not block the queue
-        // ═══════════════════════════════════════════════════════════════════════
-
-        // 1. Auto-translate to relevant languages (French, Arabic, Portuguese)
-        try {
-            await autoTranslateArticle(env, articleId, {
-                title: generated.title,
-                subtitle: generated.subtitle,
-                summary: generated.summary,
-                content: generated.content,
-                country_code: countryCode,
-            });
-        } catch (err) {
-            console.error('Auto-translation failed:', err);
-        }
-
-        // 2. Broadcast real-time alert to connected WebSocket clients
-        try {
-            await onArticlePublished(env, {
-                id: articleId,
-                slug,
-                title: generated.title,
-                summary: generated.summary,
-                country_code: countryCode,
-                sector_id: sectorId,
-                hero_image_url: null,
-            });
-        } catch (err) {
-            console.error('Alert broadcast failed:', err);
-        }
-
-        // 3. Auto-post to social media (Twitter/X)
-        try {
-            await autoPostArticle(env, {
-                id: articleId,
-                title: generated.title,
-                summary: generated.summary,
-                country_code: countryCode,
-                sector_name: sectorName,
-                slug,
-            });
-        } catch (err) {
-            console.error('Social post failed:', err);
-        }
+        console.log(`Successfully queued agent task: ${taskId} for item: ${message.ingested_item_id}`);
 
     } catch (error) {
         console.error('Article generation failed:', error);

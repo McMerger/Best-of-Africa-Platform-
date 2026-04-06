@@ -18,6 +18,10 @@ export interface Country {
     fdi_yoy_growth?: number;
     key_narratives?: string;
     ai_situation_report?: string;
+    visa_portal_url?: string;
+    business_portal_url?: string;
+    tourism_portal_url?: string;
+    history_baobab_content?: string;
 }
 
 export interface Sector {
@@ -52,6 +56,26 @@ export interface Article {
     refinement_count?: number;
     generation_prompt_version?: string;
     ai_headline_variants?: string;
+    ai_video_url?: string;
+}
+
+export interface CalendarEvent {
+    id: string;
+    title: string;
+    slug: string;
+    date_start: string;
+    date_end?: string;
+    location: string;
+    country_code: string;
+    country_name?: string;
+    category: string;
+    status: string;
+    is_featured: boolean;
+    is_vip: boolean;
+    description: string;
+    registration_url?: string;
+    registered_count?: number;
+    ai_context_brief?: string;
 }
 
 export interface ArticleListItem {
@@ -65,6 +89,8 @@ export interface ArticleListItem {
     sector_id: string;
     sector_name: string;
     hero_image_url: string;
+    ai_image_url?: string;
+    ai_video_url?: string;
     reading_time_minutes: number;
     published_at: string;
     engagement_score?: number;
@@ -139,3 +165,30 @@ export interface PlatformAnalytics {
     total_articles_7d: number;
     updated_at: string;
 }
+
+export type IntelligenceLens = 'investor' | 'government' | 'explorer';
+
+export type MissionRole = 'standard' | 'investor' | 'operator' | 'policy';
+export type MissionFormat = 'brief' | 'deep' | 'audio';
+
+export interface MissionState {
+    role: MissionRole;
+    focus: {
+        countries: string[]; // ISO codes
+        sectors: string[];   // Sector IDs
+    };
+    format: MissionFormat;
+    isOpen: boolean;
+}
+
+export type LanguageCode = 'en' | 'fr' | 'de' | 'ar' | 'hi' | 'zh' | 'pt';
+
+export const SUPPORTED_LANGUAGES: { code: LanguageCode; name: string; dir: 'ltr' | 'rtl' }[] = [
+    { code: 'en', name: 'English', dir: 'ltr' },
+    { code: 'fr', name: 'Français', dir: 'ltr' },
+    { code: 'de', name: 'Deutsch', dir: 'ltr' },
+    { code: 'ar', name: 'العربية', dir: 'rtl' },
+    { code: 'hi', name: 'हिन्दी', dir: 'ltr' },
+    { code: 'zh', name: '中文', dir: 'ltr' },
+    { code: 'pt', name: 'Português', dir: 'ltr' },
+];

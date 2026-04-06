@@ -1,17 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-
-// Supported Languages
-export type LanguageCode = 'en' | 'fr' | 'de' | 'ar' | 'hi' | 'zh' | 'pt';
-
-export const SUPPORTED_LANGUAGES: { code: LanguageCode; name: string; dir: 'ltr' | 'rtl' }[] = [
-    { code: 'en', name: 'English', dir: 'ltr' },
-    { code: 'fr', name: 'Français', dir: 'ltr' },
-    { code: 'de', name: 'Deutsch', dir: 'ltr' },
-    { code: 'ar', name: 'العربية', dir: 'rtl' },
-    { code: 'hi', name: 'हिन्दी', dir: 'ltr' },
-    { code: 'zh', name: '中文', dir: 'ltr' },
-    { code: 'pt', name: 'Português', dir: 'ltr' },
-];
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState } from 'react';
+import type { LanguageCode } from '../types';
+import { SUPPORTED_LANGUAGES } from '../types';
+export { SUPPORTED_LANGUAGES };
 
 interface LanguageContextType {
     language: LanguageCode;
@@ -24,33 +15,328 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // 1. Initialize from URL or LocalStorage or Default
-    const [language, setLanguageState] = useState<LanguageCode>('en');
-
-    useEffect(() => {
-        // Check URL path first (e.g., /fr/...) - implemented via Router usually, 
-        // but here we sync global state.
-        // For now, let's check localStorage or default
-        const stored = localStorage.getItem('boa_lang') as LanguageCode;
-        if (stored && SUPPORTED_LANGUAGES.find(l => l.code === stored)) {
-            setLanguageState(stored);
+    const [language, setLanguageState] = useState<LanguageCode>(() => {
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('boa_lang') as LanguageCode;
+            if (stored && SUPPORTED_LANGUAGES.find(l => l.code === stored)) {
+                return stored;
+            }
         }
-    }, []);
+        return 'en';
+    });
 
     const setLanguage = (lang: LanguageCode) => {
         setLanguageState(lang);
-        localStorage.setItem('boa_lang', lang);
-
-        // Update HTML dir attribute for global CSS support
-        const dir = SUPPORTED_LANGUAGES.find(l => l.code === lang)?.dir || 'ltr';
-        document.documentElement.dir = dir;
-        document.documentElement.lang = lang;
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('boa_lang', lang);
+            // Update HTML dir attribute for global CSS support
+            const dir = SUPPORTED_LANGUAGES.find(l => l.code === lang)?.dir || 'ltr';
+            document.documentElement.dir = dir;
+            document.documentElement.lang = lang;
+        }
     };
 
-    const dir = SUPPORTED_LANGUAGES.find(l => l.code === language)?.dir || 'ltr';
+    const dir = SUPPORTED_LANGUAGES.find((l: { code: string }) => l.code === language)?.dir || 'ltr';
 
-    // Simple translation helper (placeholder for real i18n lib if needed later)
+    // UI Translation Dictionary
+    const translations: Record<LanguageCode, Record<string, string>> = {
+        en: {
+            "nav.home": "Home",
+            "nav.feed": "Daily Briefing",
+            "nav.sectors": "Sectors",
+            "nav.countries": "Countries",
+            "nav.dashboards": "Risk Dashboards",
+            "nav.reports": "Reports",
+            "nav.summits": "Summits",
+            "nav.concierge": "Concierge",
+            "nav.travel": "Travel",
+            "nav.search": "Search",
+            "nav.settings": "Settings",
+            "intel.stream": "Intelligence Stream",
+            "intel.tools": "Analysis Tools",
+            "intel.corporate": "Corporate Services",
+            "intel.workspace": "Workspace",
+            "analyst.console": "Analyst Console",
+            "intel.new_articles": "NEW",
+            "intel.loading_market": "Loading market data...",
+            "intel.processing": "Processing Intelligence Stream...",
+            "home.badge": "Premium Pan-African Intelligence",
+            "home.cta_primary": "Explore Intelligence v2",
+            "home.cta_secondary": "View Countries",
+            "home.top_intel": "Top Intelligence",
+            "home.top_intel_sub": "High-priority strategic intelligence briefs, driven by AI.",
+            "home.read_brief": "Read Full Intelligence Brief",
+            "home.partners": "Strategic Partners",
+            "home.partners_sub": "Global organizations aligned with African growth.",
+            "home.partner_with_us": "Partner with us",
+            "home.latest_analysis": "Latest Sector Analysis",
+            "home.read_analysis": "Read Analysis",
+            "article.context": "Operational Context",
+            "article.contents": "Contents",
+            "article.sentiment_analysis": "Analyst Sentiment Analysis",
+            "article.market_sentiment": "Market Sentiment",
+            "article.gdp_growth": "GDP Growth",
+            "article.stability": "Stability",
+            "article.view_country": "View Country Dashboard",
+            "article.market_outlook": "Market Outlook",
+            "article.view_sector": "View Sector Analysis",
+            "article.need_data": "Need deeper data?",
+            "article.request_briefing": "Request Briefing",
+            "article.related": "Related Intelligence",
+            "intel.situation_room": "Situation Room",
+            "intel.economic_data": "Economic Data",
+            "intel.sector_matrix": "Sector Matrix",
+            "intel.intel_stream": "Intel Stream",
+            "intel.history_baobab": "History & Baobab",
+            "intel.strategic_feed": "Strategic Feed",
+            "intel.intel_archive": "Intelligence Archive",
+            "intel.stability_index": "Stability Index",
+            "intel.top_sector": "Dominant Sector",
+            "intel.emerging_narratives": "Emerging Narratives",
+            "intel.market_considerations": "Market Considerations",
+            "stats.gdp_usd": "GDP (USD)",
+            "stats.population": "Population",
+            "stats.fdi": "Foreign Direct Investment",
+            "intel.strategic_relations": "Strategic Relations",
+            "intel.diplomacy_score": "Diplomacy Score",
+            "intel.volatility_risk": "Volatility Risk",
+            "intel.sector_performance": "Sector Performance",
+            "intel.strategic_matrix": "Strategic Opportunity Matrix",
+            "lens.investor": "Value Analysis",
+            "lens.government": "Policy Analysis",
+            "lens.explorer": "Explorer Analysis"
+        },
+        pt: {
+            "nav.home": "Início",
+            "nav.feed": "Resumo Diário",
+            "nav.sectors": "Setores",
+            "nav.countries": "Países",
+            "nav.dashboards": "Dashboards de Risco",
+            "nav.reports": "Relatórios",
+            "nav.summits": "Cimeiras",
+            "nav.concierge": "Concierge",
+            "nav.travel": "Viagens Seguras",
+            "nav.search": "Pesquisar",
+            "nav.settings": "Configurações",
+            "intel.stream": "Fluxo de Inteligência",
+            "intel.tools": "Ferramentas de Análise",
+            "intel.corporate": "Serviços Corporativos",
+            "intel.workspace": "Área de Trabalho",
+            "analyst.console": "Consola de Analista",
+            "intel.new_articles": "NOVO",
+            "intel.loading_market": "Carregando dados de mercado...",
+            "intel.processing": "Processando Fluxo de Inteligência...",
+            "home.badge": "Inteligência Pan-Africana Premium",
+            "home.cta_primary": "Explorar Inteligência v2",
+            "home.cta_secondary": "Ver Países",
+            "home.top_intel": "Principais Informações",
+            "home.top_intel_sub": "Resumos de inteligência estratégica de alta prioridade, impulsionados por IA.",
+            "home.read_brief": "Ler Resumo Completo de Inteligência",
+            "home.partners": "Parceiros Estratégicos",
+            "home.partners_sub": "Organizações globais alinhadas com o crescimento africano.",
+            "home.partner_with_us": "Seja nosso parceiro",
+            "home.latest_analysis": "Última Análise Setorial",
+            "home.read_analysis": "Ler Análise",
+            "article.context": "Contexto Operacional",
+            "article.contents": "Conteúdo",
+            "article.sentiment_analysis": "Análise de Sentimento do Analista",
+            "article.market_sentiment": "Sentimento de Mercado",
+            "article.gdp_growth": "Crescimento do PIB",
+            "article.stability": "Estabilidade",
+            "article.view_country": "Ver Painel do País",
+            "article.market_outlook": "Perspetiva de Mercado",
+            "article.view_sector": "Ver Análise Setorial",
+            "article.need_data": "Precisa de dados mais profundos?",
+            "article.request_briefing": "Solicitar Briefing",
+            "article.related": "Inteligência Relacionada",
+            "intel.situation_room": "Sala de Situação",
+            "intel.economic_data": "Dados Económicos",
+            "intel.sector_matrix": "Matriz Setorial",
+            "intel.intel_stream": "Fluxo de Inteligência",
+            "intel.history_baobab": "História e Baobá",
+            "intel.strategic_feed": "Feed Estratégico",
+            "intel.intel_archive": "Arquivo de Inteligência",
+            "intel.stability_index": "Índice de Estabilidade",
+            "intel.top_sector": "Setor Dominante",
+            "intel.emerging_narratives": "Narrativas Emergentes",
+            "intel.market_considerations": "Considerações de Mercado",
+            "stats.gdp_usd": "PIB (USD)",
+            "stats.population": "População",
+            "stats.fdi": "Investimento Direto Estrangeiro",
+            "intel.strategic_relations": "Relações Estratégicas",
+            "intel.diplomacy_score": "Pontuação Diplomática",
+            "intel.volatility_risk": "Risco de Volatilidade",
+            "intel.sector_performance": "Desempenho Setorial",
+            "intel.strategic_matrix": "Matriz de Oportunidades Estratégicas",
+            "lens.investor": "Análise de Valor",
+            "lens.government": "Análise de Políticas",
+            "lens.explorer": "Análise Exploratória"
+        },
+        fr: {
+            "nav.home": "Accueil",
+            "nav.feed": "Briefing Quotidien",
+            "nav.sectors": "Secteurs",
+            "nav.countries": "Pays",
+            "nav.dashboards": "Tableaux de Bord",
+            "nav.reports": "Rapports",
+            "nav.summits": "Sommets",
+            "nav.concierge": "Concierge",
+            "nav.travel": "Voyages Sécurisés",
+            "nav.search": "Rechercher",
+            "nav.settings": "Paramètres",
+            "intel.stream": "Flux d'Intelligence",
+            "intel.tools": "Outils d'Analyse",
+            "intel.corporate": "Services aux Entreprises",
+            "intel.workspace": "Espace de Travail",
+            "analyst.console": "Console Analyste",
+            "intel.new_articles": "NOUVEAU",
+            "intel.loading_market": "Chargement des données...",
+            "intel.processing": "Traitement du flux d'intelligence...",
+            "home.badge": "Intelligence Pan-Africaine Premium",
+            "home.cta_primary": "Explorer Intelligence v2",
+            "home.cta_secondary": "Voir les Pays",
+            "home.top_intel": "Top Intelligence",
+            "home.top_intel_sub": "Briefings stratégiques de haute priorité, propulsés par l'IA.",
+            "home.read_brief": "Lire le Briefing Complet",
+            "home.partners": "Partenaires Stratégiques",
+            "home.partners_sub": "Organisations mondiales alignées sur la croissance africaine.",
+            "home.partner_with_us": "Devenir partenaire",
+            "home.latest_analysis": "Dernière Analyse Sectorielle",
+            "home.read_analysis": "Lire l'Analyse"
+        },
+        de: {
+            "nav.home": "Startseite",
+            "nav.feed": "Täglicher Bericht",
+            "nav.sectors": "Sektoren",
+            "nav.countries": "Länder",
+            "nav.dashboards": "Risiko-Dashboards",
+            "nav.reports": "Berichte",
+            "nav.summits": "Gipfeltreffen",
+            "nav.concierge": "Concierge",
+            "nav.travel": "Sicheres Reisen",
+            "nav.search": "Suche",
+            "nav.settings": "Einstellungen",
+            "intel.stream": "Geheimdienst-Stream",
+            "intel.tools": "Analysewerkzeuge",
+            "intel.corporate": "Firmendienste",
+            "intel.workspace": "Arbeitsbereich",
+            "analyst.console": "Analystenkonsole",
+            "intel.new_articles": "NEU",
+            "intel.loading_market": "Marktdaten werden geladen...",
+            "intel.processing": "Geheimdienst-Stream wird verarbeitet...",
+            "home.badge": "Premium Pan-Afrikanische Intelligenz",
+            "home.cta_primary": "Intelligenz v2 erkunden",
+            "home.cta_secondary": "Länder anzeigen",
+            "home.top_intel": "Top-Informationen",
+            "home.top_intel_sub": "Strategische Analysen mit hoher Priorität, KI-gestützt.",
+            "home.read_brief": "Vollständigen Bericht lesen",
+            "home.partners": "Strategische Partner",
+            "home.partners_sub": "Globale Organisationen, ausgerichtet auf afrikanisches Wachstum.",
+            "home.partner_with_us": "Werden Sie Partner",
+            "home.latest_analysis": "Aktuelle Sektoranalyse",
+            "home.read_analysis": "Analyse lesen"
+        },
+        zh: {
+            "nav.home": "首页",
+            "nav.feed": "每日简报",
+            "nav.sectors": "部门",
+            "nav.countries": "国家",
+            "nav.dashboards": "风险仪表板",
+            "nav.reports": "报告",
+            "nav.summits": "峰会",
+            "nav.concierge": "礼宾服务",
+            "nav.travel": "安全旅行",
+            "nav.search": "搜索",
+            "nav.settings": "设置",
+            "intel.stream": "情报流",
+            "intel.tools": "分析工具",
+            "intel.corporate": "企业服务",
+            "intel.workspace": "工作区",
+            "analyst.console": "分析师控制台",
+            "intel.new_articles": "新",
+            "intel.loading_market": "正在加载市场数据...",
+            "intel.processing": "正在处理情报流...",
+            "home.badge": "优质泛非情报",
+            "home.cta_primary": "探索情报 v2",
+            "home.cta_secondary": "查看国家",
+            "home.top_intel": "顶级情报",
+            "home.top_intel_sub": "高优先级的战略情报简报，由人工智能驱动。",
+            "home.read_brief": "阅读完整情报简报",
+            "home.partners": "战略合作伙伴",
+            "home.partners_sub": "与非洲增长保持一致的全球组织。",
+            "home.partner_with_us": "与我们合作",
+            "home.latest_analysis": "最新行业分析",
+            "home.read_analysis": "阅读分析"
+        },
+        ar: {
+            "nav.home": "الرئيسية",
+            "nav.feed": "الإحاطة اليومية",
+            "nav.sectors": "القطاعات",
+            "nav.countries": "الدول",
+            "nav.dashboards": "لوحات المخاطر",
+            "nav.reports": "التقارير",
+            "nav.summits": "القمم",
+            "nav.concierge": "الكونسيرج",
+            "nav.travel": "السفر الآمن",
+            "nav.search": "بحث",
+            "nav.settings": "الإعدادات",
+            "intel.stream": "تدفق المعلومات",
+            "intel.tools": "أدوات التحليل",
+            "intel.corporate": "خدمات الشركات",
+            "intel.workspace": "مساحة العمل",
+            "analyst.console": "لوحة المحلل",
+            "intel.new_articles": "جديد",
+            "intel.loading_market": "جاري تحميل بيانات السوق...",
+            "intel.processing": "جاري معالجة تدفق المعلومات...",
+            "home.badge": "معلومات متميزة لعموم أفريقيا",
+            "home.cta_primary": "استكشاف المعلومات v2",
+            "home.cta_secondary": "عرض الدول",
+            "home.top_intel": "أهم المعلومات",
+            "home.top_intel_sub": "إيجازات استراتيجية عالية الأولوية، مدعومة بالذكاء الاصطناعي.",
+            "home.read_brief": "اقرأ الإيجاز الكامل",
+            "home.partners": "الشركاء الاستراتيجيون",
+            "home.partners_sub": "منظمات عالمية تتماشى مع النمو الأفريقي.",
+            "home.partner_with_us": "شريك معنا",
+            "home.latest_analysis": "أحدث تحليل للقطاع",
+            "home.read_analysis": "اقرأ التحليل"
+        },
+        hi: {
+            "nav.home": "होम",
+            "nav.feed": "दैनिक ब्रीफिंग",
+            "nav.sectors": "क्षेत्र",
+            "nav.countries": "देश",
+            "nav.dashboards": "जोخिम डैशबोर्ड",
+            "nav.reports": "रिपोर्ट",
+            "nav.summits": "शिखर सम्मेलन",
+            "nav.concierge": "कंसीयर्ज",
+            "nav.travel": "सुरक्षित यात्रा",
+            "nav.search": "खोजें",
+            "nav.settings": "सेटिंग्स",
+            "intel.stream": "इंटेलिजेंस स्ट्रीम",
+            "intel.tools": "विश्लेषण उपकरण",
+            "intel.corporate": "कॉर्पोरेट सेवाएं",
+            "intel.workspace": "कार्यक्षेत्र",
+            "analyst.console": "विश्लेषक सांत्वना",
+            "intel.new_articles": "नया",
+            "intel.loading_market": "बाज़ार डेटा लोड हो रहा है...",
+            "intel.processing": "इंटेलिजेंस स्ट्रीम संसाधित की जा रही है...",
+            "home.badge": "प्रीमियम पैन-अफ्रीकी इंटेलिजेंस",
+            "home.cta_primary": "इंटेलिजेंस v2 एक्सप्लोर करें",
+            "home.cta_secondary": "देश देखें",
+            "home.top_intel": "शीर्ष इंटेलिजेंस",
+            "home.top_intel_sub": "उच्च प्राथमिकता वाली रणनीतिक खुफिया जानकारी, एआई द्वारा संचालित।",
+            "home.read_brief": "पूर्ण इंटेलिजेंस ब्रीफ पढ़ें",
+            "home.partners": "रणनीतिक साझेदार",
+            "home.partners_sub": "अफ्रीकी विकास के साथ जुड़े वैश्विक संगठन।",
+            "home.partner_with_us": "हमारे साथ भागीदार बनें",
+            "home.latest_analysis": "नवीनतम क्षेत्र विश्लेषण",
+            "home.read_analysis": "विश्लेषण पढ़ें"
+        }
+    };
+
+    // Translation helper
     const t = (key: string, fallback?: string) => {
-        return fallback || key;
+        return translations[language]?.[key] || fallback || key;
     };
 
     return (

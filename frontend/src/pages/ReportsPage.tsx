@@ -8,6 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { useParams } from 'react-router-dom';
 
+interface ReportMetadata {
+    summary?: string;
+    subtitle?: string;
+    country_code?: string;
+    country_name?: string;
+    sector_name?: string;
+}
+
 export const ReportsPage: React.FC = () => {
     const { sectorId } = useParams<{ sectorId: string }>();
     const [reports, setReports] = useState<ArticleListItem[]>([]);
@@ -23,7 +31,7 @@ export const ReportsPage: React.FC = () => {
         // Fetch real generated reports from Intelligence worker
         api.getGeneratedReports()
             .then(res => {
-                const mappedReports: ArticleListItem[] = res.data.map((r: any) => ({
+                const mappedReports: ArticleListItem[] = res.data.map((r: { id: string; title: string; metadata?: ReportMetadata; type?: string; created_at?: string }) => ({
                     id: r.id,
                     slug: r.id,
                     title: r.title,
@@ -35,7 +43,7 @@ export const ReportsPage: React.FC = () => {
                     sector_name: r.metadata?.sector_name || 'Strategic Analysis',
                     hero_image_url: `/assets/images/sectors/${r.type || 'finance'}.jpg`,
                     reading_time_minutes: 5,
-                    published_at: r.created_at
+                    published_at: r.created_at || new Date().toISOString()
                 }));
                 setReports(mappedReports);
             })

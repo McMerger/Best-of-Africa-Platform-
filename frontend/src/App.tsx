@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from "@/components/ui/sonner"
 import { CommandMenu } from '@/components/CommandMenu';
+import { isBeta } from './config/flags';
 
 // Eagerly load the homepage (first paint)
 import { HomePage } from './pages/HomePage';
@@ -9,7 +10,6 @@ import { HomePage } from './pages/HomePage';
 // Lazy-load everything else — Vite will auto-split into separate chunks
 const ArticlesPage = React.lazy(() => import('./pages/ArticlesPage').then(m => ({ default: m.ArticlesPage })));
 const ArticleDetailPage = React.lazy(() => import('./pages/ArticleDetailPage').then(m => ({ default: m.ArticleDetailPage })));
-const CountriesPage = React.lazy(() => import('./pages/CountriesPage').then(m => ({ default: m.CountriesPage })));
 const CountryDetailPage = React.lazy(() => import('./pages/CountryDetailPage').then(m => ({ default: m.CountryDetailPage })));
 const DashboardsPage = React.lazy(() => import('./pages/DashboardsPage').then(m => ({ default: m.DashboardsPage })));
 const DashboardDetailPage = React.lazy(() => import('./pages/DashboardDetailPage').then(m => ({ default: m.DashboardDetailPage })));
@@ -33,16 +33,22 @@ const SponsoredPage = React.lazy(() => import('./pages/SponsoredPage').then(m =>
 const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
-const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const EventsPage = React.lazy(() => import('./pages/EventsPage').then(m => ({ default: m.EventsPage })));
 const EventDetailPage = React.lazy(() => import('./pages/EventDetailPage').then(m => ({ default: m.EventDetailPage })));
 const BookingRequestPage = React.lazy(() => import('./pages/BookingRequestPage').then(m => ({ default: m.BookingRequestPage })));
-const MembershipPage = React.lazy(() => import('./pages/MembershipPage').then(m => ({ default: m.MembershipPage })));
-const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const AnalystPage = React.lazy(() => import('./pages/AnalystPage').then(m => ({ default: m.AnalystPage })));
 const ImpactPage = React.lazy(() => import('./pages/ImpactPage').then(m => ({ default: m.ImpactPage })));
 const LibraryPage = React.lazy(() => import('./pages/LibraryPage').then(m => ({ default: m.LibraryPage })));
 const TravelPage = React.lazy(() => import('./pages/TravelPage').then(m => ({ default: m.TravelPage })));
+
+// Beta pages — always accessible
+const BetaLanding = React.lazy(() => import('./pages/beta/BetaLanding').then(m => ({ default: m.BetaLanding })));
+const BetaMembership = React.lazy(() => import('./pages/beta/BetaMembership').then(m => ({ default: m.BetaMembership })));
+const BetaStories = React.lazy(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
+const BetaArticle = React.lazy(() => import('./pages/beta/BetaArticle').then(m => ({ default: m.BetaArticle })));
+const BetaCountryTeaser = React.lazy(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
+const BetaAbout = React.lazy(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
+const BetaNewsletter = React.lazy(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
@@ -73,10 +79,18 @@ function App() {
                   <ErrorBoundary>
                     <Suspense fallback={<PageLoader />}>
                       <Routes>
-                        <Route path="/" element={<HomePage />} />
+                        {/* Beta & core public routes (always accessible) */}
+                        <Route path="/" element={isBeta ? <BetaLanding /> : <HomePage />} />
+                        <Route path="/membership" element={<BetaMembership />} />
+                        <Route path="/stories" element={<BetaStories />} />
+                        <Route path="/stories/:slug" element={<BetaArticle />} />
+                        <Route path="/countries" element={<BetaCountryTeaser />} />
+                        <Route path="/about" element={<BetaAbout />} />
+                        <Route path="/newsletter" element={<BetaNewsletter />} />
+
+                        {/* Full app routes */}
                         <Route path="/intelligence-briefings" element={<ArticlesPage />} />
                         <Route path="/articles/:slug" element={<ArticleDetailPage />} />
-                        <Route path="/countries" element={<CountriesPage />} />
                         <Route path="/countries/:code" element={<CountryDetailPage />} />
                         <Route path="/dashboards" element={<DashboardsPage />} />
                         <Route path="/dashboards/:region" element={<DashboardDetailPage />} />
@@ -104,13 +118,11 @@ function App() {
                         <Route path="/events" element={<EventsPage />} />
                         <Route path="/events/:id" element={<EventDetailPage />} />
                         <Route path="/request-consultation" element={<BookingRequestPage />} />
-                        <Route path="/membership" element={<MembershipPage />} />
-                        <Route path="/about" element={<AboutPage />} />
                         <Route path="/analyst" element={<AnalystPage />} />
                         <Route path="/impact" element={<ImpactPage />} />
                         <Route path="/library" element={<LibraryPage />} />
                         <Route path="/contact" element={<ContactPage />} />
-                        <Route path="*" element={<NotFoundPage />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
                       </Routes>
                     </Suspense>
                   </ErrorBoundary>

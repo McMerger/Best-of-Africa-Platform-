@@ -18,15 +18,15 @@ import { generateSummary, analyzeSentiment } from '../lib/ai';
 
 async function generateTags(env: Env, content: string): Promise<string[]> {
     try {
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
                 { role: 'system', content: 'Generate 5 SEO tags for this content. Return JSON array of strings.' },
                 { role: 'user', content: content.slice(0, 1000) }
             ],
             response_format: { type: 'json_object' }
-        });
-        const prev = (response as Record<string, any>).response;
-        const match = prev.match(/\[.*\]/s);
+        }) as { response: string };
+        
+        const match = response.response.match(/\[.*\]/s);
         return match ? JSON.parse(match[0]) : ['African Business', 'News'];
     } catch { return []; }
 }
@@ -180,8 +180,8 @@ router.put('/articles/:id', async (c) => {
     if (body.content && (body.summary === undefined || body.tags === undefined)) {
         // Only run if content is being updated and fields are missing/requested
         // This logic allows explicit "reset" if user sends empty string, so we check for undefined
-        const prevArticle = existing as Record<string, any>;
-        const contentToAnalyze = body.content || prevArticle.content;
+        const currentArticle = await c.env.DB.prepare('SELECT title, content FROM articles WHERE id = ?').bind(id).first<{ title: string; content: string }>();
+        const contentToAnalyze = body.content || currentArticle?.content;
 
         if (contentToAnalyze) {
             if (body.summary === "") { // User explicitly cleared it, maybe request regen?
@@ -192,7 +192,7 @@ router.put('/articles/:id', async (c) => {
 
             // Update sentiment if content changed
             if (body.content) {
-                const aiSentiment = await analyzeSentiment(c.env, body.title || prevArticle.title, body.content);
+                const aiSentiment = await analyzeSentiment(c.env, body.title || currentArticle?.title || '', body.content);
                 updates.push('engagement_score = ?'); // Update score based on new sentiment
                 values.push(Math.round(aiSentiment.score));
             }
@@ -200,6 +200,21 @@ router.put('/articles/:id', async (c) => {
     }
 
     await c.env.DB.prepare(`UPDATE articles SET ${updates.join(', ')} WHERE id = ?`).bind(...values, id).run();
+
+    // Log feedback if content was changed significanlty
+    const currentContent = await c.env.DB.prepare('SELECT content FROM articles WHERE id = ?').bind(id).first<{ content: string }>();
+    if (body.content && body.content !== currentContent?.content) {
+        const feedbackId = crypto.randomUUID();
+        await c.env.DB.prepare(`
+            INSERT INTO article_feedback (id, article_id, feedback_type, comment, original_content, edited_content)
+            VALUES (?, ?, 'edit', 'Manual editorial improvement', ?, ?)
+        `).bind(
+            feedbackId,
+            id,
+            currentContent?.content || '',
+            body.content
+        ).run();
+    }
 
     return c.json({ success: true });
 });
@@ -222,6 +237,39 @@ router.post('/articles/:id/publish', async (c) => {
   `).bind(id).run();
 
     return c.json({ success: true });
+});
+
+/**
+ * POST /admin/articles/:id/reject
+ * Reject and archive article, logging the reason as feedback for agents.
+ */
+router.post('/articles/:id/reject', async (c) => {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+
+    const article = await c.env.DB.prepare('SELECT content FROM articles WHERE id = ?').bind(id).first<{ content: string }>();
+    if (!article) {
+        return c.json({ error: 'not_found' }, 404);
+    }
+
+    // Log rejection feedback
+    const feedbackId = crypto.randomUUID();
+    await c.env.DB.prepare(`
+        INSERT INTO article_feedback (id, article_id, feedback_type, comment, original_content)
+        VALUES (?, ?, 'rejection', ?, ?)
+    `).bind(
+        feedbackId,
+        id,
+        body.reason || 'Manual rejection',
+        article.content
+    ).run();
+
+    // Update status to archived
+    await c.env.DB.prepare(`
+        UPDATE articles SET status = 'archived' WHERE id = ?
+    `).bind(id).run();
+
+    return c.json({ success: true, message: 'Article rejected and feedback logged' });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -333,8 +381,8 @@ router.get('/intelligence/recommendations', async (c) => {
         CACHE_KEYS.adminContentRecs,
         async () => {
             // 1. Get recent internal coverage (what we DID write)
-            const recent = await c.env.DB.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20').all();
-            const internalContext = (recent.results as any[]).map(r => r.title).join('; ');
+            const recent = await c.env.DB.prepare('SELECT title FROM articles ORDER BY created_at DESC LIMIT 20').all<{ title: string }>();
+            const internalContext = recent.results.map(r => r.title).join('; ');
 
             // 2. Mock: In a real scenario, this queries a "Trending News" vector index.
             // Since we don't have a separate "News Stream" index yet, we'll prompt the AI to hallucinate 
@@ -342,16 +390,15 @@ router.get('/intelligence/recommendations', async (c) => {
             // Ideally: We search the `articles` table for "Emerging Tech" and see low results.
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
                     messages: [
                         { role: 'system', content: 'You are an Editor-in-Chief. Identify content gaps.' },
                         { role: 'user', content: `Our Recent Articles: ${internalContext}\n\nTask: Compare this against top current trends in African AgriTech, Fintech, and Mining. Identify 3 specific "Missed Content Opportunities" that are trending globally but missing from our list. Return JSON array.` }
                     ],
                     response_format: { type: 'json_object' }
-                });
+                }) as { response: string };
 
-                const raw = (aiResponse as Record<string, any>).response;
-                const match = raw.match(/\[.*\]/s);
+                const match = aiResponse.response.match(/\[.*\]/s);
                 return match ? JSON.parse(match[0]) : [];
             } catch (e) {
                 console.error("Failed to generate recommendations:", e);
@@ -418,19 +465,17 @@ router.post('/fix-sectors', async (c) => {
     const { limit = '50' } = c.req.query();
     const batchSize = Math.min(100, parseInt(limit));
 
-    // Get articles without sector or country
     const articles = await c.env.DB.prepare(`
         SELECT id, title, content, sector_id, country_code
         FROM articles
         WHERE (sector_id IS NULL OR sector_id = '' OR country_code IS NULL OR country_code = '')
         ORDER BY published_at DESC
         LIMIT ?
-    `).bind(batchSize).all();
+    `).bind(batchSize).all<{ id: string; title: string; content: string | null; sector_id: string | null; country_code: string | null }>();
 
     const results = { fixed: 0, failed: 0, details: [] as { id: string; sector: string | null; country: string | null }[] };
 
-    for (const article of (articles.results || [])) {
-        const a = article as Record<string, any>;
+    for (const a of (articles.results || [])) {
         try {
             let newSector = a.sector_id;
             let newCountry = a.country_code;
@@ -492,12 +537,11 @@ router.post('/generate-images', async (c) => {
         AND a.status = 'published'
         ORDER BY a.published_at DESC
         LIMIT ?
-    `).bind(batchSize).all();
+    `).bind(batchSize).all<{ id: string; title: string; country_name: string | null; sector_name: string | null }>();
 
     const results = { generated: 0, failed: 0, details: [] as any[] };
 
-    for (const article of (articles.results || [])) {
-        const a = article as Record<string, any>;
+    for (const a of (articles.results || [])) {
         try {
             // Construct Prompt
             const context = [a.country_name, a.sector_name].filter(Boolean).join(', ');

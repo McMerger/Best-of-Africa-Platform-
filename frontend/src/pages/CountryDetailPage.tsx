@@ -17,11 +17,16 @@ import { ActivityLogIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActionBar } from '@/components/ActionBar';
+import { CountryPortals } from '../components/CountryPortals';
+import { CountryEvents } from '../components/CountryEvents';
+import { MarkdownRenderer } from '../components/MarkdownRenderer';
+import { CountryHeroArticle } from '../components/CountryHeroArticle';
 
 export const CountryDetailPage: React.FC = () => {
     const { code } = useParams<{ code: string }>();
     const [data, setData] = useState<{ country: Country; stats: CountryStats; ai_situation_report?: string } | null>(null);
     const [articles, setArticles] = useState<ArticleListItem[]>([]);
+    const { t, dir } = useLanguage();
     const [relationships, setRelationships] = useState<{ partner: string; type: string; context: string }[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -85,7 +90,7 @@ export const CountryDetailPage: React.FC = () => {
             <ActionBar title={country.name} type="country" />
 
             {/* Hero Section: Editorial Dynamic Context (Always Visible) */}
-            <div className="container pt-8 md:pt-12 pb-6">
+            <div className="container pt-8 md:pt-12 pb-6" dir={dir}>
                 <div className="rounded-xl bg-card border border-border p-8 shadow-sm md:p-12 relative overflow-hidden">
                     {/* Ambient Background Gradient - Subtle Navy/Gold */}
                     <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-5 pointer-events-none bg-primary" />
@@ -136,25 +141,31 @@ export const CountryDetailPage: React.FC = () => {
                 <Tabs defaultValue="overview" className="space-y-8">
                     <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-flex h-12 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
                         <TabsTrigger value="overview" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                            Situation Room
+                            {t("intel.situation_room", "Situation Room")}
                         </TabsTrigger>
                         <TabsTrigger value="economy" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                            Economic Data
+                            {t("intel.economic_data", "Economic Data")}
                         </TabsTrigger>
                         <TabsTrigger value="sectors" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                            Sector Matrix
+                            {t("intel.sector_matrix", "Sector Matrix")}
                         </TabsTrigger>
                         <TabsTrigger value="intel" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                            Intel Stream
+                            {t("intel.intel_stream", "Intel Stream")}
+                        </TabsTrigger>
+                        <TabsTrigger value="history" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                            {t("intel.history_baobab", "History & Baobab")}
                         </TabsTrigger>
                     </TabsList>
 
                     {/* TAB 1: SITUATION ROOM (Overview) */}
-                    <TabsContent value="overview" className="animate-in fade-in slide-in-from-left-4 duration-500">
+                    <TabsContent value="overview" className="animate-in fade-in slide-in-from-left-4 duration-500 space-y-8">
+                        {/* Portals Section */}
+                        <CountryPortals country={country} />
+
                         <div className="grid gap-6 md:grid-cols-3">
                             {/* Stability Index */}
                             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-                                <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Stability Index</div>
+                                <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("intel.stability_index", "Stability Index")}</div>
                                 <div className="flex items-baseline gap-2">
                                     <span className="text-4xl font-black text-foreground">{country.image_strength_score || "--"}</span>
                                     <span className="text-sm font-medium text-muted-foreground">/100</span>
@@ -163,13 +174,13 @@ export const CountryDetailPage: React.FC = () => {
 
                             {/* Dominant Sector */}
                             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Dominant Sector</div>
+                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("intel.top_sector", "Dominant Sector")}</div>
                                 <div className="text-xl font-bold text-foreground">{stats.top_sectors?.[0]?.sector?.name || "--"}</div>
                             </div>
 
                             {/* Emerging Narratives */}
                             <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Emerging Narratives</div>
+                                <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t("intel.emerging_narratives", "Emerging Narratives")}</div>
                                 <div className="flex flex-wrap gap-2">
                                     {country.investment_highlights?.slice(0, 3).map((tag: string) => (
                                         <span key={tag} className="inline-flex items-center gap-1 rounded bg-secondary/20 px-2 py-1 text-[10px] font-bold text-secondary-foreground border border-secondary/20">
@@ -180,29 +191,37 @@ export const CountryDetailPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="mt-8 rounded-xl bg-card border border-border p-6 shadow-sm">
-                            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                <InfoCircledIcon className="h-5 w-5 text-primary" /> Market Considerations
-                            </h3>
-                            <p className="text-sm text-muted-foreground mb-6">
-                                Key narrative themes currently influencing market perception:
-                            </p>
-                            <div className="space-y-4">
-                                {articles.length > 0 ? (
-                                    articles.slice(0, 3).map((article, i) => (
-                                        <div key={i} className="flex gap-3 items-start">
-                                            <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
-                                            <div>
-                                                <div className="text-sm font-bold text-foreground">
-                                                    {article.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '').split(':')[0].split('?')[0]}
+                        <div className="grid gap-8 md:grid-cols-3 mt-8">
+                            <div className="md:col-span-2">
+                                <CountryEvents countryCode={country.code} />
+                            </div>
+
+                            <div className="space-y-6">
+                                <div className="rounded-xl bg-card border border-border p-6 shadow-sm">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <InfoCircledIcon className="h-5 w-5 text-primary" /> {t("intel.market_considerations", "Market Considerations")}
+                                    </h3>
+                                    <p className="text-sm text-muted-foreground mb-6">
+                                        Key narrative themes currently influencing market perception:
+                                    </p>
+                                    <div className="space-y-4">
+                                        {articles.length > 0 ? (
+                                            articles.slice(0, 3).map((article, i) => (
+                                                <div key={i} className="flex gap-3 items-start">
+                                                    <div className="h-1.5 w-1.5 mt-2 rounded-full bg-primary/40 shrink-0" />
+                                                    <div>
+                                                        <div className="text-sm font-bold text-foreground">
+                                                            {article.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '').split(':')[0].split('?')[0]}
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground">Driven by {article.sector_name || 'Market'} news.</p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">Driven by {article.sector_name || 'Market'} news.</p>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-muted-foreground">Monitoring emerging narratives...</p>
-                                )}
+                                            ))
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">Monitoring emerging narratives...</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </TabsContent>
@@ -214,7 +233,7 @@ export const CountryDetailPage: React.FC = () => {
                             <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
                                 <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
                                 <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                                    <PieChartIcon className="h-4 w-4" /> GDP (USD)
+                                    <PieChartIcon className="h-4 w-4" /> {t("stats.gdp_usd", "GDP (USD)")}
                                 </div>
                                 <div className="text-3xl font-black text-foreground tracking-tight">
                                     ${(country.gdp_usd / 1000000000).toFixed(1)}B
@@ -232,7 +251,7 @@ export const CountryDetailPage: React.FC = () => {
                             <Card className="relative overflow-hidden flex flex-col justify-center p-6 bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border border-border group">
                                 <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-primary/5 to-transparent" />
                                 <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                                    <PersonIcon className="h-4 w-4" /> Population
+                                    <PersonIcon className="h-4 w-4" /> {t("stats.population", "Population")}
                                 </div>
                                 <div className="text-3xl font-black text-foreground tracking-tight">
                                     {(country.population / 1000000).toFixed(1)}M
@@ -252,7 +271,7 @@ export const CountryDetailPage: React.FC = () => {
                             <Card className="col-span-1 md:col-span-2 relative overflow-hidden flex flex-col justify-center p-6 bg-primary/5 transition-all duration-300 hover:shadow-lg border border-primary/20 group">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                                        <ArrowRightIcon className="h-4 w-4" /> Foreign Direct Investment
+                                        <ArrowRightIcon className="h-4 w-4" /> {t("stats.fdi", "Foreign Direct Investment")}
                                     </div>
                                     <Badge className="bg-primary text-primary-foreground hover:bg-primary/90">
                                         {country.fdi_yoy_growth && country.fdi_yoy_growth > 0 ? "Check Inflow" : "Steady Flow"}
@@ -282,7 +301,7 @@ export const CountryDetailPage: React.FC = () => {
                     <TabsContent value="sectors" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
-                                <h2 className="text-xl font-bold mb-4">Strategic Opportunities</h2>
+                                <h2 className="text-xl font-bold mb-4">{t("intel.strategic_matrix", "Strategic Opportunities")}</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* Dynamic Sector Opportunities from API */}
                                     {stats.top_sectors?.length > 0 ? stats.top_sectors.map((sectorData, i) => {
@@ -319,13 +338,13 @@ export const CountryDetailPage: React.FC = () => {
 
                             {/* Key Partners */}
                             <div>
-                                <h2 className="text-xl font-bold mb-4">Strategic Relations</h2>
+                                <h2 className="text-xl font-bold mb-4">{t("intel.strategic_relations", "Strategic Relations")}</h2>
                                 <div className="rounded-3xl bg-card border border-border p-6 shadow-sm">
                                     <div className="space-y-6">
                                         <div className="group">
                                             <div className="flex justify-between mb-3 items-center">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold text-foreground uppercase tracking-wider">Diplomacy Score</span>
+                                                    <span className="text-sm font-bold text-foreground uppercase tracking-wider">{t("intel.diplomacy_score", "Diplomacy Score")}</span>
                                                 </div>
                                                 <span className="text-xl font-black text-primary">{country.diplomacy_score?.toFixed(1) || '--'}<span className="text-sm text-muted-foreground font-medium">/100</span></span>
                                             </div>
@@ -363,23 +382,55 @@ export const CountryDetailPage: React.FC = () => {
                     </TabsContent>
 
                     {/* TAB 4: INTEL STREAM */}
-                    <TabsContent value="intel">
-                        <div className="mb-6 flex items-center justify-between">
-                            <h2 className="text-2xl font-bold text-foreground">Latest Intelligence</h2>
-                            <Button asChild size="sm">
-                                <Link to={`/articles?country=${country.code}`}>View Archive</Link>
+                    <TabsContent value="intel" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {articles.length > 0 && <CountryHeroArticle article={articles[0]} />}
+
+                        <div className="mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-3xl font-serif font-black text-foreground">Strategic Feed</h2>
+                                <p className="text-muted-foreground">Recent sector-intelligence and operational briefings.</p>
+                            </div>
+                            <Button asChild variant="outline" className="rounded-full border-primary/20 text-primary hover:bg-primary/5">
+                                <Link to={`/articles?country=${country.code}`}>Intelligence Archive &rarr;</Link>
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                            {articles.length > 0 ? (
-                                articles.map(article => (
+                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-2">
+                            {articles.length > 1 ? (
+                                articles.slice(1).map(article => (
                                     <ArticleCard key={article.id} article={article} />
                                 ))
+                            ) : articles.length === 0 ? (
+                                <div className="col-span-full flex flex-col items-center justify-center rounded-3xl bg-muted/20 py-24 text-muted-foreground border border-dashed border-border">
+                                    <InfoCircledIcon className="h-12 w-12 mb-4 opacity-10" />
+                                    <p className="text-lg font-medium">Monitoring active narratives for {country.name}...</p>
+                                    <p className="text-sm">Intelligence collection agents are currently scouring 50+ regional sources.</p>
+                                </div>
                             ) : (
-                                <div className="col-span-full flex flex-col items-center justify-center rounded-xl bg-muted/20 py-12 text-muted-foreground border border-dashed border-border">
-                                    <InfoCircledIcon className="h-10 w-10 mb-2 opacity-50" />
-                                    <p>No recent intelligence briefings for {country.name}.</p>
+                                <div className="col-span-full p-8 rounded-3xl bg-muted/10 border border-border/50 text-center">
+                                    <p className="text-muted-foreground">No additional intelligence reports found for this period.</p>
+                                </div>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    {/* TAB 5: HISTORY & BAOBAB */}
+                    <TabsContent value="history" className="animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="rounded-xl border border-border bg-card p-8 md:p-12 shadow-sm relative overflow-hidden">
+                            {/* Decorative Baobab Icon (Placeholder for actual image) */}
+                            <div className="absolute -bottom-12 -right-12 h-64 w-64 opacity-5 pointer-events-none">
+                                <svg viewBox="0 0 100 100" fill="currentColor">
+                                    <path d="M50 10 C30 10 20 20 20 40 L20 80 L80 80 L80 40 C80 20 70 10 50 10 Z" />
+                                </svg>
+                            </div>
+
+                            {country.history_baobab_content ? (
+                                <MarkdownRenderer content={country.history_baobab_content} />
+                            ) : (
+                                <div className="text-center py-12">
+                                    <InfoCircledIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+                                    <h3 className="text-xl font-bold mb-2">History Under Construction</h3>
+                                    <p className="text-muted-foreground">We are currently cataloguing the deep historical narratives of {country.name}.</p>
                                 </div>
                             )}
                         </div>

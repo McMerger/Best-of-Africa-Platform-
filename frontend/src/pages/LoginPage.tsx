@@ -48,7 +48,8 @@ export const LoginPage: React.FC = () => {
                 // Reset to IDLE after showing error
                 setTimeout(() => setStatus('IDLE'), 2000);
             }
-        } catch (_err) {
+        } catch (err) {
+            console.error('Login error:', err);
             setError('Network error. Please try again.');
             setStatus('ERROR');
             setTimeout(() => setStatus('IDLE'), 2000);

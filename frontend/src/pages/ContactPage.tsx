@@ -43,8 +43,8 @@ export const ContactPage: React.FC = () => {
 
             setStatus('success');
             setFormData({ name: '', organization: '', email: '', inquiry_type: 'Strategic Partnership', message: '' });
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'An unknown error occurred');
             setStatus('error');
         }
     };

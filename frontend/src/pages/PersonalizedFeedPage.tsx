@@ -54,7 +54,13 @@ export const PersonalizedFeedPage: React.FC = () => {
 
         // 3. Sort/Prioritize based on Role
         if (role === 'investor') {
-            results.sort((a, _b) => (['finance', 'technology', 'energy'].includes(a.sector_id) ? -1 : 1));
+            results.sort((a, b) => {
+                const aPrio = ['finance', 'technology', 'energy'].includes(a.sector_id);
+                const bPrio = ['finance', 'technology', 'energy'].includes(b.sector_id);
+                if (aPrio && !bPrio) return -1;
+                if (!aPrio && bPrio) return 1;
+                return 0;
+            });
         }
 
         return results;

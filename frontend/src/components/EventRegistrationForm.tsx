@@ -74,7 +74,8 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
             } else {
                 toast.error(data.message || "Registration failed");
             }
-        } catch (error) {
+        } catch (err) {
+            console.error('Registration failed:', err);
             toast.error("An error occurred. Please try again.");
         } finally {
             setIsSubmitting(false);

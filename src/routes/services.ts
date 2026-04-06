@@ -4,16 +4,18 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
-import type { Env, Variables } from '../types';
-import { getCached, CACHE_KEYS } from '../lib/cache';
+import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
+import { requireApiKey, rateLimit } from '../lib/auth';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
+import { validate, BookingRequestSchema, PaginationSchema, EventRegistrationSchema, IdOrSlugParamSchema, UuidParamSchema, CountryCodeParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
+import { z } from 'zod';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /services/booking - Submit booking/concierge request
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/booking', async (c) => {
-    const body = await c.req.json();
+router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
     const {
         service_type,
         destination_country,
@@ -24,7 +26,7 @@ router.post('/booking', async (c) => {
         guest_email,
         guest_name,
         guest_organization
-    } = body;
+    } = (c.req as any).valid('json');
 
     // Validation
     if (!service_type) {
@@ -101,9 +103,9 @@ router.post('/booking', async (c) => {
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /services/booking/:id - Get booking request status
-// ───────────────────────────────────────────────────────────────────────────────
-router.get('/booking/:id', async (c) => {
-    const id = c.req.param('id');
+// ────────────────────────────────────────────────────────────────────────────────
+router.get('/booking/:id', validate('param', UuidParamSchema), async (c) => {
+    const { id } = (c.req as any).valid('param');
 
     const booking = await c.env.DB.prepare(`
         SELECT br.*, c.name as country_name
@@ -134,8 +136,12 @@ router.get('/booking/:id', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /services/events - List upcoming events
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/events', async (c) => {
-    const { type, country, status, limit } = c.req.query();
+router.get('/events', validate('query', PaginationSchema.extend({
+    type: z.string().optional(),
+    country: z.string().optional(),
+    status: z.string().optional(),
+})), async (c) => {
+    const { type, country, status, limit } = (c.req as any).valid('query');
 
     let query = `
         SELECT e.*, c.name as country_name, c.flag_emoji,
@@ -186,8 +192,8 @@ router.get('/events', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /services/events/:id - Get single event details
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/events/:id', async (c) => {
-    const id = c.req.param('id');
+router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
+    const { id } = (c.req as any).valid('param');
 
     // Support lookup by ID or slug
     const event = await c.env.DB.prepare(`
@@ -195,8 +201,8 @@ router.get('/events/:id', async (c) => {
                (SELECT COUNT(*) FROM event_registrations er WHERE er.event_id = e.id AND er.status != 'Cancelled') as registered_count
         FROM events e
         LEFT JOIN countries c ON e.country_code = c.code
-        WHERE e.id = ?
-    `).bind(id).first();
+        WHERE e.id = ? OR e.slug = ?
+    `).bind(id, id).first();
 
     if (!event) {
         return c.json({
@@ -245,9 +251,8 @@ router.get('/events/:id', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /services/events/:id/register - Register for an event
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/events/:id/register', async (c) => {
-    const eventId = c.req.param('id');
-    const body = await c.req.json();
+router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), validate('json', EventRegistrationSchema), async (c) => {
+    const { id: eventId } = (c.req as any).valid('param');
     const {
         user_email,
         user_name,
@@ -256,7 +261,7 @@ router.post('/events/:id/register', async (c) => {
         ticket_type,
         dietary_requirements,
         special_requests
-    } = body;
+    } = (c.req as any).valid('json');
 
     // Validation
     if (!user_email) {
@@ -269,7 +274,7 @@ router.post('/events/:id/register', async (c) => {
 
     // Get event and check capacity
     const event = await c.env.DB.prepare(`
-        SELECT e.*, 
+        SELECT e.*,
                (SELECT COUNT(*) FROM event_registrations er WHERE er.event_id = e.id AND er.status NOT IN ('Cancelled')) as registered_count
         FROM events e
         WHERE e.id = ? OR e.slug = ?
@@ -308,7 +313,7 @@ router.post('/events/:id/register', async (c) => {
 
     // Check if already registered
     const existing = await c.env.DB.prepare(`
-        SELECT id FROM event_registrations 
+        SELECT id FROM event_registrations
         WHERE event_id = ? AND user_email = ? AND status != 'Cancelled'
     `).bind(eventData.id, user_email).first();
 
@@ -364,8 +369,8 @@ router.post('/events/:id/register', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /services/events/:id/registrations - Get event registrations (admin)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/events/:id/registrations', async (c) => {
-    const eventId = c.req.param('id');
+router.get('/events/:id/registrations', validate('param', IdOrSlugParamSchema), async (c) => {
+    const { id: eventId } = (c.req as any).valid('param');
 
     // TODO: Add admin authentication check
     // const isAdmin = await checkAdminAuth(c);
@@ -389,8 +394,8 @@ router.get('/events/:id/registrations', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /services/booking - List user's booking requests
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/booking', async (c) => {
-    const email = c.req.query('email');
+router.get('/booking', validate('query', z.object({ email: z.string().email().optional() })), async (c) => {
+    const { email } = (c.req as any).valid('query');
     const userId = c.get('clientId');
 
     if (!email && !userId) {

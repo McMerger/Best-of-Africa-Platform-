@@ -1,6 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-
-export type IntelligenceLens = 'investor' | 'government' | 'explorer';
+import type { IntelligenceLens } from '../types';
 
 interface LensContextType {
     lens: IntelligenceLens;
@@ -20,14 +20,18 @@ export const LensProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (stored && LENS_ORDER.includes(stored as IntelligenceLens)) {
                 return stored as IntelligenceLens;
             }
-        } catch { }
+        } catch (e) {
+            console.warn('Failed to load lens from storage:', e);
+        }
         return 'investor';
     });
 
     useEffect(() => {
         try {
             localStorage.setItem(STORAGE_KEY, lens);
-        } catch { }
+        } catch (e) {
+            console.warn('Failed to save lens to storage:', e);
+        }
         document.body.setAttribute('data-lens', lens);
     }, [lens]);
 

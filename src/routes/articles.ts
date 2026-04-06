@@ -4,28 +4,33 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
-import type { Env, Article, ArticleListItem, PaginatedResponse } from '../types';
+import { z } from 'zod';
+import type { Env, Article, ArticleListItem, PaginatedResponse, Variables } from '../types';
 import { trackEvent } from '../lib/analytics';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, UuidParamSchema } from '../lib';
 
-const router = new Hono<{ Bindings: Env }>();
+const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles - List articles with pagination and filters
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/', async (c) => {
+router.get('/', validate('query', ArticleQuerySchema), async (c) => {
+    const query = (c.req as any).valid('query') as z.infer<typeof ArticleQuerySchema>;
     const {
-        page = '1',
-        limit = '20',
+        page,
+        limit,
         country,
         sector,
         region,
-        sort = 'published_at',
-        order = 'desc'
-    } = c.req.query();
+        sort,
+        order,
+        urgency,
+        lens
+    } = query;
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const pageNum = page;
+    const limitNum = limit;
     const offset = (pageNum - 1) * limitNum;
 
     // Build query
@@ -47,10 +52,14 @@ router.get('/', async (c) => {
         params.push(region);
     }
 
-    // Validate sort column
-    const validSorts = ['published_at', 'engagement_score', 'view_count', 'created_at'];
-    const sortCol = validSorts.includes(sort) ? sort : 'published_at';
-    const sortOrder = order.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    // Add urgency filter
+    if (urgency && urgency !== 'Normal') {
+        whereClause += ' AND urgency = ?';
+        params.push(urgency);
+    }
+
+    const sortCol = sort;
+    const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     // Get total count
     const countResult = await c.env.DB.prepare(
@@ -92,14 +101,22 @@ router.get('/', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/featured - Get featured/trending articles (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/featured', async (c) => {
-    const { limit = '6' } = c.req.query();
-    const limitNum = Math.min(20, Math.max(1, parseInt(limit)));
+router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true, lens: true })), async (c) => {
+    const { limit, lens } = (c.req as any).valid('query') as { limit: number; lens?: string };
+    const limitNum = limit;
+
+    // Build where clause for lens
+    let lensWhereClause = '';
+    const lensParams: unknown[] = [];
+    if (lens) {
+        lensWhereClause = ' AND a.lens = ?';
+        lensParams.push(lens);
+    }
 
     // Cache featured articles for 5 minutes
     const articles = await getCached(
         c.env,
-        `${CACHE_KEYS.ARTICLES_FEATURED}:${limitNum}`,
+        `${CACHE_KEYS.ARTICLES_FEATURED}:${limitNum}:${lens || 'all'}`,
         async () => {
             const result = await c.env.DB.prepare(`
                 SELECT 
@@ -112,10 +129,10 @@ router.get('/featured', async (c) => {
                 FROM articles a
                 LEFT JOIN countries c ON a.country_code = c.code
                 LEFT JOIN sectors s ON a.sector_id = s.id
-                WHERE a.status = 'published'
+                WHERE a.status = 'published' ${lensWhereClause}
                 ORDER BY a.engagement_score DESC, a.published_at DESC
                 LIMIT ?
-            `).bind(limitNum).all();
+            `).bind(...lensParams, limitNum).all();
             return result.results || [];
         },
         { ttl: CACHE_TTL.FREQUENT }
@@ -126,17 +143,17 @@ router.get('/featured', async (c) => {
         c.env,
         CACHE_KEYS.globalBriefing,
         async () => {
-            const headlines = articles.slice(0, 6).map((a: any) => a.title).join('; ');
+            const headlines = (articles as unknown as ArticleListItem[]).slice(0, 6).map(a => a.title).join('; ');
             if (!headlines) return "Monitor global markets for emerging trends.";
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
                     messages: [
                         { role: 'system', content: 'You are a Global Editor. Write a 1-sentence "World View" synthesizing these top stories.' },
                         { role: 'user', content: headlines }
                     ]
-                });
-                return aiResponse?.response?.trim() || "Global markets are active.";
+                }) as { response: string };
+                return aiResponse.response.trim();
             } catch (e) {
                 return "Global markets are active.";
             }
@@ -150,9 +167,9 @@ router.get('/featured', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/latest - Get latest articles (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/latest', async (c) => {
-    const { limit = '10' } = c.req.query();
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+router.get('/latest', validate('query', ArticleQuerySchema.pick({ limit: true })), async (c) => {
+    const { limit } = (c.req as any).valid('query') as { limit: number };
+    const limitNum = limit;
 
     // Cache latest articles for 2 minutes
     const articles = await getCached(
@@ -184,12 +201,12 @@ router.get('/latest', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/country/:code - Articles by country
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/country/:code', async (c) => {
-    const code = c.req.param('code').toUpperCase();
-    const { page = '1', limit = '20' } = c.req.query();
+router.get('/country/:code', validate('param', CountryCodeParamSchema), validate('query', ArticleQuerySchema.pick({ page: true, limit: true })), async (c) => {
+    const { code } = (c.req as any).valid('param') as { code: string };
+    const { page, limit } = (c.req as any).valid('query') as { page: number; limit: number };
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const pageNum = page;
+    const limitNum = limit;
     const offset = (pageNum - 1) * limitNum;
 
     // Get country info
@@ -238,12 +255,12 @@ router.get('/country/:code', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/sector/:id - Articles by sector
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/sector/:id', async (c) => {
-    const sectorId = c.req.param('id');
-    const { page = '1', limit = '20' } = c.req.query();
+router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', ArticleQuerySchema.pick({ page: true, limit: true })), async (c) => {
+    const { id: sectorId } = (c.req as any).valid('param') as { id: string };
+    const { page, limit } = (c.req as any).valid('query') as { page: number; limit: number };
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const pageNum = page;
+    const limitNum = limit;
     const offset = (pageNum - 1) * limitNum;
 
     // Get sector info
@@ -283,13 +300,13 @@ router.get('/sector/:id', async (c) => {
             if (!headlines) return "No sufficient data for trend analysis.";
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
                     messages: [
                         { role: 'system', content: 'You are a Sector Specialist. Synthesize a 2-sentence "Sector Trend Pulse" based on these headlines.' },
                         { role: 'user', content: headlines }
                     ]
-                });
-                return aiResponse?.response?.trim() || "Sector activity is normal.";
+                }) as { response: string };
+                return aiResponse.response.trim();
             } catch (e) {
                 return "Sector activity is normal.";
             }
@@ -317,8 +334,8 @@ router.get('/sector/:id', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/:slug - Single article by slug (OPTIMIZED)
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/:slug', async (c) => {
-    const slug = c.req.param('slug');
+router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
+    const { slug } = (c.req as any).valid('param') as { slug: string };
 
     const article = await c.env.DB.prepare(`
     SELECT 
@@ -389,17 +406,16 @@ router.get('/:slug', async (c) => {
              `;
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+                const aiResponse = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct' as any, {
                     messages: [
                         { role: 'system', content: 'You are a Senior Market Analyst. Provide high-signal executive briefs.' },
                         { role: 'user', content: prompt }
                     ],
                     response_format: { type: 'json_object' }
-                });
+                }) as { response: string };
 
-                const raw = aiResponse?.response;
-                const jsonMatch = raw.match(/\{.*\}/s);
-                return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+                const match = aiResponse.response.match(/\{.*\}/s);
+                return match ? JSON.parse(match[0]) : null;
             } catch (e) {
                 console.error('AI Context Failed', e);
                 return null;
@@ -420,13 +436,13 @@ router.get('/:slug', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /articles/:slug/audio - Generate TTS audio for article
 // ───────────────────────────────────────────────────────────────────────────────
-router.post('/:slug/audio', async (c) => {
-    const slug = c.req.param('slug');
+router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
+    const { slug } = (c.req as any).valid('param') as { slug: string };
 
     // Get article
     const article = await c.env.DB.prepare(`
         SELECT id, slug, title, summary, content, audio_url, audio_duration_seconds
-        FROM articles WHERE slug = ? AND status = 'published'
+        FROM articles WHERE slug = ?
     `).bind(slug).first() as Record<string, any>;
 
     if (!article) {
@@ -501,8 +517,8 @@ router.post('/:slug/audio', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles/:slug/audio - Get article audio status
 // ───────────────────────────────────────────────────────────────────────────────
-router.get('/:slug/audio', async (c) => {
-    const slug = c.req.param('slug');
+router.get('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
+    const { slug } = (c.req as any).valid('param') as { slug: string };
 
     const article = await c.env.DB.prepare(`
         SELECT audio_url, audio_duration_seconds

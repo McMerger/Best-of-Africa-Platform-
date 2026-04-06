@@ -1,4 +1,4 @@
-import type { Article, ArticleListItem, Country, CountryStats, Dashboard, PaginatedResponse, SearchResult, Sector, SectorBreakdown, TrendingCountry } from '../types';
+import type { Article, ArticleListItem, CalendarEvent, Country, CountryStats, Dashboard, PaginatedResponse, SearchResult, Sector, SectorBreakdown, TrendingCountry } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
@@ -51,6 +51,10 @@ export const api = {
     getArticle: (slug: string) => request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(`/articles/${slug}`),
     getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured'),
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest'),
+    getEvents: (params: Record<string, string> = {}) => {
+        const searchParams = new URLSearchParams(params);
+        return request<{ success: boolean; data: CalendarEvent[] }>(`/services/events?${searchParams}`);
+    },
 
     // Countries
     getCountries: () => request<{ data: Country[]; by_region: Record<string, { countries: Country[]; ai_insight: string }> }>('/countries'),
@@ -137,7 +141,7 @@ export const api = {
         sector_coverage: { id: string; name: string; article_count: number; }[];
     }>(`/narratives/country/${code}`),
     getReports: () => request<{ data: ArticleListItem[] }>('/market-intel/reports'),
-    getGeneratedReports: () => request<{ data: any[] }>('/market-intel/generated-reports'),
+    getGeneratedReports: () => request<{ data: ArticleListItem[] }>('/market-intel/generated-reports'),
     getGeneratedReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/generated-reports/${id}`),
     getReportsBySector: (sectorId: string) => request<{ data: ArticleListItem[] }>(`/market-intel/reports/sector/${sectorId}`),
     getReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/reports/${id}`),
@@ -292,4 +296,21 @@ export const api = {
 
     // Country Economics
     getCountryEconomics: (code: string) => request<{ gdp_growth: string; stability: string }>(`/countries/${code}/economics`),
+
+    // Administrative Intelligence & Moderation
+    getAdminArticles: () => request<{ data: ArticleListItem[] }>('/admin/articles'),
+    rejectArticle: (id: string, reason: string) => request(`/admin/articles/${id}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason })
+    }),
+    updateArticleWithFeedback: (id: string, content: string, comment: string) => request(`/admin/articles/${id}/edit`, {
+        method: 'POST',
+        body: JSON.stringify({ content, comment })
+    }),
+    triggerAuditScan: () => request('/audit/scan', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('boa_admin_token')}` }
+    }),
+    triggerAgentEvolution: () => request('/self-improve/evolve', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('boa_admin_token')}` }
+    }),
 };

@@ -4,12 +4,13 @@ import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Sector } from '../types';
-import { ExclamationTriangleIcon, ArrowTopRightIcon, BarChartIcon } from '@radix-ui/react-icons';
+import { ArrowTopRightIcon, BarChartIcon } from '@radix-ui/react-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getSectorIcon } from '@/lib/icons';
 import { useLens } from '@/context/LensContext';
+import { useLanguage } from '@/context/LanguageContext';
 interface SectorPerformance {
     sector_id: string;
     sector_name: string;
@@ -19,13 +20,24 @@ interface SectorPerformance {
     ai_insight?: string | null;
 }
 
+interface StrategicOpportunity {
+    country_code: string;
+    country_name: string;
+    sector_id: string;
+    sector_name: string;
+    title: string;
+    summary: string;
+    score: number;
+}
+
 export const MarketIntelPage: React.FC = () => {
     const [sectors, setSectors] = useState<Sector[]>([]);
     const [performance, setPerformance] = useState<SectorPerformance[]>([]);
-    const [opportunities, setOpportunities] = useState<any[]>([]); // New state
+    const [opportunities, setOpportunities] = useState<StrategicOpportunity[]>([]); // Typed state
     const [lastUpdated, setLastUpdated] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const { lens } = useLens();
+    const { t } = useLanguage();
 
     useEffect(() => {
         Promise.all([
@@ -62,7 +74,7 @@ export const MarketIntelPage: React.FC = () => {
                         <div>
                             <div>
                                 <Badge variant="outline" className="mb-4 border-primary/20 bg-primary/5 text-primary">
-                                    {lens === 'investor' ? 'Value Analysis' : lens === 'government' ? 'Policy Analysis' : 'Explorer Analysis'}
+                                    {lens === 'investor' ? t("lens.investor", 'Value Analysis') : lens === 'government' ? t("lens.government", 'Policy Analysis') : t("lens.explorer", 'Explorer Analysis')}
                                 </Badge>
                                 <h1 className="font-serif text-6xl font-black leading-none tracking-tighter text-foreground lg:text-7xl">
                                     Market <br /><span className="text-primary italic">Intelligence.</span>
@@ -76,14 +88,22 @@ export const MarketIntelPage: React.FC = () => {
                 <section className="mb-20" aria-label="Sector Performance Grid">
                     <div className="mb-8 flex items-baseline justify-between border-b-2 border-primary pb-2">
                         <h2 className="text-xl font-serif font-bold uppercase tracking-tight text-primary">
-                            Sector Performance
+                            {t("intel.sector_performance", "Sector Performance")}
                         </h2>
-                        <span className="text-sm font-bold text-muted-foreground" aria-label="Last updated time">Updated: {lastUpdated || 'Loading...'}</span>
+                        <span className="text-sm font-bold text-muted-foreground" aria-label="Last updated time">{t("intel.updated", "Updated")}: {lastUpdated || 'Loading...'}</span>
                     </div>
 
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6" role="list">
                         {sectors.map(sector => {
                             const { growth, vol, articles, insight } = getPerformance(sector.id);
+
+                            // Determine Volatility Color and Percentage for Gauge
+                            let volColor = "bg-muted-foreground/30";
+                            let volWidth = "w-0";
+                            if (vol.toLowerCase() === 'low') { volColor = "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"; volWidth = "w-[33%]"; }
+                            else if (vol.toLowerCase() === 'medium') { volColor = "bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"; volWidth = "w-[66%]"; }
+                            else if (vol.toLowerCase() === 'high') { volColor = "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.8)]"; volWidth = "w-[100%]"; }
+
                             return (
                                 <Link
                                     to={`/market-intel/sectors/${sector.id}`}
@@ -92,36 +112,48 @@ export const MarketIntelPage: React.FC = () => {
                                     aria-label={`${sector.name} Sector. Sentiment Score ${growth}. Volatility ${vol}. Click for full analysis.`}
                                     role="listitem"
                                 >
-                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-lg rounded-3xl">
-                                        <CardContent className="flex flex-col p-6">
-                                            <div className="mb-6 flex justify-between">
-                                                <div className="text-primary transition-all group-hover:scale-110" aria-hidden="true">
-                                                    {getSectorIcon(sector.id, "h-10 w-10")}
+                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-xl rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
+                                        <CardContent className="flex flex-col p-8 h-full">
+                                            <div className="mb-6 flex justify-between items-start">
+                                                <div className="text-primary transition-all duration-500 group-hover:scale-110 drop-shadow-md" aria-hidden="true">
+                                                    {getSectorIcon(sector.id, "h-12 w-12")}
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className={cn("text-xl font-bold", growth > 60 ? 'text-emerald-500' : growth < 40 ? 'text-destructive' : 'text-yellow-500')}>
-                                                        {growth}/100
+                                                    <div className={cn("text-3xl font-black tracking-tighter", growth > 60 ? 'text-emerald-500' : growth < 40 ? 'text-destructive' : 'text-yellow-500')}>
+                                                        {growth}
                                                     </div>
-                                                    <div className="text-[10px] font-bold uppercase text-muted-foreground">
-                                                        {lens === 'investor' ? 'Value Score' : lens === 'government' ? 'Policy Score' : 'Appeal Score'}
+                                                    <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mt-1">
+                                                        {lens === 'investor' ? t("lens.value_score", 'Value Score') : lens === 'government' ? t("lens.policy_score", 'Policy Score') : t("lens.appeal_score", 'Appeal Score')}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <h3 className="mb-2 text-2xl font-black leading-tight text-foreground">{sector.name}</h3>
-                                            {insight && <p className="mb-3 text-xs italic text-muted-foreground leading-snug">{insight}</p>}
+                                            <h3 className="mb-3 text-2xl font-black leading-tight text-foreground group-hover:text-primary transition-colors">{sector.name}</h3>
+                                            {insight && <p className="mb-6 text-sm italic text-muted-foreground leading-relaxed line-clamp-3 flex-1">{insight}</p>}
 
-                                            <div className="mb-6 flex gap-4 text-xs font-medium text-muted-foreground">
-                                                <span className="flex items-center gap-1.5" aria-label={`Volatility: ${vol}`}>
-                                                    <ExclamationTriangleIcon className="h-3 w-3" aria-hidden="true" /> Vol: {vol}
-                                                </span>
-                                                <span className="flex items-center gap-1.5" aria-label={`Reports: ${articles}`}>
-                                                    <BarChartIcon className="h-3 w-3" aria-hidden="true" /> Reports: {articles}
-                                                </span>
-                                            </div>
+                                            <div className="mt-auto space-y-5">
+                                                {/* Visual Volatility Gauge */}
+                                                <div>
+                                                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+                                                        <span>{t("intel.volatility_risk", "Volatility Risk")}</span>
+                                                        <span className={cn(
+                                                            vol.toLowerCase() === 'high' ? 'text-destructive' :
+                                                                vol.toLowerCase() === 'medium' ? 'text-yellow-500' : 'text-emerald-500'
+                                                        )}>{vol}</span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
+                                                        <div className={cn("h-full rounded-full transition-all duration-1000", volWidth, volColor)} />
+                                                    </div>
+                                                </div>
 
-                                            <div className="mt-auto flex items-center justify-between border-t border-border pt-4 text-xs font-bold uppercase text-primary group-hover:text-primary/80" aria-hidden="true">
-                                                Full Analysis <ArrowTopRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                                <div className="flex items-center justify-between border-t border-border/50 pt-5">
+                                                    <span className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                                                        <BarChartIcon className="h-4 w-4 text-primary" aria-hidden="true" /> {articles} Reports
+                                                    </span>
+                                                    <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary group-hover:translate-x-1 transition-transform" aria-hidden="true">
+                                                        Analysis <ArrowTopRightIcon className="h-3.5 w-3.5" />
+                                                    </span>
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -135,8 +167,8 @@ export const MarketIntelPage: React.FC = () => {
                 <section className="mb-20">
                     <div className="mb-8 flex items-end justify-between border-b border-border pb-6">
                         <div>
-                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground">Strategic Opportunity Matrix</h2>
-                            <p className="text-muted-foreground">High-growth intersections of Sector × Country.</p>
+                            <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground">{t("intel.strategic_matrix", "Strategic Opportunity Matrix")}</h2>
+                            <p className="text-muted-foreground">{t("intel.growth_intersections", "High-growth intersections of Sector × Country.")}</p>
                         </div>
                     </div>
 

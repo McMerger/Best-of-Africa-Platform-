@@ -1,189 +1,94 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONTENT MODERATION SERVICE
-// AI-powered content review before publication
-// ═══════════════════════════════════════════════════════════════════════════════
-
 import type { Env } from '../types';
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Moderation Result
-// ───────────────────────────────────────────────────────────────────────────────
 export interface ModerationResult {
-    approved: boolean;
-    confidence: number;
-    flags: ModerationFlag[];
-    suggestions: string[];
+    status: 'approved' | 'flagged' | 'needs_review';
+    score: number;
+    findings: Array<{
+        type: 'fact-check' | 'tone' | 'bias' | 'source';
+        severity: 'low' | 'medium' | 'high';
+        message: string;
+        suggestion?: string;
+    }>;
 }
 
-export interface ModerationFlag {
-    type: 'factual_accuracy' | 'bias' | 'sensitive_content' | 'quality' | 'copyright';
-    severity: 'low' | 'medium' | 'high';
-    description: string;
-    location?: string;
-}
-
-// ───────────────────────────────────────────────────────────────────────────────
-// Moderate Content with AI
-// ───────────────────────────────────────────────────────────────────────────────
-export async function moderateContent(
+/**
+ * Checks article content for factual accuracy, tone alignment, and source credibility
+ */
+export async function checkContentIntegrity(
     env: Env,
-    article: {
-        title: string;
-        content: string;
-        country_code?: string | null;
-        sector_id?: string | null;
-    }
+    title: string,
+    content: string,
+    sourceUrl?: string
 ): Promise<ModerationResult> {
+    console.log(`Moderating content: "${title.slice(0, 50)}..."`);
+
+    // 1. AI-Powered Fact-Checking & Bias Analysis
+    const moderationPrompt = `
+        As an Senior Editorial Auditor for "Best of Africa Intelligence", analyze the following AI-generated article.
+        
+        ARTICLE TITLE: ${title}
+        CONTENT: ${content.slice(0, 3000)}
+        
+        TASK:
+        1. Identify any questionable factual claims.
+        2. Evaluate the tone (must be professional, authoritative, and non-hedging).
+        3. Flag any potential "AI-isms" or repetitive phrasing.
+        
+        OUTPUT FORMAT: JSON
+        {
+            "status": "approved" | "flagged" | "needs_review",
+            "score": 0.0 to 1.0 (confidence),
+            "findings": [
+                { "type": "fact-check" | "tone" | "bias", "severity": "low"|"medium"|"high", "message": "...", "suggestion": "..." }
+            ]
+        }
+    `;
+
     try {
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
+        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
-                {
-                    role: 'system',
-                    content: `You are a content moderator for an African business intelligence platform. Review articles for:
-1. Factual accuracy - Flag unverified claims
-2. Bias - Flag one-sided reporting
-3. Sensitive content - Flag politically sensitive statements
-4. Quality - Flag low-quality writing or incomplete content
-5. Copyright - Flag potentially plagiarized content
-
-Respond in JSON:
-{
-    "approved": true/false,
-    "confidence": 0.0-1.0,
-    "flags": [{"type": "bias", "severity": "medium", "description": "..."}],
-    "suggestions": ["Improve X", "Clarify Y"]
-}
-
-Be lenient but flag serious issues. Most well-written business content should pass.`
-                },
-                {
-                    role: 'user',
-                    content: `Review this article:\n\nTitle: ${article.title}\n\nContent: ${article.content.slice(0, 3000)}`
-                }
+                { role: 'system', content: 'You are a rigorous Editorial Auditor. Your goal is to catch hallucinations and ensure platform credibility.' },
+                { role: 'user', content: moderationPrompt }
             ],
-            max_tokens: 500,
+            response_format: { type: 'json_object' }
         });
 
-        const text = response?.response || '';
+        const result = typeof response.response === 'string'
+            ? JSON.parse(response.response)
+            : response.response;
 
-        // Parse JSON from response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            return {
-                approved: parsed.approved !== false,
-                confidence: parsed.confidence || 0.8,
-                flags: parsed.flags || [],
-                suggestions: parsed.suggestions || [],
-            };
+        // Clean up status based on score threshold if necessary
+        if (result.score < 0.7 && result.status === 'approved') {
+            result.status = 'needs_review';
         }
 
-        // Default to approved if parsing fails
-        return { approved: true, confidence: 0.7, flags: [], suggestions: [] };
+        return result as ModerationResult;
 
-    } catch (error) {
-        console.error('Content moderation failed:', error);
-        // Fail open - approve if AI fails
-        return { approved: true, confidence: 0.5, flags: [], suggestions: ['AI moderation unavailable'] };
+    } catch (err) {
+        console.error('Moderation failed, defaulting to manual review required:', err);
+        return {
+            status: 'needs_review',
+            score: 0.5,
+            findings: [{
+                type: 'source',
+                severity: 'medium',
+                message: 'Automated moderation engine failed to respond.'
+            }]
+        };
     }
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Store Moderation Result
-// ───────────────────────────────────────────────────────────────────────────────
-export async function storeModerationResult(
-    env: Env,
-    articleId: string,
-    result: ModerationResult
-): Promise<void> {
-    const id = crypto.randomUUID();
+/**
+ * Calculates current credibility score for a news source
+ */
+export async function getSourceCredibility(env: Env, sourceId: string): Promise<number> {
+    const stats = await env.DB.prepare(`
+        SELECT 
+            AVG(moderation_score) as avg_score,
+            COUNT(*) as total_articles
+        FROM articles 
+        WHERE source_url IN (SELECT url FROM sources WHERE id = ?)
+    `).bind(sourceId).first<{ avg_score: number | null }>();
 
-    await env.DB.prepare(`
-        INSERT INTO moderation_results (
-            id, article_id, approved, confidence, flags, suggestions, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(
-        id,
-        articleId,
-        result.approved ? 1 : 0,
-        result.confidence,
-        JSON.stringify(result.flags),
-        JSON.stringify(result.suggestions)
-    ).run();
-
-    // Update article status based on moderation
-    if (!result.approved) {
-        await env.DB.prepare(`
-            UPDATE articles
-            SET status = 'needs_review',
-                moderation_notes = ?
-            WHERE id = ?
-        `).bind(
-            result.flags.map(f => `[${f.severity.toUpperCase()}] ${f.type}: ${f.description}`).join('\n'),
-            articleId
-        ).run();
-    }
-}
-
-// ───────────────────────────────────────────────────────────────────────────────
-// Get Moderation Queue
-// ───────────────────────────────────────────────────────────────────────────────
-export async function getModerationQueue(env: Env): Promise<{
-    id: string;
-    title: string;
-    status: string;
-    flags: ModerationFlag[];
-}[]> {
-    const articles = await env.DB.prepare(`
-        SELECT a.id, a.title, a.status, mr.flags
-        FROM articles a
-        LEFT JOIN moderation_results mr ON mr.article_id = a.id
-        WHERE a.status = 'needs_review'
-        ORDER BY a.created_at DESC
-    `).all();
-
-    return (articles.results || []).map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        status: a.status,
-        flags: a.flags ? JSON.parse(a.flags) : [],
-    }));
-}
-
-// ───────────────────────────────────────────────────────────────────────────────
-// Approve Moderated Content
-// ───────────────────────────────────────────────────────────────────────────────
-export async function approveContent(
-    env: Env,
-    articleId: string,
-    reviewerId: string
-): Promise<void> {
-    await env.DB.prepare(`
-        UPDATE articles
-        SET status = 'published',
-            published_at = datetime('now'),
-            moderation_notes = NULL,
-            reviewed_by = ?,
-            reviewed_at = datetime('now')
-        WHERE id = ?
-    `).bind(reviewerId, articleId).run();
-}
-
-// ───────────────────────────────────────────────────────────────────────────────
-// Reject Content
-// ───────────────────────────────────────────────────────────────────────────────
-export async function rejectContent(
-    env: Env,
-    articleId: string,
-    reviewerId: string,
-    reason: string
-): Promise<void> {
-    await env.DB.prepare(`
-        UPDATE articles
-        SET status = 'rejected',
-            moderation_notes = ?,
-            reviewed_by = ?,
-            reviewed_at = datetime('now')
-        WHERE id = ?
-    `).bind(reason, reviewerId, articleId).run();
+    return stats?.avg_score ?? 1.0; // Default to 1.0 for new sources
 }

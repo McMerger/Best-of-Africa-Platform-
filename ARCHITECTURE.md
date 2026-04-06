@@ -4,13 +4,13 @@
 
 | Requirement | Current | Gap | Fix |
 |-------------|---------|-----|-----|
-| AI-native article generation | ✅ Workers AI | — | — |
+| AI-native article generation | ✅ Hybrid Agent Pipeline | — | **Automaton Bridge** |
 | Self-optimizing headlines | ✅ Optimizer Worker | — | — |
-| Real-time user behavior | ⚠️ Custom events table | Slow aggregation | **Analytics Engine** |
-| Fix narrative gaps automatically | ❌ Missing | No semantic understanding | **Vectorize** for embeddings |
-| Regional updates/dashboards | ⚠️ Basic | No real-time aggregation | **Durable Objects** |
-| Sponsor campaigns & distribution | ❌ Missing | No outbound channel | **Email Workers** |
-| Paid intelligence API | ✅ Routes defined | — | — |
+| Real-time user behavior | ✅ Analytics Engine | — | — |
+| Fix narrative gaps automatically | ✅ Proactive Audit | — | **Audit Scanner** |
+| Regional updates/dashboards | ✅ Durable Objects | — | — |
+| Sponsor campaigns & distribution | ✅ Email Workers | — | — |
+| Self-Improvement Loop | ✅ AI Feedback Loop | — | **Evolution Pipeline** |
 
 ---
 
@@ -77,29 +77,19 @@
 ## Key Additions
 
 ### 1. Vectorize (Semantic Layer)
-
 - Stores embeddings of all articles using `@cf/baai/bge-base-en-v1.5`
 - Enables **narrative gap detection**: find topics/countries with low coverage
-- Powers **semantic search**: "investment opportunities in renewable energy"
-- Identifies **content clusters** to avoid repetition
+- Powers **proactive audits**: identifies stale or missing perspectives
 
-### 2. Analytics Engine (Real-time Behavior)
+### 2. Automaton Orchestration
+- Decouples long-running AI tasks from request-response cycles
+- Synchronizes D1 task state with external agent pools (`nanobot`)
+- Ensures reliable retry logic and status tracking
 
-- Native Cloudflare service for high-volume event ingestion
-- Powers the self-optimization loop with actual metrics
-- Enables audience segmentation for paid intelligence tier
-
-### 3. Durable Objects (Live Dashboards)
-
-- Real-time counters for trending articles
-- Live visitor counts per country page
-- WebSocket support for admin dashboard
-
-### 4. Email Workers (Distribution)
-
-- Newsletter automation
-- Partner report delivery
-- Sponsor campaign distribution
+### 3. Institutional Feedback Loop
+- Captures editorial rejections and manual edits as `article_feedback`
+- Triggers **Agent Evolution** to update latent instructions based on feedback
+- Maintains the "Human-in-the-Loop" standard for premium publishing
 
 ---
 

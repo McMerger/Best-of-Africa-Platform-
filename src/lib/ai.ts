@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { withCircuitBreaker } from './circuit-breaker';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Models Configuration
@@ -33,11 +34,15 @@ export async function generateArticle(
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
 
-    const response = await (env.AI as Record<string, any>).run(model || MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 2000,
-        temperature: 0.7,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(model || MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 2000,
+            temperature: 0.7,
+        })
+    );
 
     const text = (response as Record<string, any>).response || '';
     return parseArticleResponse(text);
@@ -74,11 +79,15 @@ Requirements:
 
 Output exactly 3 headlines, one per line, no numbering or bullets.`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 200,
-        temperature: 0.8,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 200,
+            temperature: 0.8,
+        })
+    );
 
     const text = (response as Record<string, any>).response || '';
     return text.split('\n').filter((line: string) => line.trim().length > 10).slice(0, 3);
@@ -103,11 +112,15 @@ export async function generateSummary(
 
     Summary:`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 150,
-        temperature: 0.5,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 150,
+            temperature: 0.5,
+        })
+    );
 
     return ((response as Record<string, any>).response || '').trim();
 }
@@ -119,9 +132,13 @@ export async function generateEmbedding(
     env: Env,
     text: string
 ): Promise<number[]> {
-    const response = await (env.AI as Record<string, any>).run(MODELS.EMBEDDINGS, {
-        text: text.slice(0, 8000), // Limit input size
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-embeddings',
+        () => (env.AI as Record<string, any>).run(MODELS.EMBEDDINGS, {
+            text: text.slice(0, 8000), // Limit input size
+        })
+    );
 
     return (response as Record<string, any>).data[0];
 }
@@ -152,11 +169,15 @@ export async function identifySector(
 
 Reply with ONLY the sector name, nothing else.`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 20,
-        temperature: 0.2,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 20,
+            temperature: 0.2,
+        })
+    );
 
     const sector = ((response as Record<string, any>).response || '').trim().toLowerCase();
     return sectors.includes(sector) ? sector : null;
@@ -178,11 +199,15 @@ export async function identifyCountry(
 Reply with ONLY the 2 - letter ISO country code(e.g., NG for Nigeria, KE for Kenya, ZA for South Africa).
 If no specific country, reply "NONE".`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 10,
-        temperature: 0.2,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 10,
+            temperature: 0.2,
+        })
+    );
 
     const code = ((response as Record<string, any>).response || '').trim().toUpperCase();
 
@@ -211,11 +236,15 @@ Also provide a one - word label: "Bullish", "Bearish", or "Neutral".
     Reply in JSON format: { "score": 75, "label": "Bullish" } `;
 
     try {
-        const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 50,
-            temperature: 0.1, // Deterministic
-        });
+        const response = await withCircuitBreaker(
+            env,
+            'ai-text-gen',
+            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+                prompt,
+                max_tokens: 50,
+                temperature: 0.1, // Deterministic
+            })
+        );
 
         const text = (response as Record<string, any>).response || '';
         const jsonMatch = text.match(/\{.*\}/s);
@@ -271,11 +300,15 @@ Structure your response EXACTLY as follows:
 
     TAGS: [comma - separated list of 3 - 5 relevant tags]`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 2000,
-        temperature: 0.8,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 2000,
+            temperature: 0.8,
+        })
+    );
 
     const text = (response as Record<string, any>).response || '';
     return parseArticleResponse(text);
@@ -477,14 +510,18 @@ ${content.slice(0, 4000)}
 
 Produce your analysis now. Be definitive. No hedging.`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-        ],
-        max_tokens: 2500,
-        temperature: 0.4,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            max_tokens: 2500,
+            temperature: 0.4,
+        })
+    );
 
     return ((response as Record<string, any>).response || content).trim();
 }
@@ -607,14 +644,18 @@ ${content.slice(0, 4000)}
 
 Produce the output now. Follow the structure exactly. Be definitive.`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-        ],
-        max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
-        temperature: 0.3, // Very low for structured output
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
+            temperature: 0.3, // Very low for structured output
+        })
+    );
 
     return ((response as Record<string, any>).response || content).trim();
 }
@@ -671,11 +712,15 @@ Structure your response EXACTLY as:
         - [Risk 2]
         - [Risk 3]`;
 
-    const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-        prompt,
-        max_tokens: 2500,
-        temperature: 0.7,
-    });
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            prompt,
+            max_tokens: 2500,
+            temperature: 0.7,
+        })
+    );
 
     const text = (response as Record<string, any>).response || '';
     return parseIntelligenceReport(text);
@@ -799,14 +844,18 @@ ${content.slice(0, 4000)}
 Return ONLY valid JSON. No markdown, no explanation.`;
 
     try {
-        const response = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ],
-            max_tokens: 1200,
-            temperature: 0.2,
-        });
+        const response = await withCircuitBreaker(
+            env,
+            'ai-text-gen',
+            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                max_tokens: 1200,
+                temperature: 0.2,
+            })
+        );
 
         const text = (response as Record<string, any>).response || '';
 
@@ -855,11 +904,15 @@ export async function generateArticleImage(
     const negative_prompt = "text, watermark, signature, caption, blurry, cartoon, illustration, low quality, distorted, bad anatomy, deformed, ugly, pixelated, grain, low resolution, superimposed text, logo, branding, writing";
 
     try {
-        const response = await (env.AI as Record<string, any>).run(MODELS.IMAGE_GENERATION, {
-            prompt,
-            negative_prompt,
-            num_steps: 20, // Balance speed/quality
-        });
+        const response = await withCircuitBreaker(
+            env,
+            'ai-image-gen',
+            () => (env.AI as Record<string, any>).run(MODELS.IMAGE_GENERATION, {
+                prompt,
+                negative_prompt,
+                num_steps: 20, // Balance speed/quality
+            })
+        );
 
         // Response is the binary image data (PNG) or stream
         // Workers AI usually returns a Response object with body stream, or direct arrayBuffer depending on implementation.
