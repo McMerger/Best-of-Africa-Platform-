@@ -20,3 +20,4 @@ export { openapiRouter } from './openapi';
 export { agentWebhooksRouter } from './agent-webhooks';
 export { auditRouter } from './audit';
 export { selfImproveRouter } from './self-improve';
+export { newsletterRouter } from './newsletter';

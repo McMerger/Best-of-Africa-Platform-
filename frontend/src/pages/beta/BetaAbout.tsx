@@ -108,7 +108,7 @@ export const BetaAbout = () => {
             Join the founding story.
           </h2>
           <Link 
-            to="/beta/membership"
+            to="/membership"
             className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-10 py-5 rounded-lg shadow-[0_20px_40px_rgba(201,168,76,0.15)] hover:brightness-110 transition-transform hover:-translate-y-1 text-lg"
           >
             Choose your Membership Tier

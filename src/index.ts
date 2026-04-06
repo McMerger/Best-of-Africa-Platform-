@@ -15,7 +15,8 @@ import {
     intelligenceRouter, adminRouter, dashboardsRouter, narrativesRouter,
     servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
     eventsRouter, campaignsRouter, configRouter, devRouter,
-    bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter
+    bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
+    newsletterRouter
 } from './routes';
 import { LiveCounter } from './durable-objects/live-counter';
 
@@ -95,6 +96,7 @@ api.route('/events', eventsRouter);
 api.route('/campaigns', campaignsRouter);
 api.route('/config', configRouter);
 
+api.route('/newsletter', newsletterRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
 api.route('/', systemRouter);
