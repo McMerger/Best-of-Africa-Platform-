@@ -98,7 +98,7 @@ export const BetaLanding = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Unlocked Card */}
           <CardReveal delay={0}>
-            <Link to="/beta/articles/tech-talent-lagos" className="group block bg-[#111827] rounded-xl border border-white/10 overflow-hidden h-full transform transition-all duration-300 hover:-translate-y-2 hover:border-[#C9A84C]/40 hover:shadow-2xl">
+            <Link to="/stories/tech-talent-lagos" className="group block bg-[#111827] rounded-xl border border-white/10 overflow-hidden h-full transform transition-all duration-300 hover:-translate-y-2 hover:border-[#C9A84C]/40 hover:shadow-2xl">
               <div className="p-8 h-full flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center mb-6">

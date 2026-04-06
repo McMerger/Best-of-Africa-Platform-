@@ -42,7 +42,7 @@ export const BetaMembership = () => {
               <li className="flex items-start"><span className="text-[#C9A84C] mr-3 mt-0.5">✓</span> Direct input on future coverage priorities</li>
             </ul>
             <a href="https://ko-fi.com/boastory" target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 rounded-lg bg-[#C9A84C] text-[#0A0F1E] font-medium hover:brightness-110 shadow-[0_0_20px_rgba(201,168,76,0.2)] transition-all duration-200">
-              Join as Supporter
+              Join as Founding Member
             </a>
           </div>
 
