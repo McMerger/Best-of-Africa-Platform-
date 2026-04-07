@@ -1,93 +1,196 @@
 import React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, Navigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
+import { api } from '../../services/api';
+import type { ArticleListItem } from '../../types';
+
+const FLAG_MAP: Record<string, string> = {
+  NG: '🇳🇬', KE: '🇰🇪', ZA: '🇿🇦', GH: '🇬🇭', ET: '🇪🇹',
+  RW: '🇷🇼', EG: '🇪🇬', TZ: '🇹🇿', UG: '🇺🇬', CI: '🇨🇮',
+  SN: '🇸🇳', MA: '🇲🇦', TN: '🇹🇳', AO: '🇦🇴', MZ: '🇲🇿',
+};
+
+const ArticleSkeleton = () => (
+  <div className="min-h-screen bg-[#0A0F1E] text-white font-sans">
+    <div className="w-full h-[300px] md:h-[400px] bg-[#111827] animate-pulse" />
+    <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="h-4 bg-white/10 rounded w-32 mb-6 animate-pulse" />
+      <div className="h-10 bg-white/10 rounded w-full mb-3 animate-pulse" />
+      <div className="h-10 bg-white/10 rounded w-3/4 mb-8 animate-pulse" />
+      <div className="space-y-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className={`h-4 bg-white/5 rounded animate-pulse ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 export const BetaArticle = () => {
-  useParams();
+  const { slug } = useParams<{ slug: string }>();
 
-  // Placeholder static content for the requested emotional framing
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['article', slug],
+    queryFn: () => api.getArticle(slug!),
+    enabled: !!slug,
+    retry: 1,
+  });
+
+  const { data: featuredData } = useQuery({
+    queryKey: ['featured-articles'],
+    queryFn: api.getFeaturedArticles,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) return <ArticleSkeleton />;
+  if (isError || !data?.article) return <Navigate to="/stories" replace />;
+
+  const { article, country } = data;
+  const flag = country?.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
+  const categoryLabel = article.tags?.[0] || '';
+  const countryLabel = country?.name || article.country_code;
+
+  // Split content into paragraphs; show first 3 free, rest paywalled
+  const paragraphs = article.content
+    ? article.content.split(/\n\n+/).filter(p => p.trim())
+    : [];
+  const freeParagraphs = paragraphs.slice(0, 3);
+  const lockedParagraphs = paragraphs.slice(3);
+
+  const relatedArticles: ArticleListItem[] = (featuredData?.data || [])
+    .filter(a => a.slug !== slug)
+    .slice(0, 3);
+
   return (
     <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
       <BetaNav />
-      {/* Hero Image Placeholder */}
-      <div className="w-full h-[300px] md:h-[400px] bg-gradient-to-b from-[#111827] to-[#0A0F1E] border-b border-white/5 relative">
-         <div className="absolute bottom-6 left-6 md:left-12 flex gap-4 items-end">
-           <span className="text-4xl md:text-5xl drop-shadow-lg">🇳🇬</span>
-         </div>
-      </div>
+
+      {/* Hero */}
+      {article.hero_image_url ? (
+        <div className="w-full h-[300px] md:h-[400px] relative">
+          <img
+            src={article.hero_image_url}
+            alt={article.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E] via-[#0A0F1E]/30 to-transparent" />
+          <div className="absolute bottom-6 left-6 md:left-12">
+            <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full h-[300px] md:h-[400px] bg-gradient-to-b from-[#111827] to-[#0A0F1E] border-b border-white/5 relative">
+          <div className="absolute bottom-6 left-6 md:left-12">
+            <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
+          </div>
+        </div>
+      )}
 
       <main className="max-w-3xl mx-auto px-6 py-12 md:py-16">
-        
         <header className="mb-12">
-          <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase mb-4 block">
-            Technology • Nigeria
-          </span>
+          {(categoryLabel || countryLabel) && (
+            <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase mb-4 block">
+              {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
+            </span>
+          )}
           <h1 className="font-serif text-[36px] md:text-[48px] leading-tight mb-6">
-            The Silent Exodus Reversing Course in Lagos
+            {article.title}
           </h1>
+          {article.subtitle && (
+            <p className="text-white/70 text-lg mb-6 font-serif">{article.subtitle}</p>
+          )}
           <div className="flex items-center gap-4 text-sm font-medium text-white/60 border-y border-white/5 py-5">
             <span className="uppercase tracking-wider">By Beta Desk</span>
             <span>•</span>
-            <span>6 min read</span>
+            <span>{article.reading_time_minutes} min read</span>
           </div>
         </header>
 
-        <article className="prose prose-invert prose-p:font-sans prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-white/80 max-w-none relative pb-32">
-          
-          {/* Paragraph 1: Emotional scene hook */}
-          <p className="mb-6">
-            When Femi walked away from his senior engineering role at a major Silicon Valley firm late last year, his colleagues asked if he was taking a sabbatical. He wasn't. He was moving back to Yaba. For years, the story of Nigerian technical talent has been one of departure—brilliant minds quietly exporting their output to Western tech hubs via remote contracts or highly competitive visas. But on the ground in Lagos, the gravity is shifting.
-          </p>
-
-          {/* Paragraph 2: Context build */}
-          <p className="mb-6">
-            "We used to build for them because the infrastructure here couldn't support our ambition," Femi notes, sitting in a quietly humming co-working space that runs flawlessly through the city's notorious grid power fluctuations. "Now, the capital is here. The complex, unsolved problems are here. And honestly, the scale of impact is just completely different."
-          </p>
-
-          {/* Paragraph 3: Data / Broader impact */}
-          <p className="mb-12">
-            He isn't an anomaly. Over the past eighteen months, a new tranche of deeply capitalized, locally anchored venture funds has begun aggressively courting diaspora engineers. They aren't just pitching patriotism; they are offering competitive equity stacks to solve fundamental platform problems—from cross-border B2B settlement to unified identity verification protocols covering hundreds of millions of unbanked citizens.
-          </p>
-
-          {/* Blurred Section (Para 4 onwards) */}
-          <div className="relative">
-             <div className="absolute inset-0 bg-[#0A0F1E]/80 backdrop-blur-[5px] z-10 flex flex-col items-center justify-center border border-white/10 rounded-xl p-8 shadow-2xl">
-               <div className="bg-[#111827] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-6">
-                 <Lock className="w-8 h-8 text-[#C9A84C]" />
-               </div>
-               <h3 className="font-serif text-[28px] text-white mb-3 text-center">
-                 This story is for Founding Members
-               </h3>
-               <p className="text-white/70 text-center mb-8 max-w-md">
-                 Members sustain our in-depth reporting across the continent. Unlock unlimited access to stories, briefings, and country hubs.
-               </p>
-               <a 
-                 href="https://ko-fi.com/boastory" 
-                 target="_blank" 
-                 rel="noopener noreferrer"
-                 className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-lg transition-transform hover:-translate-y-0.5"
-               >
-                 Become a Founding Member
-               </a>
-             </div>
-
-             <div className="opacity-30 select-none pointer-events-none" aria-hidden="true">
-               <p className="mb-6">
-                 The shift is palpable in the data. While global venture markets contracted significantly throughout 2024, early-stage capital targeting African infrastructure layers remained remarkably resilient. What changed wasn't the total volume of dollars, but who was managing them and where they were being deployed.
-               </p>
-               <p className="mb-6">
-                 "We are no longer pitching to investors who need us to explain what a mobile money agent is," explains Amina, a founder who recently closed a $4M seed round entirely from Africa-focused syndicates. "The conversations have matured. We are talking about API reliability, not basic market validation."
-               </p>
-               <p className="mb-6">
-                 This maturation of capital has fundamentally altered the talent equation. When local startups can match the stability (if not always the absolute base salary) of remote dev work, while offering massive equity upside in largely blue-ocean markets, the calculus for engineers changes. Femi's new team, building a unified logistics API, is entirely composed of senior developers who recently left remote contracts.
-               </p>
-             </div>
+        {/* AI Intelligence Brief */}
+        {article.ai_context?.key_takeaways?.length > 0 && (
+          <div className="mb-10 rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/5 p-6 relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C9A84C] rounded-l-xl" />
+            <div className="flex items-center gap-2 mb-4 pl-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A84C] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C9A84C]" />
+              </span>
+              <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase">AI Intelligence Brief</span>
+            </div>
+            <ul className="space-y-2 mb-4 pl-1">
+              {article.ai_context.key_takeaways.map((point, i) => (
+                <li key={i} className="flex gap-3 text-sm text-white/80 leading-relaxed">
+                  <span className="text-[#C9A84C] font-bold mt-0.5 shrink-0">→</span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+            {article.ai_context.strategic_implication && (
+              <p className="text-sm text-white/60 pl-1 border-t border-white/10 pt-3 mt-3">
+                <span className="text-[#C9A84C] font-semibold">Strategic Implication: </span>
+                {article.ai_context.strategic_implication}
+              </p>
+            )}
           </div>
+        )}
+
+        <article className="prose prose-invert prose-p:font-sans prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-white/80 max-w-none relative pb-32">
+
+          {/* Free paragraphs */}
+          {freeParagraphs.map((para, i) => (
+            <p key={i} className="mb-6">{para}</p>
+          ))}
+
+          {/* Paywall */}
+          {lockedParagraphs.length > 0 && (
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#0A0F1E]/80 backdrop-blur-[5px] z-10 flex flex-col items-center justify-center border border-white/10 rounded-xl p-8 shadow-2xl">
+                <div className="bg-[#111827] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-6">
+                  <Lock className="w-8 h-8 text-[#C9A84C]" />
+                </div>
+                <h3 className="font-serif text-[28px] text-white mb-3 text-center">
+                  This story is for Founding Members
+                </h3>
+                <p className="text-white/70 text-center mb-8 max-w-md">
+                  Members sustain our in-depth reporting across the continent. Unlock unlimited access to stories, briefings, and country hubs.
+                </p>
+                <a
+                  href="https://ko-fi.com/boastory"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-lg transition-transform hover:-translate-y-0.5"
+                >
+                  Become a Founding Member
+                </a>
+              </div>
+              <div className="opacity-30 select-none pointer-events-none" aria-hidden="true">
+                {lockedParagraphs.map((para, i) => (
+                  <p key={i} className="mb-6">{para}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* If article is short (≤3 paragraphs), show paywall anyway for non-members */}
+          {lockedParagraphs.length === 0 && paragraphs.length > 0 && (
+            <div className="mt-12 p-8 bg-[#111827] border border-[#C9A84C]/20 rounded-xl text-center">
+              <p className="text-white/70 mb-4">Enjoying this story?</p>
+              <a
+                href="https://ko-fi.com/boastory"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+              >
+                Support our reporting
+              </a>
+            </div>
+          )}
         </article>
       </main>
 
-      {/* More Stories Footer */}
+      {/* More Stories */}
       <aside className="bg-[#111827] border-t border-white/5 py-24 px-6 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
@@ -96,39 +199,38 @@ export const BetaArticle = () => {
               View All →
             </Link>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
-              <div className="p-6">
-                <span className="text-2xl mb-4 block">🇷🇼</span>
-                <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">
-                  Kigali's Blueprint for the Climate-Resilient City
-                </h4>
-                <p className="text-sm text-white/50">8 min read</p>
-              </div>
-            </Link>
-            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
-              <div className="p-6">
-                <span className="text-2xl mb-4 block">🇬🇭</span>
-                <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">
-                  Accra's Creative Export Economy is Maturing
-                </h4>
-                <p className="text-sm text-white/50">5 min read</p>
-              </div>
-            </Link>
-            <Link to="/stories" className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
-              <div className="p-6">
-                <span className="text-2xl mb-4 block">🇰🇪</span>
-                <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">
-                  The Geothermal Advantage Quietly Powering Nairobi
-                </h4>
-                <p className="text-sm text-white/50">7 min read</p>
-              </div>
-            </Link>
+            {relatedArticles.length > 0
+              ? relatedArticles.map(a => (
+                  <Link
+                    key={a.slug}
+                    to={`/stories/${a.slug}`}
+                    className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors"
+                  >
+                    <div className="p-6">
+                      <span className="text-2xl mb-4 block">{a.country_flag || FLAG_MAP[a.country_code] || '🌍'}</span>
+                      <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">{a.title}</h4>
+                      <p className="text-sm text-white/50">{a.reading_time_minutes} min read</p>
+                    </div>
+                  </Link>
+                ))
+              : [
+                  { flag: '🇷🇼', title: "Kigali's Blueprint for the Climate-Resilient City", time: 8, slug: 'kigali-infrastructure' },
+                  { flag: '🇬🇭', title: "Accra's Creative Export Economy is Maturing", time: 5, slug: 'accra-creative-economy' },
+                  { flag: '🇰🇪', title: 'The Geothermal Advantage Quietly Powering Nairobi', time: 7, slug: 'nairobi-clean-energy' },
+                ].map(s => (
+                  <Link key={s.slug} to={`/stories/${s.slug}`} className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
+                    <div className="p-6">
+                      <span className="text-2xl mb-4 block">{s.flag}</span>
+                      <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">{s.title}</h4>
+                      <p className="text-sm text-white/50">{s.time} min read</p>
+                    </div>
+                  </Link>
+                ))
+            }
           </div>
         </div>
       </aside>
-
     </div>
   );
 };

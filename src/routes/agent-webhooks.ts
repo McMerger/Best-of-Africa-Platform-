@@ -8,11 +8,135 @@ import { autoTranslateArticle } from '../lib/translate';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// Simple authentication middleware for agent endpoints
-// In a real scenario, this should validate a webhook signature or JWT
-router.use('/*', async (c, next) => {
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/status — public summary of agent health and recent activity
+// (no auth required — safe to display in beta frontend)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/status', async (c) => {
+    const [taskCounts, recentTasks, latestArticle, providerConfig] = await Promise.all([
+        // Task counts by status
+        c.env.DB.prepare(`
+            SELECT status, COUNT(*) as count
+            FROM agent_tasks
+            WHERE created_at > datetime('now', '-24 hours')
+            GROUP BY status
+        `).all<{ status: string; count: number }>(),
+
+        // Recent 5 tasks
+        c.env.DB.prepare(`
+            SELECT id, type, status, created_at, updated_at, completed_at,
+                   CASE WHEN error_message IS NOT NULL THEN error_message ELSE NULL END as error
+            FROM agent_tasks
+            ORDER BY created_at DESC
+            LIMIT 5
+        `).all<Record<string, unknown>>(),
+
+        // Most recently published article
+        c.env.DB.prepare(`
+            SELECT title, slug, published_at, country_code
+            FROM articles
+            WHERE status = 'published'
+            ORDER BY published_at DESC
+            LIMIT 1
+        `).first<{ title: string; slug: string; published_at: string; country_code: string }>(),
+
+        // Active provider info (label only, no keys)
+        c.env.DB.prepare(`
+            SELECT provider, label, model, last_test_status, last_tested_at
+            FROM ai_providers
+            WHERE is_active = 1
+            ORDER BY is_default DESC, created_at ASC
+            LIMIT 1
+        `).first<Record<string, unknown>>(),
+    ]);
+
+    const counts = Object.fromEntries(
+        (taskCounts.results || []).map(r => [r.status, r.count])
+    );
+
+    const pending = (counts.pending || 0);
+    const processing = (counts.processing || 0);
+    const completed24h = (counts.completed || 0);
+    const failed24h = (counts.failed || 0);
+
+    const health = processing > 0 ? 'BUSY' : pending > 0 ? 'IDLE' : 'OPERATIONAL';
+
+    return c.json({
+        health,
+        tasks_24h: { pending, processing, completed: completed24h, failed: failed24h },
+        recent_tasks: recentTasks.results || [],
+        latest_article: latestArticle || null,
+        active_provider: providerConfig || { provider: 'workers_ai', label: 'Cloudflare Workers AI', model: '@cf/meta/llama-3.1-70b-instruct' },
+        generated_at: new Date().toISOString(),
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/stream — Server-Sent Events stream for real-time agent updates
+// Sends a snapshot every 15 seconds; client reconnects automatically.
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/stream', async (c) => {
+    const { readable, writable } = new TransformStream();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+
+    const sendEvent = async (event: string, data: unknown) => {
+        const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+        await writer.write(encoder.encode(payload));
+    };
+
+    // Send initial snapshot immediately, then close (CF Workers has no long-lived connections)
+    c.executionCtx.waitUntil((async () => {
+        try {
+            const [taskCounts, recentTasks, latestArticle] = await Promise.all([
+                c.env.DB.prepare(`
+                    SELECT status, COUNT(*) as count
+                    FROM agent_tasks
+                    WHERE created_at > datetime('now', '-1 hour')
+                    GROUP BY status
+                `).all<{ status: string; count: number }>(),
+                c.env.DB.prepare(`
+                    SELECT id, type, status, created_at, completed_at
+                    FROM agent_tasks ORDER BY created_at DESC LIMIT 10
+                `).all<Record<string, unknown>>(),
+                c.env.DB.prepare(`
+                    SELECT title, slug, published_at, country_code
+                    FROM articles WHERE status = 'published'
+                    ORDER BY published_at DESC LIMIT 3
+                `).all<Record<string, unknown>>(),
+            ]);
+
+            const counts = Object.fromEntries(
+                (taskCounts.results || []).map(r => [r.status, r.count])
+            );
+
+            await sendEvent('agent_status', {
+                health: (counts.processing || 0) > 0 ? 'BUSY' : 'OPERATIONAL',
+                tasks: counts,
+                recent_tasks: recentTasks.results || [],
+                latest_articles: latestArticle.results || [],
+                timestamp: new Date().toISOString(),
+            });
+
+            await sendEvent('heartbeat', { timestamp: new Date().toISOString() });
+        } finally {
+            await writer.close();
+        }
+    })());
+
+    return new Response(readable, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+        },
+    });
+});
+
+// Admin-only auth for task management endpoints
+router.use('/tasks/*', async (c, next) => {
     const authHeader = c.req.header('Authorization');
-    // Using the same admin key for simplicity since agents aren't full users
     if (!authHeader || authHeader !== `Bearer ${c.env.ADMIN_API_KEY}`) {
         return c.json({ error: 'unauthorized', message: 'Agent authorization required' }, 401);
     }

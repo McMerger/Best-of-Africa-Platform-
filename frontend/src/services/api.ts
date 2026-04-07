@@ -53,7 +53,7 @@ export const api = {
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest'),
     getEvents: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
-        return request<{ success: boolean; data: CalendarEvent[] }>(`/services/events?${searchParams}`);
+        return request<{ success: boolean; data: CalendarEvent[] }>(`/events?${searchParams}`);
     },
 
     // Countries

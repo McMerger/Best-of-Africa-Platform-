@@ -581,4 +581,158 @@ router.post('/generate-images', async (c) => {
     });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// ZEROCLAW AGENT EDITORIAL ENDPOINTS
+// Referenced by .zeroclaw/skills/proactive-editorial.md
+// and .zeroclaw/skills/self-improving-editorial.md
+// ───────────────────────────────────────────────────────────────────────────────
+
+// GET /admin/articles?filter=needs_audit — articles needing proactive audit
+// (extends the existing list handler, checked via query param)
+router.get('/articles/needs-audit', async (c) => {
+    const limit = Math.min(parseInt(c.req.query('limit') || '10'), 50);
+
+    const articles = await c.env.DB.prepare(`
+        SELECT a.id, a.title, a.content, a.summary, a.country_code, a.sector_id,
+               a.status, a.last_audited_at, a.created_at,
+               c.name as country_name, s.name as sector_name
+        FROM articles a
+        LEFT JOIN countries c ON a.country_code = c.code
+        LEFT JOIN sectors s ON a.sector_id = s.id
+        WHERE a.status = 'pending_audit'
+           OR (a.status = 'published' AND (a.last_audited_at IS NULL OR a.last_audited_at < datetime('now', '-7 days')))
+        ORDER BY a.created_at DESC
+        LIMIT ?
+    `).bind(limit).all<Record<string, unknown>>();
+
+    return c.json({ data: articles.results || [], count: articles.results?.length || 0 });
+});
+
+// POST /admin/articles/:id/audit — submit audit result from ZeroClaw proactive-editorial skill
+router.post('/articles/:id/audit', async (c) => {
+    const id = c.req.param('id');
+    const body = await c.req.json<{
+        quality_score: number;
+        passed: boolean;
+        issues: string[];
+        recommendation: 'approve' | 'rewrite' | 'delete';
+    }>();
+
+    const article = await c.env.DB.prepare('SELECT id, content FROM articles WHERE id = ?').bind(id).first<{ id: string; content: string }>();
+    if (!article) return c.json({ error: 'not_found' }, 404);
+
+    // Update audit timestamp and optionally status
+    const newStatus = body.recommendation === 'delete' ? 'archived'
+        : body.recommendation === 'approve' ? 'published'
+        : undefined;
+
+    const statusClause = newStatus ? `, status = '${newStatus}'` : '';
+    await c.env.DB.prepare(`
+        UPDATE articles
+        SET last_audited_at = datetime('now'), updated_at = datetime('now')${statusClause}
+        WHERE id = ?
+    `).bind(id).run();
+
+    // Log the audit as a feedback event for self-improvement
+    if (!body.passed) {
+        const feedbackId = crypto.randomUUID();
+        await c.env.DB.prepare(`
+            INSERT INTO article_feedback (id, article_id, feedback_type, comment, original_content, is_processed_by_agent)
+            VALUES (?, ?, 'audit_fail', ?, ?, 0)
+        `).bind(
+            feedbackId, id,
+            `Quality: ${body.quality_score}/100. Issues: ${body.issues.join('; ')}. Recommendation: ${body.recommendation}`,
+            article.content
+        ).run();
+    }
+
+    return c.json({
+        success: true,
+        article_id: id,
+        quality_score: body.quality_score,
+        recommendation: body.recommendation,
+        status_changed_to: newStatus || null,
+    });
+});
+
+// GET /admin/editorial/recent — recent editorial activity for self-improving-editorial skill
+router.get('/editorial/recent', async (c) => {
+    const hours = Math.min(parseInt(c.req.query('hours') || '24'), 168); // max 7 days
+
+    const [auditResults, humanFeedback, qualityScores] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT f.id, f.article_id, f.feedback_type, f.comment, f.created_at,
+                   a.title, a.country_code, a.sector_id
+            FROM article_feedback f
+            LEFT JOIN articles a ON f.article_id = a.id
+            WHERE f.created_at > datetime('now', '-${hours} hours')
+              AND f.feedback_type IN ('audit_fail', 'rejection')
+            ORDER BY f.created_at DESC
+            LIMIT 50
+        `).all<Record<string, unknown>>(),
+
+        c.env.DB.prepare(`
+            SELECT f.id, f.article_id, f.feedback_type, f.comment, f.original_content, f.edited_content, f.created_at
+            FROM article_feedback f
+            WHERE f.created_at > datetime('now', '-${hours} hours')
+              AND f.feedback_type = 'edit'
+              AND f.is_processed_by_agent = 0
+            ORDER BY f.created_at DESC
+            LIMIT 50
+        `).all<Record<string, unknown>>(),
+
+        c.env.DB.prepare(`
+            SELECT engagement_score, country_code, sector_id, created_at
+            FROM articles
+            WHERE status = 'published'
+              AND created_at > datetime('now', '-${hours} hours')
+            ORDER BY created_at DESC
+        `).all<{ engagement_score: number; country_code: string; sector_id: string; created_at: string }>(),
+    ]);
+
+    const scores = qualityScores.results || [];
+    const avgScore = scores.length
+        ? Math.round(scores.reduce((s, r) => s + (r.engagement_score || 0), 0) / scores.length)
+        : null;
+
+    return c.json({
+        audit_results: auditResults.results || [],
+        human_feedback: humanFeedback.results || [],
+        quality_scores: {
+            articles: scores,
+            average: avgScore,
+            total: scores.length,
+        },
+        period_hours: hours,
+        generated_at: new Date().toISOString(),
+    });
+});
+
+// POST /admin/editorial/instruction-update — save learned rules from self-improving-editorial skill
+router.post('/editorial/instruction-update', async (c) => {
+    const body = await c.req.json<{
+        date: string;
+        rules_added: number;
+        summary: string;
+        rules: string[];
+    }>();
+
+    // Store as a special agent_task result for auditing / review
+    const id = crypto.randomUUID();
+    await c.env.DB.prepare(`
+        INSERT INTO agent_tasks (id, type, payload, status, result, completed_at, created_at, updated_at)
+        VALUES (?, 'instruction_update', '{}', 'completed', ?, datetime('now'), datetime('now'), datetime('now'))
+    `).bind(
+        id,
+        JSON.stringify({
+            date: body.date,
+            rules_added: body.rules_added,
+            summary: body.summary,
+            rules: body.rules,
+        })
+    ).run();
+
+    return c.json({ success: true, logged_as_task: id });
+});
+
 export { router as adminRouter };
