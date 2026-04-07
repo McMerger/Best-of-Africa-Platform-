@@ -57,6 +57,7 @@ export interface Article {
     generation_prompt_version?: string;
     ai_headline_variants?: string;
     ai_video_url?: string;
+    ai_context?: { key_takeaways: string[]; strategic_implication: string };
 }
 
 export interface CalendarEvent {

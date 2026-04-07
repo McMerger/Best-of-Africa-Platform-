@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, Search, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
@@ -72,6 +72,16 @@ const StoryCardSkeleton = () => (
 
 export const BetaStories = () => {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  // Debounce search input by 300ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const isSearchMode = debouncedQuery.length > 2;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['featured-articles'],
@@ -79,9 +89,32 @@ export const BetaStories = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: searchData, isFetching: isSearching } = useQuery({
+    queryKey: ['beta-search', debouncedQuery],
+    queryFn: () => api.search(debouncedQuery),
+    enabled: isSearchMode,
+    staleTime: 2 * 60 * 1000,
+  });
+
   const articles: ArticleListItem[] = isError || !data?.data?.length
     ? FALLBACK_ARTICLES
     : data.data.slice(0, 6);
+
+  // Map search results to ArticleListItem shape
+  const searchArticles: ArticleListItem[] = (searchData?.results || []).map((r: any) => ({
+    id: r.id || r.slug,
+    slug: r.slug,
+    title: r.title,
+    summary: r.summary || r.content || '',
+    country_code: r.country_code || '',
+    country_name: r.country_name || '',
+    country_flag: r.country_flag || '',
+    sector_id: r.sector_id || '',
+    sector_name: r.sector_name || '',
+    hero_image_url: r.hero_image_url || '',
+    reading_time_minutes: r.reading_time_minutes || 5,
+    published_at: r.published_at || '',
+  }));
 
   // Collect unique sector names for filter tabs
   const sectors = ['All', ...Array.from(new Set(articles.map(a => a.sector_name).filter(Boolean)))];
@@ -89,6 +122,9 @@ export const BetaStories = () => {
   const filtered = activeFilter === 'All'
     ? articles
     : articles.filter(a => a.sector_name === activeFilter);
+
+  const displayArticles = isSearchMode ? searchArticles : filtered;
+  const showLoading = isSearchMode ? isSearching : isLoading;
 
   return (
     <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] pb-32">
@@ -104,8 +140,39 @@ export const BetaStories = () => {
           </p>
         </header>
 
-        {/* Category Filter Tabs */}
-        {!isLoading && sectors.length > 1 && (
+        {/* Search Bar */}
+        <div className="relative mb-8">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            placeholder="Search stories, countries, sectors…"
+            className="w-full md:max-w-lg bg-[#111827] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C9A84C]/60 focus:ring-1 focus:ring-[#C9A84C]/30 transition-colors"
+          />
+          {searchInput && (
+            <button
+              onClick={() => { setSearchInput(''); setDebouncedQuery(''); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* AI Summary Card */}
+        {isSearchMode && searchData?.ai_answer && (
+          <div className="mb-8 bg-[#C9A84C]/8 border border-[#C9A84C]/25 rounded-xl p-5 flex gap-3">
+            <Sparkles size={16} className="text-[#C9A84C] shrink-0 mt-0.5" />
+            <div>
+              <span className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase block mb-1">AI Summary</span>
+              <p className="text-sm text-white/80 leading-relaxed">{searchData.ai_answer}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Category Filter Tabs — hidden in search mode */}
+        {!isSearchMode && !isLoading && sectors.length > 1 && (
           <div className="flex gap-2 flex-wrap mb-10">
             {sectors.map(sector => (
               <button
@@ -123,11 +190,20 @@ export const BetaStories = () => {
           </div>
         )}
 
+        {/* Search result count */}
+        {isSearchMode && !isSearching && (
+          <p className="text-sm text-white/40 mb-6">
+            {searchArticles.length > 0
+              ? `${searchArticles.length} result${searchArticles.length !== 1 ? 's' : ''} for "${debouncedQuery}"`
+              : `No results found for "${debouncedQuery}"`}
+          </p>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20">
-          {isLoading
+          {showLoading
             ? Array.from({ length: 6 }).map((_, i) => <StoryCardSkeleton key={i} />)
-            : filtered.map((article, index) => {
-                const isLocked = index >= 2;
+            : displayArticles.map((article, index) => {
+                const isLocked = !isSearchMode && index >= 2;
 
                 if (isLocked) {
                   return (
@@ -188,8 +264,10 @@ export const BetaStories = () => {
           }
         </div>
 
-        {!isLoading && filtered.length === 0 && (
-          <p className="text-center text-white/50 py-16">No stories in this category yet.</p>
+        {!showLoading && displayArticles.length === 0 && (
+          <p className="text-center text-white/50 py-16">
+            {isSearchMode ? `No stories matched "${debouncedQuery}".` : 'No stories in this category yet.'}
+          </p>
         )}
 
         <div className="text-center">

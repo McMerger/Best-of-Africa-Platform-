@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Lock, ArrowRight } from 'lucide-react';
+import { Lock, ArrowRight, MapPin, Calendar } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import {
   BetaNav,
   GoldButton,
@@ -12,8 +13,23 @@ import {
   StatCounter,
   AgentStatusPanel
 } from '../../components/beta';
+import { api } from '../../services/api';
 
 export const BetaLanding = () => {
+  const { data: stats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: api.getPlatformStats,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: eventsData } = useQuery({
+    queryKey: ['upcoming-events'],
+    queryFn: () => api.getEvents({ status: 'upcoming', limit: '3' }),
+    staleTime: 30 * 60 * 1000,
+  });
+
+  const upcomingEvents = eventsData?.data?.slice(0, 3) || [];
+
   return (
     <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] overflow-x-hidden">
       <BetaNav />
@@ -72,13 +88,13 @@ export const BetaLanding = () => {
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 divide-y divide-white/10 md:divide-y-0 md:divide-x">
             <div className="pt-8 md:pt-0">
-              <StatCounter value={1.4} label="Billion People" suffix="B" />
+              <StatCounter value={stats?.total_articles ?? 0} label="Stories Published" suffix="+" />
             </div>
             <div className="pt-8 md:pt-0">
-              <StatCounter value={19} label="Median Age" />
+              <StatCounter value={stats?.total_countries ?? 54} label="Countries Covered" />
             </div>
             <div className="pt-8 md:pt-0">
-              <StatCounter value={6} label="Of the 10 fastest growing economies" />
+              <StatCounter value={stats?.total_views ?? 0} label="Readers This Month" suffix="+" />
             </div>
           </div>
         </div>
@@ -185,7 +201,50 @@ export const BetaLanding = () => {
 
       <GoldDivider />
 
-      {/* 5. MISSION BLOCK */}
+      {/* 5. UPCOMING EVENTS STRIP */}
+      {upcomingEvents.length > 0 && (
+        <section className="py-24 px-6 border-b border-white/5 bg-[#0A0F1E]">
+          <div className="container mx-auto max-w-6xl">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+              <div>
+                <SectionLabel text="On the Ground" />
+                <h2 className="font-serif text-[2rem] md:text-[2.5rem] leading-tight">Upcoming across the continent</h2>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {upcomingEvents.map((event, i) => {
+                const dateStr = new Date(event.date_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                return (
+                  <CardReveal key={event.id} delay={i * 0.15}>
+                    <div className="bg-[#111827] rounded-xl border border-white/10 p-6 h-full flex flex-col gap-4 hover:border-[#C9A84C]/30 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold tracking-wider text-[#C9A84C] uppercase bg-[#C9A84C]/10 px-3 py-1 rounded-full border border-[#C9A84C]/20">
+                          {event.category}
+                        </span>
+                        <span className="text-xs text-white/40 font-medium">{dateStr}</span>
+                      </div>
+                      <h3 className="font-serif text-lg leading-snug text-white line-clamp-2">{event.title}</h3>
+                      <div className="mt-auto flex items-center gap-2 text-xs text-white/50">
+                        <MapPin size={12} className="text-[#C9A84C] shrink-0" />
+                        <span className="truncate">{event.location}</span>
+                        {event.country_code && (
+                          <>
+                            <span>·</span>
+                            <Calendar size={12} className="text-[#C9A84C] shrink-0" />
+                            <span>{dateStr}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </CardReveal>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 7. MISSION BLOCK */}
       <section className="py-32 px-6 container mx-auto max-w-4xl text-center">
         <CardReveal>
           <span className="text-6xl mb-8 block opacity-80">🌍</span>
@@ -199,7 +258,7 @@ export const BetaLanding = () => {
         </CardReveal>
       </section>
 
-      {/* 6. MEMBERSHIP TIERS */}
+      {/* 8. MEMBERSHIP TIERS */}
       <section className="py-32 bg-[#050810] border-y border-white/5 relative overflow-hidden">
         {/* Subtle backdrop glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[400px] bg-[#C9A84C] opacity-5 blur-[150px] pointer-events-none rounded-full" />
@@ -273,7 +332,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 7. TRANSPARENCY SECTION */}
+      {/* 9. TRANSPARENCY SECTION */}
       <section className="py-24 px-6 container mx-auto max-w-5xl text-center">
         <h3 className="font-sans font-medium text-white/50 uppercase tracking-widest text-sm mb-12">Where early support goes</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">

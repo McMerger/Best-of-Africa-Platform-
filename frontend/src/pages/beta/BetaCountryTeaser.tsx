@@ -35,6 +35,7 @@ const CountryCardSkeleton = () => (
 
 export const BetaCountryTeaser = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [activeCountry, setActiveCountry] = useState<Country | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['countries'],
@@ -75,7 +76,7 @@ export const BetaCountryTeaser = () => {
                 return (
                   <button
                     key={country.code}
-                    onClick={() => setActiveModal(country.code)}
+                    onClick={() => { setActiveModal(country.code); setActiveCountry(country); }}
                     className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[280px] text-left transition-transform hover:-translate-y-1 duration-300 hover:border-[#C9A84C]/40"
                   >
                     <div className="p-6 h-full flex flex-col justify-between">
@@ -124,14 +125,14 @@ export const BetaCountryTeaser = () => {
       {activeModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0A0F1E]/80 backdrop-blur-sm"
-          onClick={() => setActiveModal(null)}
+          onClick={() => { setActiveModal(null); setActiveCountry(null); }}
         >
           <div
             className="bg-[#111827] border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
             <button
-              onClick={() => setActiveModal(null)}
+              onClick={() => { setActiveModal(null); setActiveCountry(null); }}
               className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
               aria-label="Close modal"
             >
@@ -140,12 +141,45 @@ export const BetaCountryTeaser = () => {
               </svg>
             </button>
             <div className="flex flex-col items-center text-center pt-4">
-              <div className="bg-[#0A0F1E] p-4 rounded-full border border-[#C9A84C]/30 shadow-inner mb-6">
-                <Lock className="w-8 h-8 text-[#C9A84C]" />
+              <div className="flex items-center gap-3 mb-4">
+                {activeCountry?.flag_emoji && (
+                  <span className="text-4xl">{activeCountry.flag_emoji}</span>
+                )}
+                <h3 className="font-serif text-[24px] text-white">
+                  {activeCountry?.name || 'Country'} Intelligence
+                </h3>
               </div>
-              <h3 className="font-serif text-[24px] mb-3 text-white">Full Intelligence Unlocks at Launch</h3>
-              <p className="text-white/70 text-sm leading-relaxed mb-8">
-                Detailed metrics, deep-dive dossiers, and localized intelligence hubs for all 54 nations are restricted to the full platform release. Founding Members get early access.
+
+              {/* Intelligence Score Preview */}
+              {activeCountry && (activeCountry.diplomacy_score > 0 || activeCountry.image_strength_score > 0) && (
+                <div className="w-full bg-[#0A0F1E] rounded-xl border border-white/10 p-5 mb-6 text-left">
+                  <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-4">Intelligence Preview</p>
+                  {[
+                    { label: 'Diplomacy Index', value: activeCountry.diplomacy_score },
+                    { label: 'Investment Readiness', value: activeCountry.image_strength_score },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="mb-3 last:mb-0">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-xs text-white/60">{label}</span>
+                        <span className="text-xs font-semibold text-[#C9A84C]">{(value * 100).toFixed(0)}</span>
+                      </div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#C9A84C] rounded-full transition-all duration-700"
+                          style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-white/30 mt-4 flex items-center gap-1.5">
+                    <Lock size={10} className="text-[#C9A84C]" />
+                    Full 12-point country dossier unlocked for members
+                  </p>
+                </div>
+              )}
+
+              <p className="text-white/70 text-sm leading-relaxed mb-6">
+                Deep-dive dossiers, localized intelligence hubs, and real-time signals for all 54 nations are available to Founding Members.
               </p>
               <a
                 href="https://ko-fi.com/boastory"

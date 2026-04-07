@@ -108,6 +108,34 @@ export const BetaArticle = () => {
           </div>
         </header>
 
+        {/* AI Intelligence Brief */}
+        {article.ai_context?.key_takeaways?.length > 0 && (
+          <div className="mb-10 rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/5 p-6 relative overflow-hidden">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C9A84C] rounded-l-xl" />
+            <div className="flex items-center gap-2 mb-4 pl-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A84C] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C9A84C]" />
+              </span>
+              <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase">AI Intelligence Brief</span>
+            </div>
+            <ul className="space-y-2 mb-4 pl-1">
+              {article.ai_context.key_takeaways.map((point, i) => (
+                <li key={i} className="flex gap-3 text-sm text-white/80 leading-relaxed">
+                  <span className="text-[#C9A84C] font-bold mt-0.5 shrink-0">→</span>
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+            {article.ai_context.strategic_implication && (
+              <p className="text-sm text-white/60 pl-1 border-t border-white/10 pt-3 mt-3">
+                <span className="text-[#C9A84C] font-semibold">Strategic Implication: </span>
+                {article.ai_context.strategic_implication}
+              </p>
+            )}
+          </div>
+        )}
+
         <article className="prose prose-invert prose-p:font-sans prose-p:text-[17px] prose-p:leading-[1.8] prose-p:text-white/80 max-w-none relative pb-32">
 
           {/* Free paragraphs */}
