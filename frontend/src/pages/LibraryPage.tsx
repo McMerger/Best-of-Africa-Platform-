@@ -63,7 +63,7 @@ export const LibraryPage: React.FC = () => {
                                         </p>
                                     </div>
                                     <div className="p-6 pt-0 mt-auto flex items-center justify-between text-muted-foreground border-t border-border/50 bg-muted/5">
-                                        <span className="text-xs font-mono">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Recently Saved'}</span>
+                                        <span className="text-xs font-mono">{item.published_at ? new Date(item.published_at).toLocaleDateString() : 'Recently Saved'}</span>
                                         <Button size="icon" variant="ghost" className="rounded-full h-8 w-8 hover:bg-primary hover:text-primary-foreground">
                                             <ArrowRightIcon className="h-4 w-4" />
                                         </Button>
