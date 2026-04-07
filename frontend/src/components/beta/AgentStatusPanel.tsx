@@ -49,6 +49,8 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   audit_article:         'Editorial Audit',
   evolve_instructions:   'Self-Improvement',
   instruction_update:    'Rule Update',
+  country_enrichment:    'Country Enrichment',
+  situation_report:      'SitRep Generation',
 };
 
 const HEALTH_CONFIG = {

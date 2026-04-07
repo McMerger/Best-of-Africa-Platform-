@@ -7,9 +7,19 @@ import { api } from '../../services/api';
 import type { ArticleListItem } from '../../types';
 
 const FLAG_MAP: Record<string, string> = {
-  NG: '🇳🇬', KE: '🇰🇪', ZA: '🇿🇦', GH: '🇬🇭', ET: '🇪🇹',
-  RW: '🇷🇼', EG: '🇪🇬', TZ: '🇹🇿', UG: '🇺🇬', CI: '🇨🇮',
-  SN: '🇸🇳', MA: '🇲🇦', TN: '🇹🇳', AO: '🇦🇴', MZ: '🇲🇿',
+  // North Africa
+  DZ: '🇩🇿', EG: '🇪🇬', LY: '🇱🇾', MA: '🇲🇦', MR: '🇲🇷', SD: '🇸🇩', TN: '🇹🇳',
+  // West Africa
+  BJ: '🇧🇯', BF: '🇧🇫', CV: '🇨🇻', CI: '🇨🇮', GM: '🇬🇲', GH: '🇬🇭', GN: '🇬🇳',
+  GW: '🇬🇼', LR: '🇱🇷', ML: '🇲🇱', NE: '🇳🇪', NG: '🇳🇬', SN: '🇸🇳', SL: '🇸🇱', TG: '🇹🇬',
+  // East Africa
+  BI: '🇧🇮', KM: '🇰🇲', DJ: '🇩🇯', ER: '🇪🇷', ET: '🇪🇹', KE: '🇰🇪', MG: '🇲🇬',
+  MU: '🇲🇺', MW: '🇲🇼', MZ: '🇲🇿', RW: '🇷🇼', SC: '🇸🇨', SO: '🇸🇴', SS: '🇸🇸',
+  ST: '🇸🇹', TZ: '🇹🇿', UG: '🇺🇬',
+  // Central Africa
+  AO: '🇦🇴', CM: '🇨🇲', CF: '🇨🇫', TD: '🇹🇩', CD: '🇨🇩', CG: '🇨🇬', GQ: '🇬🇶', GA: '🇬🇦',
+  // Southern Africa
+  BW: '🇧🇼', SZ: '🇸🇿', LS: '🇱🇸', NA: '🇳🇦', ZA: '🇿🇦', ZM: '🇿🇲', ZW: '🇿🇼',
 };
 
 const ArticleSkeleton = () => (

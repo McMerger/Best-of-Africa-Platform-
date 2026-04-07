@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import type { Env, Country } from '../types';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, invalidateCache, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -409,6 +409,52 @@ router.get('/:code/relationships', async (c) => {
         relationships: relationships,
         updated_at: new Date().toISOString()
     });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// PATCH /countries/:code — Agent-only enrichment endpoint
+// Allows ZeroClaw to write intelligence data back to the platform
+// ───────────────────────────────────────────────────────────────────────────────
+router.patch('/:code', async (c) => {
+    const auth = c.req.header('Authorization');
+    if (!auth || auth !== `Bearer ${c.env.ADMIN_API_KEY}`) {
+        return c.json({ error: 'unauthorized' }, 401);
+    }
+
+    const code = c.req.param('code').toUpperCase();
+    const body = await c.req.json();
+
+    const ALLOWED = [
+        'diplomacy_score', 'image_strength_score', 'fdi_inflow_usd', 'fdi_yoy_growth',
+        'investment_highlights', 'tourism_highlights', 'key_narratives',
+        'ai_situation_report', 'hero_image_url', 'description',
+    ] as const;
+
+    const updates: Record<string, unknown> = {};
+    for (const field of ALLOWED) {
+        if (body[field] !== undefined) {
+            updates[field] = (field === 'investment_highlights' || field === 'tourism_highlights')
+                ? JSON.stringify(body[field])
+                : body[field];
+        }
+    }
+
+    if (!Object.keys(updates).length) {
+        return c.json({ error: 'no_valid_fields', message: 'No patchable fields provided' }, 400);
+    }
+
+    const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+    await c.env.DB.prepare(
+        `UPDATE countries SET ${setClauses}, updated_at = datetime('now') WHERE code = ?`
+    ).bind(...Object.values(updates), code).run();
+
+    await Promise.all([
+        invalidateCache(c.env, CACHE_KEYS.COUNTRIES_LIST),
+        invalidateCache(c.env, CACHE_KEYS.countryStats(code)),
+        invalidateCache(c.env, CACHE_KEYS.countrySituation(code)),
+    ]);
+
+    return c.json({ success: true, updated: Object.keys(updates) });
 });
 
 export { router as countriesRouter };

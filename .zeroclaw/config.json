@@ -74,6 +74,26 @@
           "fetch_recent": "GET /api/v1/admin/editorial/recent?hours=24",
           "submit_update": "POST /api/v1/admin/editorial/instruction-update"
         }
+      },
+      {
+        "name": "country-enrichment",
+        "skill": "country-enrichment",
+        "cron": "0 */6 * * *",
+        "message": "Poll for country_enrichment tasks. For each task, research diplomacy scores, FDI data, and key narratives for the given African country, then submit results back to the platform.",
+        "api_endpoints": {
+          "poll": "GET /api/v1/agent/tasks/pending?type=country_enrichment",
+          "complete": "POST /api/v1/agent/tasks/complete"
+        }
+      },
+      {
+        "name": "situation-reporter",
+        "skill": "situation-reporter",
+        "cron": "0 */12 * * *",
+        "message": "Poll for situation_report tasks. Generate a 3-paragraph intelligence situation report for each country and submit back to the platform.",
+        "api_endpoints": {
+          "poll": "GET /api/v1/agent/tasks/pending?type=situation_report",
+          "complete": "POST /api/v1/agent/tasks/complete"
+        }
       }
     ]
   }

@@ -5,6 +5,7 @@ import { validate } from '../lib';
 import { generateArticleImage } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { autoTranslateArticle } from '../lib/translate';
+import { invalidateCache, CACHE_KEYS } from '../lib/cache';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -147,15 +148,19 @@ router.use('/tasks/*', async (c, next) => {
 // GET /agent/tasks/pending - Fetch the next available task
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/tasks/pending', async (c) => {
-    // We use a transaction to safely fetch and lock a task
-    // D1 doesn't have true FOR UPDATE SKIP LOCKED, so we do a simple query and atomic update
+    // Optional type filter so individual skills can poll only their task type
+    const { type } = c.req.query();
+    const typeClause = type ? `AND type = ?` : '';
+    const bindings: unknown[] = type ? [type] : [];
+
     const pendingTask = await c.env.DB.prepare(`
-        SELECT id, type, payload 
-        FROM agent_tasks 
-        WHERE status = 'pending' 
-        ORDER BY created_at ASC 
+        SELECT id, type, payload
+        FROM agent_tasks
+        WHERE status = 'pending'
+        ${typeClause}
+        ORDER BY created_at ASC
         LIMIT 1
-    `).first<{ id: string, type: string, payload: string }>();
+    `).bind(...bindings).first<{ id: string, type: string, payload: string }>();
 
     if (!pendingTask) {
         return c.json({ data: null, message: 'No pending tasks' });
@@ -306,6 +311,45 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
         } catch (e) {
             console.error('Failed to process completed article generation task', e);
         }
+    }
+
+    // ── country_enrichment ────────────────────────────────────────────────────
+    if (task?.type === 'country_enrichment' && payload.status === 'completed' && payload.result) {
+        try {
+            const r = payload.result;
+            const code = r.country_code?.toUpperCase();
+            if (code) {
+                const patch: Record<string, unknown> = {};
+                if (r.diplomacy_score     != null) patch.diplomacy_score     = r.diplomacy_score;
+                if (r.image_strength_score != null) patch.image_strength_score = r.image_strength_score;
+                if (r.fdi_inflow_usd      != null) patch.fdi_inflow_usd      = r.fdi_inflow_usd;
+                if (r.fdi_yoy_growth      != null) patch.fdi_yoy_growth      = r.fdi_yoy_growth;
+                if (r.investment_highlights)        patch.investment_highlights = JSON.stringify(r.investment_highlights);
+                if (r.key_narratives)               patch.key_narratives      = r.key_narratives;
+
+                if (Object.keys(patch).length) {
+                    const set = Object.keys(patch).map(k => `${k} = ?`).join(', ');
+                    await c.env.DB.prepare(
+                        `UPDATE countries SET ${set}, updated_at = datetime('now') WHERE code = ?`
+                    ).bind(...Object.values(patch), code).run();
+                    await invalidateCache(c.env, CACHE_KEYS.COUNTRIES_LIST);
+                    await invalidateCache(c.env, CACHE_KEYS.countryStats(code));
+                }
+            }
+        } catch (e) { console.error('country_enrichment handler error', e); }
+    }
+
+    // ── situation_report ──────────────────────────────────────────────────────
+    if (task?.type === 'situation_report' && payload.status === 'completed' && payload.result) {
+        try {
+            const { country_code, situation_report } = payload.result;
+            if (country_code && situation_report) {
+                await c.env.DB.prepare(
+                    `UPDATE countries SET ai_situation_report = ?, updated_at = datetime('now') WHERE code = ?`
+                ).bind(situation_report, country_code.toUpperCase()).run();
+                await invalidateCache(c.env, CACHE_KEYS.countrySituation(country_code.toUpperCase()));
+            }
+        } catch (e) { console.error('situation_report handler error', e); }
     }
 
     return c.json({ success: true, message: 'Task status updated' });
