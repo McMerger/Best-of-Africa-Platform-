@@ -72,6 +72,7 @@ const StoryCardSkeleton = () => (
 
 export const BetaStories = () => {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeCountry, setActiveCountry] = useState('All');
   const [searchInput, setSearchInput] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -116,12 +117,13 @@ export const BetaStories = () => {
     published_at: r.published_at || '',
   }));
 
-  // Collect unique sector names for filter tabs
+  // Collect unique sector and country names for filter tabs
   const sectors = ['All', ...Array.from(new Set(articles.map(a => a.sector_name).filter(Boolean)))];
+  const countries = ['All', ...Array.from(new Set(articles.map(a => a.country_name).filter(Boolean)))];
 
-  const filtered = activeFilter === 'All'
-    ? articles
-    : articles.filter(a => a.sector_name === activeFilter);
+  const filtered = articles
+    .filter(a => activeFilter === 'All' || a.sector_name === activeFilter)
+    .filter(a => activeCountry === 'All' || a.country_name === activeCountry);
 
   const displayArticles = isSearchMode ? searchArticles : filtered;
   const showLoading = isSearchMode ? isSearching : isLoading;
@@ -171,13 +173,13 @@ export const BetaStories = () => {
           </div>
         )}
 
-        {/* Category Filter Tabs — hidden in search mode */}
+        {/* Sector Filter Tabs — hidden in search mode */}
         {!isSearchMode && !isLoading && sectors.length > 1 && (
-          <div className="flex gap-2 flex-wrap mb-10">
+          <div className="flex gap-2 flex-wrap mb-3">
             {sectors.map(sector => (
               <button
                 key={sector}
-                onClick={() => setActiveFilter(sector)}
+                onClick={() => { setActiveFilter(sector); setActiveCountry('All'); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                   activeFilter === sector
                     ? 'bg-[#C9A84C] text-[#0A0F1E] border-[#C9A84C]'
@@ -185,6 +187,28 @@ export const BetaStories = () => {
                 }`}
               >
                 {sector}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Country Filter Tabs — hidden in search mode, only shown when 2+ countries */}
+        {!isSearchMode && !isLoading && countries.length > 2 && (
+          <div className="flex gap-2 flex-wrap mb-10">
+            <span className="text-[10px] font-bold tracking-widest text-white/25 uppercase self-center mr-1">Country</span>
+            {countries.map(country => (
+              <button
+                key={country}
+                onClick={() => setActiveCountry(country)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+                  activeCountry === country
+                    ? 'bg-white/15 text-white border-white/30'
+                    : 'border-white/10 text-white/40 hover:border-white/25 hover:text-white/70'
+                }`}
+              >
+                {country === 'All'
+                  ? 'All Countries'
+                  : `${articles.find(a => a.country_name === country)?.country_flag || ''} ${country}`}
               </button>
             ))}
           </div>

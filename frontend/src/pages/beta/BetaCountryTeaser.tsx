@@ -333,6 +333,14 @@ export const BetaCountryTeaser = () => {
                 </div>
               </div>
 
+              {/* AI Situation Report */}
+              {(activeCountry as Country).ai_situation_report && (
+                <div className="bg-[#0A0F1E] rounded-xl border border-white/10 p-4 mb-4">
+                  <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-2">Current Situation</p>
+                  <p className="text-xs text-white/70 leading-relaxed">{(activeCountry as Country).ai_situation_report}</p>
+                </div>
+              )}
+
               {/* Intelligence Score Preview */}
               {activeCountry && ((activeCountry as Country).diplomacy_score > 0 || (activeCountry as Country).image_strength_score > 0) && (
                 <div className="bg-[#0A0F1E] rounded-xl border border-white/10 p-5 mb-5">
@@ -360,6 +368,51 @@ export const BetaCountryTeaser = () => {
                     <Lock size={10} className="text-[#C9A84C]" />
                     Full 12-point country dossier unlocked for members
                   </p>
+                </div>
+              )}
+
+              {/* FDI Mini-Bar */}
+              {(activeCountry as Country).fdi_inflow_usd != null && (
+                <div className="bg-[#0A0F1E] rounded-xl border border-white/10 px-4 py-3 mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-0.5">FDI Inflow</p>
+                    <p className="text-base font-semibold text-white font-sans">
+                      ${((activeCountry as Country).fdi_inflow_usd! / 1e9).toFixed(1)}B
+                    </p>
+                  </div>
+                  {(activeCountry as Country).fdi_yoy_growth != null && (
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      (activeCountry as Country).fdi_yoy_growth! >= 0
+                        ? 'text-green-400 bg-green-400/10'
+                        : 'text-red-400 bg-red-400/10'
+                    }`}>
+                      {(activeCountry as Country).fdi_yoy_growth! >= 0 ? '▲' : '▼'} {Math.abs((activeCountry as Country).fdi_yoy_growth!).toFixed(1)}% YoY
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Portal Links */}
+              {((activeCountry as Country).visa_portal_url || (activeCountry as Country).business_portal_url || (activeCountry as Country).tourism_portal_url) && (
+                <div className="flex gap-2 mb-4">
+                  {(activeCountry as Country).visa_portal_url && (
+                    <a href={(activeCountry as Country).visa_portal_url} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 text-center text-[10px] font-bold uppercase tracking-wider border border-white/15 text-white/50 px-2 py-2 rounded-lg hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-colors">
+                      🛂 Visa
+                    </a>
+                  )}
+                  {(activeCountry as Country).business_portal_url && (
+                    <a href={(activeCountry as Country).business_portal_url} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 text-center text-[10px] font-bold uppercase tracking-wider border border-white/15 text-white/50 px-2 py-2 rounded-lg hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-colors">
+                      💼 Invest
+                    </a>
+                  )}
+                  {(activeCountry as Country).tourism_portal_url && (
+                    <a href={(activeCountry as Country).tourism_portal_url} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 text-center text-[10px] font-bold uppercase tracking-wider border border-white/15 text-white/50 px-2 py-2 rounded-lg hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-colors">
+                      ✈️ Visit
+                    </a>
+                  )}
                 </div>
               )}
 

@@ -199,9 +199,46 @@ export const BetaLanding = () => {
         </div>
       </section>
 
+      {/* 5. CONTINENTAL COVERAGE TEASER */}
+      <section className="py-20 px-6 bg-[#080D1A] border-y border-white/5">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-10">
+            <SectionLabel text="Platform Intelligence" />
+            <h2 className="font-serif text-[1.75rem] md:text-[2.5rem] leading-tight">
+              5 regions. 54 countries. One feed.
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {[
+              { region: 'North',    emoji: '🌅', count: 7,  highlight: 'Gas & Solar' },
+              { region: 'West',     emoji: '🌊', count: 16, highlight: 'Fintech & Cocoa' },
+              { region: 'East',     emoji: '🦁', count: 17, highlight: 'Aviation & Logistics' },
+              { region: 'Central',  emoji: '🌿', count: 9,  highlight: 'Critical Minerals' },
+              { region: 'Southern', emoji: '💎', count: 7,  highlight: 'Mining & Finance' },
+            ].map((r, i) => (
+              <CardReveal key={r.region} delay={i * 0.08}>
+                <Link to="/countries"
+                  className="block bg-[#111827] rounded-xl border border-white/10 p-5 text-center hover:border-[#C9A84C]/30 transition-colors group"
+                >
+                  <div className="text-3xl mb-2">{r.emoji}</div>
+                  <div className="font-serif text-base md:text-lg text-white group-hover:text-[#C9A84C] transition-colors">{r.region}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] my-1">{r.count} Nations</div>
+                  <div className="text-[11px] text-white/35">{r.highlight}</div>
+                </Link>
+              </CardReveal>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/countries" className="text-[#C9A84C] font-semibold text-sm tracking-wider uppercase hover:opacity-75 transition-opacity">
+              Explore All Countries →
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <GoldDivider />
 
-      {/* 5. UPCOMING EVENTS STRIP */}
+      {/* 6. UPCOMING EVENTS STRIP */}
       {upcomingEvents.length > 0 && (
         <section className="py-24 px-6 border-b border-white/5 bg-[#0A0F1E]">
           <div className="container mx-auto max-w-6xl">

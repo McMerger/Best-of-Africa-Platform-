@@ -735,4 +735,89 @@ router.post('/editorial/instruction-update', async (c) => {
     return c.json({ success: true, logged_as_task: id });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /admin/agent-tasks/queue-country-enrichment
+// Seeds country_enrichment tasks for countries missing scores/FDI data
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/agent-tasks/queue-country-enrichment', async (c) => {
+    const missing = await c.env.DB.prepare(`
+        SELECT code, name FROM countries
+        WHERE diplomacy_score IS NULL
+           OR diplomacy_score = 0.5
+           OR fdi_inflow_usd IS NULL
+        ORDER BY name ASC
+    `).all<{ code: string; name: string }>();
+
+    let queued = 0;
+    for (const country of missing.results || []) {
+        const existing = await c.env.DB.prepare(`
+            SELECT id FROM agent_tasks
+            WHERE type = 'country_enrichment'
+              AND json_extract(payload, '$.country_code') = ?
+              AND status IN ('pending', 'processing')
+            LIMIT 1
+        `).bind(country.code).first();
+
+        if (!existing) {
+            await c.env.DB.prepare(`
+                INSERT INTO agent_tasks (id, type, payload, status, created_at, updated_at)
+                VALUES (?, 'country_enrichment', ?, 'pending', datetime('now'), datetime('now'))
+            `).bind(
+                crypto.randomUUID(),
+                JSON.stringify({ country_code: country.code, country_name: country.name })
+            ).run();
+            queued++;
+        }
+    }
+
+    return c.json({ success: true, queued, total_missing: missing.results?.length ?? 0 });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /admin/agent-tasks/queue-situation-reports
+// Seeds situation_report tasks for countries missing or with stale SitReps
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/agent-tasks/queue-situation-reports', async (c) => {
+    const countries = await c.env.DB.prepare(`
+        SELECT code, name FROM countries
+        WHERE ai_situation_report IS NULL
+           OR updated_at < datetime('now', '-48 hours')
+        ORDER BY name ASC
+    `).all<{ code: string; name: string }>();
+
+    let queued = 0;
+    for (const country of countries.results || []) {
+        const existing = await c.env.DB.prepare(`
+            SELECT id FROM agent_tasks
+            WHERE type = 'situation_report'
+              AND json_extract(payload, '$.country_code') = ?
+              AND status IN ('pending', 'processing')
+            LIMIT 1
+        `).bind(country.code).first();
+
+        if (!existing) {
+            const headlines = await c.env.DB.prepare(`
+                SELECT title FROM articles
+                WHERE country_code = ? AND status = 'published'
+                ORDER BY published_at DESC LIMIT 5
+            `).bind(country.code).all<{ title: string }>();
+
+            await c.env.DB.prepare(`
+                INSERT INTO agent_tasks (id, type, payload, status, created_at, updated_at)
+                VALUES (?, 'situation_report', ?, 'pending', datetime('now'), datetime('now'))
+            `).bind(
+                crypto.randomUUID(),
+                JSON.stringify({
+                    country_code: country.code,
+                    country_name: country.name,
+                    recent_headlines: (headlines.results || []).map(h => h.title),
+                })
+            ).run();
+            queued++;
+        }
+    }
+
+    return c.json({ success: true, queued, total_eligible: countries.results?.length ?? 0 });
+});
+
 export { router as adminRouter };
