@@ -48,6 +48,11 @@ export interface Article {
     engagement_score: number;
     published_at: string;
     is_sponsored: boolean;
+    // Optional fields populated by the API depending on context / member status
+    author_name?: string;
+    paywall?: boolean;
+    meta_title?: string;
+    meta_description?: string;
     ai_sentiment_score?: number;
     ai_sentiment_label?: string;
     ai_investor_brief?: string;

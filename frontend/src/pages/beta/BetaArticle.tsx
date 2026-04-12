@@ -8,7 +8,13 @@ import { BetaNav, BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
-import type { ArticleListItem } from '../../types';
+import type { Article, ArticleListItem, Country } from '../../types';
+
+interface ArticleResponse {
+  article: Article;
+  country?: Country;
+  member?: boolean;
+}
 
 // Track reading progress based on a target element's position
 function useReadingProgress(targetId: string) {
@@ -143,7 +149,7 @@ export const BetaArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const readingProgress = useReadingProgress('article-root');
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError } = useQuery<ArticleResponse>({
     queryKey: ['article', slug],
     queryFn: () => api.getArticle(slug!),
     enabled: !!slug,
@@ -184,12 +190,12 @@ export const BetaArticle = () => {
   const flag = country?.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
   const categoryLabel = article.tags?.[0] || '';
   const countryLabel = country?.name || article.country_code;
-  const authorName = (article as any).author_name || 'Best of Africa Desk';
+  const authorName = article.author_name || 'Best of Africa Desk';
 
   // ── Paywall: trust the API's server-side decision ─────────────────────────
   // The backend already truncated content for non-members and set paywall:true
-  const isPaywalled = !!(article as any).paywall;
-  const isMember = !!(data as any).member;
+  const isPaywalled = !!article.paywall;
+  const isMember = !!data.member;
 
   // Content is whatever the API returned — full for members, truncated for guests
   const articleContent = article.content || '';
@@ -414,7 +420,7 @@ export const BetaArticle = () => {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {relatedArticles.length > 0
+            {displayRelated.length > 0
               ? displayRelated.map((a: ArticleListItem) => (
                   <Link
                     key={a.slug}

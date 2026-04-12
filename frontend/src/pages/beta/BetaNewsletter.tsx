@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav, BetaFooter } from '../../components/beta';
 import { SEO } from '../../components/SEO';
@@ -45,7 +46,7 @@ export const BetaNewsletter = () => {
   };
 
   // ── Success State ──────────────────────────────────────────────────────────
-  if (phase === 'success') {
+  if (status === 'success') {
     return (
       <div className="min-h-screen bg-[#0A0F1E] text-white flex flex-col selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
         <SEO title="Subscribed | Best of Africa" />
@@ -92,27 +93,29 @@ export const BetaNewsletter = () => {
             </p>
           </div>
 
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="Your email address"
-                required
-                disabled={status === 'loading'}
-                autoComplete="email"
-                className="w-full bg-[#111827] border border-white/20 text-white rounded-lg px-6 py-4 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/30 font-sans disabled:opacity-50"
-              />
-              {status === 'error' && (
-                <p className="text-red-400 text-sm -mt-2" role="alert">{errorMessage}</p>
-              )}
-              <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="w-full bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-              >
-                {status === 'loading' ? 'Subscribing…' : 'Subscribe free'}
-              </button>
-            </form>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-4 mb-8 w-full">
+            <input
+              ref={inputRef}
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Your email address"
+              required
+              disabled={status === 'loading'}
+              autoComplete="email"
+              className="w-full bg-[#111827] border border-white/20 text-white rounded-lg px-6 py-4 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/30 font-sans disabled:opacity-50"
+            />
+            {status === 'error' && (
+              <p className="text-red-400 text-sm -mt-2" role="alert">{errorMessage}</p>
+            )}
+            <button
+              type="submit"
+              disabled={status === 'loading'}
+              className="w-full bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
+              {status === 'loading' ? 'Subscribing…' : 'Subscribe free'}
+            </button>
+          </form>
 
           {/* Benefits */}
           <div className="w-full bg-[#111827] rounded-xl border border-white/5 p-8 text-left mb-8 shadow-inner">

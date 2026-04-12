@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
-import type { ArticleListItem } from '../../types';
+import { FALLBACK_ARTICLES } from '../../constants/beta';
+import type { ArticleListItem, SearchResult } from '../../types';
 
 const StoryCardSkeleton = () => (
   <div className="bg-[#111827] rounded-xl border border-white/10 h-[380px] animate-pulse">
@@ -65,8 +65,8 @@ export const BetaStories = () => {
       } else {
         // Append new articles, filter dupes
         setAllArticles(prev => {
-          const newIds = new Set(data.data.map((a: any) => a.id || a.slug));
-          const filteredPrev = prev.filter((a: any) => !newIds.has(a.id || a.slug));
+          const newIds = new Set(data.data.map((a: ArticleListItem) => a.id || a.slug));
+          const filteredPrev = prev.filter((a: ArticleListItem) => !newIds.has(a.id || a.slug));
           return [...filteredPrev, ...data.data];
         });
       }
@@ -93,21 +93,12 @@ export const BetaStories = () => {
     : allArticles;
 
   // Map search results to ArticleListItem shape
+
   const searchArticles: ArticleListItem[] = isCountryCode
     ? (countryCodeData?.data || [])
-    : (searchData?.results || []).map((r: any) => ({
-        id: r.id || r.slug,
-        slug: r.slug,
-        title: r.title,
-        summary: r.summary || r.content || '',
-        country_code: r.country_code || '',
-        country_name: r.country_name || '',
-        country_flag: r.country_flag || '',
-        sector_id: r.sector_id || '',
-        sector_name: r.sector_name || '',
-        hero_image_url: r.hero_image_url || '',
-        reading_time_minutes: r.reading_time_minutes || 5,
-        published_at: r.published_at || '',
+    : (searchData?.results || []).map((r: SearchResult) => ({
+        ...r.article,
+        id: r.article.id || r.article.slug,
       }));
 
   // Collect unique sector names for filter tabs
@@ -288,7 +279,7 @@ export const BetaStories = () => {
         </div>
 
         {/* Load More Button (Only outside search mode, if activeFilter is all, and there is more data) */}
-        {!showLoading && !isSearchMode && activeFilter === 'All' && data?.pagination?.has_next && (
+        {!showLoading && !isSearchMode && activeFilter === 'All' && (data as any)?.pagination && (data as any).pagination.page < (data as any).pagination.total_pages && (
           <div className="flex justify-center mb-20 text-center">
             <button
               onClick={() => setPage(p => p + 1)}

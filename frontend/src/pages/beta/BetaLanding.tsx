@@ -234,7 +234,7 @@ export const BetaLanding = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {upcomingEvents.map((event, i) => {
-                const dateStr = new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const dateStr = new Date(event.date_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 return (
                   <CardReveal key={event.id} delay={i * 0.15}>
                     <div className="bg-[#111827] rounded-xl border border-white/10 p-6 h-full flex flex-col gap-4 hover:border-[#C9A84C]/30 transition-colors">

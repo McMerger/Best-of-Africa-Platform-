@@ -77,6 +77,25 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
   },
 ];
 
+export const TIER_LABELS: Record<string, { title: string; desc: string }> = {
+  basic: {
+    title: 'Basic Reader',
+    desc: 'You have limited free access to content. Join a membership tier for full intelligence.'
+  },
+  supporter: {
+    title: 'Supporter',
+    desc: 'You have unlimited access to stories and selected newsletters.'
+  },
+  founding: {
+    title: 'Founding Member',
+    desc: 'You have full access to the beta platform and direct input on future priorities.'
+  },
+  partner: {
+    title: 'Partner',
+    desc: 'You receive monthly executive briefings and have a direct line to the editorial team.'
+  }
+};
+
 // ─── Demo / fallback articles (shown when API is unavailable) ─────────────────
 
 export const FALLBACK_ARTICLES: ArticleListItem[] = [

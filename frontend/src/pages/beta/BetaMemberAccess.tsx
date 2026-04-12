@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { CheckCircle, Mail, ArrowRight, Lock, RefreshCw } from 'lucide-react';
+import { Mail, ArrowRight, Lock, RefreshCw } from 'lucide-react';
 import { BetaNav, BetaFooter, BetaDashboard } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
@@ -14,17 +13,13 @@ export const memberAuth = {
   isMember: () => !!localStorage.getItem('boa_auth_token'),
 };
 
-// ─── Tier display ──────────────────────────────────────────────────────────────
-const TIER_LABELS: Record<string, { label: string; color: string; desc: string }> = {
-  basic:      { label: 'Supporter',       color: '#C9A84C',  desc: 'Full article access' },
-  premium:    { label: 'Founding Member', color: '#E8C96A',  desc: 'Full access + country intelligence' },
-  enterprise: { label: 'Founding Patron', color: '#fff',     desc: 'Full access + priority briefings' },
-};
+
 
 export const BetaMemberAccess = () => {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [phase, setPhase] = useState<'checking' | 'form' | 'otp' | 'loading' | 'success' | 'error' | 'expired'>('checking');
+  const [phase, setPhase] = useState<'checking' | 'form' | 'otp' | 'success' | 'error' | 'expired'>('checking');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [memberData, setMemberData] = useState<{ tier: string; name: string } | null>(null);
 
@@ -51,7 +46,7 @@ export const BetaMemberAccess = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPhase('loading');
+    setIsSubmitting(true);
     setErrorMsg('');
 
     try {
@@ -76,13 +71,14 @@ export const BetaMemberAccess = () => {
         ? 'Your membership has expired. Please renew on Ko-fi to restore access.'
         : msg
       );
+      setIsSubmitting(false);
       setPhase('error');
     }
   };
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPhase('loading');
+    setIsSubmitting(true);
     setErrorMsg('');
 
     try {
@@ -94,6 +90,7 @@ export const BetaMemberAccess = () => {
         }
       );
 
+      setIsSubmitting(false);
       if (res.ok && res.token) {
         memberAuth.setToken(res.token);
         setMemberData({ tier: res.tier, name: res.name });
@@ -108,12 +105,13 @@ export const BetaMemberAccess = () => {
         setPhase('form');
       } else {
         setErrorMsg('Invalid verification code. Please try again.');
-        setPhase('otp');
       }
+      setIsSubmitting(false);
+      setPhase('otp');
     }
   };
 
-  const tierInfo = memberData ? (TIER_LABELS[memberData.tier] || TIER_LABELS.basic) : null;
+
 
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
@@ -177,83 +175,16 @@ export const BetaMemberAccess = () => {
 
           {phase === 'success' && memberData ? (
             // ── Success state (Dashboard) ──────────────────────────────────────
-            <BetaDashboard 
-              memberData={memberData} 
+            <BetaDashboard
+              memberData={memberData}
               onLogout={() => {
                 localStorage.removeItem('boa_auth_token');
                 setPhase('form');
                 setMemberData(null);
-              }} 
+              }}
             />
-          ) : (
-            // ── Form state ─────────────────────────────────────────────────────
-            <>
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 mb-6">
-                  <Lock className="w-8 h-8 text-[#C9A84C]" />
-                </div>
-                <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
-                  Unlock member access
-                </h1>
-                <p className="text-white/60 leading-relaxed max-w-sm mx-auto">
-                  Enter the email you used on Ko-fi to activate your full membership on this device.
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-                <div className="relative">
-                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="Your Ko-fi email address"
-                    required
-                    autoComplete="email"
-                    disabled={phase === 'loading'}
-                    className="w-full bg-[#111827] border border-white/15 rounded-xl pl-10 pr-4 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50"
-                  />
-                </div>
-
-                {phase === 'error' && (
-                  <p className="text-red-400 text-sm" role="alert">{errorMsg}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={phase === 'loading' || !email.trim()}
-                  className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {phase === 'loading' ? (
-                    <>
-                      <span className="inline-block w-4 h-4 border-2 border-[#0A0F1E]/40 border-t-[#0A0F1E] rounded-full animate-spin" />
-                      Verifying…
-                    </>
-                  ) : (
-                    <>Activate membership <ArrowRight size={15} /></>
-                  )}
-                </button>
-              </form>
-
-              <div className="border-t border-white/5 pt-8 text-center space-y-4">
-                <p className="text-white/40 text-sm">Not a member yet?</p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[#C9A84C] font-semibold hover:opacity-80 transition-opacity text-sm"
-                >
-                  Become a Founding Member on Ko-fi →
-                </a>
-                <p className="text-white/25 text-xs max-w-xs mx-auto">
-                  After supporting on Ko-fi, return here with the same email to unlock access. No password required.
-                </p>
-              </div>
-            </>
-          )}
-
-          {/* ── OTP Form State ────────────────────────────────────────────────── */}
-          {phase === 'otp' && (
+          ) : phase === 'otp' ? (
+            // ── OTP Form State ─────────────────────────────────────────────────
             <>
               <div className="text-center mb-10">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 mb-6">
@@ -278,7 +209,7 @@ export const BetaMemberAccess = () => {
                     pattern="\d*"
                     maxLength={6}
                     autoComplete="one-time-code"
-                    disabled={phase === 'loading'}
+                    disabled={isSubmitting}
                     className="w-full bg-[#111827] border border-[#C9A84C]/30 rounded-xl px-4 py-6 text-white placeholder:text-white/20 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
                   />
                 </div>
@@ -289,7 +220,7 @@ export const BetaMemberAccess = () => {
 
                 <button
                   type="submit"
-                  disabled={phase === 'loading' || otp.length < 6}
+                  disabled={isSubmitting || otp.length < 6}
                   className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Verify Code
@@ -297,12 +228,74 @@ export const BetaMemberAccess = () => {
               </form>
 
               <div className="text-center mt-6">
-                <button 
+                <button
                   onClick={() => { setPhase('form'); setOtp(''); }}
                   className="text-xs text-white/40 hover:text-white underline transition-colors"
                 >
                   Use a different email
                 </button>
+              </div>
+            </>
+          ) : (
+            // ── Email form state ───────────────────────────────────────────────
+            <>
+              <div className="text-center mb-10">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 mb-6">
+                  <Lock className="w-8 h-8 text-[#C9A84C]" />
+                </div>
+                <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
+                  Unlock member access
+                </h1>
+                <p className="text-white/60 leading-relaxed max-w-sm mx-auto">
+                  Enter the email you used on Ko-fi to activate your full membership on this device.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4 mb-8">
+                <div className="relative">
+                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="Enter your member email"
+                    required
+                    name="email"
+                    disabled={isSubmitting}
+                    className="w-full bg-[#111827] border border-white/15 rounded-xl pl-10 pr-4 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50"
+                  />
+                </div>
+
+                {phase === 'error' && (
+                  <p className="text-red-400 text-sm" role="alert">{errorMsg}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !email.includes('@')}
+                  className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <div className="w-5 h-5 border-2 border-[#0A0F1E]/30 border-t-[#0A0F1E] rounded-full animate-spin" />
+                  ) : (
+                    <>Activate membership <ArrowRight size={15} /></>
+                  )}
+                </button>
+              </form>
+
+              <div className="border-t border-white/5 pt-8 text-center space-y-4">
+                <p className="text-white/40 text-sm">Not a member yet?</p>
+                <a
+                  href={KO_FI_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[#C9A84C] font-semibold hover:opacity-80 transition-opacity text-sm"
+                >
+                  Become a Founding Member on Ko-fi →
+                </a>
+                <p className="text-white/25 text-xs max-w-xs mx-auto">
+                  After supporting on Ko-fi, return here with the same email to unlock access. No password required.
+                </p>
               </div>
             </>
           )}
