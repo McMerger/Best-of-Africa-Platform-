@@ -1,10 +1,22 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { BetaNav } from '../../components/beta';
+import { useQuery } from '@tanstack/react-query';
+import { BetaNav, BetaFooter } from '../../components/beta';
+import { SEO } from '../../components/SEO';
+import { api } from '../../services/api';
 
 export const BetaAbout = () => {
+  const { data: stats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: api.getPlatformStats,
+    staleTime: 10 * 60 * 1000,
+  });
+
   return (
     <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
+      <SEO 
+        title="About | Best of Africa" 
+        description="We are building an investment-grade platform mapping Africa's rapidly growing venture, tech, and cultural markets."
+      />
       <BetaNav />
       {/* 1. HERO */}
       <section className="bg-[#0A0F1E] pt-32 pb-24 px-6 border-b border-white/5">
@@ -14,6 +26,25 @@ export const BetaAbout = () => {
           </h1>
         </div>
       </section>
+
+      {/* 1b. Live platform stats strip — proof, not aspiration */}
+      {stats && (
+        <section className="border-b border-white/5 bg-[#111827]/60">
+          <div className="max-w-4xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { value: stats.total_articles.toLocaleString(), label: 'Stories Published' },
+              { value: stats.total_countries, label: 'Countries Covered' },
+              { value: stats.regions, label: 'African Regions' },
+              { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: 'Total Reads' },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <p className="font-serif text-[2.25rem] font-bold text-[#C9A84C] leading-none mb-1">{value}</p>
+                <p className="text-xs text-white/40 uppercase tracking-widest font-medium">{label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <main className="max-w-4xl mx-auto px-6">
         
@@ -116,6 +147,8 @@ export const BetaAbout = () => {
         </section>
 
       </main>
+
+      <BetaFooter />
     </div>
   );
 };

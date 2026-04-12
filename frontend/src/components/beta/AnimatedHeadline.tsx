@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
@@ -17,7 +17,7 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
 
   const child = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 12, stiffness: 100 } },
+    visible: { opacity: 1, y: 0, transition: { type: "spring" as const, damping: 12, stiffness: 100 } },
   };
 
   return (

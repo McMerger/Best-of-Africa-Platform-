@@ -5,4 +5,8 @@ export * from './CardReveal';
 export * from './GoldDivider';
 export * from './StatCounter';
 export * from './BetaNav';
+export * from './BetaFooter';
+export * from './MembershipTiersGrid';
+export * from './BetaDashboard';
+export * from './BetaAudioPlayer';
 export { AgentStatusPanel } from './AgentStatusPanel';

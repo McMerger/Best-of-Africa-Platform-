@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
 import { Menu, X } from 'lucide-react';
 import { GoldButton } from './GoldButton';
+import { KO_FI_URL } from '../../constants/beta';
 
 const links = [
   { name: 'Stories', path: '/stories' },
+  { name: 'Member Access', path: '/member-access' },
   { name: 'Countries', path: '/countries' },
   { name: 'About', path: '/about' },
   { name: 'Newsletter', path: '/newsletter' },
@@ -15,6 +17,19 @@ const links = [
 export const BetaNav = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+
+  // Close mobile menu when navigating or pressing Escape
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileMenuOpen(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
 
   return (
     <>
@@ -35,7 +50,9 @@ export const BetaNav = () => {
           <NavigationMenu.Root className="hidden md:flex relative justify-center z-10">
             <NavigationMenu.List className="flex gap-8 items-center m-0 p-0 list-none">
               {links.map((link) => {
-                const isActive = link.path === '/' ? location.pathname === '/' : location.pathname.startsWith(link.path);
+                // Match exact path or the path followed immediately by '/' (prevents /stories matching /stories/:slug)
+                const isActive = location.pathname === link.path ||
+                  (link.path !== '/' && location.pathname.startsWith(link.path + '/'));
                 return (
                   <NavigationMenu.Item key={link.path}>
                     <NavigationMenu.Link asChild active={isActive}>
@@ -56,9 +73,9 @@ export const BetaNav = () => {
 
           {/* Right side CTA / Mobile Toggle */}
           <div className="flex items-center gap-4">
-            <Link to="/membership" className="hidden md:block">
+            <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="hidden md:block">
               <GoldButton variant="primary" size="small">Join Now</GoldButton>
-            </Link>
+            </a>
             
             <button 
               className="md:hidden text-white/80 hover:text-white transition-colors"

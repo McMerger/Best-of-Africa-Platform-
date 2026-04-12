@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useLanguage, SUPPORTED_LANGUAGES } from "../context/LanguageContext";
-import { GlobeIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
 export function LanguageSelector() {

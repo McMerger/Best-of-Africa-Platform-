@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMission } from '../context/MissionContext';
-import type { MissionRole, MissionFormat } from '../context/MissionContext';
+import type { MissionRole, MissionFormat } from '../types';
 import { api } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

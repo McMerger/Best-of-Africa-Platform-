@@ -16,7 +16,7 @@ import {
     servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
     eventsRouter, campaignsRouter, configRouter, devRouter,
     bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
-    newsletterRouter, agentProvidersRouter
+    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter
 } from './routes';
 import { LiveCounter } from './durable-objects/live-counter';
 
@@ -71,6 +71,11 @@ app.get('/health', (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// SEO & Discoverability (Mounted at worker root)
+// ───────────────────────────────────────────────────────────────────────────────
+app.route('/', seoRouter);
+
+// ───────────────────────────────────────────────────────────────────────────────
 // API Routes (v1)
 // ───────────────────────────────────────────────────────────────────────────────
 const api = new Hono<{ Bindings: Env }>();
@@ -98,6 +103,7 @@ api.route('/config', configRouter);
 
 api.route('/newsletter', newsletterRouter);
 api.route('/agent/providers', agentProvidersRouter);
+api.route('/members', membersRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
 api.route('/', systemRouter);

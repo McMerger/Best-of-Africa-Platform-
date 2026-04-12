@@ -43,6 +43,12 @@ export interface Env {
     ANTHROPIC_API_KEY?: string;
     GOOGLE_AI_API_KEY?: string;
     OPENROUTER_API_KEY?: string;
+
+    // Ko-fi webhook verification token (set via `wrangler secret put KOFI_TOKEN`)
+    KOFI_TOKEN?: string;
+
+    // ElevenLabs TTS API Key
+    ELEVENLABS_API_KEY?: string;
 }
 
 // Context variables for Hono middleware
@@ -187,7 +193,7 @@ export interface Client {
     name: string;
     email: string;
     organization: string | null;
-    type: 'government' | 'investor' | 'partner' | 'media' | null;
+    type: 'government' | 'investor' | 'partner' | 'media' | 'member' | null;
     tier: 'basic' | 'premium' | 'enterprise';
     rate_limit_per_hour: number;
     is_active: boolean;

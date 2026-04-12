@@ -22,3 +22,5 @@ export { auditRouter } from './audit';
 export { selfImproveRouter } from './self-improve';
 export { newsletterRouter } from './newsletter';
 export { agentProvidersRouter } from './agent-providers';
+export { membersRouter } from './members';
+export { seoRouter } from './seo';

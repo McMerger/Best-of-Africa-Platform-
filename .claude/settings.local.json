@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cd \"C:\\\\\\\\Users\\\\\\\\syner\\\\\\\\Downloads\\\\\\\\Best-of-Africa-Platform--main\\\\\\\\Best-of-Africa-Platform--main\\\\\\\\frontend\")",
+      "Bash(node -e \"console.log\\('node works'\\)\")",
+      "Bash(node:*)"
+    ]
+  }
+}

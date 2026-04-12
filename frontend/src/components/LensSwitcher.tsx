@@ -1,5 +1,6 @@
 import React from 'react';
-import { useLens, type IntelligenceLens } from '../context/LensContext';
+import { useLens } from '../context/LensContext';
+import type { IntelligenceLens } from '../types';
 
 const LENS_CONFIG: Record<IntelligenceLens, { icon: string; label: string; color: string }> = {
     investor: { icon: '📊', label: 'Investor', color: '#10b981' },

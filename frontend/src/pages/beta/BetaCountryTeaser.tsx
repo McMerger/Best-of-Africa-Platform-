@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Lock, Search, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
 import { api } from '../../services/api';
+import { KO_FI_URL } from '../../constants/beta';
 import type { Country } from '../../types';
 
 // ─── Fallback: all 54 African countries ──────────────────────────────────────
@@ -134,6 +135,19 @@ export const BetaCountryTeaser = () => {
     queryFn: api.getCountries,
     staleTime: 24 * 60 * 60 * 1000,
   });
+
+  // Build a country -> article count map from API data
+  const articleCountMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (data?.by_region) {
+      Object.values(data.by_region).forEach((r: any) => {
+        (r.countries || []).forEach((c: any) => {
+          if (c.code && c.article_count != null) map[c.code] = c.article_count;
+        });
+      });
+    }
+    return map;
+  }, [data]);
 
   // Flatten API response or use fallback
   const allCountries: Partial<Country>[] = useMemo(() => {
@@ -283,7 +297,7 @@ export const BetaCountryTeaser = () => {
         <div className="text-center">
           <p className="text-white/40 text-sm mb-5">Full country intelligence hubs unlock for Founding Members</p>
           <a
-            href="https://ko-fi.com/boastory"
+            href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
@@ -333,35 +347,47 @@ export const BetaCountryTeaser = () => {
                 </div>
               </div>
 
-              {/* Intelligence Score Preview */}
-              {activeCountry && ((activeCountry as Country).diplomacy_score > 0 || (activeCountry as Country).image_strength_score > 0) && (
-                <div className="bg-[#0A0F1E] rounded-xl border border-white/10 p-5 mb-5">
-                  <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-4">Intelligence Preview</p>
-                  {[
-                    { label: 'Diplomacy Index', value: (activeCountry as Country).diplomacy_score },
-                    { label: 'Investment Readiness', value: (activeCountry as Country).image_strength_score },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="mb-3 last:mb-0">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs text-white/60">{label}</span>
-                        <span className="text-xs font-semibold text-[#C9A84C]">{Math.round((value || 0) * 100)}</span>
+              {/* Intelligence Preview — article count + key opportunities */}
+              <div className="bg-[#0A0F1E] rounded-xl border border-white/10 p-5 mb-5">
+                <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-4">Intelligence Preview</p>
+                {(() => {
+                  const count = activeCountry.code ? (articleCountMap[activeCountry.code] ?? null) : null;
+                  return count !== null && count > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-4xl font-serif font-bold text-[#C9A84C]">{count}</span>
+                        <div>
+                          <p className="text-sm text-white font-medium leading-tight">
+                            {count === 1 ? 'story published' : 'stories published'}
+                          </p>
+                          <p className="text-xs text-white/40">and growing with the autonomous editorial loop</p>
+                        </div>
                       </div>
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.max(0, Math.min(1, value || 0)) * 100}%` }}
-                          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                          className="h-full bg-[#C9A84C] rounded-full"
-                        />
-                      </div>
+                      <div className="h-px bg-white/5 my-3" />
+                      <p className="text-[10px] text-white/30 flex items-center gap-1.5">
+                        <Lock size={10} className="text-[#C9A84C]" />
+                        Full 12-point country dossier for Founding Members
+                      </p>
                     </div>
-                  ))}
-                  <p className="text-[10px] text-white/30 mt-4 flex items-center gap-1.5">
-                    <Lock size={10} className="text-[#C9A84C]" />
-                    Full 12-point country dossier unlocked for members
-                  </p>
-                </div>
-              )}
+                  ) : (
+                    <div className="space-y-3">
+                      {['Investment Climate', 'Trade Position', 'Economic Momentum', 'Infrastructure Score'].map((label) => (
+                        <div key={label}>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-xs text-white/40">{label}</span>
+                            <Lock size={10} className="text-white/20" />
+                          </div>
+                          <div className="h-1.5 bg-white/5 rounded-full" />
+                        </div>
+                      ))}
+                      <p className="text-[10px] text-white/30 mt-3 flex items-center gap-1.5">
+                        <Lock size={10} className="text-[#C9A84C]" />
+                        Full dossier unlocked for Founding Members
+                      </p>
+                    </div>
+                  );
+                })()}
+              </div>
 
               {/* Investment Highlights */}
               {Array.isArray(activeCountry.investment_highlights) && activeCountry.investment_highlights.length > 0 && (
@@ -382,7 +408,7 @@ export const BetaCountryTeaser = () => {
               </p>
 
               <a
-                href="https://ko-fi.com/boastory"
+                href={KO_FI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block w-full text-center bg-[#C9A84C] text-[#0A0F1E] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"

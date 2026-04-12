@@ -151,19 +151,22 @@ router.get('/', async (c) => {
         }
 
         // Hybrid: combine semantic and full-text
+        const ftsQuery = `"${q.replace(/"/g, '""')}"*`;
         const fullTextResults = await c.env.DB.prepare(`
       SELECT 
         a.id, a.slug, a.title, a.summary,
         a.country_code, c.name as country_name,
         a.sector_id, s.name as sector_name,
         a.hero_image_url, a.published_at
-      FROM articles a
+      FROM articles_fts f
+      JOIN articles a ON a.id = f.id
       LEFT JOIN countries c ON a.country_code = c.code
       LEFT JOIN sectors s ON a.sector_id = s.id
-      WHERE a.status = 'published'
-        AND (a.title LIKE ? OR a.content LIKE ? OR a.summary LIKE ?)
+      WHERE articles_fts MATCH ?
+        AND a.status = 'published'
+      ORDER BY rank
       LIMIT ?
-    `).bind(`%${q}%`, `%${q}%`, `%${q}%`, limitNum).all();
+    `).bind(ftsQuery, limitNum).all();
 
         // Merge and deduplicate results
         const seen = new Set<string>();
@@ -279,21 +282,23 @@ router.get('/', async (c) => {
         });
     }
 
-    // Pure full-text search
+    // Pure full-text search utilizing FTS5 indexing
+    const ftsQuery = `"${q.replace(/"/g, '""')}"*`;
     const results = await c.env.DB.prepare(`
     SELECT 
       a.id, a.slug, a.title, a.summary,
       a.country_code, c.name as country_name,
       a.sector_id, s.name as sector_name,
       a.hero_image_url, a.published_at
-    FROM articles a
+    FROM articles_fts f
+    JOIN articles a ON a.id = f.id
     LEFT JOIN countries c ON a.country_code = c.code
     LEFT JOIN sectors s ON a.sector_id = s.id
-    WHERE a.status = 'published'
-      AND (a.title LIKE ? OR a.content LIKE ? OR a.summary LIKE ?)
-    ORDER BY a.engagement_score DESC
+    WHERE articles_fts MATCH ?
+      AND a.status = 'published'
+    ORDER BY rank
     LIMIT ?
-  `).bind(`%${q}%`, `%${q}%`, `%${q}%`, limitNum).all();
+  `).bind(ftsQuery, limitNum).all();
 
     // Transform to SearchResult format
     const searchResults = (results.results || []).map((article: any) => ({

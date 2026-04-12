@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Zap, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Plus, Trash2, TestTube } from 'lucide-react';
@@ -14,12 +15,22 @@ interface AgentTask {
   completed_at?: string;
 }
 
+interface AgentMetricRow {
+  agent_name: string;
+  runs: number;
+  tasks_done: number;
+  tasks_failed: number;
+  avg_duration_ms: number;
+  last_run_at: string;
+}
+
 interface AgentStatus {
-  health: 'OPERATIONAL' | 'BUSY' | 'IDLE';
-  tasks_24h: { pending: number; processing: number; completed: number; failed: number };
+  health: 'OPERATIONAL' | 'BUSY' | 'IDLE' | 'DEGRADED';
+  tasks_24h: { pending: number; processing: number; completed: number; failed: number; stalled?: number };
   recent_tasks: AgentTask[];
   latest_article: { title: string; slug: string; published_at: string; country_code: string } | null;
   active_provider: { provider: string; label: string; model: string; last_test_status?: string } | null;
+  metrics_7d: AgentMetricRow[];
   generated_at: string;
 }
 
@@ -51,10 +62,11 @@ const TASK_TYPE_LABELS: Record<string, string> = {
   instruction_update:    'Rule Update',
 };
 
-const HEALTH_CONFIG = {
+const HEALTH_CONFIG: Record<string, { label: string; color: string; pulse: boolean }> = {
   OPERATIONAL: { label: 'Operational',  color: '#22c55e', pulse: false },
   BUSY:        { label: 'Running',      color: '#C9A84C', pulse: true  },
   IDLE:        { label: 'Idle',         color: '#6b7280', pulse: false },
+  DEGRADED:    { label: 'Degraded',     color: '#ef4444', pulse: true  },
 };
 
 function relativeTime(iso: string): string {
@@ -69,7 +81,7 @@ function relativeTime(iso: string): string {
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function StatusDot({ health }: { health: 'OPERATIONAL' | 'BUSY' | 'IDLE' }) {
+function StatusDot({ health }: { health: string }) {
   const cfg = HEALTH_CONFIG[health];
   return (
     <span className="relative flex h-2.5 w-2.5">
@@ -229,30 +241,43 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   const [sseData, setSseData] = useState<Partial<AgentStatus> | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Poll agent status every 30s via React Query
+  // Expose a helper to parse unknown task types into readable strings
+  const getTaskLabel = (type: string) => TASK_TYPE_LABELS[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  // Only activate SSE + polling once the panel scrolls into view (saves network on page load)
+  const { ref: panelRef, inView } = useInView({ triggerOnce: true, rootMargin: '100px' });
+
+  // Poll agent status every 30s — only when panel is visible
   const { data: status, refetch } = useQuery<AgentStatus>({
     queryKey: ['agent-status'],
     queryFn: () => request<AgentStatus>('/agent/status'),
-    refetchInterval: 30_000,
+    refetchInterval: inView ? 30_000 : false,
     staleTime: 25_000,
+    enabled: inView,
   });
 
-  // Also open SSE for real-time push updates
+  // Open SSE only when panel scrolls into view
   useEffect(() => {
+    if (!inView) return;
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
     const es = new EventSource(`${API_BASE}/agent/stream`);
     eventSourceRef.current = es;
 
-    es.addEventListener('agent_status', (e) => {
+    const handleAgentStatus = (e: MessageEvent) => {
       try { setSseData(JSON.parse(e.data)); } catch { /* ignore */ }
-    });
+    };
+
+    es.addEventListener('agent_status', handleAgentStatus);
 
     es.onerror = () => {
       es.close();
     };
 
-    return () => es.close();
-  }, []);
+    return () => {
+      es.removeEventListener('agent_status', handleAgentStatus);
+      es.close();
+    };
+  }, [inView]);
 
   // Merge SSE data over the polled data
   const live: AgentStatus | null = status
@@ -292,9 +317,30 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
     providersList.refetch();
   };
 
+  if (!inView || !live) {
+    return (
+      <div ref={panelRef} className="bg-[#0A0F1E] border border-white/10 rounded-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#111827]">
+          <div className="flex gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
+            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
+            <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
+          </div>
+          <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+            ZeroClaw OS v1.0.0
+          </div>
+        </div>
+        <div className="relative h-[480px] p-6 flex flex-col items-center justify-center bg-[#0A0F1E] font-mono">
+          <div className="w-8 h-8 border-2 border-[#C9A84C]/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
+          <span className="text-[#C9A84C] text-sm tracking-widest animate-pulse">BOOTING INTELLIGENCE ENGINE...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="bg-[#0A0F1E] border border-white/10 rounded-2xl overflow-hidden">
+      <div ref={panelRef} className="bg-[#0A0F1E] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
@@ -310,12 +356,13 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 divide-x divide-white/5 border-b border-white/5">
+        <div className="grid grid-cols-5 divide-x divide-white/5 border-b border-white/5">
           {[
             { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-white/50' },
             { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-[#C9A84C]' },
             { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-green-400' },
             { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-red-400' },
+            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-red-400' : 'text-white/20' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex flex-col items-center justify-center py-4 px-2 gap-1">
               <Icon size={14} className={color} />
@@ -379,7 +426,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                     {live.recent_tasks.map(task => (
                       <div key={task.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                         <div>
-                          <p className="text-xs text-white/70 font-medium">{TASK_TYPE_LABELS[task.type] || task.type}</p>
+                          <h4 className="font-medium text-[13px]">{getTaskLabel(task.type)}</h4>
                           <p className="text-[10px] text-white/30">{relativeTime(task.created_at)}</p>
                         </div>
                         <TaskBadge status={task.status} />
@@ -422,6 +469,39 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {/* 7-day skill metrics table */}
+        {live?.metrics_7d && live.metrics_7d.length > 0 && (
+          <div className="px-6 pb-4 border-t border-white/5 pt-4">
+            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-3">7-day skill performance</p>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-[11px] text-left">
+                <thead>
+                  <tr className="text-white/25 uppercase tracking-wider">
+                    <th className="pb-2 pr-4 font-medium">Skill</th>
+                    <th className="pb-2 pr-3 font-medium text-right">Runs</th>
+                    <th className="pb-2 pr-3 font-medium text-right">Done</th>
+                    <th className="pb-2 pr-3 font-medium text-right">Fail</th>
+                    <th className="pb-2 font-medium text-right">Avg ms</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {live.metrics_7d.map((row) => (
+                    <tr key={row.agent_name} className="border-t border-white/5">
+                      <td className="py-1.5 pr-4 text-white/70 font-medium">{row.agent_name}</td>
+                      <td className="py-1.5 pr-3 text-white/50 text-right">{row.runs}</td>
+                      <td className="py-1.5 pr-3 text-green-400 text-right">{row.tasks_done}</td>
+                      <td className="py-1.5 pr-3 text-right">
+                        <span className={row.tasks_failed > 0 ? 'text-red-400' : 'text-white/20'}>{row.tasks_failed}</span>
+                      </td>
+                      <td className="py-1.5 text-white/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

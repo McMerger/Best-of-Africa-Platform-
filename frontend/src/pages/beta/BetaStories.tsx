@@ -1,56 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Lock, Search, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
+import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
+import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
-
-// Fallback articles if API is unavailable
-const FALLBACK_ARTICLES: ArticleListItem[] = [
-  {
-    id: '1', slug: 'tech-talent-lagos', title: 'The Silent Exodus Reversing Course in Lagos',
-    summary: 'A new wave of deeply capitalized local funds is convincing Nigeria\'s diaspora engineers that building at home is no longer a compromise.',
-    country_code: 'NG', country_name: 'Nigeria', country_flag: '🇳🇬',
-    sector_id: 'technology', sector_name: 'Technology',
-    hero_image_url: '', reading_time_minutes: 6, published_at: '',
-  },
-  {
-    id: '2', slug: 'kigali-infrastructure', title: "Kigali's Blueprint for the Climate-Resilient City",
-    summary: "While Western capitals debate policy, Rwanda is quietly executing a radical, ground-up redesign of urban mobility and green space.",
-    country_code: 'RW', country_name: 'Rwanda', country_flag: '🇷🇼',
-    sector_id: 'infrastructure', sector_name: 'Urban Development',
-    hero_image_url: '', reading_time_minutes: 8, published_at: '',
-  },
-  {
-    id: '3', slug: 'nairobi-clean-energy', title: 'The Geothermal Advantage Quietly Powering Nairobi',
-    summary: 'How Kenya bypassed fossil fuel dependency to build a tech ecosystem running almost entirely on renewable power.',
-    country_code: 'KE', country_name: 'Kenya', country_flag: '🇰🇪',
-    sector_id: 'energy', sector_name: 'Energy',
-    hero_image_url: '', reading_time_minutes: 7, published_at: '',
-  },
-  {
-    id: '4', slug: 'accra-creative-economy', title: "Accra's Creative Export Economy is Maturing",
-    summary: "Beyond the festivals and viral moments, Ghanaian artists are building the permanent infrastructure to own their global distribution.",
-    country_code: 'GH', country_name: 'Ghana', country_flag: '🇬🇭',
-    sector_id: 'culture', sector_name: 'Culture',
-    hero_image_url: '', reading_time_minutes: 5, published_at: '',
-  },
-  {
-    id: '5', slug: 'addis-aviation-dominance', title: 'How Addis Ababa Won the African Sky',
-    summary: "The relentless operational discipline that turned a regional carrier into the continent's undisputed logistics heavyweight.",
-    country_code: 'ET', country_name: 'Ethiopia', country_flag: '🇪🇹',
-    sector_id: 'logistics', sector_name: 'Logistics',
-    hero_image_url: '', reading_time_minutes: 9, published_at: '',
-  },
-  {
-    id: '6', slug: 'cape-town-biotech', title: 'The Biotech Engineers Redefining Medicine at the Cape',
-    summary: 'South African laboratories are shifting from manufacturing generic drugs to patenting breakthrough mRNA applications for the global market.',
-    country_code: 'ZA', country_name: 'South Africa', country_flag: '🇿🇦',
-    sector_id: 'healthcare', sector_name: 'Healthcare',
-    hero_image_url: '', reading_time_minutes: 6, published_at: '',
-  },
-];
 
 const StoryCardSkeleton = () => (
   <div className="bg-[#111827] rounded-xl border border-white/10 h-[380px] animate-pulse">
@@ -74,6 +30,8 @@ export const BetaStories = () => {
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchInput, setSearchInput] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 6;
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -81,40 +39,76 @@ export const BetaStories = () => {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const isSearchMode = debouncedQuery.length > 2;
+  const isSearchMode = debouncedQuery.length >= 2;
+  // Detect 2-letter uppercase country code pattern (e.g. "KE", "NG", "ZA")
+  const isCountryCode = /^[A-Z]{2}$/.test(debouncedQuery);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['featured-articles'],
-    queryFn: api.getFeaturedArticles,
+  const { data, isLoading, isError, isPlaceholderData } = useQuery({
+    queryKey: ['featured-articles', page],
+    queryFn: () => {
+      // If we are past page 1, fetch from generic articles endpoint instead of featured
+      if (page > 1) {
+        return api.getArticles({ page: page.toString(), limit: itemsPerPage.toString() });
+      }
+      return api.getFeaturedArticles();
+    },
     staleTime: 5 * 60 * 1000,
   });
+
+  // Track all loaded articles across pages
+  const [allArticles, setAllArticles] = useState<ArticleListItem[]>([]);
+
+  useEffect(() => {
+    if (data?.data && !isError) {
+      if (page === 1) {
+        setAllArticles(data.data.slice(0, itemsPerPage));
+      } else {
+        // Append new articles, filter dupes
+        setAllArticles(prev => {
+          const newIds = new Set(data.data.map((a: any) => a.id || a.slug));
+          const filteredPrev = prev.filter((a: any) => !newIds.has(a.id || a.slug));
+          return [...filteredPrev, ...data.data];
+        });
+      }
+    }
+  }, [data, isError, page]);
 
   const { data: searchData, isFetching: isSearching } = useQuery({
     queryKey: ['beta-search', debouncedQuery],
     queryFn: () => api.search(debouncedQuery),
-    enabled: isSearchMode,
+    enabled: isSearchMode && !isCountryCode,
     staleTime: 2 * 60 * 1000,
   });
 
-  const articles: ArticleListItem[] = isError || !data?.data?.length
-    ? FALLBACK_ARTICLES
-    : data.data.slice(0, 6);
+  // Country-code direct lookup: query the articles endpoint by country_code
+  const { data: countryCodeData, isFetching: isCountrySearching } = useQuery({
+    queryKey: ['beta-country-search', debouncedQuery],
+    queryFn: () => api.getArticles({ country: debouncedQuery, limit: '12' }),
+    enabled: isSearchMode && isCountryCode,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const articles: ArticleListItem[] = isError || allArticles.length === 0 && !isLoading
+    ? FALLBACK_ARTICLES.slice(0, itemsPerPage)
+    : allArticles;
 
   // Map search results to ArticleListItem shape
-  const searchArticles: ArticleListItem[] = (searchData?.results || []).map((r: any) => ({
-    id: r.id || r.slug,
-    slug: r.slug,
-    title: r.title,
-    summary: r.summary || r.content || '',
-    country_code: r.country_code || '',
-    country_name: r.country_name || '',
-    country_flag: r.country_flag || '',
-    sector_id: r.sector_id || '',
-    sector_name: r.sector_name || '',
-    hero_image_url: r.hero_image_url || '',
-    reading_time_minutes: r.reading_time_minutes || 5,
-    published_at: r.published_at || '',
-  }));
+  const searchArticles: ArticleListItem[] = isCountryCode
+    ? (countryCodeData?.data || [])
+    : (searchData?.results || []).map((r: any) => ({
+        id: r.id || r.slug,
+        slug: r.slug,
+        title: r.title,
+        summary: r.summary || r.content || '',
+        country_code: r.country_code || '',
+        country_name: r.country_name || '',
+        country_flag: r.country_flag || '',
+        sector_id: r.sector_id || '',
+        sector_name: r.sector_name || '',
+        hero_image_url: r.hero_image_url || '',
+        reading_time_minutes: r.reading_time_minutes || 5,
+        published_at: r.published_at || '',
+      }));
 
   // Collect unique sector names for filter tabs
   const sectors = ['All', ...Array.from(new Set(articles.map(a => a.sector_name).filter(Boolean)))];
@@ -124,10 +118,14 @@ export const BetaStories = () => {
     : articles.filter(a => a.sector_name === activeFilter);
 
   const displayArticles = isSearchMode ? searchArticles : filtered;
-  const showLoading = isSearchMode ? isSearching : isLoading;
+  const showLoading = isSearchMode ? (isSearching || isCountrySearching) : isLoading;
 
   return (
     <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] pb-32">
+      <SEO 
+        title="Stories | Best of Africa" 
+        description="Deep-dive journalism and market intelligence covering business, tech, and policy across the continent."
+      />
       <BetaNav />
       <div className="max-w-7xl mx-auto px-6 py-24">
 
@@ -177,7 +175,7 @@ export const BetaStories = () => {
             {sectors.map(sector => (
               <button
                 key={sector}
-                onClick={() => setActiveFilter(sector)}
+                onClick={() => { setActiveFilter(sector); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                   activeFilter === sector
                     ? 'bg-[#C9A84C] text-[#0A0F1E] border-[#C9A84C]'
@@ -203,14 +201,16 @@ export const BetaStories = () => {
           {showLoading
             ? Array.from({ length: 6 }).map((_, i) => <StoryCardSkeleton key={i} />)
             : displayArticles.map((article, index) => {
-                const isLocked = !isSearchMode && index >= 2;
+                // Free after first 4; lock remaining (show 4 free so visitors can sample quality)
+                const isLocked = !isSearchMode && index >= 4;
 
                 if (isLocked) {
                   return (
-                    <div key={article.slug} className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[380px]">
-                      <div className="absolute top-4 right-4 z-30 bg-[#C9A84C]/90 backdrop-blur-sm text-[#0A0F1E] text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded shadow-md">
-                        Founding Members Only
-                      </div>
+                    <Link
+                      key={article.slug}
+                      to="/membership"
+                      className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[380px] cursor-pointer hover:border-[#C9A84C]/30 transition-colors"
+                    >
                       <div className="p-6 pb-2 border-b border-white/5 relative z-10 bg-[#111827]">
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-2xl">{article.country_flag}</span>
@@ -223,16 +223,16 @@ export const BetaStories = () => {
                         </div>
                       </div>
                       <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-white/5">
-                        <div className="absolute inset-0 backdrop-blur-[5px] bg-[#0A0F1E]/60 transition-opacity duration-300" />
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-[#0A0F1E]/65 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
                           <div className="bg-[#0A0F1E] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-[#C9A84C]/10 transition-all duration-300">
                             <Lock className="w-6 h-6 text-[#C9A84C]" />
                           </div>
                           <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
-                          <span className="text-xs text-white/60 uppercase tracking-widest font-semibold">Unlock to read</span>
+                          <span className="text-xs text-[#C9A84C] uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 }
 
@@ -240,21 +240,44 @@ export const BetaStories = () => {
                   <Link
                     key={article.slug}
                     to={`/stories/${article.slug}`}
-                    className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[380px] transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/40"
+                    className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/40"
                   >
+                    {/* Hero thumbnail */}
+                    {article.hero_image_url ? (
+                      <div className="h-44 overflow-hidden shrink-0">
+                        <img
+                          src={article.hero_image_url}
+                          alt={article.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-44 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0F1E] shrink-0 flex items-center justify-center">
+                        <span className="text-5xl opacity-60">{article.country_flag || '🌍'}</span>
+                      </div>
+                    )}
                     <div className="p-6 pb-2 flex-grow relative z-10 bg-[#111827]">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-2xl">{article.country_flag}</span>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="text-xl">{article.hero_image_url ? '' : ''}{article.country_flag}</span>
                         <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className="font-serif text-[22px] leading-snug mb-3 text-white group-hover:text-[#C9A84C] transition-colors">
+                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-white group-hover:text-[#C9A84C] transition-colors">
                         {article.title}
                       </h3>
-                      <p className="text-white/70 text-sm leading-relaxed line-clamp-3">{article.summary}</p>
+                      <p className="text-white/70 text-sm leading-relaxed line-clamp-2">{article.summary}</p>
                     </div>
                     <div className="p-6 pt-0 bg-[#111827]">
                       <div className="text-xs font-medium text-white/50 border-t border-white/10 pt-4 flex justify-between items-center">
-                        <span>{article.reading_time_minutes} min read</span>
+                        <span className="flex items-center gap-2">
+                          {article.reading_time_minutes} min read
+                          {article.published_at && (
+                            <>
+                              <span className="text-white/20">·</span>
+                              <span>{new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                            </>
+                          )}
+                        </span>
                         <span className="text-[#C9A84C] group-hover:translate-x-1 transition-transform">Read story →</span>
                       </div>
                     </div>
@@ -264,21 +287,55 @@ export const BetaStories = () => {
           }
         </div>
 
+        {/* Load More Button (Only outside search mode, if activeFilter is all, and there is more data) */}
+        {!showLoading && !isSearchMode && activeFilter === 'All' && data?.pagination?.has_next && (
+          <div className="flex justify-center mb-20 text-center">
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={isPlaceholderData}
+              className="px-6 py-2 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] text-sm font-medium hover:bg-[#C9A84C]/10 transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isPlaceholderData ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-[#C9A84C]/40 border-t-[#C9A84C] rounded-full animate-spin" />
+                  Loading...
+                </>
+              ) : 'Load More'}
+            </button>
+          </div>
+        )}
+
         {!showLoading && displayArticles.length === 0 && (
-          <p className="text-center text-white/50 py-16">
-            {isSearchMode ? `No stories matched "${debouncedQuery}".` : 'No stories in this category yet.'}
-          </p>
+          <div className="text-center py-16">
+            {isSearchMode ? (
+              <>
+                <p className="text-white/50 mb-4">No stories matched "{debouncedQuery}".</p>
+                <p className="text-white/30 text-sm mb-6">Try searching for a country, city, or sector:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {['Lagos', 'Kigali', 'Nairobi', 'Technology', 'Energy', 'Ghana'].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setSearchInput(s)}
+                      className="px-3 py-1 rounded-full text-xs border border-white/15 text-white/50 hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-colors"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-white/50">No stories in this category yet.</p>
+            )}
+          </div>
         )}
 
         <div className="text-center">
-          <a
-            href="https://ko-fi.com/boastory"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/membership"
             className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg shadow-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
           >
             Unlock All Stories — Become a Founding Member
-          </a>
+          </Link>
         </div>
 
       </div>

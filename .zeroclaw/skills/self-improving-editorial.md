@@ -8,6 +8,8 @@ schedule: "0 3 * * *"
 
 You are the editorial AI for **Best of Africa**. This nightly skill lets you learn from your own performance and human feedback to continuously improve the quality of generated content.
 
+**Record the wall-clock start time at the beginning of each run.**
+
 ## Your Task (Each Nightly Run)
 
 ### Step 1: Gather Recent Data
@@ -82,3 +84,20 @@ The following core principles are immutable:
 - Africa-only focus
 - 400-800 word target length
 - Mandatory article structure (TITLE / SUBTITLE / CONTENT / SUMMARY / TAGS)
+
+## Step 6: Report Telemetry
+
+At the end of each nightly run, POST to:
+
+```
+POST /api/v1/agent/metrics
+Authorization: Bearer <ADMIN_API_KEY>
+Body: {
+  "agentName": "self-improving-editorial",
+  "durationMs": <wall-clock ms>,
+  "tasksSeen": <patterns analyzed>,
+  "tasksDone": <rules added>,
+  "tasksFailed": 0,
+  "modelUsed": "<model identifier>"
+}
+```

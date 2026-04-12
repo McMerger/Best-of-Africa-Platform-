@@ -1,52 +1,64 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { ShieldAlert } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-interface ErrorBoundaryState {
-    hasError: boolean;
-    error: Error | null;
+interface Props {
+  children: ReactNode;
 }
 
-export class ErrorBoundary extends React.Component<
-    { children: React.ReactNode },
-    ErrorBoundaryState
-> {
-    constructor(props: { children: React.ReactNode }) {
-        super(props);
-        this.state = { hasError: false, error: null };
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+  };
+
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught React component error:', error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-[#0A0F1E] flex flex-col items-center justify-center p-6 text-center font-sans">
+          <div className="max-w-md w-full bg-[#111827] border border-[#C9A84C]/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-[#C9A84C]/10 flex items-center justify-center mb-6">
+              <ShieldAlert size={32} className="text-[#C9A84C]" />
+            </div>
+            
+            <h1 className="font-serif text-2xl md:text-3xl text-white mb-4">
+              Intelligence Feed Disrupted
+            </h1>
+            
+            <p className="text-white/60 mb-8 leading-relaxed">
+              We encountered an unexpected structural anomaly while rendering this vector. Our engineering nodes have been notified.
+            </p>
+            
+            <button
+              onClick={() => {
+                this.setState({ hasError: false, error: null });
+                window.location.href = '/';
+              }}
+              className="w-full bg-[#C9A84C] text-[#0A0F1E] py-3 rounded-lg font-semibold hover:bg-white transition-colors uppercase tracking-wider text-sm mb-4"
+            >
+              Return to Core Hub
+            </button>
+            <p className="text-[#C9A84C]/40 text-xs">
+              {this.state.error?.message || 'Unknown render parameter'}
+            </p>
+          </div>
+        </div>
+      );
     }
 
-    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-        return { hasError: true, error };
-    }
-
-    componentDidCatch(error: Error, info: React.ErrorInfo) {
-        console.error('[ErrorBoundary]', error, info.componentStack);
-    }
-
-    render() {
-        if (this.state.hasError) {
-            return (
-                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
-                    <div className="text-6xl">⚠️</div>
-                    <h2 className="text-2xl font-serif font-bold text-foreground">
-                        Something went wrong
-                    </h2>
-                    <p className="text-muted-foreground text-center max-w-md">
-                        An unexpected error occurred. This has been logged for review.
-                    </p>
-                    <Button
-                        onClick={() => {
-                            this.setState({ hasError: false, error: null });
-                            window.location.href = '/';
-                        }}
-                        className="font-bold"
-                    >
-                        Return to Homepage
-                    </Button>
-                </div>
-            );
-        }
-
-        return this.props.children;
-    }
+    return this.props.children;
+  }
 }

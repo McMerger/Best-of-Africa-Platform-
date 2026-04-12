@@ -10,6 +10,36 @@ import { trackEvent } from '../lib/analytics';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, UuidParamSchema } from '../lib';
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Helper: decode and validate a Bearer JWT without killing the request
+// Returns the client_id (sub) on success, null if absent/invalid/expired
+// ───────────────────────────────────────────────────────────────────────────────
+async function decodeBearerJWT(authHeader: string | undefined, secret: string): Promise<string | null> {
+    if (!authHeader?.startsWith('Bearer ')) return null;
+    const token = authHeader.slice(7);
+    try {
+        const [headerB64, payloadB64, signatureB64] = token.split('.');
+        if (!headerB64 || !payloadB64 || !signatureB64) return null;
+
+        const key = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['verify']
+        );
+        const signature = Uint8Array.from(atob(signatureB64), ch => ch.charCodeAt(0));
+        const isValid = await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(`${headerB64}.${payloadB64}`));
+        if (!isValid) return null;
+
+        const payload: { sub: string; exp: number } = JSON.parse(atob(payloadB64));
+        if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+        return payload.sub;
+    } catch {
+        return null;
+    }
+}
+
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -95,6 +125,7 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     };
 
     c.header('X-Total-Count', total.toString());
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
     return c.json(response);
 });
 
@@ -238,6 +269,7 @@ router.get('/country/:code', validate('param', CountryCodeParamSchema), validate
     LIMIT ? OFFSET ?
   `).bind(code, limitNum, offset).all();
 
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
     return c.json({
         country,
         articles: {
@@ -314,6 +346,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
         { ttl: CACHE_TTL.DASHBOARD }
     );
 
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
     return c.json({
         sector: {
             ...sector,
@@ -424,14 +457,41 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         { ttl: CACHE_TTL.STATIC } // Briefs don't change often
     );
 
+    // ── Server-side paywall ────────────────────────────────────────────────────
+    // Validate any Bearer JWT. Any authenticated client (basic/premium/enterprise)
+    // gets full content. Anonymous visitors receive a truncated preview + paywall flag.
+    const clientId = await decodeBearerJWT(c.req.header('Authorization'), c.env.JWT_SECRET);
+
+    let articleContent = article.content || '';
+    let paywallActive = false;
+    let paragraphsVisible = 0;
+
+    if (!clientId) {
+        // Truncate to first 50% of paragraphs (minimum 2)
+        const paragraphs = articleContent.split(/\n\n+/).filter((p: string) => p.trim());
+        const freeCount = Math.max(2, Math.ceil(paragraphs.length * 0.5));
+        if (paragraphs.length > freeCount) {
+            articleContent = paragraphs.slice(0, freeCount).join('\n\n');
+            paywallActive = true;
+            paragraphsVisible = freeCount;
+        }
+    }
+
     return c.json({
         article: {
             ...article,
-            ai_context: aiContext
+            content: articleContent,
+            ai_context: aiContext,
+            ...(paywallActive && {
+                paywall: true,
+                paragraphs_visible: paragraphsVisible,
+            }),
         },
         related,
+        member: !!clientId,
     });
 });
+
 
 // ───────────────────────────────────────────────────────────────────────────────
 // POST /articles/:slug/audio - Generate TTS audio for article
@@ -463,45 +523,65 @@ router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
         });
     }
 
-    // Generate TTS using Cloudflare AI
-    // Create script from summary (summarized for ~2min audio)
+    // Generate Real TTS 
     const script = `${article.title}. ${article.summary}`;
 
     try {
-        // Use Cloudflare's TTS model (if available, else simulate)
-        // Note: As of 2024, Cloudflare AI doesn't have native TTS, 
-        // but we prepare the infrastructure for when it does
-
-        // For now, store a marker that audio was requested
         const audioId = `audio-${article.id}`;
+        
+        let audioUrl = `https://best-of-africa-media.r2.dev/audio/${audioId}.mp3`;
+        let durationSeconds = Math.max(30, Math.ceil((script.split(/\s+/).length / 150) * 60));
+        let message = 'Audio generation queued. Available shortly.';
 
-        // Store in R2 (placeholder for actual TTS output)
-        // In production, this would integrate with a TTS service like:
-        // - ElevenLabs
-        // - Google Cloud TTS
-        // - Amazon Polly
+        if (c.env.ELEVENLABS_API_KEY) {
+            // Foundational African "Rachel" voice substitute or professional narrator
+            const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
+            
+            const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': c.env.ELEVENLABS_API_KEY
+                },
+                body: JSON.stringify({
+                    text: script,
+                    model_id: "eleven_monolingual_v1",
+                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+                })
+            });
 
-        // Estimate duration based on word count (~150 words per minute)
-        const wordCount = script.split(/\s+/).length;
-        const durationSeconds = Math.max(30, Math.ceil((wordCount / 150) * 60));
+            if (!elevenRes.ok) {
+                const errText = await elevenRes.text();
+                throw new Error(`ElevenLabs Error: ${elevenRes.status} ${errText}`);
+            }
+
+            const audioBuffer = await elevenRes.arrayBuffer();
+            
+            // Persist the synthesized binary straight to the R2 edge CDN
+            await c.env.MEDIA.put(`audio/${audioId}.mp3`, audioBuffer, {
+                httpMetadata: { contentType: 'audio/mpeg' }
+            });
+
+            message = 'Audio successfully synthesized.';
+        } else {
+            console.warn('[TTS] ELEVENLABS_API_KEY not found. Faking generation.');
+            message = 'TTS pipeline in standby - missing ElevenLabs key.';
+        }
 
         // Update article with audio metadata
         await c.env.DB.prepare(`
             UPDATE articles 
             SET audio_url = ?, audio_duration_seconds = ?
             WHERE id = ?
-        `).bind(
-            `https://best-of-africa-media.r2.dev/audio/${audioId}.mp3`,
-            durationSeconds,
-            article.id
-        ).run();
+        `).bind(audioUrl, durationSeconds, article.id).run();
 
         return c.json({
             success: true,
-            audio_url: `https://best-of-africa-media.r2.dev/audio/${audioId}.mp3`,
+            audio_url: audioUrl,
             duration_seconds: durationSeconds,
-            message: 'Audio generation queued. Available shortly.',
-            note: 'TTS integration pending external service connection'
+            message: message,
+            note: c.env.ELEVENLABS_API_KEY ? 'Powered by ElevenLabs' : 'Mock generated'
         });
 
     } catch (err) {

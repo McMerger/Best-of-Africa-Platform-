@@ -21,6 +21,7 @@ import { CountryPortals } from '../components/CountryPortals';
 import { CountryEvents } from '../components/CountryEvents';
 import { MarkdownRenderer } from '../components/MarkdownRenderer';
 import { CountryHeroArticle } from '../components/CountryHeroArticle';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CountryDetailPage: React.FC = () => {
     const { code } = useParams<{ code: string }>();

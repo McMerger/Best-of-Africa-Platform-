@@ -49,6 +49,7 @@ const BetaArticle = React.lazy(() => import('./pages/beta/BetaArticle').then(m =
 const BetaCountryTeaser = React.lazy(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
 const BetaAbout = React.lazy(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
 const BetaNewsletter = React.lazy(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
+const BetaMemberAccess = React.lazy(() => import('./pages/beta/BetaMemberAccess').then(m => ({ default: m.BetaMemberAccess })));
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
@@ -87,6 +88,7 @@ function App() {
                         <Route path="/countries" element={<BetaCountryTeaser />} />
                         <Route path="/about" element={<BetaAbout />} />
                         <Route path="/newsletter" element={<BetaNewsletter />} />
+                        <Route path="/member-access" element={<BetaMemberAccess />} />
 
                         {/* Full app routes */}
                         <Route path="/intelligence-briefings" element={<ArticlesPage />} />

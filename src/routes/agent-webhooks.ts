@@ -8,13 +8,49 @@ import { autoTranslateArticle } from '../lib/translate';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Write a telemetry row to agent_metrics after each agent run. */
+async function writeAgentMetric(
+    db: Env['DB'],
+    opts: {
+        agentName: string;
+        durationMs: number;
+        tasksSeen: number;
+        tasksDone: number;
+        tasksFailed: number;
+        modelUsed?: string;
+        tokensUsed?: number;
+        error?: string;
+    }
+) {
+    try {
+        await db.prepare(`
+            INSERT INTO agent_metrics (id, agent_name, run_at, duration_ms, tasks_seen, tasks_done, tasks_failed, model_used, tokens_used, error)
+            VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            crypto.randomUUID(),
+            opts.agentName,
+            opts.durationMs,
+            opts.tasksSeen,
+            opts.tasksDone,
+            opts.tasksFailed,
+            opts.modelUsed ?? null,
+            opts.tokensUsed ?? null,
+            opts.error ?? null,
+        ).run();
+    } catch (err) {
+        console.error('[agent_metrics] Failed to write metric row:', err);
+    }
+}
+
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /agent/status — public summary of agent health and recent activity
 // (no auth required — safe to display in beta frontend)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/status', async (c) => {
-    const [taskCounts, recentTasks, latestArticle, providerConfig] = await Promise.all([
-        // Task counts by status
+    const [taskCounts, recentTasks, latestArticle, providerConfig, stalled, metricsRows] = await Promise.all([
+        // Task counts by status (last 24h)
         c.env.DB.prepare(`
             SELECT status, COUNT(*) as count
             FROM agent_tasks
@@ -24,7 +60,7 @@ router.get('/status', async (c) => {
 
         // Recent 5 tasks
         c.env.DB.prepare(`
-            SELECT id, type, status, created_at, updated_at, completed_at,
+            SELECT id, type, status, priority, retry_count, created_at, updated_at, completed_at,
                    CASE WHEN error_message IS NOT NULL THEN error_message ELSE NULL END as error
             FROM agent_tasks
             ORDER BY created_at DESC
@@ -48,25 +84,59 @@ router.get('/status', async (c) => {
             ORDER BY is_default DESC, created_at ASC
             LIMIT 1
         `).first<Record<string, unknown>>(),
+
+        // Stalled tasks: processing past their TTL
+        c.env.DB.prepare(`
+            SELECT COUNT(*) as count
+            FROM agent_tasks
+            WHERE status = 'processing'
+              AND expires_at IS NOT NULL
+              AND expires_at < datetime('now')
+        `).first<{ count: number }>(),
+
+        // Agent metrics: last 7 days rollup per skill
+        c.env.DB.prepare(`
+            SELECT agent_name,
+                   COUNT(*) as runs,
+                   SUM(tasks_done) as tasks_done,
+                   SUM(tasks_failed) as tasks_failed,
+                   ROUND(AVG(duration_ms)) as avg_duration_ms,
+                   MAX(run_at) as last_run_at
+            FROM agent_metrics
+            WHERE run_at > datetime('now', '-7 days')
+            GROUP BY agent_name
+            ORDER BY last_run_at DESC
+        `).all<Record<string, unknown>>(),
     ]);
 
     const counts = Object.fromEntries(
         (taskCounts.results || []).map(r => [r.status, r.count])
     );
 
-    const pending = (counts.pending || 0);
-    const processing = (counts.processing || 0);
+    const pending    = (counts.pending    || 0);
+    const processing = (counts.processing  || 0);
     const completed24h = (counts.completed || 0);
-    const failed24h = (counts.failed || 0);
+    const failed24h  = (counts.failed     || 0);
+    const stalledCount = stalled?.count ?? 0;
 
-    const health = processing > 0 ? 'BUSY' : pending > 0 ? 'IDLE' : 'OPERATIONAL';
+    // BUSY = actively processing; DEGRADED = stalled tasks present; OPERATIONAL = clean idle
+    const health = processing > 0
+        ? 'BUSY'
+        : stalledCount > 0
+            ? 'DEGRADED'
+            : 'OPERATIONAL';
 
     return c.json({
         health,
-        tasks_24h: { pending, processing, completed: completed24h, failed: failed24h },
+        tasks_24h: { pending, processing, completed: completed24h, failed: failed24h, stalled: stalledCount },
         recent_tasks: recentTasks.results || [],
         latest_article: latestArticle || null,
-        active_provider: providerConfig || { provider: 'workers_ai', label: 'Cloudflare Workers AI', model: '@cf/meta/llama-3.1-70b-instruct' },
+        active_provider: providerConfig || {
+            provider: 'workers_ai',
+            label: 'Cloudflare Workers AI',
+            model: '@cf/meta/llama-3.1-70b-instruct',
+        },
+        metrics_7d: metricsRows.results || [],
         generated_at: new Date().toISOString(),
     });
 });
@@ -96,7 +166,7 @@ router.get('/stream', async (c) => {
                     GROUP BY status
                 `).all<{ status: string; count: number }>(),
                 c.env.DB.prepare(`
-                    SELECT id, type, status, created_at, completed_at
+                    SELECT id, type, status, priority, created_at, completed_at
                     FROM agent_tasks ORDER BY created_at DESC LIMIT 10
                 `).all<Record<string, unknown>>(),
                 c.env.DB.prepare(`
@@ -134,7 +204,7 @@ router.get('/stream', async (c) => {
     });
 });
 
-// Admin-only auth for task management endpoints
+// ─── Admin-only auth middleware for task management endpoints ──────────────────
 router.use('/tasks/*', async (c, next) => {
     const authHeader = c.req.header('Authorization');
     if (!authHeader || authHeader !== `Bearer ${c.env.ADMIN_API_KEY}`) {
@@ -144,36 +214,56 @@ router.use('/tasks/*', async (c, next) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/tasks/pending - Fetch the next available task
+// GET /agent/tasks/pending — Fetch and atomically lock the highest-priority task
+//
+// Uses migration 0027 columns:
+//   - priority ASC (1=urgent, 5=normal, 10=low)
+//   - expires_at: task TTL set to 10 minutes from lock time
+//   - Expired processing tasks are reset to pending first (stall recovery)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/tasks/pending', async (c) => {
-    // We use a transaction to safely fetch and lock a task
-    // D1 doesn't have true FOR UPDATE SKIP LOCKED, so we do a simple query and atomic update
+    const agentName = c.req.query('agent') || 'unknown';
+    const agentVersion = c.req.query('version') || null;
+
+    // Step 0: Reset stalled tasks (processing past TTL) back to pending so they can be retried
+    await c.env.DB.prepare(`
+        UPDATE agent_tasks
+        SET status = 'pending',
+            updated_at = datetime('now')
+        WHERE status = 'processing'
+          AND expires_at IS NOT NULL
+          AND expires_at < datetime('now')
+          AND retry_count < max_retries
+    `).run();
+
+    // Step 1: Find the highest-priority pending task
     const pendingTask = await c.env.DB.prepare(`
-        SELECT id, type, payload 
-        FROM agent_tasks 
-        WHERE status = 'pending' 
-        ORDER BY created_at ASC 
+        SELECT id, type, payload, priority, retry_count, max_retries
+        FROM agent_tasks
+        WHERE status = 'pending'
+        ORDER BY priority ASC, created_at ASC
         LIMIT 1
-    `).first<{ id: string, type: string, payload: string }>();
+    `).first<{ id: string; type: string; payload: string; priority: number; retry_count: number; max_retries: number }>();
 
     if (!pendingTask) {
         return c.json({ data: null, message: 'No pending tasks' });
     }
 
-    // Attempt to lock it (atomic)
+    // Step 2: Atomically lock it and set a 10-minute TTL
     const updateResult = await c.env.DB.prepare(`
-        UPDATE agent_tasks 
-        SET status = 'processing', updated_at = datetime('now')
+        UPDATE agent_tasks
+        SET status       = 'processing',
+            updated_at   = datetime('now'),
+            expires_at   = datetime('now', '+10 minutes'),
+            agent_version = ?
         WHERE id = ? AND status = 'pending'
-    `).bind(pendingTask.id).run();
+    `).bind(agentVersion, pendingTask.id).run();
 
     if (updateResult.meta.changes === 0) {
-        // Someone else grabbed it in the millisecond between select and update
+        // Race: another agent grabbed it between SELECT and UPDATE
         return c.json({ data: null, message: 'Task already claimed, try again' });
     }
 
-    // Parse payload safely
     let parsedPayload;
     try {
         parsedPayload = JSON.parse(pendingTask.payload);
@@ -185,130 +275,238 @@ router.get('/tasks/pending', async (c) => {
         data: {
             id: pendingTask.id,
             type: pendingTask.type,
-            payload: parsedPayload
-        }
+            payload: parsedPayload,
+            priority: pendingTask.priority,
+            attempt: pendingTask.retry_count + 1,
+            max_retries: pendingTask.max_retries,
+        },
     });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/tasks/complete - Submit a completed task
+// POST /agent/tasks/complete — Submit a completed or failed task
+//
+// Uses migration 0027 columns:
+//   - retry_count: incremented on failure
+//   - max_retries: if retry_count < max_retries, re-queue as pending instead of failing
+//   - Writes a row to agent_metrics for every call
 // ───────────────────────────────────────────────────────────────────────────────
 const CompleteTaskSchema = z.object({
-    taskId: z.string().uuid(),
-    status: z.enum(['completed', 'failed']),
-    result: z.any().optional(),
-    errorMessage: z.string().optional()
+    taskId:       z.string().uuid(),
+    status:       z.enum(['completed', 'failed']),
+    agentName:    z.string().default('unknown'),
+    durationMs:   z.number().int().nonneg().optional(),
+    result:       z.any().optional(),
+    errorMessage: z.string().optional(),
+    modelUsed:    z.string().optional(),
+    tokensUsed:   z.number().int().nonneg().optional(),
 });
 
 router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) => {
     const payload = c.req.valid('json');
+    const completedAt = new Date().toISOString();
 
-    // Update the task status
-    await c.env.DB.prepare(`
-        UPDATE agent_tasks 
-        SET status = ?, result = ?, error_message = ?, updated_at = datetime('now'), completed_at = datetime('now')
-        WHERE id = ?
-    `).bind(
-        payload.status,
-        payload.result ? JSON.stringify(payload.result) : null,
-        payload.errorMessage || null,
-        payload.taskId
-    ).run();
+    // Fetch current retry state
+    const taskMeta = await c.env.DB.prepare(
+        'SELECT type, payload, retry_count, max_retries FROM agent_tasks WHERE id = ?'
+    ).bind(payload.taskId).first<{ type: string; payload: string; retry_count: number; max_retries: number }>();
 
-    // If this was an article generation task and it completed successfully, we trigger the final ingestion logic
-    // We'd need to look up the task to know what to do if the agent didn't send back the context type.
-    const task = await c.env.DB.prepare('SELECT type, payload FROM agent_tasks WHERE id = ?').bind(payload.taskId).first<{ type: string, payload: string }>();
+    if (!taskMeta) {
+        return c.json({ error: 'not_found', message: 'Task not found' }, 404);
+    }
 
-    if (task && task.type === 'generate_article' && payload.status === 'completed' && payload.result) {
-        try {
-            const originalPayload = JSON.parse(task.payload);
-            const itemId = originalPayload.ingested_item_id;
-            const generated = payload.result; // Expects { title, subtitle, content, summary, readingTime, ... }
+    let finalStatus = payload.status;
 
-            if (itemId && generated.title && generated.content) {
-                // Determine reading time
-                const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
-                
-                // Generate a slug
-                const baseSlug = generated.title
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-|-$/g, '')
-                    .slice(0, 80);
-                const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
-                const articleId = crypto.randomUUID();
+    if (payload.status === 'failed') {
+        const newRetryCount = (taskMeta.retry_count ?? 0) + 1;
 
-                // Insert into articles table
-                await c.env.DB.prepare(`
-                    INSERT INTO articles (
-                        id, slug, title, subtitle, content, summary, 
-                        country_code, sector_id, tags, 
-                        reading_time_minutes, source_url, source_title, source_published_at,
-                        status, published_at, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
-                `).bind(
-                    articleId,
-                    slug,
-                    generated.title,
-                    generated.subtitle || null,
-                    generated.content,
-                    generated.summary || null,
-                    originalPayload.country_code || null,
-                    originalPayload.sector_id || null,
-                    generated.tags ? JSON.stringify(generated.tags) : '[]',
-                    readingTime,
-                    originalPayload.url || null,
-                    originalPayload.title || null,
-                    originalPayload.published_at || null
-                ).run();
+        if (newRetryCount < (taskMeta.max_retries ?? 3)) {
+            // Re-queue: bump retry count, reset to pending with lower priority degradation
+            await c.env.DB.prepare(`
+                UPDATE agent_tasks
+                SET status       = 'pending',
+                    retry_count  = ?,
+                    error_message = ?,
+                    updated_at   = datetime('now'),
+                    expires_at   = NULL
+                WHERE id = ?
+            `).bind(newRetryCount, payload.errorMessage ?? null, payload.taskId).run();
 
-                // Update ingested_items to link to the new article
-                await c.env.DB.prepare(`
-                    UPDATE ingested_items 
-                    SET status = 'completed', article_id = ?, error_message = NULL
-                    WHERE id = ?
-                `).bind(articleId, itemId).run();
+            console.log(`[agent] Task ${payload.taskId} failed (attempt ${newRetryCount}/${taskMeta.max_retries}), re-queuing.`);
+            finalStatus = 'failed'; // we still log it as failed for this run
+        } else {
+            // Exhausted retries — mark permanently failed
+            await c.env.DB.prepare(`
+                UPDATE agent_tasks
+                SET status        = 'failed',
+                    retry_count   = ?,
+                    error_message = ?,
+                    updated_at    = datetime('now'),
+                    completed_at  = datetime('now'),
+                    expires_at    = NULL
+                WHERE id = ?
+            `).bind(taskMeta.retry_count + 1, payload.errorMessage ?? null, payload.taskId).run();
+        }
+    } else {
+        // Completed successfully
+        await c.env.DB.prepare(`
+            UPDATE agent_tasks
+            SET status       = 'completed',
+                result       = ?,
+                error_message = NULL,
+                updated_at   = datetime('now'),
+                completed_at = datetime('now'),
+                expires_at   = NULL
+            WHERE id = ?
+        `).bind(
+            payload.result ? JSON.stringify(payload.result) : null,
+            payload.taskId
+        ).run();
+    }
 
-                // 2. TRIGGER ASYNCHRONOUS ENRICHMENT (Fire and forget in this context)
-                // In Cloudflare Workers, we use c.executionCtx.waitUntil for non-blocking work
-                c.executionCtx.waitUntil((async () => {
+    // Write telemetry (fire and forget — don't block the response)
+    c.executionCtx.waitUntil(writeAgentMetric(c.env.DB, {
+        agentName:   payload.agentName,
+        durationMs:  payload.durationMs ?? 0,
+        tasksSeen:   1,
+        tasksDone:   finalStatus === 'completed' ? 1 : 0,
+        tasksFailed: finalStatus === 'failed' ? 1 : 0,
+        modelUsed:   payload.modelUsed,
+        tokensUsed:  payload.tokensUsed,
+        error:       payload.errorMessage,
+    }));
+
+    // ── Article ingestion pipeline (unchanged from before) ──────────────────
+    if (taskMeta.type === 'generate_article' && payload.status === 'completed' && payload.result) {
+        c.executionCtx.waitUntil((async () => {
+            try {
+                const originalPayload = JSON.parse(taskMeta.payload);
+                const itemId    = originalPayload.ingested_item_id;
+                const generated = payload.result;
+
+                if (itemId && generated.title && generated.content) {
+                    const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
+                    const baseSlug = generated.title
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/^-|-$/g, '')
+                        .slice(0, 80);
+                    const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
+                    const articleId = crypto.randomUUID();
+
+                    await c.env.DB.prepare(`
+                        INSERT INTO articles (
+                            id, slug, title, subtitle, content, summary,
+                            country_code, sector_id, tags,
+                            reading_time_minutes, source_url, source_title, source_published_at,
+                            status, published_at, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                    `).bind(
+                        articleId, slug,
+                        generated.title, generated.subtitle || null,
+                        generated.content, generated.summary || null,
+                        originalPayload.country_code || null,
+                        originalPayload.sector_id    || null,
+                        generated.tags ? JSON.stringify(generated.tags) : '[]',
+                        readingTime,
+                        originalPayload.url          || null,
+                        originalPayload.title        || null,
+                        originalPayload.published_at || null,
+                    ).run();
+
+                    await c.env.DB.prepare(`
+                        UPDATE ingested_items
+                        SET status = 'completed', article_id = ?, error_message = NULL
+                        WHERE id = ?
+                    `).bind(articleId, itemId).run();
+
+                    // Async enrichment: translate + hero image
                     try {
-                        console.log(`Enriching article: ${articleId}`);
-
-                        // A. Auto-Translate
                         await autoTranslateArticle(c.env, articleId, {
-                            title: generated.title,
-                            subtitle: generated.subtitle,
-                            summary: generated.summary,
-                            content: generated.content,
-                            country_code: originalPayload.country_code
+                            title:        generated.title,
+                            subtitle:     generated.subtitle,
+                            summary:      generated.summary,
+                            content:      generated.content,
+                            country_code: originalPayload.country_code,
                         });
 
-                        // B. Generate Hero Image
                         const imagePrompt = `Professional editorial journalism photo for an article titled: "${generated.title}". Subject: ${originalPayload.country_name || 'Africa'} ${originalPayload.sector_name || 'Business'}. Photorealistic, high quality, 8k.`;
                         const imageBuffer = await generateArticleImage(c.env, imagePrompt);
-                        
+
                         if (imageBuffer) {
                             const imageKey = `articles/${articleId}/hero.png`;
                             const imageUrl = await uploadImage(c.env, imageKey, imageBuffer, 'image/png');
-                            
-                            await c.env.DB.prepare(`
-                                UPDATE articles SET ai_image_url = ? WHERE id = ?
-                            `).bind(imageUrl, articleId).run();
-                            
-                            console.log(`Image generated and attached to article: ${articleId}`);
+                            await c.env.DB.prepare(
+                                'UPDATE articles SET ai_image_url = ? WHERE id = ?'
+                            ).bind(imageUrl, articleId).run();
                         }
                     } catch (enrichError) {
                         console.error('Enrichment failed for article:', articleId, enrichError);
                     }
-                })());
+                }
+            } catch (e) {
+                console.error('Failed to process completed article generation task', e);
             }
-        } catch (e) {
-            console.error('Failed to process completed article generation task', e);
-        }
+        })());
     }
 
-    return c.json({ success: true, message: 'Task status updated' });
+    return c.json({ success: true, message: 'Task status updated', status: finalStatus });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /agent/metrics — ZeroClaw can POST a batch metric record directly
+// (alternative to per-task reporting via /tasks/complete)
+// ───────────────────────────────────────────────────────────────────────────────
+const MetricSchema = z.object({
+    agentName:   z.string(),
+    durationMs:  z.number().int().nonneg(),
+    tasksSeen:   z.number().int().nonneg().default(0),
+    tasksDone:   z.number().int().nonneg().default(0),
+    tasksFailed: z.number().int().nonneg().default(0),
+    modelUsed:   z.string().optional(),
+    tokensUsed:  z.number().int().nonneg().optional(),
+    error:       z.string().optional(),
+});
+
+router.use('/metrics', async (c, next) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || authHeader !== `Bearer ${c.env.ADMIN_API_KEY}`) {
+        return c.json({ error: 'unauthorized' }, 401);
+    }
+    await next();
+});
+
+router.post('/metrics', validate('json', MetricSchema), async (c) => {
+    const body = c.req.valid('json');
+    await writeAgentMetric(c.env.DB, body);
+    return c.json({ success: true });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/metrics — Admin view of agent execution history
+// ───────────────────────────────────────────────────────────────────────────────
+router.use('/metrics*', async (c, next) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || authHeader !== `Bearer ${c.env.ADMIN_API_KEY}`) {
+        return c.json({ error: 'unauthorized' }, 401);
+    }
+    await next();
+});
+
+router.get('/metrics', async (c) => {
+    const days  = Number(c.req.query('days') || 7);
+    const agent = c.req.query('agent');
+
+    const rows = await c.env.DB.prepare(`
+        SELECT id, agent_name, run_at, duration_ms, tasks_seen, tasks_done, tasks_failed, model_used, tokens_used, error
+        FROM agent_metrics
+        WHERE run_at > datetime('now', '-' || ? || ' days')
+          ${agent ? "AND agent_name = ?" : ""}
+        ORDER BY run_at DESC
+        LIMIT 200
+    `).bind(...(agent ? [days, agent] : [days])).all<Record<string, unknown>>();
+
+    return c.json({ data: rows.results || [] });
 });
 
 export { router as agentWebhooksRouter };
