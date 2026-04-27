@@ -52,12 +52,14 @@ export const BetaMemberAccess = () => {
       .catch(() => setPhase('form'));
   }, []);
 
-  // Listen for global 401 events from the API layer — redirect to login immediately
+  // Listen for global 401 events from the API layer — show the expired screen so
+  // users know why they were logged out rather than silently seeing the login form.
   useEffect(() => {
     const handler = () => {
+      if (!memberAuth.getToken()) return; // already logged out, ignore
       memberAuth.clearToken();
       setMemberData(null);
-      setPhase('form');
+      setPhase('expired');
     };
     window.addEventListener('boa:auth:unauthorized', handler);
     return () => window.removeEventListener('boa:auth:unauthorized', handler);

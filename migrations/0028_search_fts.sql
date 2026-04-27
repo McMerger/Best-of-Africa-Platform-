@@ -1,4 +1,6 @@
 -- Create FTS5 Virtual Table for Article Search
+-- NOTE: Initial population of existing articles is done separately via
+-- a batched backfill script to avoid D1 CPU time limits.
 CREATE VIRTUAL TABLE IF NOT EXISTS articles_fts USING fts5(
     id UNINDEXED,
     title,
@@ -7,10 +9,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS articles_fts USING fts5(
     content='articles',
     content_rowid='rowid'
 );
-
--- Initial population of the FTS index
-INSERT INTO articles_fts(articles_fts, rowid, id, title, summary, content)
-SELECT 'rebuild', rowid, id, title, summary, content FROM articles;
 
 -- Create Triggers to keep FTS index synced with the articles table
 CREATE TRIGGER articles_ai AFTER INSERT ON articles BEGIN
