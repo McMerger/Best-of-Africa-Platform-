@@ -52,6 +52,17 @@ export const BetaMemberAccess = () => {
       .catch(() => setPhase('form'));
   }, []);
 
+  // Listen for global 401 events from the API layer — redirect to login immediately
+  useEffect(() => {
+    const handler = () => {
+      memberAuth.clearToken();
+      setMemberData(null);
+      setPhase('form');
+    };
+    window.addEventListener('boa:auth:unauthorized', handler);
+    return () => window.removeEventListener('boa:auth:unauthorized', handler);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

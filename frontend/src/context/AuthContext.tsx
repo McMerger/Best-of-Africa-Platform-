@@ -50,6 +50,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [state.token, state.user]);
 
+    // Listen for 401 unauthorized events from the API layer and log out globally
+    useEffect(() => {
+        const handler = () => logout();
+        window.addEventListener('boa:auth:unauthorized', handler);
+        return () => window.removeEventListener('boa:auth:unauthorized', handler);
+    }, []);
+
     const login = (token: string, user: AuthState['user']) => {
         setState({
             isAuthenticated: true,

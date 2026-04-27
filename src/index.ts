@@ -43,7 +43,7 @@ app.use('*', cors({
     origin: (origin, c) => {
         const extra = c.env.ADDITIONAL_ORIGINS;
         const allowed = new Set(BASE_ALLOWED_ORIGINS);
-        if (extra) extra.split(',').map(o => o.trim()).filter(Boolean).forEach(o => allowed.add(o));
+        if (extra) extra.split(',').map((o: string) => o.trim()).filter(Boolean).forEach((o: string) => allowed.add(o));
         if (allowed.has(origin) || origin.endsWith('.pages.dev')) return origin;
         return 'https://bestofafrica.com';
     },
