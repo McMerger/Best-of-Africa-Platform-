@@ -28,8 +28,8 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#0A0F1E] flex flex-col items-center justify-center p-6 text-center font-sans">
-          <div className="max-w-md w-full bg-[#111827] border border-[#C9A84C]/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
+        <div className="min-h-screen bg-[#0E0C0A] flex flex-col items-center justify-center p-6 text-center font-sans">
+          <div className="max-w-md w-full bg-[#1A1714] border border-[#C9A84C]/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-[#C9A84C]/10 flex items-center justify-center mb-6">
               <ShieldAlert size={32} className="text-[#C9A84C]" />
             </div>
@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: null });
                 window.location.href = '/';
               }}
-              className="w-full bg-[#C9A84C] text-[#0A0F1E] py-3 rounded-lg font-semibold hover:bg-white transition-colors uppercase tracking-wider text-sm mb-4"
+              className="w-full bg-[#C9A84C] text-[#0E0C0A] py-3 rounded-lg font-semibold hover:bg-white transition-colors uppercase tracking-wider text-sm mb-4"
             >
               Return to Core Hub
             </button>

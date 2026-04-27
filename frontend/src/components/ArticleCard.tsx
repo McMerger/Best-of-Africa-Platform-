@@ -8,7 +8,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
     const [imgError, setImgError] = useState(false);
     const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/^📰\s*/g, '').trim();
     return (
-        <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/60 bg-card/50 backdrop-blur-sm">
+        <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/50 bg-card/50 backdrop-blur-sm">
             <div className="hidden md:block w-1.5 bg-primary/10 shrink-0 group-hover:bg-primary transition-colors duration-300" />
 
             {/* Thumbnail Image */}

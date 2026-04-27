@@ -256,7 +256,7 @@ router.get('/health/deep', async (c) => {
 
     // Log health check to analytics
     try {
-        c.env.ANALYTICS?.writeDataPoint({
+        c.env.ANALYTICS.writeDataPoint({
             blobs: ['health_check', overallStatus],
             doubles: [totalResponseTime, checks.length, unhealthyCount, degradedCount],
             indexes: ['health_check', overallStatus],

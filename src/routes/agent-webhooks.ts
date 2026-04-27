@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { generateArticleImage } from '../lib/ai';
+import { generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { autoTranslateArticle } from '../lib/translate';
 
@@ -49,6 +49,9 @@ async function writeAgentMetric(
 // (no auth required — safe to display in beta frontend)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/status', async (c) => {
+    const { limit = '5' } = c.req.query();
+    const recentLimit = Math.max(1, Math.min(50, parseInt(limit) || 5));
+
     const [taskCounts, recentTasks, latestArticle, providerConfig, stalled, metricsRows] = await Promise.all([
         // Task counts by status (last 24h)
         c.env.DB.prepare(`
@@ -58,14 +61,14 @@ router.get('/status', async (c) => {
             GROUP BY status
         `).all<{ status: string; count: number }>(),
 
-        // Recent 5 tasks
+        // Recent tasks — configurable via ?limit= (default 5, max 50)
         c.env.DB.prepare(`
             SELECT id, type, status, priority, retry_count, created_at, updated_at, completed_at,
                    CASE WHEN error_message IS NOT NULL THEN error_message ELSE NULL END as error
             FROM agent_tasks
             ORDER BY created_at DESC
-            LIMIT 5
-        `).all<Record<string, unknown>>(),
+            LIMIT ?
+        `).bind(recentLimit).all<Record<string, unknown>>(),
 
         // Most recently published article
         c.env.DB.prepare(`
@@ -225,22 +228,50 @@ router.get('/tasks/pending', async (c) => {
     const agentName = c.req.query('agent') || 'unknown';
     const agentVersion = c.req.query('version') || null;
 
-    // Step 0: Reset stalled tasks (processing past TTL) back to pending so they can be retried
+    // Step 0: Reset stalled tasks (processing past TTL) back to pending so they can be retried.
+    // Increment retry_count so a perpetually-stalling task eventually exhausts its retries.
     await c.env.DB.prepare(`
         UPDATE agent_tasks
-        SET status = 'pending',
-            updated_at = datetime('now')
+        SET status        = 'pending',
+            retry_count   = retry_count + 1,
+            error_message = 'Stalled: TTL expired without completion',
+            updated_at    = datetime('now'),
+            expires_at    = NULL
         WHERE status = 'processing'
           AND expires_at IS NOT NULL
           AND expires_at < datetime('now')
           AND retry_count < max_retries
     `).run();
 
-    // Step 1: Find the highest-priority pending task
+    // Mark permanently failed tasks that stalled and have no retries left
+    await c.env.DB.prepare(`
+        UPDATE agent_tasks
+        SET status        = 'failed',
+            error_message = 'Stalled: TTL expired, retries exhausted',
+            updated_at    = datetime('now'),
+            completed_at  = datetime('now'),
+            expires_at    = NULL
+        WHERE status = 'processing'
+          AND expires_at IS NOT NULL
+          AND expires_at < datetime('now')
+          AND retry_count >= max_retries
+    `).run();
+
+    // Passive archival: prune old terminal tasks so the table doesn't grow unbounded.
+    // Completed tasks older than 30 days and failed tasks older than 7 days are removed.
+    await c.env.DB.prepare(`
+        DELETE FROM agent_tasks
+        WHERE (status = 'completed' AND completed_at < datetime('now', '-30 days'))
+           OR (status = 'failed'    AND completed_at < datetime('now', '-7 days'))
+    `).run();
+
+    // Step 1: Find the highest-priority pending task that is ready to run.
+    // expires_at is repurposed as a "not-before" gate for retried tasks.
     const pendingTask = await c.env.DB.prepare(`
         SELECT id, type, payload, priority, retry_count, max_retries
         FROM agent_tasks
         WHERE status = 'pending'
+          AND (expires_at IS NULL OR expires_at <= datetime('now'))
         ORDER BY priority ASC, created_at ASC
         LIMIT 1
     `).first<{ id: string; type: string; payload: string; priority: number; retry_count: number; max_retries: number }>();
@@ -295,15 +326,15 @@ const CompleteTaskSchema = z.object({
     taskId:       z.string().uuid(),
     status:       z.enum(['completed', 'failed']),
     agentName:    z.string().default('unknown'),
-    durationMs:   z.number().int().nonneg().optional(),
+    durationMs:   z.number().int().nonnegative().optional(),
     result:       z.any().optional(),
     errorMessage: z.string().optional(),
     modelUsed:    z.string().optional(),
-    tokensUsed:   z.number().int().nonneg().optional(),
+    tokensUsed:   z.number().int().nonnegative().optional(),
 });
 
 router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) => {
-    const payload = c.req.valid('json');
+    const payload = await c.req.json() as z.infer<typeof CompleteTaskSchema>;
     const completedAt = new Date().toISOString();
 
     // Fetch current retry state
@@ -321,18 +352,25 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
         const newRetryCount = (taskMeta.retry_count ?? 0) + 1;
 
         if (newRetryCount < (taskMeta.max_retries ?? 3)) {
-            // Re-queue: bump retry count, reset to pending with lower priority degradation
+            // Exponential backoff: 30s, 2m, 8m for attempts 1-3.
+            // We repurpose expires_at as a "not-before" gate — the pending query
+            // already filters `expires_at IS NULL`, so reuse it to delay pickup.
+            const backoffSeconds = Math.pow(4, newRetryCount) * 30; // 30s, 120s, 480s
+            // Priority degrades by 1 per retry so new tasks aren't blocked behind retries.
+            const degradedPriority = Math.min(10, (taskMeta as any).priority ?? 5) + 1;
+
             await c.env.DB.prepare(`
                 UPDATE agent_tasks
-                SET status       = 'pending',
-                    retry_count  = ?,
+                SET status        = 'pending',
+                    retry_count   = ?,
+                    priority      = ?,
                     error_message = ?,
-                    updated_at   = datetime('now'),
-                    expires_at   = NULL
+                    updated_at    = datetime('now'),
+                    expires_at    = datetime('now', '+' || ? || ' seconds')
                 WHERE id = ?
-            `).bind(newRetryCount, payload.errorMessage ?? null, payload.taskId).run();
+            `).bind(newRetryCount, degradedPriority, payload.errorMessage ?? null, backoffSeconds, payload.taskId).run();
 
-            console.log(`[agent] Task ${payload.taskId} failed (attempt ${newRetryCount}/${taskMeta.max_retries}), re-queuing.`);
+            console.log(`[agent] Task ${payload.taskId} failed (attempt ${newRetryCount}/${taskMeta.max_retries}), re-queuing with ${backoffSeconds}s backoff.`);
             finalStatus = 'failed'; // we still log it as failed for this run
         } else {
             // Exhausted retries — mark permanently failed
@@ -399,8 +437,9 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             id, slug, title, subtitle, content, summary,
                             country_code, sector_id, tags,
                             reading_time_minutes, source_url, source_title, source_published_at,
+                            generation_prompt_version,
                             status, published_at, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
                     `).bind(
                         articleId, slug,
                         generated.title, generated.subtitle || null,
@@ -412,6 +451,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         originalPayload.url          || null,
                         originalPayload.title        || null,
                         originalPayload.published_at || null,
+                        ARTICLE_PROMPT_VERSION,
                     ).run();
 
                     await c.env.DB.prepare(`
@@ -420,7 +460,8 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         WHERE id = ?
                     `).bind(articleId, itemId).run();
 
-                    // Async enrichment: translate + hero image
+                    // Async enrichment: translation and hero image are independent —
+                    // failure of one must not prevent the other from running.
                     try {
                         await autoTranslateArticle(c.env, articleId, {
                             title:        generated.title,
@@ -429,7 +470,11 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             content:      generated.content,
                             country_code: originalPayload.country_code,
                         });
+                    } catch (translateError) {
+                        console.error(`[enrichment] Translation failed for article ${articleId}:`, translateError);
+                    }
 
+                    try {
                         const imagePrompt = `Professional editorial journalism photo for an article titled: "${generated.title}". Subject: ${originalPayload.country_name || 'Africa'} ${originalPayload.sector_name || 'Business'}. Photorealistic, high quality, 8k.`;
                         const imageBuffer = await generateArticleImage(c.env, imagePrompt);
 
@@ -439,13 +484,37 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             await c.env.DB.prepare(
                                 'UPDATE articles SET ai_image_url = ? WHERE id = ?'
                             ).bind(imageUrl, articleId).run();
+                        } else {
+                            console.warn(`[enrichment] Image generation returned null for article ${articleId}`);
                         }
-                    } catch (enrichError) {
-                        console.error('Enrichment failed for article:', articleId, enrichError);
+                    } catch (imageError) {
+                        console.error(`[enrichment] Hero image failed for article ${articleId}:`, imageError);
                     }
                 }
             } catch (e) {
                 console.error('Failed to process completed article generation task', e);
+            }
+        })());
+    }
+
+    // ── Post-completion: evolve_instructions ──────────────────────────────────
+    // Mark the feedback rows as processed now that the task actually succeeded.
+    // If the task failed (and retries are exhausted), rows stay unprocessed so
+    // the next /self-improve/evolve call can include them in a fresh task.
+    if (taskMeta.type === 'evolve_instructions' && payload.status === 'completed') {
+        c.executionCtx.waitUntil((async () => {
+            try {
+                const originalPayload = JSON.parse(taskMeta.payload);
+                const feedbacks = originalPayload.feedbacks as Array<{ id: string }> | undefined;
+                if (Array.isArray(feedbacks) && feedbacks.length > 0) {
+                    const ids = feedbacks.map(f => f.id);
+                    const placeholders = ids.map(() => '?').join(',');
+                    await c.env.DB.prepare(
+                        `UPDATE article_feedback SET is_processed_by_agent = 1 WHERE id IN (${placeholders})`
+                    ).bind(...ids).run();
+                }
+            } catch (e) {
+                console.error('[agent] Failed to mark feedback as processed after evolve_instructions:', e);
             }
         })());
     }
@@ -459,12 +528,12 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
 // ───────────────────────────────────────────────────────────────────────────────
 const MetricSchema = z.object({
     agentName:   z.string(),
-    durationMs:  z.number().int().nonneg(),
-    tasksSeen:   z.number().int().nonneg().default(0),
-    tasksDone:   z.number().int().nonneg().default(0),
-    tasksFailed: z.number().int().nonneg().default(0),
+    durationMs:  z.number().int().nonnegative(),
+    tasksSeen:   z.number().int().nonnegative().default(0),
+    tasksDone:   z.number().int().nonnegative().default(0),
+    tasksFailed: z.number().int().nonnegative().default(0),
     modelUsed:   z.string().optional(),
-    tokensUsed:  z.number().int().nonneg().optional(),
+    tokensUsed:  z.number().int().nonnegative().optional(),
     error:       z.string().optional(),
 });
 
@@ -477,7 +546,7 @@ router.use('/metrics', async (c, next) => {
 });
 
 router.post('/metrics', validate('json', MetricSchema), async (c) => {
-    const body = c.req.valid('json');
+    const body = await c.req.json() as z.infer<typeof MetricSchema>;
     await writeAgentMetric(c.env.DB, body);
     return c.json({ success: true });
 });
@@ -507,6 +576,32 @@ router.get('/metrics', async (c) => {
     `).bind(...(agent ? [days, agent] : [days])).all<Record<string, unknown>>();
 
     return c.json({ data: rows.results || [] });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// DELETE /agent/tasks/archive — Admin: manually purge old terminal tasks
+// Accepts ?completed_days=N (default 30) and ?failed_days=N (default 7)
+// ───────────────────────────────────────────────────────────────────────────────
+router.delete('/tasks/archive', async (c) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || authHeader !== `Bearer ${c.env.ADMIN_API_KEY}`) {
+        return c.json({ error: 'unauthorized' }, 401);
+    }
+
+    const completedDays = Math.max(1, Number(c.req.query('completed_days') || 30));
+    const failedDays    = Math.max(1, Number(c.req.query('failed_days')    || 7));
+
+    const result = await c.env.DB.prepare(`
+        DELETE FROM agent_tasks
+        WHERE (status = 'completed' AND completed_at < datetime('now', '-' || ? || ' days'))
+           OR (status = 'failed'    AND completed_at < datetime('now', '-' || ? || ' days'))
+    `).bind(completedDays, failedDays).run();
+
+    return c.json({
+        success: true,
+        deleted: result.meta.changes,
+        policy: { completed_days: completedDays, failed_days: failedDays },
+    });
 });
 
 export { router as agentWebhooksRouter };

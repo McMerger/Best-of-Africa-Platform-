@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function useSystemConfig() {
     return useQuery({

@@ -59,8 +59,8 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
         lens
     } = query;
 
-    const pageNum = page;
-    const limitNum = limit;
+    const pageNum = Math.max(1, page);
+    const limitNum = Math.max(1, Math.min(100, limit));
     const offset = (pageNum - 1) * limitNum;
 
     // Build query
@@ -88,7 +88,14 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
         params.push(urgency);
     }
 
-    const sortCol = sort;
+    // Use a whitelist map — never interpolate user input directly into SQL
+    const SORT_COLUMN_MAP: Record<string, string> = {
+        published_at: 'a.published_at',
+        engagement_score: 'a.engagement_score',
+        view_count: 'a.view_count',
+        created_at: 'a.created_at',
+    };
+    const sortCol = SORT_COLUMN_MAP[sort] ?? 'a.published_at';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     // Get total count
@@ -110,7 +117,7 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     LEFT JOIN countries c ON a.country_code = c.code
     LEFT JOIN sectors s ON a.sector_id = s.id
     ${whereClause}
-    ORDER BY a.is_sponsored DESC, a.${sortCol} ${sortOrder}
+    ORDER BY a.is_sponsored DESC, ${sortCol} ${sortOrder}
     LIMIT ? OFFSET ?
   `).bind(...params, limitNum, offset).all<ArticleListItem>();
 
@@ -183,7 +190,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                         { role: 'system', content: 'You are a Global Editor. Write a 1-sentence "World View" synthesizing these top stories.' },
                         { role: 'user', content: headlines }
                     ]
-                }) as { response: string };
+                }) as unknown as { response: string };
                 return aiResponse.response.trim();
             } catch (e) {
                 return "Global markets are active.";
@@ -337,7 +344,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
                         { role: 'system', content: 'You are a Sector Specialist. Synthesize a 2-sentence "Sector Trend Pulse" based on these headlines.' },
                         { role: 'user', content: headlines }
                     ]
-                }) as { response: string };
+                }) as unknown as { response: string };
                 return aiResponse.response.trim();
             } catch (e) {
                 return "Sector activity is normal.";
@@ -445,7 +452,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
                         { role: 'user', content: prompt }
                     ],
                     response_format: { type: 'json_object' }
-                }) as { response: string };
+                }) as unknown as { response: string };
 
                 const match = aiResponse.response.match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : null;
@@ -497,6 +504,14 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
 // POST /articles/:slug/audio - Generate TTS audio for article
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
+    // Require authentication — audio generation calls ElevenLabs and incurs cost
+    const authHeader = c.req.header('Authorization');
+    const apiKey = c.req.header('X-API-Key');
+    const clientId = await decodeBearerJWT(authHeader, c.env.JWT_SECRET);
+    if (!clientId && !apiKey) {
+        return c.json({ success: false, error: 'unauthorized', message: 'Authentication required to generate audio' }, 401);
+    }
+
     const { slug } = (c.req as any).valid('param') as { slug: string };
 
     // Get article
@@ -534,9 +549,10 @@ router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
         let message = 'Audio generation queued. Available shortly.';
 
         if (c.env.ELEVENLABS_API_KEY) {
-            // Foundational African "Rachel" voice substitute or professional narrator
-            const voiceId = "21m00Tcm4TlvDq8ikWAM"; 
-            
+            // Voice ID falls back to Rachel (21m00Tcm4TlvDq8ikWAM) if env var not set.
+            // Override via ELEVENLABS_VOICE_ID in wrangler.toml / Workers secrets.
+            const voiceId = c.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+
             const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
                 method: 'POST',
                 headers: {

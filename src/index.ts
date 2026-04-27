@@ -16,7 +16,7 @@ import {
     servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
     eventsRouter, campaignsRouter, configRouter, devRouter,
     bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
-    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter
+    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter
 } from './routes';
 import { LiveCounter } from './durable-objects/live-counter';
 
@@ -31,15 +31,24 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 app.use('*', logger());
 app.use('*', secureHeaders());
 app.use('*', prettyJSON());
+// Production-safe allowed origins.
+// For local frontend dev add to .dev.vars:
+//   ADDITIONAL_ORIGINS=http://localhost:5173,http://localhost:5174
+const BASE_ALLOWED_ORIGINS = new Set([
+    'https://bestofafrica.com',
+    'https://www.bestofafrica.com',
+]);
+
 app.use('*', cors({
-    origin: (origin) => {
-        if (origin.endsWith('.pages.dev') || origin === 'http://localhost:5173' || origin === 'https://bestofafrica.com') {
-            return origin;
-        }
+    origin: (origin, c) => {
+        const extra = c.env.ADDITIONAL_ORIGINS;
+        const allowed = new Set(BASE_ALLOWED_ORIGINS);
+        if (extra) extra.split(',').map(o => o.trim()).filter(Boolean).forEach(o => allowed.add(o));
+        if (allowed.has(origin) || origin.endsWith('.pages.dev')) return origin;
         return 'https://bestofafrica.com';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Session-ID'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Session-ID', 'X-Requested-With', 'X-Admin-Key'],
     exposeHeaders: ['X-Total-Count', 'X-Rate-Limit-Remaining', 'X-Request-ID'],
     maxAge: 86400,
     credentials: true,
@@ -51,6 +60,38 @@ app.use('*', async (c, next) => {
     c.set('requestId', requestId);
     c.header('X-Request-ID', requestId);
     await next();
+});
+
+// CSRF guard: state-changing requests must originate from our frontend.
+// Browsers send Origin on cross-origin requests; same-origin requests send Referer.
+// Non-browser clients (Workers, CLI) that omit both headers must supply X-Requested-With.
+app.use('*', async (c, next) => {
+    const method = c.req.method;
+    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+        return next();
+    }
+
+    const origin = c.req.header('Origin');
+    const referer = c.req.header('Referer');
+    const xrw = c.req.header('X-Requested-With');
+
+    const ALLOWED_ORIGINS = ['https://bestofafrica.com', 'https://www.bestofafrica.com'];
+
+    if (origin && ALLOWED_ORIGINS.some(o => origin === o || origin.endsWith('.pages.dev'))) {
+        return next();
+    }
+    if (!origin && referer && ALLOWED_ORIGINS.some(o => referer.startsWith(o))) {
+        return next();
+    }
+    if (xrw === 'XMLHttpRequest') {
+        return next();
+    }
+    // Allow server-to-server calls that carry a valid admin key or API key header
+    if (c.req.header('Authorization') || c.req.header('X-API-Key') || c.req.header('X-Admin-Key')) {
+        return next();
+    }
+
+    return c.json({ error: 'forbidden', message: 'CSRF check failed' }, 403);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -103,6 +144,7 @@ api.route('/config', configRouter);
 
 api.route('/newsletter', newsletterRouter);
 api.route('/agent/providers', agentProvidersRouter);
+api.route('/agent/moonshot/oauth', moonshotOAuthRouter);
 api.route('/members', membersRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
@@ -172,9 +214,10 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
             break;
 
         case '*/2 * * * *':
-            // Optimization: every 2 minutes
+            // Optimization + stale task recovery: every 2 minutes
             console.log('Running optimization worker...');
             await runOptimization(env);
+            await runStaleTaskRecovery(env);
             break;
 
         case '0 5 * * *':
@@ -223,6 +266,14 @@ async function runOptimization(env: Env) {
     // Implemented in workers/optimizer.ts
     const { optimizeContent } = await import('./workers/optimizer');
     await optimizeContent(env);
+}
+
+async function runStaleTaskRecovery(env: Env) {
+    // Implemented in workers/generator.ts
+    // Internal fallback: claims generate_article tasks that ZeroClaw hasn't
+    // picked up after 15 minutes and runs the full generation pipeline locally.
+    const { processStaleArticleTasks } = await import('./workers/generator');
+    await processStaleArticleTasks(env);
 }
 
 async function processContentGeneration(data: Record<string, unknown>, env: Env) {

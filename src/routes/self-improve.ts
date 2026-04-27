@@ -43,15 +43,10 @@ router.get('/evolve', async (c) => {
             })
         ).run();
 
-        // 3. Mark feedback as "in processing" (or we could wait for task completion)
-        // For simplicity, we'll mark them as processed once queued
-        const feedbackIds = feedbacks.results.map(f => f.id);
-        const placeholders = feedbackIds.map(() => '?').join(',');
-        await c.env.DB.prepare(`
-            UPDATE article_feedback 
-            SET is_processed_by_agent = 1 
-            WHERE id IN (${placeholders})
-        `).bind(...feedbackIds).run();
+        // NOTE: Feedback rows are NOT marked as processed here.
+        // They will be marked processed by the agent-webhooks completion handler
+        // when the 'evolve_instructions' task succeeds. This prevents feedback
+        // from being silently lost if the agent fails or the task is never picked up.
 
         return c.json({
             success: true,

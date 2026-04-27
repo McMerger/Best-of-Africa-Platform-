@@ -3,31 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --navy: #0A0F1E;
-  --navy-surface: #111827;
-  --navy-card: rgba(255,255,255,0.03);
+  --charcoal: #1C1814;         /* Dark sections — hero, footer, membership */
+  --charcoal-surface: #EDE8DF; /* Alternating section bg */
+  --charcoal-deep: #0B0907;    /* Hero radial/deepest overlay */
+  --parchment: #F5F0E8;        /* Page background */
+  --parchment-deep: #EDE8DF;   /* Section alt background */
+  --navy: #1C1814;             /* Alias */
+  --navy-surface: #EDE8DF;     /* Alias */
+  --navy-card: rgba(28,24,20,0.03);
   --gold: #C9A84C;
   --gold-light: #E8C96A;
   --gold-muted: rgba(201,168,76,0.12);
-  --text-primary: #FFFFFF;
-  --text-secondary: rgba(255,255,255,0.7);
-  --text-muted: rgba(255,255,255,0.4);
-  --border-subtle: rgba(255,255,255,0.08);
+  --text-primary: #1C1814;
+  --text-secondary: rgba(28,24,20,0.65);
+  --text-muted: rgba(28,24,20,0.4);
+  --border-subtle: rgba(28,24,20,0.08);
   --border-gold: rgba(201,168,76,0.3);
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-card: 0 2px 16px rgba(28,24,20,0.08);
   --shadow-gold: 0 8px 40px rgba(201,168,76,0.2);
 }
 
 body {
-  background-color: #0A0F1E;
-  color: #FFFFFF;
+  background-color: #F5F0E8;
+  color: #1C1814;
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-h1, h2, h3 {
-  font-family: 'Playfair Display', serif;
 }
 
 @layer base {
@@ -148,8 +149,20 @@ h1, h2, h3 {
   h4,
   h5,
   h6 {
-    @apply font-sans tracking-tight text-foreground;
+    /* NOTE: text-foreground intentionally removed — it overrides explicit text-white
+       on beta page headings. Each heading sets its own colour. font-sans and
+       tracking-tight are safe defaults for non-serif pages. */
+    @apply font-sans tracking-tight;
   }
+
+  /* Beta pages use font-serif headings with white text — preserve this
+     against the font-sans base override above. The className on each
+     heading always includes font-serif and text-white which should win,
+     but explicit specificity here ensures it survives dark-mode cascades. */
+  .font-serif, [class*="font-serif"] {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
 
   h1 {
     @apply text-4xl font-black md:text-5xl lg:text-6xl;
@@ -219,5 +232,34 @@ h1, h2, h3 {
 
   .prose li {
     @apply text-foreground font-medium;
+  }
+
+  /* ── Beta UI utilities ───────────────────────────────────────────────────── */
+
+  /* Animated shimmer border for locked article cards — draws the eye to the paywall CTA */
+  @keyframes shimmer-border {
+    0%   { box-shadow: 0 0 0px rgba(201,168,76,0); }
+    40%  { box-shadow: 0 0 18px rgba(201,168,76,0.22); }
+    60%  { box-shadow: 0 0 18px rgba(201,168,76,0.22); }
+    100% { box-shadow: 0 0 0px rgba(201,168,76,0); }
+  }
+
+  .locked-card-shimmer {
+    animation: shimmer-border 3.5s ease-in-out infinite;
+  }
+  .locked-card-shimmer:hover {
+    animation: none;
+    box-shadow: 0 0 28px rgba(201,168,76,0.2);
+  }
+
+  /* Reading progress bar */
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #C9A84C, #E8C96A);
+    z-index: 9999;
+    transition: width 0.1s linear;
   }
 }

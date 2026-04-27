@@ -204,7 +204,6 @@ export const NavBar: React.FC = () => {
                                         <Button variant="ghost" className="w-full" asChild>
                                             <Link to="/login">Sign In</Link>
                                         </Button>
-                                        <div className="mt-4 text-[10px] text-muted-foreground/50 text-center font-mono">v1.2 (Mobile Fix)</div>
                                     </div>
                                 </div>
                             </div>
@@ -332,25 +331,17 @@ export const NavBar: React.FC = () => {
                                                     className="flex h-full w-full select-none flex-col justify-end rounded-3xl bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
                                                     to="/feed"
                                                 >
-                                                    <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center">
-                                                        <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/50 backdrop-blur-md rounded-full border border-border/50 shadow-sm">
-                                                            <span className="text-[10px] uppercase font-black tracking-[0.2em] text-primary">Command Center</span>
-                                                            <span className="flex h-2 w-2 relative">
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-                                                                <div className="relative hidden md:block w-[320px]">
-                                                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                                                    <Input
-                                                                        type="search"
-                                                                        placeholder="Search intelligence (e.g. 'Nigeria Energy')..."
-                                                                        className="h-10 w-full rounded-full border-border bg-muted/50 pl-10 text-sm focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all"
-                                                                    />
-                                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                                                        <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded-full border bg-muted px-2 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
-                                                                            <span className="text-xs">⌘</span>K
-                                                                        </kbd>
-                                                                    </div>
-                                                                </div>
-                                                            </span>
+                                                    <div className="mb-4 relative hidden md:block w-full">
+                                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                                                        <Input
+                                                            type="search"
+                                                            placeholder="Search intelligence (e.g. 'Nigeria Energy')..."
+                                                            className="h-10 w-full rounded-full border-border/50 bg-white/10 pl-10 pr-14 text-sm text-white placeholder:text-white/50 focus:bg-white/20 focus:ring-2 focus:ring-primary/40 transition-all"
+                                                        />
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                                            <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 font-mono text-[10px] font-medium text-white/60 sm:flex">
+                                                                <span className="text-xs">⌘</span>K
+                                                            </kbd>
                                                         </div>
                                                     </div>
                                                     <div className="mb-2 mt-4 text-lg font-medium text-white">

@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { trackEvent } from '../lib/analytics';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { checkRateLimit, rateLimitHeaders } from '../lib/ratelimit';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -18,6 +19,14 @@ router.get('/', async (c) => {
 
     if (!q || q.length < 2) {
         return c.json({ error: 'bad_request', message: 'Query must be at least 2 characters' }, 400);
+    }
+
+    // Rate limit: 30 searches/min per IP to protect AI embedding quota
+    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+    const rl = await checkRateLimit(c.env, `search:${ip}`, 'free');
+    Object.entries(rateLimitHeaders(rl)).forEach(([k, v]) => c.header(k, v));
+    if (!rl.allowed) {
+        return c.json({ error: 'too_many_requests', message: `Rate limit exceeded. Retry in ${rl.retryAfter}s.` }, 429);
     }
 
     const limitNum = Math.min(50, Math.max(1, parseInt(limit)));

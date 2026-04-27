@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // AGENT PROVIDERS ROUTER
 // Manage AI provider credentials that power ZeroClaw agents.
-// Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Cloudflare Workers AI
+// Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Moonshot AI (Kimi), Cloudflare Workers AI
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
@@ -9,15 +9,16 @@ import type { Env, Variables } from '../types';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'openrouter', 'workers_ai'] as const;
+const VALID_PROVIDERS = ['openai', 'anthropic', 'gemini', 'openrouter', 'moonshot', 'workers_ai'] as const;
 type ProviderName = typeof VALID_PROVIDERS[number];
 
 const PROVIDER_DEFAULTS: Record<ProviderName, { model: string; label: string; base_url?: string }> = {
-    openai:     { model: 'gpt-4o',                        label: 'OpenAI',         base_url: 'https://api.openai.com/v1' },
-    anthropic:  { model: 'claude-sonnet-4-6',              label: 'Anthropic',      base_url: 'https://api.anthropic.com' },
-    gemini:     { model: 'gemini-2.5-pro',                 label: 'Google Gemini',  base_url: 'https://generativelanguage.googleapis.com/v1beta' },
-    openrouter: { model: 'anthropic/claude-sonnet-4-6',    label: 'OpenRouter',     base_url: 'https://openrouter.ai/api/v1' },
-    workers_ai: { model: '@cf/meta/llama-3.1-70b-instruct',label: 'Cloudflare Workers AI' },
+    openai:     { model: 'gpt-4o',                         label: 'OpenAI',              base_url: 'https://api.openai.com/v1' },
+    anthropic:  { model: 'claude-sonnet-4-6',               label: 'Anthropic',           base_url: 'https://api.anthropic.com' },
+    gemini:     { model: 'gemini-2.5-pro',                  label: 'Google Gemini',       base_url: 'https://generativelanguage.googleapis.com/v1beta' },
+    openrouter: { model: 'anthropic/claude-sonnet-4-6',     label: 'OpenRouter',          base_url: 'https://openrouter.ai/api/v1' },
+    moonshot:   { model: 'moonshot-v1-32k',                 label: 'Moonshot AI (Kimi)',  base_url: 'https://api.moonshot.cn/v1' },
+    workers_ai: { model: '@cf/meta/llama-3.1-70b-instruct', label: 'Cloudflare Workers AI' },
 };
 
 // Admin-only auth
@@ -60,7 +61,9 @@ router.post('/', async (c) => {
         return c.json({ error: 'invalid_provider', message: `Provider must be one of: ${VALID_PROVIDERS.join(', ')}` }, 400);
     }
 
-    if (body.provider !== 'workers_ai' && !body.api_key) {
+    // Moonshot can authenticate via OAuth (no api_key needed if OAuth is authorized).
+    // All other external providers require an api_key.
+    if (body.provider !== 'workers_ai' && body.provider !== 'moonshot' && !body.api_key) {
         return c.json({ error: 'api_key_required', message: 'api_key is required for this provider' }, 400);
     }
 
@@ -165,7 +168,7 @@ router.post('/:id/test', async (c) => {
                 max_tokens: 5
             });
             testStatus = 'ok';
-        } else if (row.provider === 'openai' || row.provider === 'openrouter') {
+        } else if (row.provider === 'openai' || row.provider === 'openrouter' || row.provider === 'moonshot') {
             const baseUrl = row.base_url || PROVIDER_DEFAULTS[row.provider as ProviderName].base_url;
             const res = await fetch(`${baseUrl}/models`, {
                 headers: { Authorization: `Bearer ${row.api_key}` }
@@ -190,7 +193,8 @@ router.post('/:id/test', async (c) => {
             if (!res.ok) testError = `HTTP ${res.status}`;
         } else if (row.provider === 'gemini') {
             const res = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models?key=${row.api_key}`
+                'https://generativelanguage.googleapis.com/v1beta/models',
+                { headers: { 'x-goog-api-key': row.api_key } }
             );
             testStatus = res.ok ? 'ok' : 'error';
             if (!res.ok) testError = `HTTP ${res.status}`;
@@ -211,14 +215,11 @@ router.post('/:id/test', async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /agent/providers/config — get the active zeroclaw-compatible provider config
 // (used by ZeroClaw at startup to pick up credentials dynamically)
+// API keys are redacted from the HTTP response; ZeroClaw reads them directly from KV.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/config', async (c) => {
-    // Reuse KV-cached config if fresh (updated within last 5 minutes)
-    const cached = await c.env.CACHE.get('zeroclaw:provider_config', 'json');
-    if (cached) return c.json(cached);
-
     const config = await buildProviderConfig(c.env);
-    return c.json(config);
+    return c.json(redactProviderConfig(config));
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -247,6 +248,8 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
             providers.gemini = { api_key: row.api_key };
         } else if (row.provider === 'openrouter') {
             providers.openrouter = { api_key: row.api_key, base_url: row.base_url || 'https://openrouter.ai/api/v1' };
+        } else if (row.provider === 'moonshot') {
+            providers.moonshot = { api_key: row.api_key, base_url: row.base_url || 'https://api.moonshot.cn/v1' };
         }
 
         if (row.is_default) {
@@ -267,6 +270,16 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
         providers,
         agents: { defaults: { provider: defaultProvider, model: defaultModel } },
     };
+}
+
+function redactProviderConfig(config: Record<string, unknown>): Record<string, unknown> {
+    const providers = config.providers as Record<string, Record<string, unknown>>;
+    const redacted: Record<string, Record<string, unknown>> = {};
+    for (const [name, val] of Object.entries(providers)) {
+        const { api_key: _, ...safe } = val;
+        redacted[name] = safe;
+    }
+    return { ...config, providers: redacted };
 }
 
 async function syncProvidersToKV(env: Env): Promise<void> {

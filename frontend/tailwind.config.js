@@ -14,12 +14,14 @@ export default {
             },
         },
         extend: {
-            lg: 'var(--radius)',
-            md: 'calc(var(--radius) - 8px)',
-            sm: 'calc(var(--radius) - 12px)',
-            xl: 'calc(var(--radius) + 4px)',
-            '2xl': 'calc(var(--radius) + 8px)',
-            '3xl': 'calc(var(--radius) + 12px)',
+            borderRadius: {
+                lg: 'var(--radius)',
+                md: 'calc(var(--radius) - 8px)',
+                sm: 'calc(var(--radius) - 12px)',
+                xl: 'calc(var(--radius) + 4px)',
+                '2xl': 'calc(var(--radius) + 8px)',
+                '3xl': 'calc(var(--radius) + 12px)',
+            },
             fontFamily: {
                 sans: ['Inter', 'sans-serif'],
                 serif: ['"Playfair Display"', 'serif'],

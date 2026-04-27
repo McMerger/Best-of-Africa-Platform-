@@ -69,7 +69,7 @@ export class Logger {
     ) {
         this.config = {
             minLevel: (config.minLevel || 'info') as LogLevel,
-            environment: (config.environment || (env as any)?.ENVIRONMENT || 'development'),
+            environment: (config.environment || env?.ENVIRONMENT || 'development'),
             enableAnalytics: true,
             ...config,
         };

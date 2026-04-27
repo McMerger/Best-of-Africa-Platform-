@@ -28,10 +28,10 @@ export const StatCounter = ({
 
   return (
     <div ref={ref} className="flex flex-col items-center justify-center text-center">
-      <div className="text-[#C9A84C] font-serif" style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", lineHeight: 1 }}>
+      <div className="text-[#C9A84C] font-serif" style={{ fontSize: "clamp(1.75rem, 4vw, 4rem)", lineHeight: 1 }}>
         {prefix}<motion.span>{rounded}</motion.span>{suffix}
       </div>
-      <div className="text-white text-[0.875rem] font-sans font-medium mt-2">
+      <div className="text-[0.875rem] font-sans font-medium mt-2 opacity-60">
         {label}
       </div>
     </div>

@@ -43,12 +43,27 @@ export interface Env {
     ANTHROPIC_API_KEY?: string;
     GOOGLE_AI_API_KEY?: string;
     OPENROUTER_API_KEY?: string;
+    MOONSHOT_API_KEY?: string;
+    // Moonshot OAuth credentials (from platform.moonshot.cn → OAuth Apps)
+    MOONSHOT_CLIENT_ID?: string;
+    MOONSHOT_CLIENT_SECRET?: string;
+    // Override Moonshot token endpoint if needed (defaults to api.moonshot.cn/oauth/token)
+    MOONSHOT_TOKEN_URL?: string;
 
     // Ko-fi webhook verification token (set via `wrangler secret put KOFI_TOKEN`)
     KOFI_TOKEN?: string;
 
     // ElevenLabs TTS API Key
     ELEVENLABS_API_KEY?: string;
+    // ElevenLabs voice ID — defaults to Rachel (21m00Tcm4TlvDq8ikWAM) if unset
+    ELEVENLABS_VOICE_ID?: string;
+
+    // Comma-separated extra CORS origins beyond the hardcoded base set.
+    // Set in wrangler.toml [vars] or via .dev.vars for local frontend dev.
+    ADDITIONAL_ORIGINS?: string;
+
+    // Secret for /dev/* endpoints — set in production via wrangler secret put DEV_SECRET
+    DEV_SECRET?: string;
 }
 
 // Context variables for Hono middleware

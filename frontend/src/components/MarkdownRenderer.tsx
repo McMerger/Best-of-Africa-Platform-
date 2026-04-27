@@ -11,7 +11,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         if (!content) return '';
 
         let processed = content
-            // 1. Sanitize to prevent basic failures (though we trust backend)
+            // Step 1: HTML-encode ALL raw < and > characters first.
+            // This ensures any HTML that may exist in the raw content is neutralised
+            // before our controlled replacements below re-introduce only safe, known tags.
+            // dangerouslySetInnerHTML is therefore safe here — we are the only source of HTML.
             .replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
             // 2. Headers with IDs
@@ -61,11 +64,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
             return `<p class="mb-4 leading-relaxed text-foreground/90">${block.replace(/\n/g, '<br/>')}</p>`;
         }).join('\n');
 
-        // Wrap adjacent <li>s in <ul> (Regex pass to find sequences of <li>...</li> and wrap them)
-        // This is tricky with simple strings. We will rely on the "ArticleDetailPage" container styling 
-        // usually prose handles this, but since we are replacing prose with custom HTML...
-        // Let's do a basic wrap.
-        processed = processed.replace(/(<li.*?>.*?<\/li>\s*)+/g, '<ul class="my-4 space-y-2 list-none">$1</ul>');
+        // Wrap consecutive <li> elements in a single <ul>.
+        // The regex matches one or more adjacent <li>…</li> blocks (including newlines) and
+        // wraps the entire run — avoids creating multiple nested or sibling <ul> tags.
+        processed = processed.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\s*)+)/g, '<ul class="my-4 space-y-2 list-none pl-4">$1</ul>');
 
         return processed;
     }, [content]);

@@ -1,10 +1,14 @@
 import path from "path"
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  if (mode === 'production' && !env.VITE_API_URL) {
+    throw new Error('VITE_API_URL is required for production builds. Set it in frontend/.env.production or as a CI environment variable.');
+  }
+  return {
   plugins: [
     react()
   ],
@@ -36,4 +40,5 @@ export default defineConfig({
       },
     },
   },
+  };
 })

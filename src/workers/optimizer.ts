@@ -21,54 +21,45 @@ import { generateSlug } from '../lib/optimizer/helpers';
 // This is the "intelligence loop" that makes the platform self-improving
 // ───────────────────────────────────────────────────────────────────────────────
 export async function optimizeContent(env: Env): Promise<void> {
-    console.log('Starting autonomous content optimization...');
+    console.log('[optimizer] Starting autonomous content optimization...');
 
-    // 1. Update engagement scores for recent articles
-    await updateEngagementScores(env);
+    const steps: Array<{ name: string; fn: () => Promise<unknown> }> = [
+        { name: 'updateEngagementScores',        fn: () => updateEngagementScores(env) },
+        { name: 'createHeadlineTests',            fn: () => createHeadlineTests(env) },
+        { name: 'evaluateHeadlineTests',          fn: () => evaluateHeadlineTests(env) },
+        { name: 'fillContentGaps',                fn: () => fillContentGaps(env) },
+        { name: 'refreshDashboards',              fn: () => refreshDashboards(env) },
+        { name: 'optimizeContentFormats',         fn: () => optimizeContentFormats(env) },
+        { name: 'updateCountryScores',            fn: () => updateCountryScores(env) },
+        { name: 'populateMarketMetrics',          fn: () => populateMarketMetrics(env) },
+        { name: 'populateNarrativeStrategies',    fn: () => populateNarrativeStrategies(env) },
+        { name: 'generateDynamicSectorSummaries', fn: () => generateDynamicSectorSummaries(env) },
+        { name: 'generateHomePageDynamicContent', fn: () => generateHomePageDynamicContent(env) },
+        { name: 'generateSystemicDynamicContent', fn: () => generateSystemicDynamicContent(env) },
+        { name: 'generatePageSpecificContent',    fn: () => generatePageSpecificContent(env) },
+        { name: 'generateMarketingContent',       fn: () => generateMarketingContent(env) },
+        { name: 'generateEventDescriptions',      fn: () => generateEventDescriptions(env) },
+    ];
 
-    // 2. Create A/B tests for underperforming headlines
-    await createHeadlineTests(env);
+    const results: Record<string, 'ok' | 'error'> = {};
 
-    // 3. Evaluate and finalize headline tests (with refinement logging)
-    await evaluateHeadlineTests(env);
+    for (const step of steps) {
+        try {
+            await step.fn();
+            results[step.name] = 'ok';
+        } catch (err) {
+            results[step.name] = 'error';
+            console.error(`[optimizer] Step "${step.name}" failed:`, err);
+            // Continue — one broken step must not abort the rest
+        }
+    }
 
-    // 4. Fill narrative gaps (coverage optimization)
-    await fillContentGaps(env);
-
-    // 5. Refresh regional dashboards (new)
-    await refreshDashboards(env);
-
-    // 6. Optimize content format based on user behavior (new)
-    await optimizeContentFormats(env);
-
-    // 7. Update country image strength scores (new)
-    await updateCountryScores(env);
-
-    // 8. Populate market metrics for sector trends page
-    await populateMarketMetrics(env);
-
-    // 9. Generate narrative strategies for underserved countries
-    await populateNarrativeStrategies(env);
-
-    // 10. Generate dynamic UI strings (Sector Summaries)
-    await generateDynamicSectorSummaries(env);
-
-    // 11. Generate Home Page Dynamic Content (Headlines)
-    await generateHomePageDynamicContent(env);
-
-    // 12. Generate Systemic Dynamic Content (Search, Footer)
-    await generateSystemicDynamicContent(env);
-
-    // 13. Generate Page Specific Content (Auth, Member, About, Error)
-    await generatePageSpecificContent(env);
-
-    // 14. AI-Generated Marketing Content (Weekly refresh)
-    await generateMarketingContent(env);
-
-    // 15. AI-Generated Event Descriptions
-    await generateEventDescriptions(env);
-
-    console.log('Autonomous optimization complete');
+    const failed = Object.entries(results).filter(([, v]) => v === 'error').map(([k]) => k);
+    if (failed.length > 0) {
+        console.warn(`[optimizer] Completed with ${failed.length} failed step(s): ${failed.join(', ')}`);
+    } else {
+        console.log('[optimizer] All steps completed successfully.');
+    }
 }
 
 
@@ -81,54 +72,64 @@ export async function processOptimizationTask(
 ): Promise<void> {
     const message = data as unknown as OptimizationMessage;
 
-    if (message.type === 'optimize_headline' && message.article_id) {
-        // Optimize specific article headline
-        const article = await env.DB.prepare(`
-      SELECT id, title, summary FROM articles WHERE id = ?
-    `).bind(message.article_id).first();
+    try {
+        if (message.type === 'optimize_headline' && message.article_id) {
+            const article = await env.DB.prepare(
+                'SELECT id, title, summary FROM articles WHERE id = ?'
+            ).bind(message.article_id).first();
 
-        if (article) {
-            const a = article as Record<string, any>;
-            const variants = await generateHeadlineVariants(env, a.title, a.summary || '');
+            if (article) {
+                const a = article as Record<string, any>;
+                const variants = await generateHeadlineVariants(env, a.title, a.summary || '');
 
-            if (variants.length >= 2) {
+                if (variants.length >= 2) {
+                    await env.DB.prepare(`
+                        INSERT INTO headline_tests (id, article_id, variant, headline)
+                        VALUES (?, ?, 'A', ?), (?, ?, 'B', ?)
+                    `).bind(
+                        crypto.randomUUID(), a.id, variants[0],
+                        crypto.randomUUID(), a.id, variants[1]
+                    ).run();
+                }
+            }
+        } else if (message.type === 'fill_narrative_gap' && message.country_code && message.sector_id) {
+            const country = await env.DB.prepare(
+                'SELECT name FROM countries WHERE code = ?'
+            ).bind(message.country_code).first();
+            const sector = await env.DB.prepare(
+                'SELECT name FROM sectors WHERE id = ?'
+            ).bind(message.sector_id).first();
+
+            if (country && sector) {
+                const generated = await fillNarrativeGap(
+                    env,
+                    (country as Record<string, any>).name,
+                    (sector as Record<string, any>).name
+                );
+
+                const articleId = crypto.randomUUID();
+                const slug = generateSlug(generated.title);
+
                 await env.DB.prepare(`
-          INSERT INTO headline_tests (id, article_id, variant, headline)
-          VALUES (?, ?, 'A', ?), (?, ?, 'B', ?)
-        `).bind(
-                    crypto.randomUUID(), a.id, variants[0],
-                    crypto.randomUUID(), a.id, variants[1]
+                    INSERT INTO articles (
+                        id, slug, title, subtitle, content, summary,
+                        country_code, sector_id, tags,
+                        status, published_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
+                `).bind(
+                    articleId, slug,
+                    generated.title, generated.subtitle,
+                    generated.content, generated.summary,
+                    message.country_code, message.sector_id,
+                    JSON.stringify(generated.tags)
                 ).run();
             }
+        } else {
+            console.warn('[optimizer] Unknown message type or missing fields:', message.type);
         }
-    } else if (message.type === 'fill_narrative_gap' && message.country_code && message.sector_id) {
-        // Fill specific gap
-        const country = await env.DB.prepare('SELECT name FROM countries WHERE code = ?').bind(message.country_code).first();
-        const sector = await env.DB.prepare('SELECT name FROM sectors WHERE id = ?').bind(message.sector_id).first();
-
-        if (country && sector) {
-            const generated = await fillNarrativeGap(env, (country as Record<string, any>).name, (sector as Record<string, any>).name);
-
-            const articleId = crypto.randomUUID();
-            const slug = generateSlug(generated.title);
-
-            await env.DB.prepare(`
-        INSERT INTO articles (
-          id, slug, title, subtitle, content, summary,
-          country_code, sector_id, tags,
-          status, published_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
-      `).bind(
-                articleId,
-                slug,
-                generated.title,
-                generated.subtitle,
-                generated.content,
-                generated.summary,
-                message.country_code,
-                message.sector_id,
-                JSON.stringify(generated.tags)
-            ).run();
-        }
+    } catch (err) {
+        console.error('[optimizer] processOptimizationTask failed for message type:', message.type, err);
+        // Do not rethrow — a failed queue message should not crash the consumer.
+        // Cloudflare Queues will retry the message automatically based on the queue's retry policy.
     }
 }

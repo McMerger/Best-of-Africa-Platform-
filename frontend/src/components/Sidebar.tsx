@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         <motion.div
             initial={false}
             animate={{ width: isCollapsed ? 80 : 256 }}
-            className={cn("hidden lg:flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl h-screen sticky top-0 z-50 overflow-hidden", className)}
+            className={cn("hidden lg:flex flex-col border-r border-border/40 bg-card/50 backdrop-blur-xl h-screen sticky top-0 z-40 overflow-hidden", className)}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
             {/* Header */}
@@ -60,7 +60,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                <Button variant="ghost" size="icon" onClick={toggleSidebar} className="shrink-0 text-muted-foreground hover:text-foreground">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleSidebar}
+                    aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                >
                     {isCollapsed ? <HamburgerMenuIcon className="h-4 w-4" /> : <Cross2Icon className="h-4 w-4" />}
                 </Button>
             </div>
@@ -154,8 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ className }) => {
                     <GearIcon className="h-3.5 w-3.5 shrink-0" />
                     {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">{t("nav.settings", "Settings")}</span>}
                 </NavLink>
-                {!isCollapsed && <div className="mt-2 text-[10px] text-muted-foreground/50 text-center font-mono whitespace-nowrap">v1.3 (UX Refined)</div>}
-            </div>
+                </div>
         </motion.div>
     );
 };

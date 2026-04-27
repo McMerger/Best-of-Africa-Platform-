@@ -1,5 +1,5 @@
-INSERT INTO ingested_items (id, title, status, url, source_id, published_at) 
-VALUES ('test-item-123', 'Async Task Test Article', 'pending', 'https://example.com/test', 'reuters', datetime('now'));
-
-INSERT INTO agent_tasks (id, type, payload, status) 
-VALUES ('test-task-123', 'generate_article', '{"ingested_item_id":"test-item-123", "title":"Async Task Test Article", "content":"This is test content", "country_code":"MZ"}', 'pending');
+-- This file has been neutralized. Test fixture moved to fixtures/test_task_seed.sql.
+-- Delete this file before running db:migrate:prod.
+-- Apply test data locally only with:
+--   wrangler d1 execute best-of-africa-db --local --file=fixtures/test_task_seed.sql
+SELECT 1;

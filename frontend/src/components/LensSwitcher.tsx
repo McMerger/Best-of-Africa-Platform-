@@ -2,24 +2,37 @@ import React from 'react';
 import { useLens } from '../context/LensContext';
 import type { IntelligenceLens } from '../types';
 
-const LENS_CONFIG: Record<IntelligenceLens, { icon: string; label: string; color: string }> = {
-    investor: { icon: '📊', label: 'Investor', color: '#10b981' },
-    government: { icon: '🏛️', label: 'Government', color: '#6366f1' },
-    explorer: { icon: '🧭', label: 'Explorer', color: '#f59e0b' },
+const LENS_CONFIG: Record<IntelligenceLens, {
+    icon: string;
+    label: string;
+    activeClasses: string;
+    activeTextClass: string;
+}> = {
+    investor: {
+        icon: '📊',
+        label: 'Investor',
+        activeClasses: 'bg-emerald-500/15 outline outline-1 outline-emerald-500/40',
+        activeTextClass: 'text-emerald-500',
+    },
+    government: {
+        icon: '🏛️',
+        label: 'Government',
+        activeClasses: 'bg-indigo-500/15 outline outline-1 outline-indigo-500/40',
+        activeTextClass: 'text-indigo-500',
+    },
+    explorer: {
+        icon: '🧭',
+        label: 'Explorer',
+        activeClasses: 'bg-amber-500/15 outline outline-1 outline-amber-500/40',
+        activeTextClass: 'text-amber-500',
+    },
 };
 
 export const LensSwitcher: React.FC = () => {
     const { lens, setLens } = useLens();
 
     return (
-        <div style={{
-            display: 'flex',
-            gap: '2px',
-            background: 'rgba(255,255,255,0.06)',
-            borderRadius: '10px',
-            padding: '3px',
-            border: '1px solid rgba(255,255,255,0.08)',
-        }}>
+        <div className="flex gap-0.5 bg-muted/50 rounded-[10px] p-0.5 border border-border/30">
             {(Object.keys(LENS_CONFIG) as IntelligenceLens[]).map((key) => {
                 const config = LENS_CONFIG[key];
                 const isActive = lens === key;
@@ -27,25 +40,16 @@ export const LensSwitcher: React.FC = () => {
                     <button
                         key={key}
                         onClick={() => setLens(key)}
-                        title={`Switch to ${config.label} lens`}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            padding: '5px 10px',
-                            borderRadius: '8px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: isActive ? 600 : 400,
-                            background: isActive ? `${config.color}20` : 'transparent',
-                            color: isActive ? config.color : 'rgba(255,255,255,0.5)',
-                            transition: 'all 0.2s ease',
-                            whiteSpace: 'nowrap',
-                            outline: isActive ? `1px solid ${config.color}40` : 'none',
-                        }}
+                        aria-label={`Switch to ${config.label} lens`}
+                        aria-pressed={isActive}
+                        className={[
+                            'flex items-center gap-1.5 px-2.5 py-1 rounded-lg border-none cursor-pointer text-xs transition-all duration-200 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                            isActive
+                                ? `${config.activeClasses} ${config.activeTextClass} font-semibold`
+                                : 'bg-transparent text-muted-foreground hover:text-foreground font-normal',
+                        ].join(' ')}
                     >
-                        <span style={{ fontSize: '14px' }}>{config.icon}</span>
+                        <span className="text-sm" aria-hidden="true">{config.icon}</span>
                         <span>{config.label}</span>
                     </button>
                 );

@@ -71,8 +71,13 @@ export async function checkRateLimit(
         };
 
     } catch (error) {
-        console.error('Rate limit check failed:', error);
-        // Fail open - allow request if rate limiting fails
+        // KV unavailable — fail open so a KV blip doesn't DDoS legitimate users,
+        // but log with enough context to detect sustained KV outages in production logs.
+        console.error('[ratelimit] KV check failed — failing open', {
+            identifier,
+            tier,
+            error: error instanceof Error ? error.message : String(error),
+        });
         return {
             allowed: true,
             remaining: limits.requests,

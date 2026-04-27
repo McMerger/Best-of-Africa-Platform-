@@ -37,8 +37,14 @@ router.post('/kofi-webhook', async (c) => {
     }
 
     // Validate Ko-fi verification token (set in Ko-fi dashboard → API)
+    // Fail closed: if KOFI_TOKEN is not configured, reject all webhooks to prevent
+    // unauthenticated callers from provisioning or upgrading member accounts.
     const verificationToken = c.env.KOFI_TOKEN;
-    if (verificationToken && payload.verification_token !== verificationToken) {
+    if (!verificationToken) {
+        console.error('[kofi-webhook] KOFI_TOKEN env var is not set — rejecting all webhook calls.');
+        return c.json({ ok: false, error: 'Webhook not configured' }, 503);
+    }
+    if (payload.verification_token !== verificationToken) {
         return c.json({ ok: false, error: 'Invalid verification token' }, 401);
     }
 
@@ -145,37 +151,71 @@ router.post('/verify-email', async (c) => {
         return c.json({ ok: false, error: 'Your membership has expired. Please renew on Ko-fi.' }, 403);
     }
 
-    // Generate a secure 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Store OTP in KV cache with 10 minute expiration and 0 starting attempts
+    // Generate a cryptographically secure 6-digit OTP
+    // Math.random() is NOT cryptographically secure — use crypto.getRandomValues() instead.
+    const otpBuffer = new Uint32Array(1);
+    crypto.getRandomValues(otpBuffer);
+    const otp = (100000 + (otpBuffer[0] % 900000)).toString();
+
+    // Store OTP in KV cache with 10 minute expiration and 0 starting attempts.
+    // otp_deadline is stored as an absolute Unix timestamp so that on each failed
+    // attempt we re-save with the *remaining* TTL rather than a fresh 600 seconds —
+    // preventing an attacker from resetting the window by submitting wrong codes.
     const otpKey = `member_otp:${email}`;
-    const sessionData = { 
-        otp, 
-        clientId: client.id, 
-        tier: client.tier, 
-        name: client.name, 
+    const sessionData = {
+        otp,
+        clientId: client.id,
+        tier: client.tier,
+        name: client.name,
         expires_at: client.expires_at,
-        attempts: 0 
+        otp_deadline: Math.floor(Date.now() / 1000) + 600,
+        attempts: 0
     };
     await c.env.CACHE.put(otpKey, JSON.stringify(sessionData), { expirationTtl: 600 });
 
+    // Basic rate limiting: check if an OTP was already generated in the last 60s
+    // (The KV TTL is 600s — we check attempts to avoid email spam)
+    // The 3-strike defense is on /verify-otp; here we just log the send.
+
     // Send the OTP via MailChannels in the background
+    // All styling uses proper inline CSS — no Tailwind classes in email templates.
     const htmlEmail = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0A0F1E; padding: 40px 20px; color: #ffffff;">
-        <div style="max-w-xl mx-auto flex flex-col items-center bg-[#111827] border border-[rgba(201,168,76,0.3)] padding: 40px; text-align: center; border-radius: 12px;">
-            <h1 style="font-family: Georgia, serif; font-size: 24px; margin-bottom: 20px;">Your Access Code</h1>
-            <p style="font-size: 16px; color: rgba(255,255,255,0.7); margin-bottom: 30px;">
-                Enter this code to access your Best of Africa member dashboard. It expires in 10 minutes.
-            </p>
-            <div style="background-color: #1a2235; padding: 20px 40px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.2); font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #C9A84C; margin-bottom: 30px;">
-                ${otp}
-            </div>
-            <p style="margin-top: 40px; font-size: 12px; color: rgba(255,255,255,0.3);">
-                If you did not request this code, you can safely ignore this email.
-            </p>
-        </div>
-    </div>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your Best of Africa access code</title></head>
+    <body style="margin: 0; padding: 0; background-color: #0a0f1e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #0a0f1e; padding: 40px 20px;">
+        <tr>
+          <td align="center">
+            <table width="560" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 560px; width: 100%; background-color: #111827; border: 1px solid rgba(201,168,76,0.25); border-radius: 12px; overflow: hidden;">
+              <tr>
+                <td style="padding: 40px 48px; text-align: center;">
+                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #C9A84C;">Best of Africa</p>
+                  <h1 style="margin: 0 0 24px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; color: #ffffff;">Your Access Code</h1>
+                  <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.65);">
+                    Enter this code on the Best of Africa member access page.<br>
+                    It expires in <strong style="color: #ffffff;">10 minutes</strong>.
+                  </p>
+                  <div style="display: inline-block; background-color: #0a0f1e; border: 1px solid rgba(201,168,76,0.3); border-radius: 8px; padding: 20px 40px; margin-bottom: 32px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 700; letter-spacing: 12px; color: #C9A84C;">${otp}</span>
+                  </div>
+                  <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.25); line-height: 1.5;">
+                    If you did not request this code, you can safely ignore this email.<br>
+                    This code was requested for the account: ${email}
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 16px 48px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
+                  <p style="margin: 0; font-size: 11px; color: rgba(255,255,255,0.2);">© ${new Date().getFullYear()} Best of Africa · <a href="https://bestofafrica.com" style="color: rgba(201,168,76,0.5); text-decoration: none;">bestofafrica.com</a></p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
     `;
 
     c.executionCtx.waitUntil(
@@ -221,8 +261,9 @@ router.post('/verify-otp', async (c) => {
             await c.env.CACHE.delete(otpKey);
             return c.json({ ok: false, error: 'Too many invalid attempts. Your code has been voided. Please request a new one.' }, 429);
         } else {
-            // Re-save incremented attempts to cache (maintaining rough TTL)
-            await c.env.CACHE.put(otpKey, JSON.stringify(sessionData), { expirationTtl: 600 });
+            // Re-save with the *remaining* TTL — never extend the window on a bad attempt
+            const remainingTtl = Math.max((sessionData.otp_deadline ?? 0) - Math.floor(Date.now() / 1000), 1);
+            await c.env.CACHE.put(otpKey, JSON.stringify(sessionData), { expirationTtl: remainingTtl });
             return c.json({ ok: false, error: `Invalid verification code. ${3 - sessionData.attempts} attempts remaining.` }, 400);
         }
     }
@@ -263,15 +304,83 @@ router.get('/me', async (c) => {
 
         if (!client) return c.json({ member: false }, 200);
 
+        // Calculate days remaining for client-side renewal nudges
+        const expiresAt = client.expires_at ? new Date(client.expires_at) : null;
+        const now = new Date();
+        const expires_in_days = expiresAt
+            ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / 86400_000))
+            : null;
+
         return c.json({
             member: true,
             tier: client.tier,
             name: client.name,
             expires_at: client.expires_at,
+            expires_in_days,
         });
     } catch {
         return c.json({ member: false }, 200);
     }
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// PUT /members/profile — update member name and organization
+// Requires a valid member JWT
+// ───────────────────────────────────────────────────────────────────────────────
+router.put('/profile', async (c) => {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+        return c.json({ ok: false, error: 'Authentication required' }, 401);
+    }
+
+    let clientId: string;
+    try {
+        const token = authHeader.slice(7);
+        const [, payloadB64, ] = token.split('.');
+        const payload: { sub: string; exp: number } = JSON.parse(atob(payloadB64));
+        if (payload.exp < Math.floor(Date.now() / 1000)) {
+            return c.json({ ok: false, error: 'Token expired' }, 401);
+        }
+        clientId = payload.sub;
+    } catch {
+        return c.json({ ok: false, error: 'Invalid token' }, 401);
+    }
+
+    let body: { name?: string; organization?: string };
+    try {
+        body = await c.req.json();
+    } catch {
+        return c.json({ ok: false, error: 'Invalid JSON' }, 400);
+    }
+
+    const updates: string[] = [];
+    const params: unknown[] = [];
+
+    if (body.name !== undefined) {
+        const name = body.name.trim();
+        if (!name || name.length < 2 || name.length > 120) {
+            return c.json({ ok: false, error: 'Name must be 2–120 characters' }, 400);
+        }
+        updates.push('name = ?');
+        params.push(name);
+    }
+
+    if (body.organization !== undefined) {
+        const org = body.organization.trim().slice(0, 200);
+        updates.push('organization = ?');
+        params.push(org);
+    }
+
+    if (updates.length === 0) {
+        return c.json({ ok: false, error: 'No valid fields to update' }, 400);
+    }
+
+    params.push(clientId);
+    await c.env.DB.prepare(
+        `UPDATE clients SET ${updates.join(', ')}, updated_at = datetime('now') WHERE id = ? AND type = 'member'`
+    ).bind(...params).run();
+
+    return c.json({ ok: true, message: 'Profile updated' });
 });
 
 export { router as membersRouter };

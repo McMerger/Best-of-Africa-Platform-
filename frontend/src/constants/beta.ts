@@ -44,18 +44,18 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
   {
     id: 'supporter',
     name: 'Supporter',
-    price: '$5',
+    price: '$3',
     features: [
       'Unlimited access to stories and collections',
       'Access to selected newsletters and updates',
       'Invites to online conversations and AMAs',
     ],
-    ctaLabel: 'Support this creator',
+    ctaLabel: 'Join as Supporter',
   },
   {
     id: 'founding',
     name: 'Founding Member',
-    price: '$15',
+    price: '$8',
     features: [
       'Everything in Supporter',
       'Full access to the beta platform',
@@ -67,7 +67,7 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
   {
     id: 'partner',
     name: 'Partner',
-    price: '$50',
+    price: '$20',
     features: [
       'Everything in Founding Member',
       'Monthly executive Africa intelligence briefing',
@@ -77,23 +77,65 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
   },
 ];
 
-export const TIER_LABELS: Record<string, { title: string; desc: string }> = {
+export const TIER_LABELS: Record<string, { title: string; desc: string; perks: string[] }> = {
+  // DB-stored values (basic / premium / enterprise)
   basic: {
-    title: 'Basic Reader',
-    desc: 'You have limited free access to content. Join a membership tier for full intelligence.'
+    title: 'Supporter',
+    desc: 'Unlimited access to stories and selected newsletters.',
+    perks: [
+      'Unlimited access to all published stories',
+      'Selected newsletters and platform updates',
+      'Invites to online conversations and AMAs',
+    ],
   },
+  premium: {
+    title: 'Founding Member',
+    desc: 'Full access to the beta platform and direct input on future priorities.',
+    perks: [
+      'Everything in Supporter',
+      'Full beta platform access — country hubs and intelligence briefs',
+      'Direct input on future coverage priorities',
+      'Early access to all new features',
+    ],
+  },
+  enterprise: {
+    title: 'Founding Patron',
+    desc: 'Monthly executive briefings and a direct line to the editorial team.',
+    perks: [
+      'Everything in Founding Member',
+      'Monthly executive Africa intelligence briefing',
+      'Direct line to the editorial team',
+    ],
+  },
+  // Ko-fi tier name aliases (kept for backward compatibility)
   supporter: {
     title: 'Supporter',
-    desc: 'You have unlimited access to stories and selected newsletters.'
+    desc: 'Unlimited access to stories and selected newsletters.',
+    perks: [
+      'Unlimited access to all published stories',
+      'Selected newsletters and platform updates',
+      'Invites to online conversations and AMAs',
+    ],
   },
   founding: {
     title: 'Founding Member',
-    desc: 'You have full access to the beta platform and direct input on future priorities.'
+    desc: 'Full access to the beta platform and direct input on future priorities.',
+    perks: [
+      'Everything in Supporter',
+      'Full beta platform access — country hubs and intelligence briefs',
+      'Direct input on future coverage priorities',
+      'Early access to all new features',
+    ],
   },
   partner: {
-    title: 'Partner',
-    desc: 'You receive monthly executive briefings and have a direct line to the editorial team.'
-  }
+    title: 'Founding Patron',
+    desc: 'Monthly executive briefings and a direct line to the editorial team.',
+    perks: [
+      'Everything in Founding Member',
+      'Monthly executive Africa intelligence briefing',
+      'Direct line to the editorial team',
+    ],
+  },
 };
 
 // ─── Demo / fallback articles (shown when API is unavailable) ─────────────────

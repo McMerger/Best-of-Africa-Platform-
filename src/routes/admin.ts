@@ -4,9 +4,11 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
+import { z } from 'zod';
 import type { Env, Variables } from '../types';
 import { requireAdmin } from '../lib/auth';
 import { getCached, CACHE_KEYS } from '../lib/cache';
+import { validate, CreateArticleSchema } from '../lib';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -20,15 +22,38 @@ async function generateTags(env: Env, content: string): Promise<string[]> {
     try {
         const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
             messages: [
-                { role: 'system', content: 'Generate 5 SEO tags for this content. Return JSON array of strings.' },
+                {
+                    role: 'system',
+                    content: 'Generate exactly 5 SEO tags for this article. Respond with a valid JSON array of strings only. Example: ["tag1","tag2","tag3","tag4","tag5"]'
+                },
                 { role: 'user', content: content.slice(0, 1000) }
             ],
             response_format: { type: 'json_object' }
         }) as { response: string };
-        
-        const match = response.response.match(/\[.*\]/s);
-        return match ? JSON.parse(match[0]) : ['African Business', 'News'];
-    } catch { return []; }
+
+        // Try direct JSON parse first, then fall back to array extraction
+        const raw = response.response?.trim() || '';
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw);
+        } catch {
+            const match = raw.match(/\[[\s\S]*\]/);
+            if (!match) return ['African Business', 'News'];
+            parsed = JSON.parse(match[0]);
+        }
+
+        // Accept both array and object-with-tags-key shapes
+        const tags = Array.isArray(parsed)
+            ? parsed
+            : Array.isArray((parsed as any)?.tags)
+                ? (parsed as any).tags
+                : null;
+
+        if (!tags) return ['African Business', 'News'];
+        return tags.filter((t: unknown) => typeof t === 'string').slice(0, 5);
+    } catch {
+        return ['African Business', 'News'];
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -75,8 +100,14 @@ router.get('/articles', async (c) => {
 });
 
 // POST /admin/articles - Create article
-router.post('/articles', async (c) => {
-    const body = await c.req.json();
+router.post('/articles', validate('json', CreateArticleSchema.extend({
+    subtitle: z.string().max(300).optional(),
+    summary: z.string().max(1000).optional(),
+    slug: z.string().min(3).max(200).optional(),
+    status: z.enum(['draft', 'published', 'archived']).default('draft'),
+    is_sponsored: z.boolean().default(false),
+})), async (c) => {
+    const body = (c.req as any).valid('json');
     const id = crypto.randomUUID();
     // AI Autopilot: Auto-fill missing fields
     let summary = body.summary;
@@ -281,8 +312,20 @@ router.get('/sources', async (c) => {
     return c.json({ data: sources.results || [] });
 });
 
-router.post('/sources', async (c) => {
-    const body = await c.req.json();
+const CreateSourceSchema = z.object({
+    name: z.string().min(2).max(200),
+    type: z.enum(['rss', 'api', 'scraper', 'manual']),
+    url: z.string().url().refine(url => url.startsWith('http://') || url.startsWith('https://'), {
+        message: 'Only http and https URLs are allowed',
+    }),
+    country_code: z.string().length(2).optional(),
+    sector_id: z.string().uuid().optional(),
+    is_active: z.boolean().default(true),
+    fetch_interval_minutes: z.number().int().min(5).max(1440).default(30),
+});
+
+router.post('/sources', validate('json', CreateSourceSchema), async (c) => {
+    const body = (c.req as any).valid('json');
     const id = crypto.randomUUID();
 
     await c.env.DB.prepare(`

@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage } from '../lib/ai';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
@@ -118,6 +118,206 @@ export async function generateArticleFromQueue(
 
 // Alias for queue handler compatibility
 export const generateArticle = generateArticleFromQueue;
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Stale Task Fallback (Cron — every 2 minutes)
+//
+// ZeroClaw is an external agent that polls /agent/tasks/pending. If it goes
+// offline, generate_article tasks pile up in agent_tasks with no one to claim
+// them. This function is the self-sufficient fallback: after a 15-minute grace
+// window it claims up to 3 tasks internally and runs the full generation +
+// enrichment pipeline without any external dependency.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function processStaleArticleTasks(env: Env): Promise<void> {
+    // 1. Find generate_article tasks that ZeroClaw hasn't claimed after 15 min
+    const staleTasks = await env.DB.prepare(`
+        SELECT id, payload, retry_count
+        FROM agent_tasks
+        WHERE type = 'generate_article'
+          AND status = 'pending'
+          AND created_at < datetime('now', '-15 minutes')
+          AND (expires_at IS NULL OR expires_at <= datetime('now'))
+        ORDER BY priority DESC, created_at ASC
+        LIMIT 3
+    `).all<{ id: string; payload: string; retry_count: number }>();
+
+    if (staleTasks.results.length === 0) return;
+
+    console.log(`[generator] Claiming ${staleTasks.results.length} stale task(s) for internal generation.`);
+
+    for (const task of staleTasks.results) {
+        // 2. Lock the task: mark processing + set a 10-minute processing TTL
+        await env.DB.prepare(`
+            UPDATE agent_tasks
+            SET status = 'processing',
+                updated_at = datetime('now'),
+                expires_at = datetime('now', '+10 minutes')
+            WHERE id = ? AND status = 'pending'
+        `).bind(task.id).run();
+
+        let payload: Record<string, any>;
+        try {
+            payload = JSON.parse(task.payload);
+        } catch {
+            console.error(`[generator] Task ${task.id} has unparseable payload — failing permanently.`);
+            await env.DB.prepare(`
+                UPDATE agent_tasks
+                SET status = 'failed', error_message = 'Invalid JSON payload', completed_at = datetime('now')
+                WHERE id = ?
+            `).bind(task.id).run();
+            continue;
+        }
+
+        try {
+            // 3. Generate article content
+            const generated = await generateArticleContent(
+                env,
+                payload.title || '',
+                payload.content || '',
+                payload.country_name ?? null,
+                payload.sector_name ?? null,
+            );
+
+            if (!generated?.title || !generated?.content) {
+                throw new Error('generateArticle returned empty title or content');
+            }
+
+            const articleId = crypto.randomUUID();
+            const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
+            const slug = generateSlug(generated.title);
+
+            await env.DB.prepare(`
+                INSERT INTO articles (
+                    id, slug, title, subtitle, content, summary,
+                    country_code, sector_id, tags,
+                    reading_time_minutes, source_url, source_title, source_published_at,
+                    generation_prompt_version,
+                    status, published_at, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+            `).bind(
+                articleId, slug,
+                generated.title,
+                generated.subtitle ?? null,
+                generated.content,
+                generated.summary ?? null,
+                payload.country_code ?? null,
+                payload.sector_id    ?? null,
+                generated.tags ? JSON.stringify(generated.tags) : '[]',
+                readingTime,
+                payload.url           ?? null,
+                payload.title         ?? null,
+                payload.published_at  ?? null,
+                ARTICLE_PROMPT_VERSION,
+            ).run();
+
+            // 4. Image generation (independent — failure does not block article)
+            try {
+                const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
+                const imageBuffer = await generateArticleImage(env, imagePrompt);
+                if (imageBuffer) {
+                    const imageKey = `articles/${articleId}/hero.png`;
+                    const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
+                    if (imageUrl) {
+                        await env.DB.prepare(
+                            'UPDATE articles SET ai_image_url = ? WHERE id = ?'
+                        ).bind(imageUrl, articleId).run();
+                    }
+                } else {
+                    console.warn(`[generator] Image generation returned null for article ${articleId}`);
+                }
+            } catch (imgErr) {
+                console.error(`[generator] Image generation failed for article ${articleId}:`, imgErr);
+            }
+
+            // 5. Translation (independent — failure does not block article)
+            try {
+                await autoTranslateArticle(env, articleId, {
+                    title:        generated.title,
+                    subtitle:     generated.subtitle,
+                    summary:      generated.summary,
+                    content:      generated.content,
+                    country_code: payload.country_code ?? null,
+                });
+            } catch (transErr) {
+                console.error(`[generator] Translation failed for article ${articleId}:`, transErr);
+            }
+
+            // 6. Vector indexing (independent — failure does not block article)
+            try {
+                await indexArticle(env, articleId, generated.title, generated.content, {
+                    country_code: payload.country_code ?? null,
+                    sector_id:    payload.sector_id    ?? null,
+                });
+            } catch (vecErr) {
+                console.error(`[generator] Vectorization failed for article ${articleId}:`, vecErr);
+            }
+
+            // 7. Mark task done and update ingested_item status
+            await env.DB.prepare(`
+                UPDATE agent_tasks
+                SET status = 'completed',
+                    result = ?,
+                    completed_at = datetime('now'),
+                    updated_at = datetime('now')
+                WHERE id = ?
+            `).bind(JSON.stringify({ article_id: articleId, generated_internally: true }), task.id).run();
+
+            if (payload.ingested_item_id) {
+                await env.DB.prepare(`
+                    UPDATE ingested_items SET status = 'completed' WHERE id = ?
+                `).bind(payload.ingested_item_id).run();
+            }
+
+            console.log(`[generator] Internally generated article ${articleId} from stale task ${task.id}.`);
+
+        } catch (err) {
+            console.error(`[generator] Internal generation failed for task ${task.id}:`, err);
+
+            const newRetryCount = (task.retry_count ?? 0) + 1;
+            const maxRetries = 3;
+
+            if (newRetryCount >= maxRetries) {
+                // Permanent failure — exhausted retries
+                await env.DB.prepare(`
+                    UPDATE agent_tasks
+                    SET status = 'failed',
+                        retry_count = ?,
+                        error_message = ?,
+                        completed_at = datetime('now'),
+                        updated_at = datetime('now')
+                    WHERE id = ?
+                `).bind(
+                    newRetryCount,
+                    err instanceof Error ? err.message : String(err),
+                    task.id
+                ).run();
+
+                if (payload.ingested_item_id) {
+                    await env.DB.prepare(`
+                        UPDATE ingested_items SET status = 'rejected', rejection_reason = ? WHERE id = ?
+                    `).bind('Internal generation exhausted retries', payload.ingested_item_id).run();
+                }
+            } else {
+                // Back off exponentially before the next internal retry attempt
+                const backoffSeconds = Math.pow(4, newRetryCount) * 30; // 120s / 480s
+                await env.DB.prepare(`
+                    UPDATE agent_tasks
+                    SET status = 'pending',
+                        retry_count = ?,
+                        error_message = ?,
+                        expires_at = datetime('now', '+' || ? || ' seconds'),
+                        updated_at = datetime('now')
+                    WHERE id = ?
+                `).bind(
+                    newRetryCount,
+                    err instanceof Error ? err.message : String(err),
+                    backoffSeconds,
+                    task.id
+                ).run();
+            }
+        }
+    }
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helpers

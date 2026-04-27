@@ -211,7 +211,10 @@ async function hashApiKey(key: string): Promise<string> {
 
 function getCurrentHour(): string {
     const now = new Date();
-    return `${now.getUTCFullYear()}-${now.getUTCMonth()}-${now.getUTCDate()}-${now.getUTCHours()}`;
+    const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(now.getUTCDate()).padStart(2, '0');
+    const hh = String(now.getUTCHours()).padStart(2, '0');
+    return `${now.getUTCFullYear()}-${mm}-${dd}-${hh}`;
 }
 
 function getNextHourTimestamp(): number {

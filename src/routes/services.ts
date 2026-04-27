@@ -9,6 +9,7 @@ import { requireApiKey, rateLimit } from '../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
 import { validate, BookingRequestSchema, PaginationSchema, EventRegistrationSchema, IdOrSlugParamSchema, UuidParamSchema, CountryCodeParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
 import { z } from 'zod';
+import { sendRegistrationConfirmation } from '../lib/email';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -350,8 +351,13 @@ router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), vali
         confirmationCode
     ).run();
 
-    // TODO: Send confirmation email
-    // await sendRegistrationConfirmation(c.env, { registrationId, confirmationCode, event: eventData, user_email });
+    sendRegistrationConfirmation({
+        registrationId,
+        confirmationCode,
+        user_email,
+        user_name: user_name || undefined,
+        event: eventData as { title: string; date?: string; date_start?: string; location?: string },
+    }).catch((err) => console.error('[email] registration confirmation failed:', err));
 
     return c.json({
         success: true,
@@ -361,7 +367,7 @@ router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), vali
             event_title: eventData.title,
             event_date: eventData.date,
             status: 'Pending',
-            message: 'Registration successful. A confirmation email has been sent.'
+            message: `Registration successful. Your confirmation code is ${confirmationCode}. Please keep it for your records.`
         }
     }, 201);
 });
@@ -372,9 +378,11 @@ router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), vali
 router.get('/events/:id/registrations', validate('param', IdOrSlugParamSchema), async (c) => {
     const { id: eventId } = (c.req as any).valid('param');
 
-    // TODO: Add admin authentication check
-    // const isAdmin = await checkAdminAuth(c);
-    // if (!isAdmin) return c.json({ error: 'unauthorized' }, 401);
+    // Require an authenticated admin client
+    const clientId = c.get('clientId');
+    if (!clientId) return c.json({ error: 'unauthorized' }, 401);
+    const caller = await c.env.DB.prepare('SELECT type FROM clients WHERE id = ?').bind(clientId).first<{ type: string }>();
+    if (!caller || caller.type !== 'admin') return c.json({ error: 'unauthorized' }, 401);
 
     const registrations = await c.env.DB.prepare(`
         SELECT er.*, e.title as event_title

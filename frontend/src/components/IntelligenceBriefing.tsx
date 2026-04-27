@@ -73,7 +73,7 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
                         </div>
                         <div className="group rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm transition-colors hover:border-primary/50 hover:bg-card">
                             <div className="text-xs font-medium uppercase text-muted-foreground">Dominant Sector</div>
-                            <div className="mt-1 text-lg font-bold text-foreground truncate">{topSector}</div>
+                            <div className="mt-1 text-lg font-bold text-foreground truncate" title={topSector}>{topSector}</div>
                         </div>
                         <div className="group col-span-2 rounded-xl border border-border/50 bg-card/50 p-4 backdrop-blur-sm transition-colors hover:border-primary/50 hover:bg-card">
                             <div className="text-xs font-medium uppercase text-muted-foreground">Emerging Narratives</div>

@@ -278,6 +278,13 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     // Define the Massive Scale Discovery Task (Google News)
     const discoveryTask = async () => {
         try {
+            // Ensure the synthetic source row exists so FK constraints on ingested_items.source_id are satisfied.
+            await env.DB.prepare(`
+                INSERT INTO sources (id, name, type, url, is_active, fetch_interval_minutes)
+                VALUES ('google-news-aggregator', 'Google News Aggregator', 'custom', 'https://news.google.com/rss', 1, 60)
+                ON CONFLICT(id) DO NOTHING
+            `).run();
+
             console.log('Starting Massive Scale Discovery with PRIORITY TARGETING...');
 
             // PRIORITY TARGETING: Query underserved countries first

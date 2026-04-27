@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Lock, Search, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
@@ -9,7 +9,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import type { ArticleListItem, SearchResult } from '../../types';
 
 const StoryCardSkeleton = () => (
-  <div className="bg-[#111827] rounded-xl border border-white/10 h-[380px] animate-pulse">
+  <div className="bg-white rounded-xl border border-[#1C1814]/8 h-[380px] animate-pulse">
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="w-8 h-8 bg-white/10 rounded-full" />
@@ -53,6 +53,8 @@ export const BetaStories = () => {
       return api.getFeaturedArticles();
     },
     staleTime: 5 * 60 * 1000,
+    // M2 FIX: Keep previous data visible while next page is fetching — no more loading flash
+    placeholderData: keepPreviousData,
   });
 
   // Track all loaded articles across pages
@@ -88,7 +90,9 @@ export const BetaStories = () => {
     staleTime: 2 * 60 * 1000,
   });
 
-  const articles: ArticleListItem[] = isError || allArticles.length === 0 && !isLoading
+  // M1 FIX: Explicit parentheses to make operator precedence unambiguous
+  const usingFallback = isError || (allArticles.length === 0 && !isLoading);
+  const articles: ArticleListItem[] = usingFallback
     ? FALLBACK_ARTICLES.slice(0, itemsPerPage)
     : allArticles;
 
@@ -112,7 +116,7 @@ export const BetaStories = () => {
   const showLoading = isSearchMode ? (isSearching || isCountrySearching) : isLoading;
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] pb-32">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] pb-32">
       <SEO 
         title="Stories | Best of Africa" 
         description="Deep-dive journalism and market intelligence covering business, tech, and policy across the continent."
@@ -124,38 +128,46 @@ export const BetaStories = () => {
           <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
             Stories from the Continent
           </h1>
-          <p className="text-xl text-white/70">
+          <p className="text-xl text-[#1C1814]/75">
             Real reporting. Real opportunities.
           </p>
         </header>
 
+        {/* Subtle notice when live content is unavailable and sample stories are shown */}
+        {usingFallback && !isLoading && (
+          <div className="mb-6 px-4 py-2.5 rounded-lg bg-[#1C1814]/5 border border-[#1C1814]/10 flex items-center gap-2 text-sm text-[#1C1814]/50">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]/60 shrink-0" />
+            Sample stories shown — live content is loading or unavailable.
+          </div>
+        )}
+
         {/* Search Bar */}
         <div className="relative mb-8">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/40 pointer-events-none" />
           <input
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
-            className="w-full md:max-w-lg bg-[#111827] border border-white/10 rounded-lg pl-10 pr-10 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C9A84C]/60 focus:ring-1 focus:ring-[#C9A84C]/30 transition-colors"
+            className="w-full md:max-w-lg bg-white border border-[#1C1814]/8 rounded-lg pl-10 pr-10 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/40 focus:outline-none focus:border-[#C9A84C]/60 focus:ring-1 focus:ring-[#C9A84C]/30 transition-colors"
           />
           {searchInput && (
             <button
               onClick={() => { setSearchInput(''); setDebouncedQuery(''); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1C1814]/40 hover:text-[#1C1814] transition-colors"
             >
               <X size={14} />
             </button>
           )}
         </div>
 
-        {/* AI Summary Card */}
+        {/* Editorial Summary Card */}
         {isSearchMode && searchData?.ai_answer && (
           <div className="mb-8 bg-[#C9A84C]/8 border border-[#C9A84C]/25 rounded-xl p-5 flex gap-3">
             <Sparkles size={16} className="text-[#C9A84C] shrink-0 mt-0.5" />
             <div>
-              <span className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase block mb-1">AI Summary</span>
-              <p className="text-sm text-white/80 leading-relaxed">{searchData.ai_answer}</p>
+              <span className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase block mb-1">Editorial Summary</span>
+              <p className="text-sm text-[#1C1814]/80 leading-relaxed">{searchData.ai_answer}</p>
             </div>
           </div>
         )}
@@ -169,8 +181,8 @@ export const BetaStories = () => {
                 onClick={() => { setActiveFilter(sector); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                   activeFilter === sector
-                    ? 'bg-[#C9A84C] text-[#0A0F1E] border-[#C9A84C]'
-                    : 'border-white/15 text-white/60 hover:border-white/40 hover:text-white'
+                    ? 'bg-[#C9A84C] text-[#0E0C0A] border-[#C9A84C]'
+                    : 'border-[#1C1814]/10 text-[#1C1814]/65 hover:border-[#1C1814]/30 hover:text-[#1C1814]'
                 }`}
               >
                 {sector}
@@ -181,7 +193,7 @@ export const BetaStories = () => {
 
         {/* Search result count */}
         {isSearchMode && !isSearching && (
-          <p className="text-sm text-white/40 mb-6">
+          <p className="text-sm text-[#1C1814]/40 mb-6">
             {searchArticles.length > 0
               ? `${searchArticles.length} result${searchArticles.length !== 1 ? 's' : ''} for "${debouncedQuery}"`
               : `No results found for "${debouncedQuery}"`}
@@ -200,23 +212,23 @@ export const BetaStories = () => {
                     <Link
                       key={article.slug}
                       to="/membership"
-                      className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col h-[380px] cursor-pointer hover:border-[#C9A84C]/30 transition-colors"
+                      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-[#C9A84C]/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors"
                     >
-                      <div className="p-6 pb-2 border-b border-white/5 relative z-10 bg-[#111827]">
+                      <div className="p-6 pb-2 border-b border-[#1C1814]/8 relative z-10 bg-white">
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-2xl">{article.country_flag}</span>
-                          <span className="text-xs font-semibold tracking-wider text-white/50 uppercase">{article.sector_name}</span>
+                          <span className="text-xs font-semibold tracking-wider text-[#1C1814]/50 uppercase">{article.sector_name}</span>
                         </div>
-                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-white">{article.title}</h3>
-                        <p className="text-white/60 text-sm leading-relaxed line-clamp-3">{article.summary}</p>
-                        <div className="mt-4 text-xs font-medium text-white/40 border-t border-white/5 pt-4">
+                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-[#1C1814]">{article.title}</h3>
+                        <p className="text-[#1C1814]/65 text-sm leading-relaxed line-clamp-3">{article.summary}</p>
+                        <div className="mt-4 text-xs font-medium text-[#1C1814]/40 border-t border-[#1C1814]/8 pt-4">
                           {article.reading_time_minutes} min read
                         </div>
                       </div>
-                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-white/5">
-                        <div className="absolute inset-0 backdrop-blur-[5px] bg-[#0A0F1E]/65 transition-opacity duration-300" />
+                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-[#1C1814]/8">
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-[#1C1814]/65 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
-                          <div className="bg-[#0A0F1E] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-[#C9A84C]/10 transition-all duration-300">
+                          <div className="bg-[#1C1814] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-[#C9A84C]/10 transition-all duration-300">
                             <Lock className="w-6 h-6 text-[#C9A84C]" />
                           </div>
                           <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
@@ -231,7 +243,7 @@ export const BetaStories = () => {
                   <Link
                     key={article.slug}
                     to={`/stories/${article.slug}`}
-                    className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/40"
+                    className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)]"
                   >
                     {/* Hero thumbnail */}
                     {article.hero_image_url ? (
@@ -244,27 +256,27 @@ export const BetaStories = () => {
                         />
                       </div>
                     ) : (
-                      <div className="h-44 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0F1E] shrink-0 flex items-center justify-center">
+                      <div className="h-44 bg-gradient-to-br from-[#C9A84C]/10 to-[#0E0C0A] shrink-0 flex items-center justify-center">
                         <span className="text-5xl opacity-60">{article.country_flag || '🌍'}</span>
                       </div>
                     )}
-                    <div className="p-6 pb-2 flex-grow relative z-10 bg-[#111827]">
+                    <div className="p-6 pb-2 flex-grow relative z-10 bg-white">
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-xl">{article.hero_image_url ? '' : ''}{article.country_flag}</span>
                         <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-white group-hover:text-[#C9A84C] transition-colors">
+                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-[#1C1814] group-hover:text-[#C9A84C] transition-colors">
                         {article.title}
                       </h3>
-                      <p className="text-white/70 text-sm leading-relaxed line-clamp-2">{article.summary}</p>
+                      <p className="text-[#1C1814]/75 text-sm leading-relaxed line-clamp-2">{article.summary}</p>
                     </div>
-                    <div className="p-6 pt-0 bg-[#111827]">
-                      <div className="text-xs font-medium text-white/50 border-t border-white/10 pt-4 flex justify-between items-center">
+                    <div className="p-6 pt-0 bg-white">
+                      <div className="text-xs font-medium text-[#1C1814]/50 border-t border-[#1C1814]/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read
                           {article.published_at && (
                             <>
-                              <span className="text-white/20">·</span>
+                              <span className="text-[#1C1814]/20">·</span>
                               <span>{new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                             </>
                           )}
@@ -300,14 +312,14 @@ export const BetaStories = () => {
           <div className="text-center py-16">
             {isSearchMode ? (
               <>
-                <p className="text-white/50 mb-4">No stories matched "{debouncedQuery}".</p>
-                <p className="text-white/30 text-sm mb-6">Try searching for a country, city, or sector:</p>
+                <p className="text-[#1C1814]/50 mb-4">That story isn't published yet.</p>
+                <p className="text-[#1C1814]/30 text-sm mb-6">Try a country name, city, or sector:</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {['Lagos', 'Kigali', 'Nairobi', 'Technology', 'Energy', 'Ghana'].map(s => (
                     <button
                       key={s}
                       onClick={() => setSearchInput(s)}
-                      className="px-3 py-1 rounded-full text-xs border border-white/15 text-white/50 hover:border-[#C9A84C]/40 hover:text-[#C9A84C] transition-colors"
+                      className="px-3 py-1 rounded-full text-xs border border-[#1C1814]/10 text-[#1C1814]/50 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:text-[#C9A84C] transition-colors"
                     >
                       {s}
                     </button>
@@ -315,7 +327,7 @@ export const BetaStories = () => {
                 </div>
               </>
             ) : (
-              <p className="text-white/50">No stories in this category yet.</p>
+              <p className="text-[#1C1814]/50">No stories in this category yet.</p>
             )}
           </div>
         )}
@@ -323,7 +335,7 @@ export const BetaStories = () => {
         <div className="text-center">
           <Link
             to="/membership"
-            className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg shadow-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+            className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-medium font-sans px-8 py-4 rounded-lg shadow-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
           >
             Unlock All Stories — Become a Founding Member
           </Link>

@@ -50,13 +50,13 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-white/30 uppercase tracking-widest font-semibold hidden sm:block">Share</span>
+      <span className="text-[10px] text-[#1C1814]/30 uppercase tracking-widest font-semibold hidden sm:block">Share</span>
       <a
         href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on X / Twitter"
-        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+        className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
       >
         <Twitter size={13} />
       </a>
@@ -65,14 +65,14 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on LinkedIn"
-        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+        className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
       >
         <Linkedin size={13} />
       </a>
       <button
         onClick={copyLink}
         aria-label="Copy link"
-        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+        className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
       >
         {copied ? <Check size={13} className="text-[#C9A84C]" /> : <Link2 size={13} />}
       </button>
@@ -81,15 +81,15 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 }
 
 const ArticleSkeleton = () => (
-  <div className="min-h-screen bg-[#0A0F1E] text-white font-sans">
-    <div className="w-full h-[300px] md:h-[400px] bg-[#111827] animate-pulse" />
+  <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans">
+    <div className="w-full h-[300px] md:h-[400px] bg-white animate-pulse" />
     <div className="max-w-3xl mx-auto px-6 py-12">
-      <div className="h-4 bg-white/10 rounded w-32 mb-6 animate-pulse" />
-      <div className="h-10 bg-white/10 rounded w-full mb-3 animate-pulse" />
-      <div className="h-10 bg-white/10 rounded w-3/4 mb-8 animate-pulse" />
+      <div className="h-4 bg-[#1C1814]/10 rounded w-32 mb-6 animate-pulse" />
+      <div className="h-10 bg-[#1C1814]/10 rounded w-full mb-3 animate-pulse" />
+      <div className="h-10 bg-[#1C1814]/10 rounded w-3/4 mb-8 animate-pulse" />
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={`h-4 bg-white/5 rounded animate-pulse ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
+          <div key={i} className={`h-4 bg-[#1C1814]/5 rounded animate-pulse ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
         ))}
       </div>
     </div>
@@ -103,19 +103,19 @@ function ArticleMarkdown({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         h2: ({ children }) => (
-          <h2 className="font-serif text-[1.75rem] text-white mt-10 mb-4 leading-snug">{children}</h2>
+          <h2 className="font-serif text-[1.75rem] text-[#1C1814] mt-10 mb-4 leading-snug">{children}</h2>
         ),
         h3: ({ children }) => (
-          <h3 className="font-serif text-[1.375rem] text-white mt-8 mb-3 leading-snug">{children}</h3>
+          <h3 className="font-serif text-[1.375rem] text-[#1C1814] mt-8 mb-3 leading-snug">{children}</h3>
         ),
         p: ({ children }) => (
-          <p className="text-white/80 text-[17px] leading-[1.85] mb-6 font-sans">{children}</p>
+          <p className="text-[#1C1814]/80 text-[17px] leading-[1.85] mb-6 font-sans">{children}</p>
         ),
         strong: ({ children }) => (
           <strong className="text-[#C9A84C] font-semibold">{children}</strong>
         ),
         em: ({ children }) => (
-          <em className="italic text-white/70">{children}</em>
+          <em className="italic text-[#1C1814]/70">{children}</em>
         ),
         ul: ({ children }) => (
           <ul className="my-4 space-y-2 ml-4">{children}</ul>
@@ -124,20 +124,20 @@ function ArticleMarkdown({ content }: { content: string }) {
           <ol className="my-4 space-y-2 ml-4 list-decimal">{children}</ol>
         ),
         li: ({ children }) => (
-          <li className="text-white/80 text-[16px] leading-relaxed flex gap-3">
+          <li className="text-[#1C1814]/80 text-[16px] leading-relaxed flex gap-3">
             <span className="text-[#C9A84C] mt-1 shrink-0">→</span>
             <span>{children}</span>
           </li>
         ),
         blockquote: ({ children }) => (
-          <blockquote className="my-6 border-l-4 border-[#C9A84C] pl-6 text-white/60 font-serif italic text-lg leading-relaxed">
+          <blockquote className="my-6 border-l-4 border-[#C9A84C] pl-6 text-[#1C1814]/60 font-serif italic text-lg leading-relaxed">
             {children}
           </blockquote>
         ),
         code: ({ children }) => (
-          <code className="bg-white/5 text-[#C9A84C] text-sm px-1.5 py-0.5 rounded font-mono">{children}</code>
+          <code className="bg-[#1C1814]/5 text-[#C9A84C] text-sm px-1.5 py-0.5 rounded font-mono">{children}</code>
         ),
-        hr: () => <hr className="my-10 border-white/10" />,
+        hr: () => <hr className="my-10 border-[#1C1814]/10" />,
       }}
     >
       {content}
@@ -167,12 +167,12 @@ export const BetaArticle = () => {
   // Show a proper error page instead of silently redirecting
   if (isError || !data?.article) {
     return (
-      <div className="min-h-screen bg-[#0A0F1E] text-white font-sans">
+      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans">
         <BetaNav />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
           <span className="text-6xl mb-6">📰</span>
           <h2 className="font-serif text-3xl mb-3">Story not found</h2>
-          <p className="text-white/60 mb-8 max-w-sm">
+          <p className="text-[#1C1814]/60 mb-8 max-w-sm">
             This story may have moved or been updated. Browse all our coverage below.
           </p>
           <Link
@@ -225,7 +225,7 @@ export const BetaArticle = () => {
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <div id="article-root" className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
+    <div id="article-root" className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814]">
       <SEO 
         title={article.meta_title || article.title}
         description={article.meta_description || article.summary || ''}
@@ -247,7 +247,7 @@ export const BetaArticle = () => {
       <div className="max-w-3xl mx-auto px-6 pt-6">
         <Link
           to="/stories"
-          className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 transition-colors group"
+          className="inline-flex items-center gap-1.5 text-sm text-[#1C1814]/40 hover:text-[#1C1814]/70 transition-colors group"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
           All Stories
@@ -263,13 +263,13 @@ export const BetaArticle = () => {
             loading="lazy"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1E] via-[#0A0F1E]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0E0C0A] via-[#0E0C0A]/30 to-transparent" />
           <div className="absolute bottom-6 left-6 md:left-12">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>
         </div>
       ) : (
-        <div className="w-full h-[220px] md:h-[300px] bg-gradient-to-b from-[#111827] to-[#0A0F1E] border-b border-white/5 relative mt-4">
+        <div className="w-full h-[220px] md:h-[300px] bg-gradient-to-br from-[#C9A84C]/15 via-[#1C1814]/5 to-[#0E0C0A]/10 border-b border-[#1C1814]/10 relative mt-4">
           <div className="absolute bottom-6 left-6 md:left-12">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>
@@ -295,15 +295,15 @@ export const BetaArticle = () => {
           )}
 
           {/* Byline row */}
-          <div className="flex items-center justify-between text-sm font-medium text-white/60 border-y border-white/5 py-4 gap-4">
+          <div className="flex items-center justify-between text-sm font-medium text-[#1C1814]/60 border-y border-white/5 py-4 gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-wrap">
               <span className="uppercase tracking-wider text-xs whitespace-nowrap">By {authorName}</span>
-              <span className="text-white/20">·</span>
+              <span className="text-[#1C1814]/20">·</span>
               <span className="whitespace-nowrap">{article.reading_time_minutes} min read</span>
               {article.published_at && (
                 <>
-                  <span className="text-white/20">·</span>
-                  <time dateTime={article.published_at} className="whitespace-nowrap text-white/40">
+                  <span className="text-[#1C1814]/20">·</span>
+                  <time dateTime={article.published_at} className="whitespace-nowrap text-[#1C1814]/40">
                     {new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </time>
                 </>
@@ -318,7 +318,7 @@ export const BetaArticle = () => {
           <BetaAudioPlayer slug={slug!} />
         </div>
 
-        {/* AI Intelligence Brief */}
+        {/* Editorial Brief */}
         {article.ai_context?.key_takeaways && article.ai_context.key_takeaways.length > 0 && (
           <div className="mb-10 rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/5 p-6 relative overflow-hidden">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C9A84C] rounded-l-xl" />
@@ -327,18 +327,18 @@ export const BetaArticle = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A84C] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C9A84C]" />
               </span>
-              <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase">AI Intelligence Brief</span>
+              <span className="text-[#C9A84C] text-[11px] font-bold tracking-widest uppercase">Editorial Brief</span>
             </div>
             <ul className="space-y-2 mb-4 pl-1">
               {article.ai_context.key_takeaways.map((point: string, i: number) => (
-                <li key={i} className="flex gap-3 text-sm text-white/80 leading-relaxed">
+                <li key={i} className="flex gap-3 text-sm text-[#1C1814]/80 leading-relaxed">
                   <span className="text-[#C9A84C] font-bold mt-0.5 shrink-0">→</span>
                   <span>{point}</span>
                 </li>
               ))}
             </ul>
             {article.ai_context?.strategic_implication && (
-              <p className="text-sm text-white/60 pl-1 border-t border-white/10 pt-3 mt-3">
+              <p className="text-sm text-[#1C1814]/60 pl-1 border-t border-[#1C1814]/10 pt-3 mt-3">
                 <span className="text-[#C9A84C] font-semibold">Strategic Implication: </span>
                 {article.ai_context?.strategic_implication}
               </p>
@@ -355,34 +355,34 @@ export const BetaArticle = () => {
             <div className="relative mt-2">
               {/* Visual hint that more content follows — server already stripped the real text */}
               <div className="opacity-10 select-none pointer-events-none blur-sm" aria-hidden="true">
-                <p className="text-white/60 leading-relaxed mb-4">
+                <p className="text-[#1C1814]/60 leading-relaxed mb-4">
                   Unlock full access to continue reading exclusive intelligence on African business and investment…
                 </p>
-                <p className="text-white/40 leading-relaxed">
+                <p className="text-[#1C1814]/40 leading-relaxed">
                   Our reporting goes deeper into the data, interviews, and on-the-ground context that matters.
                 </p>
               </div>
 
               {/* Lock overlay */}
-              <div className="absolute inset-x-0 top-0 h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#0A0F1E]/0 via-[#0A0F1E]/90 to-[#0A0F1E] pt-8 pb-16 px-6 text-center">
-                <div className="bg-[#111827] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-6">
+              <div className="absolute inset-x-0 top-0 h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#0E0C0A]/0 via-[#0E0C0A]/90 to-[#0E0C0A] pt-8 pb-16 px-6 text-center">
+                <div className="bg-white p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-6">
                   <Lock className="w-8 h-8 text-[#C9A84C]" />
                 </div>
-                <h3 className="font-serif text-[28px] text-white mb-3">
+                <h3 className="font-serif text-[28px] text-[#1C1814] mb-3">
                   Continue reading as a Founding Member
                 </h3>
-                <p className="text-white/70 mb-8 max-w-md">
+                <p className="text-[#1C1814]/70 mb-8 max-w-md">
                   Members sustain our in-depth reporting across the continent. Unlock unlimited access to every story, briefing, and country hub.
                 </p>
                 <a
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-semibold font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_4px_24px_rgba(201,168,76,0.3)] transition-transform hover:-translate-y-0.5"
+                  className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_4px_24px_rgba(201,168,76,0.3)] transition-transform hover:-translate-y-0.5"
                 >
                   Become a Founding Member
                 </a>
-                <p className="mt-5 text-sm text-white/40">
+                <p className="mt-5 text-sm text-[#1C1814]/40">
                   Already a member?{' '}
                   <Link to="/member-access" className="text-[#C9A84C] hover:underline font-medium">
                     Sign in here
@@ -394,14 +394,14 @@ export const BetaArticle = () => {
 
           {/* Short article — soft support nudge after reading (only for non-members) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
-            <div className="mt-12 p-8 bg-[#111827] border border-[#C9A84C]/20 rounded-xl text-center">
-              <p className="text-white/70 mb-2 font-serif text-lg">Enjoyed this story?</p>
-              <p className="text-white/50 text-sm mb-6">Members get unlimited access to every story and country intelligence hub we publish.</p>
+            <div className="mt-12 p-8 bg-white border border-[#1C1814]/10 rounded-xl text-center">
+              <p className="text-[#1C1814]/70 mb-2 font-serif text-lg">Enjoyed this story?</p>
+              <p className="text-[#1C1814]/50 text-sm mb-6">Members get unlimited access to every story and country intelligence hub we publish.</p>
               <a
                 href={KO_FI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+                className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
               >
                 Support our reporting
               </a>
@@ -411,11 +411,11 @@ export const BetaArticle = () => {
       </main>
 
       {/* More Stories */}
-      <aside className="bg-[#111827] border-t border-white/5 py-24 px-6 relative z-20">
+      <aside className="bg-[#EDE8DF] border-t border-[#1C1814]/8 py-24 px-6 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
-            <h2 className="font-serif text-[32px] text-white">More Stories</h2>
-            <Link to="/stories" className="text-[#C9A84C] font-semibold text-sm tracking-wider uppercase hover:text-white transition-colors">
+            <h2 className="font-serif text-[32px] text-[#1C1814]">More Stories</h2>
+            <Link to="/stories" className="text-[#C9A84C] font-semibold text-sm tracking-wider uppercase hover:text-[#1C1814] transition-colors">
               View All →
             </Link>
           </div>
@@ -425,28 +425,26 @@ export const BetaArticle = () => {
                   <Link
                     key={a.slug}
                     to={`/stories/${a.slug}`}
-                    className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors"
+                    className="group bg-[#F5F0E8] rounded-xl overflow-hidden border border-[#1C1814]/10 hover:border-[#C9A84C]/40 transition-colors"
                   >
                     <div className="p-6">
                       <span className="text-2xl mb-4 block">{a.country_flag || FLAG_MAP[a.country_code] || '🌍'}</span>
                       <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">{a.title}</h4>
-                      <p className="text-sm text-white/50">{a.reading_time_minutes} min read</p>
+                      <p className="text-sm text-[#1C1814]/50">{a.reading_time_minutes} min read</p>
                     </div>
                   </Link>
                 ))
-              : [
-                  { flag: '🇷🇼', title: "Kigali's Blueprint for the Climate-Resilient City", time: 8, slug: 'kigali-infrastructure' },
-                  { flag: '🇬🇭', title: "Accra's Creative Export Economy is Maturing", time: 5, slug: 'accra-creative-economy' },
-                  { flag: '🇰🇪', title: 'The Geothermal Advantage Quietly Powering Nairobi', time: 7, slug: 'nairobi-clean-energy' },
-                ].map(s => (
-                  <Link key={s.slug} to={`/stories/${s.slug}`} className="group bg-[#0A0F1E] rounded-xl overflow-hidden border border-white/10 hover:border-[#C9A84C]/40 transition-colors">
-                    <div className="p-6">
-                      <span className="text-2xl mb-4 block">{s.flag}</span>
-                      <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-[#C9A84C] transition-colors">{s.title}</h4>
-                      <p className="text-sm text-white/50">{s.time} min read</p>
-                    </div>
-                  </Link>
-                ))
+              : (
+                  <div className="col-span-1 md:col-span-3 text-center py-12">
+                    <p className="text-[#1C1814]/40 mb-4">Explore the full archive for more stories from the continent.</p>
+                    <Link
+                      to="/stories"
+                      className="inline-flex items-center gap-2 text-[#C9A84C] font-semibold text-sm hover:opacity-80 transition-opacity"
+                    >
+                      Browse all stories →
+                    </Link>
+                  </div>
+                )
             }
           </div>
         </div>

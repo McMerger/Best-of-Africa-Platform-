@@ -108,6 +108,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <fieldset disabled={isSubmitting} className="space-y-4 disabled:opacity-60 disabled:pointer-events-none">
                 <FormField
                     control={form.control}
                     name="user_name"
@@ -202,6 +203,8 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
                         </FormItem>
                     )}
                 />
+
+                </fieldset>
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? (

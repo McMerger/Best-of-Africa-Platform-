@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -153,10 +153,10 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A0F1E]/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-[#111827] border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
-        <h3 className="font-serif text-2xl text-white mb-1">Connect AI Provider</h3>
-        <p className="text-white/50 text-sm mb-6">Power ZeroClaw agents with your own AI subscription</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E0C0A]/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-[#1A1714] border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+        <h3 className="font-serif text-2xl text-white mb-1">Configure Publishing Tools</h3>
+        <p className="text-white/50 text-sm mb-6">Connect your editorial publishing system</p>
 
         <div className="space-y-4">
           <div>
@@ -164,7 +164,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
             <select
               value={provider}
               onChange={e => { setProvider(e.target.value); setModel(''); }}
-              className="w-full bg-[#0A0F1E] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
+              className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
             >
               {PROVIDER_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -180,7 +180,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={`sk-... or your ${PROVIDER_LABELS[provider]?.name} key`}
-                className="w-full bg-[#0A0F1E] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/20 font-mono text-sm"
+                className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/20 font-mono text-sm"
               />
             </div>
           )}
@@ -190,7 +190,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="w-full bg-[#0A0F1E] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
+              className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
             >
               <option value="">Default for provider</option>
               {selectedOpt?.models.map(m => (
@@ -219,7 +219,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
           <button
             onClick={save}
             disabled={loading}
-            className="flex-1 bg-[#C9A84C] text-[#0A0F1E] font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
+            className="flex-1 bg-[#C9A84C] text-[#0E0C0A] font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
           >
             {loading ? 'Saving…' : 'Connect Provider'}
           </button>
@@ -240,6 +240,8 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   const [showProviderModal, setShowProviderModal] = useState(false);
   const [sseData, setSseData] = useState<Partial<AgentStatus> | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const sseRetryCount = useRef(0);
+  const sseRetryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Expose a helper to parse unknown task types into readable strings
   const getTaskLabel = (type: string) => TASK_TYPE_LABELS[type] || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -248,7 +250,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   const { ref: panelRef, inView } = useInView({ triggerOnce: true, rootMargin: '100px' });
 
   // Poll agent status every 30s — only when panel is visible
-  const { data: status, refetch } = useQuery<AgentStatus>({
+  const { data: status, isLoading: isStatusLoading, refetch } = useQuery<AgentStatus>({
     queryKey: ['agent-status'],
     queryFn: () => request<AgentStatus>('/agent/status'),
     refetchInterval: inView ? 30_000 : false,
@@ -256,9 +258,8 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
     enabled: inView,
   });
 
-  // Open SSE only when panel scrolls into view
-  useEffect(() => {
-    if (!inView) return;
+  // SSE connection factory with exponential backoff reconnect (max 3 retries)
+  const connectSSE = useCallback(() => {
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
     const es = new EventSource(`${API_BASE}/agent/stream`);
     eventSourceRef.current = es;
@@ -270,14 +271,36 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
     es.addEventListener('agent_status', handleAgentStatus);
 
     es.onerror = () => {
+      es.removeEventListener('agent_status', handleAgentStatus);
       es.close();
+      eventSourceRef.current = null;
+      // Exponential backoff: 2s, 4s, 8s — give up after 3 retries
+      if (sseRetryCount.current < 3) {
+        const delay = Math.pow(2, sseRetryCount.current + 1) * 1000;
+        sseRetryCount.current += 1;
+        console.warn(`[AgentStatusPanel] SSE disconnected. Reconnecting in ${delay}ms (attempt ${sseRetryCount.current}/3)...`);
+        sseRetryTimer.current = setTimeout(connectSSE, delay);
+      } else {
+        console.warn('[AgentStatusPanel] SSE max retries reached. Relying on polling only.');
+      }
     };
 
     return () => {
       es.removeEventListener('agent_status', handleAgentStatus);
       es.close();
     };
-  }, [inView]);
+  }, []);
+
+  // Open SSE only when panel scrolls into view
+  useEffect(() => {
+    if (!inView) return;
+    sseRetryCount.current = 0;
+    const cleanup = connectSSE();
+    return () => {
+      cleanup();
+      if (sseRetryTimer.current) clearTimeout(sseRetryTimer.current);
+    };
+  }, [inView, connectSSE]);
 
   // Merge SSE data over the polled data
   const live: AgentStatus | null = status
@@ -317,22 +340,27 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
     providersList.refetch();
   };
 
-  if (!inView || !live) {
+  // m10 FIX: Decouple loading state from inView sentinel.
+  // Show the skeleton when in-view but waiting on the first API response,
+  // not the full "booting" screen which can persist for up to 30s.
+  if (!inView || (isStatusLoading && !live)) {
     return (
-      <div ref={panelRef} className="bg-[#0A0F1E] border border-white/10 rounded-2xl overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#111827]">
+      <div ref={panelRef} className="bg-[#0E0C0A] border border-white/10 rounded-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#1A1714]">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
             <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
           </div>
           <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
-            ZeroClaw OS v1.0.0
+            Editorial OS v1.0.0
           </div>
         </div>
-        <div className="relative h-[480px] p-6 flex flex-col items-center justify-center bg-[#0A0F1E] font-mono">
+        <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-[#0E0C0A] font-mono">
           <div className="w-8 h-8 border-2 border-[#C9A84C]/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
-          <span className="text-[#C9A84C] text-sm tracking-widest animate-pulse">BOOTING INTELLIGENCE ENGINE...</span>
+          <span className="text-[#C9A84C] text-sm tracking-widest animate-pulse">
+            {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING EDITORIAL STATUS...'}
+          </span>
         </div>
       </div>
     );
@@ -340,12 +368,12 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
   return (
     <>
-      <div ref={panelRef} className="bg-[#0A0F1E] border border-white/10 rounded-2xl overflow-hidden">
+      <div ref={panelRef} className="bg-[#0E0C0A] border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
             <Activity size={18} className="text-[#C9A84C]" />
-            <span className="font-semibold text-white text-sm tracking-wide">ZeroClaw Agent</span>
+            <span className="font-semibold text-white text-sm tracking-wide">Editorial System</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusDot health={health} />
@@ -356,7 +384,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-5 divide-x divide-white/5 border-b border-white/5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-white/5">
           {[
             { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-white/50' },
             { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-[#C9A84C]' },
@@ -392,7 +420,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {/* Latest article */}
         {live?.latest_article && (
           <div className="px-6 py-4 border-b border-white/5">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Latest Generated</p>
+            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Latest Published</p>
             <a
               href={`/stories/${live.latest_article.slug}`}
               className="text-sm text-white/80 hover:text-[#C9A84C] transition-colors line-clamp-1"
@@ -481,7 +509,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
               <table className="w-full text-[11px] text-left">
                 <thead>
                   <tr className="text-white/25 uppercase tracking-wider">
-                    <th className="pb-2 pr-4 font-medium">Skill</th>
+                    <th className="pb-2 pr-4 font-medium">Pipeline</th>
                     <th className="pb-2 pr-3 font-medium text-right">Runs</th>
                     <th className="pb-2 pr-3 font-medium text-right">Done</th>
                     <th className="pb-2 pr-3 font-medium text-right">Fail</th>

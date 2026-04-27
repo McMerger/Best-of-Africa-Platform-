@@ -55,6 +55,57 @@ export async function sendEmail({
     }
 }
 
+export interface RegistrationConfirmationParams {
+    registrationId: string;
+    confirmationCode: string;
+    user_email: string;
+    user_name?: string;
+    event: { title: string; date?: string; date_start?: string; location?: string };
+}
+
+export async function sendRegistrationConfirmation({
+    confirmationCode,
+    user_email,
+    user_name,
+    event,
+}: RegistrationConfirmationParams): Promise<boolean> {
+    const displayName = user_name || user_email;
+    const eventDate = event.date || event.date_start || '';
+    const location = event.location || '';
+
+    const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0A0F1E; padding: 40px 20px; color: #ffffff;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #111827; border: 1px solid rgba(201,168,76,0.3); border-radius: 12px; padding: 40px; text-align: center;">
+            <h1 style="font-family: Georgia, serif; font-size: 26px; margin-bottom: 8px;">Registration Confirmed</h1>
+            <p style="font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 32px;">${event.title}</p>
+            <p style="font-size: 16px; color: rgba(255,255,255,0.8); line-height: 1.6; margin-bottom: 24px;">
+                Hi ${displayName},<br><br>
+                You are successfully registered. Please keep your confirmation code safe — you will need it at check-in.
+            </p>
+            <div style="background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.4); border-radius: 8px; padding: 20px; margin-bottom: 32px;">
+                <p style="margin: 0 0 6px; font-size: 12px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 1px;">Confirmation Code</p>
+                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #C9A84C; letter-spacing: 2px;">${confirmationCode}</p>
+            </div>
+            ${eventDate || location ? `
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; text-align: left;">
+                ${eventDate ? `<tr><td style="padding: 8px 0; color: rgba(255,255,255,0.4); font-size: 13px; width: 80px;">Date</td><td style="padding: 8px 0; color: rgba(255,255,255,0.8); font-size: 13px;">${eventDate}</td></tr>` : ''}
+                ${location ? `<tr><td style="padding: 8px 0; color: rgba(255,255,255,0.4); font-size: 13px;">Location</td><td style="padding: 8px 0; color: rgba(255,255,255,0.8); font-size: 13px;">${location}</td></tr>` : ''}
+            </table>` : ''}
+            <p style="margin-top: 40px; font-size: 12px; color: rgba(255,255,255,0.3);">
+                Questions? Reply to this email.<br>
+                © ${new Date().getFullYear()} Best of Africa
+            </p>
+        </div>
+    </div>`;
+
+    return sendEmail({
+        to: user_email,
+        toName: user_name,
+        subject: `Registration Confirmed: ${event.title} [${confirmationCode}]`,
+        html,
+    });
+}
+
 /**
  * Convenience method to send the standardized Member Welcome Email.
  */

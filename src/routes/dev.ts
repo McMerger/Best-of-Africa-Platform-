@@ -6,7 +6,7 @@ const router = new Hono<{ Bindings: Env }>();
 
 // Auth guard for dev endpoints (defined here before first use)
 const devAuthGuard = async (c: any, next: () => Promise<void>) => {
-    const secret = c.req.header('X-Dev-Secret') || c.req.query('secret');
+    const secret = c.req.header('X-Dev-Secret');
     const expectedSecret = (c.env as Record<string, any>).DEV_SECRET;
 
     // If DEV_SECRET is not set, DENY access (safe by default)

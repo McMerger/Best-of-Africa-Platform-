@@ -62,11 +62,21 @@ export const ArticlesPage: React.FC = () => {
                     <div className="container py-20"><Skeleton className="h-[400px] w-full rounded-xl" /></div>
                 ) : (
                     <>
-                        <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {articles.map(article => (
-                                <ArticleCard key={article.id} article={article} />
-                            ))}
-                        </div>
+                        {articles.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-24 text-center border border-border/50 rounded-2xl bg-muted/20">
+                                <p className="text-4xl mb-4">🌍</p>
+                                <p className="text-lg font-semibold text-foreground mb-2">No stories found</p>
+                                <p className="text-sm text-muted-foreground max-w-xs">
+                                    No articles match your current filters. Try adjusting your search.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {articles.map(article => (
+                                    <ArticleCard key={article.id} article={article} />
+                                ))}
+                            </div>
+                        )}
 
                         {totalPages > 1 && (
                             <div className="flex items-center justify-center gap-4 border-t border-border pt-8">

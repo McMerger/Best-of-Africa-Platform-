@@ -36,6 +36,11 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+        // Notify listeners (e.g. BetaMemberAccess) so they can redirect to the
+        // login screen instead of silently swallowing the authentication failure.
+        if (response.status === 401) {
+            window.dispatchEvent(new CustomEvent('boa:auth:unauthorized'));
+        }
         throw new Error(error.message || `API Error: ${response.status}`);
     }
 

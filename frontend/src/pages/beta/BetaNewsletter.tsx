@@ -48,7 +48,7 @@ export const BetaNewsletter = () => {
   // ── Success State ──────────────────────────────────────────────────────────
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-[#0A0F1E] text-white flex flex-col selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
+      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] flex flex-col selection:bg-[#C9A84C] selection:text-[#0E0C0A]">
         <SEO title="Subscribed | Best of Africa" />
         <BetaNav />
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
@@ -57,12 +57,12 @@ export const BetaNewsletter = () => {
               <CheckCircle className="w-8 h-8 text-[#C9A84C]" />
             </div>
             <h1 className="font-serif text-3xl mb-3">You're on the list</h1>
-            <p className="text-white/70 mb-8 leading-relaxed">
+            <p className="text-[#1C1814]/70 mb-8 leading-relaxed">
               Expect your first dispatch on Sunday. In the meantime, dive into our latest stories and market intelligence.
             </p>
             <Link
               to="/stories"
-              className="inline-block w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all shadow-lg"
+              className="inline-block w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all shadow-lg"
             >
               Read latest stories
             </Link>
@@ -74,10 +74,10 @@ export const BetaNewsletter = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-white flex flex-col selection:bg-[#C9A84C] selection:text-[#0A0F1E]">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] flex flex-col selection:bg-[#C9A84C] selection:text-[#0E0C0A]">
       <SEO 
         title="Newsletter | Best of Africa" 
-        description="Join thousands of founders and investors receiving our weekly dispatch on African venture and culture."
+        description="Weekly intelligence dispatches on African business, culture, and emerging markets — no noise, no filter."
       />
       <BetaNav />
 
@@ -88,7 +88,7 @@ export const BetaNewsletter = () => {
             <h1 className="font-serif text-[40px] md:text-[48px] leading-tight mb-4">
               Stay close to Africa's story.
             </h1>
-            <p className="text-lg text-white/70 max-w-sm mx-auto leading-relaxed">
+            <p className="text-lg text-[#1C1814]/70 max-w-sm mx-auto leading-relaxed">
               Free weekly dispatches — cities, founders, opportunities. No noise. Unsubscribe anytime.
             </p>
           </div>
@@ -103,7 +103,7 @@ export const BetaNewsletter = () => {
               required
               disabled={status === 'loading'}
               autoComplete="email"
-              className="w-full bg-[#111827] border border-white/20 text-white rounded-lg px-6 py-4 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/30 font-sans disabled:opacity-50"
+              className="w-full bg-white border border-[#1C1814]/15 text-[#1C1814] rounded-lg px-6 py-4 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-[#1C1814]/50 font-sans disabled:opacity-50"
             />
             {status === 'error' && (
               <p className="text-red-400 text-sm -mt-2" role="alert">{errorMessage}</p>
@@ -111,41 +111,39 @@ export const BetaNewsletter = () => {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full bg-[#C9A84C] text-[#0A0F1E] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full bg-[#C9A84C] text-[#0E0C0A] font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              {status === 'loading' ? 'Subscribing…' : 'Subscribe free'}
+              {status === 'loading' ? 'Subscribing…' : 'Get the weekly dispatch'}
             </button>
           </form>
 
           {/* Benefits */}
-          <div className="w-full bg-[#111827] rounded-xl border border-white/5 p-8 text-left mb-8 shadow-inner">
+          <div className="w-full bg-white rounded-xl border border-[#1C1814]/8 p-8 text-left mb-8 shadow-sm">
             <ul className="space-y-4">
               {[
-                'Weekly story from an African city',
-                'Early access to new country coverage',
-                'First to know when the full platform launches',
+                'Weekly intelligence dispatch from across the continent',
+                'First look at new country hubs and coverage',
+                'Exclusive early access to platform features',
               ].map(benefit => (
                 <li key={benefit} className="flex items-start gap-3">
                   <span className="text-[#C9A84C] font-bold shrink-0">•</span>
-                  <span className="text-white/80 font-medium">{benefit}</span>
+                  <span className="text-[#1C1814]/80 font-medium">{benefit}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <p className="text-sm font-medium text-white/50 mb-12 uppercase tracking-wide">
-            {subscriberCount !== null && subscriberCount > 0
-              ? subscriberCount >= 50
-                ? `Join ${subscriberCount.toLocaleString()} early readers following Best of Africa`
-                : `Join our growing community of early readers`
-              : `Join early supporters already following Best of Africa`
+          <p className="text-sm font-medium text-[#1C1814]/50 mb-12 uppercase tracking-wide">
+            {subscriberCount !== null && subscriberCount >= 50
+              ? `${subscriberCount.toLocaleString()} readers already on the list`
+              : `Join the first wave of continental intelligence`
             }
           </p>
 
-          <div className="pt-8 border-t border-white/10 w-full text-center">
-            <p className="text-white/60 mb-2">Want more?</p>
+          <div className="pt-8 border-t border-[#1C1814]/8 w-full text-center">
+            <p className="text-[#1C1814]/60 mb-2">Ready to go deeper?</p>
             <Link to="/membership" className="text-[#C9A84C] font-semibold hover:opacity-80 transition-opacity">
-              Founding Members get full access.
+              Founding Members unlock the full platform.
             </Link>
           </div>
 

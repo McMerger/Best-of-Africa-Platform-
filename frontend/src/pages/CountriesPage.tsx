@@ -30,7 +30,7 @@ export const CountriesPage: React.FC = () => {
             const byRegionTransformed = Object.entries(countriesRes.by_region || {}).reduce((acc, [region, regionData]) => {
                 acc[region] = {
                     countries: regionData.countries || [],
-                    ai_insight: regionData.ai_insight || "Awaiting regional analysis..."
+                    ai_insight: regionData.ai_insight || "Regional intelligence is being compiled."
                 };
                 return acc;
             }, {} as Record<string, { countries: Country[], ai_insight: string }>);
@@ -47,7 +47,7 @@ export const CountriesPage: React.FC = () => {
 
     return (
         <Layout>
-            <div className={`container transition-all duration-300 ${isCompact ? 'py-6' : 'py-12'}`}>
+            <div className={`container transition-all duration-300 ${isCompact ? 'py-4 md:py-6' : 'py-6 md:py-12'}`}>
                 <header className={`flex flex-col items-center justify-between border-b border-border lg:flex-row transition-all duration-300 ${isCompact ? 'mb-8 gap-6 pb-6' : 'mb-16 gap-12 pb-12'}`}>
                     <div className="flex-1">
                         <div className="mb-4 flex items-center justify-between">
@@ -89,9 +89,9 @@ export const CountriesPage: React.FC = () => {
                         <section key={region} className={`animate-in fade-in slide-in-from-bottom-4 duration-500 transition-all duration-300 ${isCompact ? 'mb-8' : 'mb-16'}`}>
                             <div className={`border-b-2 border-primary transition-all duration-300 ${isCompact ? 'mb-4 pb-2' : 'mb-8 pb-4'}`}>
                                 <div className="flex items-center gap-4 mb-2">
-                                    <div className={`font-serif font-bold tracking-tight text-primary transition-all duration-300 ${isCompact ? 'text-2xl' : 'text-3xl'}`}>
+                                    <h2 className={`font-serif font-bold tracking-tight text-primary transition-all duration-300 ${isCompact ? 'text-2xl' : 'text-3xl'}`}>
                                         {region} Africa
-                                    </div>
+                                    </h2>
                                     <div className="rounded bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">
                                         {regionData.countries.length} Markets
                                     </div>

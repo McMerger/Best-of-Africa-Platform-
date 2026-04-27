@@ -6,7 +6,13 @@
       "Bash(cd \"C:\\\\\\\\Users\\\\\\\\syner\\\\\\\\Downloads\\\\\\\\Best-of-Africa-Platform--main\\\\\\\\Best-of-Africa-Platform--main\\\\\\\\frontend\")",
       "Bash(node -e \"console.log\\('node works'\\)\")",
       "Bash(node:*)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(powershell:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(cmd /c \"npx tsc --noEmit --skipLibCheck 2>&1\")",
+      "Read(//tmp/**)",
+      "Bash(node_modules/.bin/tsc --noEmit --skipLibCheck)"
     ]
   }
 }

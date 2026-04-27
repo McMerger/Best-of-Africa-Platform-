@@ -144,23 +144,23 @@ export const HomePage: React.FC = () => {
 
             <div className="container py-16">
 
-                {/* 2. STRATEGIC OPPORTUNITIES: AI News Carousel */}
+                {/* 2. FEATURED STORIES CAROUSEL */}
                 <section className="mb-24">
                     <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 pb-4">
                         <div>
                             <h2 className="text-3xl font-serif font-bold tracking-tight text-foreground mb-2 flex items-center gap-3">
                                 <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse inline-block" /> {t("home.top_intel", "Top Intelligence")}
                             </h2>
-                            <p className="text-muted-foreground">{t("home.top_intel_sub", "High-priority strategic intelligence briefs, driven by AI.")}</p>
+                            <p className="text-muted-foreground">{t("home.top_intel_sub", "High-priority strategic intelligence briefs, curated for founders and investors.")}</p>
                         </div>
                         <div className="flex gap-2 mt-4 md:mt-0">
-                            <Button variant="outline" size="icon" className="rounded-full shadow-sm" onClick={() => setIsAutoPlaying(!isAutoPlaying)} title={isAutoPlaying ? "Pause Autoplay" : "Start Autoplay"}>
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm" onClick={() => setIsAutoPlaying(!isAutoPlaying)} aria-label={isAutoPlaying ? "Pause autoplay" : "Start autoplay"}>
                                 {isAutoPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
                             </Button>
-                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToPrev}>
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToPrev} aria-label="Previous slide">
                                 <ArrowLeftIcon className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToNext}>
+                            <Button variant="outline" size="icon" className="rounded-full shadow-sm hover:bg-primary/10 hover:text-primary transition-colors" onClick={goToNext} aria-label="Next slide">
                                 <ArrowRightIcon className="h-4 w-4" />
                             </Button>
                         </div>
@@ -186,7 +186,7 @@ export const HomePage: React.FC = () => {
                                     }}
                                     className="absolute inset-0 w-full h-full"
                                 >
-                                    {/* AI Background Image or Gradient Fallback */}
+                                    {/* Story Background Image or Gradient Fallback */}
                                     <div className="absolute inset-0 w-full h-full">
                                         {featured[currentIndex].ai_image_url ? (
                                             <img
@@ -245,10 +245,11 @@ export const HomePage: React.FC = () => {
                                         setCurrentIndex(index);
                                     }}
                                     className={cn(
-                                        "h-1.5 rounded-full transition-all duration-300",
+                                        "h-1.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                                         index === currentIndex ? "w-8 bg-primary" : "w-2 bg-white/30 hover:bg-white/50"
                                     )}
                                     aria-label={`Go to slide ${index + 1}`}
+                                    aria-current={index === currentIndex ? 'true' : undefined}
                                 />
                             ))}
                         </div>

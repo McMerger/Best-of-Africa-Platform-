@@ -22,5 +22,6 @@ export { auditRouter } from './audit';
 export { selfImproveRouter } from './self-improve';
 export { newsletterRouter } from './newsletter';
 export { agentProvidersRouter } from './agent-providers';
+export { moonshotOAuthRouter } from './moonshot-oauth';
 export { membersRouter } from './members';
 export { seoRouter } from './seo';

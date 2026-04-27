@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Mail, ArrowRight, Lock, RefreshCw } from 'lucide-react';
 import { BetaNav, BetaFooter, BetaDashboard } from '../../components/beta';
 import { SEO } from '../../components/SEO';
@@ -21,23 +21,31 @@ export const BetaMemberAccess = () => {
   const [phase, setPhase] = useState<'checking' | 'form' | 'otp' | 'success' | 'error' | 'expired'>('checking');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [memberData, setMemberData] = useState<{ tier: string; name: string } | null>(null);
+  const [memberData, setMemberData] = useState<{ tier: string; name: string; expires_in_days?: number | null } | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
   // On mount: check if an existing token is still valid
   useEffect(() => {
-    const token = localStorage.getItem('boa_auth_token');
+    const token = memberAuth.getToken();
     if (!token) { setPhase('form'); return; }
 
-    request<{ member: boolean; tier?: string; name?: string; reason?: string }>('/members/me')
+    // C5 FIX: Must pass the Authorization header so the server can validate the JWT.
+    // Without this, /members/me always returns {member: false} regardless of stored token.
+    request<{ member: boolean; tier?: string; name?: string; expires_in_days?: number | null; reason?: string }>(
+      '/members/me',
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
       .then(res => {
         if (res.member && res.tier && res.name) {
-          setMemberData({ tier: res.tier, name: res.name });
+          setMemberData({ tier: res.tier, name: res.name, expires_in_days: res.expires_in_days ?? null });
           setPhase('success');
         } else if (res.reason === 'expired') {
-          localStorage.removeItem('boa_auth_token');
+          memberAuth.clearToken();
           setPhase('expired');
         } else {
-          localStorage.removeItem('boa_auth_token');
+          memberAuth.clearToken();
           setPhase('form');
         }
       })
@@ -59,6 +67,7 @@ export const BetaMemberAccess = () => {
       );
 
       if (res.ok && res.status === 'pending_otp') {
+        setIsSubmitting(false);
         setPhase('otp');
       } else {
         throw new Error('Verification failed');
@@ -93,7 +102,7 @@ export const BetaMemberAccess = () => {
       setIsSubmitting(false);
       if (res.ok && res.token) {
         memberAuth.setToken(res.token);
-        setMemberData({ tier: res.tier, name: res.name });
+        setMemberData({ tier: res.tier, name: res.name, expires_in_days: null });
         setPhase('success');
       } else {
         throw new Error('Invalid verification code');
@@ -113,10 +122,44 @@ export const BetaMemberAccess = () => {
 
 
 
+  // Auto-focus OTP input when the OTP screen appears
+  useEffect(() => {
+    if (phase === 'otp') {
+      setTimeout(() => otpInputRef.current?.focus(), 50);
+    }
+  }, [phase]);
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    setResendSuccess(false);
+    try {
+      await request<{ ok: boolean }>('/members/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+      setResendSuccess(true);
+      setTimeout(() => setResendSuccess(false), 3000);
+      // Start 30-second cooldown
+      setResendCooldown(30);
+      const interval = setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch {
+      setErrorMsg('Failed to resend. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
-      <div className="min-h-screen bg-[#0A0F1E] text-white flex flex-col">
+      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] flex flex-col">
         <SEO title="Member Access | Best of Africa" />
         <BetaNav />
         <div className="flex-1 flex items-center justify-center">
@@ -129,7 +172,7 @@ export const BetaMemberAccess = () => {
   // ── Expired state ──────────────────────────────────────────────────────────
   if (phase === 'expired') {
     return (
-      <div className="min-h-screen bg-[#0A0F1E] text-white font-sans flex flex-col">
+      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans flex flex-col">
         <SEO title="Access Expired | Best of Africa" />
         <BetaNav />
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
@@ -138,12 +181,12 @@ export const BetaMemberAccess = () => {
               <RefreshCw className="w-8 h-8 text-amber-400" />
             </div>
             <h1 className="font-serif text-3xl mb-3">Your access has expired</h1>
-            <p className="text-white/60 mb-8">
+            <p className="text-[#1C1814]/60 mb-8">
               Your 30-day access token has expired. Re-enter your member email to get a fresh one, or renew your membership on Ko-fi.
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
+              className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
             >
               Re-enter member email
             </button>
@@ -151,7 +194,7 @@ export const BetaMemberAccess = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-white/40 hover:text-white transition-colors"
+              className="text-sm text-[#1C1814]/40 hover:text-[#1C1814] transition-colors"
             >
               Renew on Ko-fi →
             </a>
@@ -163,7 +206,7 @@ export const BetaMemberAccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] flex flex-col">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] flex flex-col">
       <SEO 
         title="Member Access | Best of Africa" 
         description="Access your Founding Member benefits and premium intelligence."
@@ -178,7 +221,7 @@ export const BetaMemberAccess = () => {
             <BetaDashboard
               memberData={memberData}
               onLogout={() => {
-                localStorage.removeItem('boa_auth_token');
+                memberAuth.clearToken(); // M5 FIX: use shared abstraction instead of direct localStorage
                 setPhase('form');
                 setMemberData(null);
               }}
@@ -193,7 +236,7 @@ export const BetaMemberAccess = () => {
                 <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
                   Check your email
                 </h1>
-                <p className="text-white/60 leading-relaxed max-w-sm mx-auto">
+                <p className="text-[#1C1814]/60 leading-relaxed max-w-sm mx-auto">
                   We sent a 6-digit verification code to <strong>{email}</strong>. Entering it below will authorize this device.
                 </p>
               </div>
@@ -201,6 +244,7 @@ export const BetaMemberAccess = () => {
               <form onSubmit={handleOtpSubmit} className="space-y-4 mb-4">
                 <div className="relative">
                   <input
+                    ref={otpInputRef}
                     type="text"
                     value={otp}
                     onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -210,7 +254,7 @@ export const BetaMemberAccess = () => {
                     maxLength={6}
                     autoComplete="one-time-code"
                     disabled={isSubmitting}
-                    className="w-full bg-[#111827] border border-[#C9A84C]/30 rounded-xl px-4 py-6 text-white placeholder:text-white/20 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
+                    className="w-full bg-white border border-[#C9A84C]/60 rounded-xl px-4 py-6 text-[#1C1814] placeholder:text-[#1C1814]/40 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
                   />
                 </div>
 
@@ -221,16 +265,28 @@ export const BetaMemberAccess = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || otp.length < 6}
-                  className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Verify Code
                 </button>
               </form>
 
-              <div className="text-center mt-6">
+              <div className="text-center mt-6 flex flex-col gap-3">
+                {resendSuccess && (
+                  <p className="text-sm text-emerald-400 font-medium" role="status">New code sent — check your inbox.</p>
+                )}
                 <button
-                  onClick={() => { setPhase('form'); setOtp(''); }}
-                  className="text-xs text-white/40 hover:text-white underline transition-colors"
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isSubmitting || resendCooldown > 0}
+                  className="text-sm text-[#C9A84C]/70 hover:text-[#C9A84C] transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPhase('form'); setOtp(''); setErrorMsg(''); }}
+                  className="text-xs text-[#1C1814]/30 hover:text-[#1C1814]/60 underline transition-colors"
                 >
                   Use a different email
                 </button>
@@ -246,14 +302,14 @@ export const BetaMemberAccess = () => {
                 <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
                   Unlock member access
                 </h1>
-                <p className="text-white/60 leading-relaxed max-w-sm mx-auto">
+                <p className="text-[#1C1814]/60 leading-relaxed max-w-sm mx-auto">
                   Enter the email you used on Ko-fi to activate your full membership on this device.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4 mb-8">
                 <div className="relative">
-                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/30 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
@@ -262,7 +318,7 @@ export const BetaMemberAccess = () => {
                     required
                     name="email"
                     disabled={isSubmitting}
-                    className="w-full bg-[#111827] border border-white/15 rounded-xl pl-10 pr-4 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50"
+                    className="w-full bg-white border border-[#1C1814]/10 rounded-xl pl-10 pr-4 py-4 text-[#1C1814] placeholder:text-[#1C1814]/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50"
                   />
                 </div>
 
@@ -273,18 +329,18 @@ export const BetaMemberAccess = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !email.includes('@')}
-                  className="w-full bg-[#C9A84C] text-[#0A0F1E] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-[#0A0F1E]/30 border-t-[#0A0F1E] rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-[#0E0C0A]/30 border-t-[#0E0C0A] rounded-full animate-spin" />
                   ) : (
                     <>Activate membership <ArrowRight size={15} /></>
                   )}
                 </button>
               </form>
 
-              <div className="border-t border-white/5 pt-8 text-center space-y-4">
-                <p className="text-white/40 text-sm">Not a member yet?</p>
+              <div className="border-t border-[#1C1814]/8 pt-8 text-center space-y-4">
+                <p className="text-[#1C1814]/40 text-sm">Not a member yet?</p>
                 <a
                   href={KO_FI_URL}
                   target="_blank"
@@ -293,7 +349,7 @@ export const BetaMemberAccess = () => {
                 >
                   Become a Founding Member on Ko-fi →
                 </a>
-                <p className="text-white/25 text-xs max-w-xs mx-auto">
+                <p className="text-[#1C1814]/25 text-xs max-w-xs mx-auto">
                   After supporting on Ko-fi, return here with the same email to unlock access. No password required.
                 </p>
               </div>

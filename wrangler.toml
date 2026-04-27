@@ -50,13 +50,15 @@ queue = "headline-optimization"
 
 [[queues.consumers]]
 queue = "content-generation"
-max_batch_size = 10
-max_batch_timeout = 30
+max_batch_size = 1      # Process one at a time — AI generation can run >30s
+max_batch_timeout = 120 # 2-minute window for a single generation task
+max_retries = 5
 
 [[queues.consumers]]
 queue = "headline-optimization"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # WORKERS AI - Article Generation & Embeddings
@@ -96,20 +98,35 @@ crons = [
 # ENVIRONMENT VARIABLES
 # ═══════════════════════════════════════════════════════════════════════════════
 [vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "production"
 API_VERSION = "v1"
+# Comma-separated extra CORS origins beyond bestofafrica.com (e.g. staging domain).
+# For local frontend dev add "http://localhost:5173" to .dev.vars instead.
+ADDITIONAL_ORIGINS = ""
 
-# Secrets (set via wrangler secret put):
-# - JWT_SECRET
-# - NEWS_API_KEY
-# - ADMIN_API_KEY
+# ── Secrets — set via wrangler CLI before deploying ───────────────────────────
+# wrangler secret put JWT_SECRET       # openssl rand -hex 32
+# wrangler secret put ADMIN_API_KEY    # random admin key for /admin endpoints
+# wrangler secret put NEWS_API_KEY     # newsapi.org key
+# wrangler secret put DEV_SECRET       # protects /dev/* endpoints in prod
 #
-# Optional AI Provider secrets (for ZeroClaw agent fallback):
-# - OPENAI_API_KEY        (OpenAI / any OpenAI-compatible API)
-# - ANTHROPIC_API_KEY     (Anthropic Claude)
-# - GOOGLE_AI_API_KEY     (Google Gemini)
-# - OPENROUTER_API_KEY    (OpenRouter — multi-provider gateway)
-#
-# Provider keys can also be added dynamically via:
-#   POST /api/v1/agent/providers  (admin-authenticated)
-# and are stored encrypted in the D1 ai_providers table.
+# Optional AI Provider secrets (platform falls back to Workers AI if unset).
+# These can also be configured at runtime via POST /api/v1/agent/providers.
+# wrangler secret put OPENAI_API_KEY
+# wrangler secret put ANTHROPIC_API_KEY
+# wrangler secret put GOOGLE_AI_API_KEY
+# wrangler secret put OPENROUTER_API_KEY
+# wrangler secret put MOONSHOT_CLIENT_ID      # Moonshot OAuth app client ID (platform.moonshot.cn)
+# wrangler secret put MOONSHOT_CLIENT_SECRET  # Moonshot OAuth app client secret
+# wrangler secret put MOONSHOT_API_KEY        # fallback only — OAuth is preferred
+# wrangler secret put KOFI_TOKEN
+# wrangler secret put ELEVENLABS_API_KEY
+# wrangler secret put ELEVENLABS_VOICE_ID  # optional; defaults to Rachel voice
+
+# ── Environment profiles ───────────────────────────────────────────────────────
+# Override per-environment with: wrangler deploy --env staging
+[env.production]
+vars = { ENVIRONMENT = "production", API_VERSION = "v1", ADDITIONAL_ORIGINS = "" }
+
+[env.staging]
+vars = { ENVIRONMENT = "staging", API_VERSION = "v1", ADDITIONAL_ORIGINS = "https://staging.bestofafrica.com" }

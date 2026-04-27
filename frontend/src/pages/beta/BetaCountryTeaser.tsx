@@ -1,11 +1,22 @@
-import { useState, useMemo } from 'react';
-import { Lock, Search, Globe } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Lock, Search, Globe, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import type { Country } from '../../types';
+
+// ─── Countries API response shape ────────────────────────────────────────────
+interface CountryEntry extends Partial<Country> {
+  article_count?: number;
+}
+interface RegionData {
+  countries: CountryEntry[];
+}
+interface CountriesApiResponse {
+  by_region: Record<string, RegionData>;
+}
 
 // ─── Fallback: all 54 African countries ──────────────────────────────────────
 const FALLBACK_COUNTRIES: Partial<Country>[] = [
@@ -93,7 +104,7 @@ const CountryCard = ({
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
       onClick={onClick}
-      className="group relative bg-[#111827] rounded-xl overflow-hidden border border-white/10 flex flex-col text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#C9A84C]/40 hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5"
+      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5"
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
@@ -101,11 +112,11 @@ const CountryCard = ({
           {country.region}
         </span>
       </div>
-      <h3 className="font-serif text-[17px] font-semibold text-white group-hover:text-[#C9A84C] transition-colors leading-tight mb-1">
+      <h3 className="font-serif text-[17px] font-semibold text-[#1C1814] group-hover:text-[#C9A84C] transition-colors leading-tight mb-1">
         {country.name}
       </h3>
       {tag && (
-        <p className="text-[11px] text-white/40 font-medium leading-tight line-clamp-1">{tag}</p>
+        <p className="text-[11px] text-[#1C1814]/40 font-medium leading-tight line-clamp-1">{tag}</p>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
     </motion.button>
@@ -113,13 +124,13 @@ const CountryCard = ({
 };
 
 const CountryCardSkeleton = () => (
-  <div className="bg-[#111827] rounded-xl border border-white/10 p-5 animate-pulse">
+  <div className="bg-white rounded-xl border border-[#1C1814]/8 p-5 animate-pulse">
     <div className="flex items-center justify-between mb-3">
       <div className="w-8 h-8 bg-white/10 rounded-full" />
       <div className="w-16 h-4 bg-white/10 rounded-full" />
     </div>
     <div className="h-4 bg-white/10 rounded w-2/3 mb-2" />
-    <div className="h-3 bg-white/5 rounded w-1/2" />
+    <div className="h-3 bg-[#1C1814]/5 rounded w-1/2" />
   </div>
 );
 
@@ -130,7 +141,7 @@ export const BetaCountryTeaser = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeCountry, setActiveCountry] = useState<Partial<Country> | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
     queryFn: api.getCountries,
     staleTime: 24 * 60 * 60 * 1000,
@@ -140,8 +151,8 @@ export const BetaCountryTeaser = () => {
   const articleCountMap = useMemo(() => {
     const map: Record<string, number> = {};
     if (data?.by_region) {
-      Object.values(data.by_region).forEach((r: any) => {
-        (r.countries || []).forEach((c: any) => {
+      Object.values(data.by_region).forEach((r: RegionData) => {
+        (r.countries || []).forEach((c: CountryEntry) => {
           if (c.code && c.article_count != null) map[c.code] = c.article_count;
         });
       });
@@ -152,7 +163,7 @@ export const BetaCountryTeaser = () => {
   // Flatten API response or use fallback
   const allCountries: Partial<Country>[] = useMemo(() => {
     if (data?.by_region) {
-      const fromApi = Object.values(data.by_region).flatMap((r: any) => r.countries || []);
+      const fromApi = Object.values(data.by_region).flatMap((r: RegionData) => r.countries || []);
       return fromApi.length >= 10 ? fromApi : FALLBACK_COUNTRIES;
     }
     return FALLBACK_COUNTRIES;
@@ -188,13 +199,22 @@ export const BetaCountryTeaser = () => {
     setActiveCountry(country);
   };
 
-  const closeModal = () => {
+  // M7 FIX: useCallback so the reference is stable and can be in the useEffect dep array
+  const closeModal = useCallback(() => {
     setActiveModal(null);
     setActiveCountry(null);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!activeModal) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+    // M7 FIX: closeModal is now stable (useCallback) + in the dependency array
+  }, [activeModal, closeModal]);
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-white font-sans selection:bg-[#C9A84C] selection:text-[#0A0F1E] pb-32">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] pb-32">
       <BetaNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
@@ -208,47 +228,48 @@ export const BetaCountryTeaser = () => {
           <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
             One Continent. Every Story.
           </h1>
-          <p className="text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-[#1C1814]/60 max-w-2xl mx-auto leading-relaxed">
             From the Atlantic to the Indian Ocean — deep-dive intelligence for every African nation, coming to Founding Members.
           </p>
         </header>
 
         {/* Search */}
         <div className="relative max-w-md mx-auto mb-10">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/30 pointer-events-none" />
           <input
             type="text"
             placeholder="Search countries or sectors…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-[#111827] border border-white/15 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all"
+            className="w-full bg-white border border-[#1C1814]/10 rounded-xl pl-10 pr-4 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1C1814]/30 hover:text-[#1C1814]/70 transition-colors p-1"
               aria-label="Clear search"
             >
-              ×
+              {/* m9 FIX: use lucide X icon instead of literal × string */}
+              <X size={14} />
             </button>
           )}
         </div>
 
         {/* Regional Tabs */}
         {!search && (
-          <div className="flex flex-wrap justify-center gap-2 mb-10">
+          <div className="flex overflow-x-auto gap-2 mb-10 pb-1 justify-start sm:justify-center flex-nowrap scrollbar-hide">
             {REGIONS.map(region => (
               <button
                 key={region}
                 onClick={() => setActiveRegion(region)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
-                    ? 'bg-[#C9A84C] text-[#0A0F1E] shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
-                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10'
+                    ? 'bg-[#C9A84C] text-[#0E0C0A] shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
+                    : 'bg-[#1C1814]/5 text-[#1C1814]/60 hover:bg-white/10 hover:text-[#1C1814] border border-[#1C1814]/8'
                 }`}
               >
                 {region}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-[#0A0F1E]/70' : 'text-white/30'}`}>
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-[#0E0C0A]/70' : 'text-[#1C1814]/30'}`}>
                   {regionCounts[region]}
                 </span>
               </button>
@@ -258,7 +279,7 @@ export const BetaCountryTeaser = () => {
 
         {/* Search result count */}
         {search.length >= 2 && (
-          <p className="text-center text-white/40 text-sm mb-8">
+          <p className="text-center text-[#1C1814]/40 text-sm mb-8">
             {filtered.length} {filtered.length === 1 ? 'country' : 'countries'} matching "{search}"
           </p>
         )}
@@ -283,7 +304,7 @@ export const BetaCountryTeaser = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="col-span-full text-center py-20 text-white/40"
+                    className="col-span-full text-center py-20 text-[#1C1814]/40"
                   >
                     <Globe size={40} className="mx-auto mb-4 opacity-30" />
                     <p className="text-lg">No countries found for "{search}"</p>
@@ -295,14 +316,14 @@ export const BetaCountryTeaser = () => {
 
         {/* Bottom CTA */}
         <div className="text-center">
-          <p className="text-white/40 text-sm mb-5">Full country intelligence hubs unlock for Founding Members</p>
+          <p className="text-[#1C1814]/40 text-sm mb-5">Full country intelligence hubs unlock for Founding Members</p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-[#C9A84C] text-[#0A0F1E] font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+            className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
-            Get Early Access — Become a Founding Member
+            Unlock All 54 Country Hubs — Join as a Founding Member
           </a>
         </div>
       </div>
@@ -314,7 +335,7 @@ export const BetaCountryTeaser = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0A0F1E]/85 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#F5F0E8]/85 backdrop-blur-sm"
             onClick={closeModal}
           >
             <motion.div
@@ -322,25 +343,24 @@ export const BetaCountryTeaser = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-[#111827] border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative"
+              className="bg-white border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={closeModal}
-                className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors p-1"
+                className="absolute top-4 right-4 text-[#1C1814]/40 hover:text-[#1C1814] transition-colors p-1"
                 aria-label="Close modal"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                {/* m9 FIX: use lucide X icon — consistent with the rest of the codebase */}
+                <X size={20} />
               </button>
 
               {/* Header */}
               <div className="flex items-center gap-4 mb-6 pt-1">
                 <span className="text-5xl">{activeCountry.flag_emoji || '🌍'}</span>
                 <div>
-                  <h3 className="font-serif text-2xl text-white">{activeCountry.name}</h3>
+                  <h3 className="font-serif text-2xl text-[#1C1814]">{activeCountry.name}</h3>
                   <span className="text-[11px] font-bold uppercase tracking-widest text-[#C9A84C]/70">
                     {activeCountry.region} Africa
                   </span>
@@ -348,7 +368,7 @@ export const BetaCountryTeaser = () => {
               </div>
 
               {/* Intelligence Preview — article count + key opportunities */}
-              <div className="bg-[#0A0F1E] rounded-xl border border-white/10 p-5 mb-5">
+              <div className="bg-[#F5F0E8] rounded-xl border border-[#1C1814]/8 p-5 mb-5">
                 <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-4">Intelligence Preview</p>
                 {(() => {
                   const count = activeCountry.code ? (articleCountMap[activeCountry.code] ?? null) : null;
@@ -357,14 +377,14 @@ export const BetaCountryTeaser = () => {
                       <div className="flex items-center gap-3">
                         <span className="text-4xl font-serif font-bold text-[#C9A84C]">{count}</span>
                         <div>
-                          <p className="text-sm text-white font-medium leading-tight">
+                          <p className="text-sm text-[#1C1814] font-medium leading-tight">
                             {count === 1 ? 'story published' : 'stories published'}
                           </p>
-                          <p className="text-xs text-white/40">and growing with the autonomous editorial loop</p>
+                          <p className="text-xs text-[#1C1814]/40">and growing across the continent</p>
                         </div>
                       </div>
-                      <div className="h-px bg-white/5 my-3" />
-                      <p className="text-[10px] text-white/30 flex items-center gap-1.5">
+                      <div className="h-px bg-[#1C1814]/5 my-3" />
+                      <p className="text-[10px] text-[#1C1814]/30 flex items-center gap-1.5">
                         <Lock size={10} className="text-[#C9A84C]" />
                         Full 12-point country dossier for Founding Members
                       </p>
@@ -374,13 +394,13 @@ export const BetaCountryTeaser = () => {
                       {['Investment Climate', 'Trade Position', 'Economic Momentum', 'Infrastructure Score'].map((label) => (
                         <div key={label}>
                           <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-xs text-white/40">{label}</span>
-                            <Lock size={10} className="text-white/20" />
+                            <span className="text-xs text-[#1C1814]/40">{label}</span>
+                            <Lock size={10} className="text-[#1C1814]/20" />
                           </div>
-                          <div className="h-1.5 bg-white/5 rounded-full" />
+                          <div className="h-1.5 bg-[#1C1814]/5 rounded-full" />
                         </div>
                       ))}
-                      <p className="text-[10px] text-white/30 mt-3 flex items-center gap-1.5">
+                      <p className="text-[10px] text-[#1C1814]/30 mt-3 flex items-center gap-1.5">
                         <Lock size={10} className="text-[#C9A84C]" />
                         Full dossier unlocked for Founding Members
                       </p>
@@ -392,10 +412,10 @@ export const BetaCountryTeaser = () => {
               {/* Investment Highlights */}
               {Array.isArray(activeCountry.investment_highlights) && activeCountry.investment_highlights.length > 0 && (
                 <div className="mb-5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-3">Key Opportunities</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#1C1814]/40 mb-3">Key Opportunities</p>
                   <div className="flex flex-wrap gap-2">
                     {(activeCountry.investment_highlights as string[]).map((h: string) => (
-                      <span key={h} className="text-xs bg-white/5 border border-white/10 text-white/70 px-3 py-1 rounded-full">
+                      <span key={h} className="text-xs bg-[#1C1814]/5 border border-[#1C1814]/8 text-[#1C1814]/70 px-3 py-1 rounded-full">
                         {h}
                       </span>
                     ))}
@@ -403,7 +423,7 @@ export const BetaCountryTeaser = () => {
                 </div>
               )}
 
-              <p className="text-white/60 text-sm leading-relaxed mb-6">
+              <p className="text-[#1C1814]/60 text-sm leading-relaxed mb-6">
                 Deep-dive dossiers, localized intelligence hubs, and real-time signals for all 54 nations — available to Founding Members.
               </p>
 
@@ -411,7 +431,7 @@ export const BetaCountryTeaser = () => {
                 href={KO_FI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-[#C9A84C] text-[#0A0F1E] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+                className="block w-full text-center bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
               >
                 Become a Founding Member
               </a>

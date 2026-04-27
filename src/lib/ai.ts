@@ -5,6 +5,7 @@
 
 import type { Env } from '../types';
 import { withCircuitBreaker } from './circuit-breaker';
+import { getMoonshotAccessToken } from './moonshot-oauth';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Models Configuration
@@ -14,6 +15,153 @@ const MODELS = {
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
     IMAGE_GENERATION: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
 };
+
+// Bump this string whenever the article generation prompt changes.
+// Stored on the article row so we can evaluate prompt quality over time.
+export const ARTICLE_PROMPT_VERSION = 'v1.1';
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Provider-Aware AI Call
+//
+// Reads the active provider from KV (zeroclaw:provider_config, set by
+// agent-providers.ts) and routes the request to the correct API.
+// Falls back to Workers AI when no external provider is configured.
+//
+// Only used for creative/quality-critical generation (articles, lenses,
+// headlines). Fast deterministic calls (classify, embed) stay on Workers AI.
+// ───────────────────────────────────────────────────────────────────────────────
+interface AICallOptions {
+    prompt?: string;
+    messages?: { role: string; content: string }[];
+    max_tokens?: number;
+    temperature?: number;
+}
+
+async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
+    let provider = 'workers_ai';
+    let model = MODELS.TEXT_GENERATION;
+    let apiKey: string | undefined;
+    let baseUrl = 'https://api.openai.com/v1';
+
+    // Read provider config from KV (5-min TTL, written by agent-providers.ts)
+    try {
+        const configRaw = await env.CACHE.get('zeroclaw:provider_config');
+        if (configRaw) {
+            const config = JSON.parse(configRaw);
+            const defaults = config?.agents?.defaults;
+            if (defaults?.provider) {
+                provider = defaults.provider;
+                model = defaults.model || model;
+                const providerCfg = config?.providers?.[provider];
+                apiKey = providerCfg?.api_key;
+                if (providerCfg?.base_url) baseUrl = providerCfg.base_url;
+            }
+        }
+    } catch {
+        // KV unavailable — fall through to Workers AI
+    }
+
+    const useWorkersAI = provider === 'workers_ai' || !apiKey;
+
+    // ── Workers AI (default fallback) ─────────────────────────────────────────
+    if (useWorkersAI) {
+        const response = await withCircuitBreaker(
+            env,
+            'ai-text-gen',
+            () => (env.AI as Record<string, any>).run(
+                model.startsWith('@cf/') ? model : MODELS.TEXT_GENERATION,
+                options.messages
+                    ? { messages: options.messages, max_tokens: options.max_tokens, temperature: options.temperature }
+                    : { prompt: options.prompt, max_tokens: options.max_tokens, temperature: options.temperature }
+            )
+        );
+        return ((response as Record<string, any>).response || '').trim();
+    }
+
+    // ── Moonshot AI (Kimi) — OAuth subscription token preferred, API key fallback ─
+    if (provider === 'moonshot') {
+        // Try OAuth access token first (subscription auth).
+        // Falls back to the api_key stored in the provider config only if OAuth
+        // has never been authorized, so the platform keeps working during setup.
+        const oauthToken   = await getMoonshotAccessToken(env).catch(() => null);
+        const effectiveKey = oauthToken || apiKey;
+        if (!effectiveKey) throw new Error('[ai] Moonshot: no OAuth token and no API key configured. Visit /api/v1/agent/moonshot/oauth/authorize to authorize your subscription.');
+
+        if (!oauthToken && apiKey) {
+            console.warn('[moonshot] Using API key fallback — OAuth not yet authorized. Visit /api/v1/agent/moonshot/oauth/authorize.');
+        }
+
+        const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${effectiveKey}` },
+            body: JSON.stringify({ model, messages, max_tokens: options.max_tokens, temperature: options.temperature }),
+        });
+        if (!res.ok) throw new Error(`[ai] Moonshot returned HTTP ${res.status}`);
+        const data = await res.json() as any;
+        return (data.choices?.[0]?.message?.content || '').trim();
+    }
+
+    // ── OpenAI / OpenRouter (shared OpenAI-compatible schema) ────────────────
+    if (provider === 'openai' || provider === 'openrouter') {
+        const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
+        const res = await fetch(`${baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify({ model, messages, max_tokens: options.max_tokens, temperature: options.temperature }),
+        });
+        if (!res.ok) throw new Error(`[ai] ${provider} returned HTTP ${res.status}`);
+        const data = await res.json() as any;
+        return (data.choices?.[0]?.message?.content || '').trim();
+    }
+
+    // ── Anthropic ─────────────────────────────────────────────────────────────
+    if (provider === 'anthropic') {
+        const allMessages = options.messages || [{ role: 'user', content: options.prompt || '' }];
+        const systemMsg = allMessages.find(m => m.role === 'system')?.content;
+        const userMessages = allMessages.filter(m => m.role !== 'system');
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey!,
+                'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+                model,
+                max_tokens: options.max_tokens || 1024,
+                ...(systemMsg ? { system: systemMsg } : {}),
+                messages: userMessages,
+            }),
+        });
+        if (!res.ok) throw new Error(`[ai] Anthropic returned HTTP ${res.status}`);
+        const data = await res.json() as any;
+        return (data.content?.[0]?.text || '').trim();
+    }
+
+    // ── Google Gemini ─────────────────────────────────────────────────────────
+    if (provider === 'gemini') {
+        const text = options.messages
+            ? options.messages.map(m => m.content).join('\n\n')
+            : options.prompt || '';
+        const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text }] }],
+                    generationConfig: { maxOutputTokens: options.max_tokens, temperature: options.temperature },
+                }),
+            }
+        );
+        if (!res.ok) throw new Error(`[ai] Gemini returned HTTP ${res.status}`);
+        const data = await res.json() as any;
+        return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    }
+
+    throw new Error(`[ai] Unknown provider: ${provider}`);
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Generate Article from Source
@@ -33,18 +181,7 @@ export async function generateArticle(
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(model || MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 2000,
-            temperature: 0.7,
-        })
-    );
-
-    const text = (response as Record<string, any>).response || '';
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 2000, temperature: 0.7 });
     return parseArticleResponse(text);
 }
 
@@ -79,17 +216,7 @@ Requirements:
 
 Output exactly 3 headlines, one per line, no numbering or bullets.`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 200,
-            temperature: 0.8,
-        })
-    );
-
-    const text = (response as Record<string, any>).response || '';
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.8 });
     return text.split('\n').filter((line: string) => line.trim().length > 10).slice(0, 3);
 }
 
@@ -112,17 +239,7 @@ export async function generateSummary(
 
     Summary:`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 150,
-            temperature: 0.5,
-        })
-    );
-
-    return ((response as Record<string, any>).response || '').trim();
+    return callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.5 });
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -140,7 +257,11 @@ export async function generateEmbedding(
         })
     );
 
-    return (response as Record<string, any>).data[0];
+    const vector = (response as Record<string, any>).data?.[0];
+    if (!Array.isArray(vector) || vector.length === 0) {
+        throw new Error(`generateEmbedding: unexpected response shape — data[0] was ${JSON.stringify(vector)}`);
+    }
+    return vector;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -300,17 +421,7 @@ Structure your response EXACTLY as follows:
 
     TAGS: [comma - separated list of 3 - 5 relevant tags]`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 2000,
-            temperature: 0.8,
-        })
-    );
-
-    const text = (response as Record<string, any>).response || '';
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 2000, temperature: 0.8 });
     return parseArticleResponse(text);
 }
 
@@ -510,20 +621,15 @@ ${content.slice(0, 4000)}
 
 Produce your analysis now. Be definitive. No hedging.`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ],
-            max_tokens: 2500,
-            temperature: 0.4,
-        })
-    );
-
-    return ((response as Record<string, any>).response || content).trim();
+    const text = await callConfiguredAI(env, {
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 2500,
+        temperature: 0.4,
+    });
+    return text || content;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -644,20 +750,15 @@ ${content.slice(0, 4000)}
 
 Produce the output now. Follow the structure exactly. Be definitive.`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ],
-            max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
-            temperature: 0.3, // Very low for structured output
-        })
-    );
-
-    return ((response as Record<string, any>).response || content).trim();
+    const text = await callConfiguredAI(env, {
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+        ],
+        max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
+        temperature: 0.3,
+    });
+    return text || content;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -712,17 +813,7 @@ Structure your response EXACTLY as:
         - [Risk 2]
         - [Risk 3]`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 2500,
-            temperature: 0.7,
-        })
-    );
-
-    const text = (response as Record<string, any>).response || '';
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 2500, temperature: 0.7 });
     return parseIntelligenceReport(text);
 }
 
@@ -844,20 +935,14 @@ ${content.slice(0, 4000)}
 Return ONLY valid JSON. No markdown, no explanation.`;
 
     try {
-        const response = await withCircuitBreaker(
-            env,
-            'ai-text-gen',
-            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                max_tokens: 1200,
-                temperature: 0.2,
-            })
-        );
-
-        const text = (response as Record<string, any>).response || '';
+        const text = await callConfiguredAI(env, {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+            ],
+            max_tokens: 1200,
+            temperature: 0.2,
+        });
 
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -866,7 +951,7 @@ Return ONLY valid JSON. No markdown, no explanation.`;
 
         return getDefaultBriefing();
     } catch (e) {
-        console.error('Unified Briefing Error:', e);
+        console.error('[ai] Unified Briefing Error:', e);
         return getDefaultBriefing();
     }
 }
