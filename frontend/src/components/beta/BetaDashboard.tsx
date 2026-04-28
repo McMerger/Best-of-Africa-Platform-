@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LogOut, CheckCircle, Clock, BookOpen, Globe, Mail } from 'lucide-react';
+import { LogOut, CheckCircle, Clock, BookOpen, Globe, Mail, BarChart2 } from 'lucide-react';
 import { TIER_LABELS, KO_FI_URL } from '../../constants/beta';
 
 // per-tier icon to add visual identity to the dashboard
@@ -80,7 +80,7 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
         </div>
 
         {/* Access Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link to="/stories" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
             <BookOpen size={16} className="text-[#C9A84C]" />
             <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">All Stories</h3>
@@ -90,6 +90,11 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
             <Globe size={16} className="text-[#C9A84C]" />
             <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">Country Hubs</h3>
             <p className="text-xs text-white/50 leading-relaxed">Intelligence for all 54 nations.</p>
+          </Link>
+          <Link to="/intel" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
+            <BarChart2 size={16} className="text-[#C9A84C]" />
+            <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">Market Intel</h3>
+            <p className="text-xs text-white/50 leading-relaxed">Sector signals and opportunities.</p>
           </Link>
           <Link to="/newsletter" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
             <Mail size={16} className="text-[#C9A84C]" />

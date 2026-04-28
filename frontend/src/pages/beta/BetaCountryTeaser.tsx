@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Lock, Search, Globe, X } from 'lucide-react';
+import { Lock, Search, Globe, X, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { BetaNav } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
@@ -424,17 +425,28 @@ export const BetaCountryTeaser = () => {
               )}
 
               <p className="text-[#1C1814]/60 text-sm leading-relaxed mb-6">
-                Deep-dive dossiers, localized intelligence hubs, and real-time signals for all 54 nations — available to Founding Members.
+                Deep-dive dossiers, localized intelligence hubs, and real-time signals for all 54 nations.
               </p>
 
-              <a
-                href={KO_FI_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full text-center bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
-              >
-                Become a Founding Member
-              </a>
+              <div className="space-y-3">
+                {activeCountry?.code && (
+                  <Link
+                    to={`/countries/${activeCountry.code.toLowerCase()}`}
+                    onClick={closeModal}
+                    className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+                  >
+                    Open {activeCountry.name} Hub <ArrowRight size={15} />
+                  </Link>
+                )}
+                <a
+                  href={KO_FI_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center text-[#1C1814]/50 hover:text-[#1C1814] text-sm transition-colors py-2"
+                >
+                  Not a member yet? Join on Ko-fi →
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         )}

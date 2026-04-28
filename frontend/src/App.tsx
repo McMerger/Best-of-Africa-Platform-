@@ -47,6 +47,8 @@ const BetaMembership = React.lazy(() => import('./pages/beta/BetaMembership').th
 const BetaStories = React.lazy(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
 const BetaArticle = React.lazy(() => import('./pages/beta/BetaArticle').then(m => ({ default: m.BetaArticle })));
 const BetaCountryTeaser = React.lazy(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
+const BetaCountryHub = React.lazy(() => import('./pages/beta/BetaCountryHub').then(m => ({ default: m.BetaCountryHub })));
+const BetaMarketIntel = React.lazy(() => import('./pages/beta/BetaMarketIntel').then(m => ({ default: m.BetaMarketIntel })));
 const BetaAbout = React.lazy(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
 const BetaNewsletter = React.lazy(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
 const BetaMemberAccess = React.lazy(() => import('./pages/beta/BetaMemberAccess').then(m => ({ default: m.BetaMemberAccess })));
@@ -86,6 +88,8 @@ function App() {
                         <Route path="/stories" element={<BetaStories />} />
                         <Route path="/stories/:slug" element={<BetaArticle />} />
                         <Route path="/countries" element={<BetaCountryTeaser />} />
+                        <Route path="/countries/:code" element={<BetaCountryHub />} />
+                        <Route path="/intel" element={<BetaMarketIntel />} />
                         <Route path="/about" element={<BetaAbout />} />
                         <Route path="/newsletter" element={<BetaNewsletter />} />
                         <Route path="/member-access" element={<BetaMemberAccess />} />

@@ -8,9 +8,9 @@ import { KO_FI_URL } from '../../constants/beta';
 
 const links = [
   { name: 'Stories', path: '/stories' },
-  { name: 'Member Access', path: '/member-access' },
   { name: 'Countries', path: '/countries' },
-  { name: 'About', path: '/about' },
+  { name: 'Market Intel', path: '/intel' },
+  { name: 'Member Access', path: '/member-access' },
   { name: 'Newsletter', path: '/newsletter' },
 ];
 
