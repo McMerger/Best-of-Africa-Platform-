@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BetaNav, BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
-import { useReadingProgress } from '../../hooks/useReadingProgress';
+
 import { useMember } from '../../context/MemberContext';
 import { api } from '../../services/api';
 import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';

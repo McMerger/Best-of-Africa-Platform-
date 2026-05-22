@@ -90,18 +90,7 @@ export const BetaCountryTeaser = () => {
     staleTime: 24 * 60 * 60 * 1000,
   });
 
-  // Build a country -> article count map from API data
-  const articleCountMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    if (data?.by_region) {
-      Object.values(data.by_region).forEach((r: RegionData) => {
-        (r.countries || []).forEach((c: CountryEntry) => {
-          if (c.code && c.article_count != null) map[c.code] = c.article_count;
-        });
-      });
-    }
-    return map;
-  }, [data]);
+
 
   // Flatten API response
   const allCountries: Partial<Country>[] = useMemo(() => {

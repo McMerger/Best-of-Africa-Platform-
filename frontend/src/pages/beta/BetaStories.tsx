@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Lock, Search, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
@@ -257,6 +258,7 @@ export const BetaStories = () => {
                           <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
                           <span className="text-xs text-[#C9A84C] uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
                         </div>
+                      </div>
                       </Link>
                     </motion.div>
                   );
