@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../../types';
 import { requireApiKey, rateLimit } from '../../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../../lib/cache';
+import { callConfiguredAI } from '../../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -98,97 +99,20 @@ router.get('/performance', async (c) => {
                     : 'No financial data available';
 
                 try {
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            {
-                                role: 'system',
-                                content: activeLens === 'investor'
-                                    ? `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.
+                    let systemContent = '';
+                    if (activeLens === 'investor') {
+                        systemContent = `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.\n\nAnalyze the "${s.name}" sector using ALL provided data:\n- Recent article headlines and summaries (signal quality)\n- Engagement variance (${variance.toFixed(1)} stddev — high variance = volatile sentiment)\n- Financial metrics when available\n- RAG-retrieved deep context from the knowledge base\n\nProduce a GRAHAM-STYLE assessment:\n\n1. **Score (0-100)**: Based on VALUE INVESTMENT thesis. Consider:\n   - Does the sector exhibit stable, predictable earnings patterns?\n   - Is the sector trading below intrinsic value (margin of safety)?\n   - Are financial fundamentals strong (low debt, high dividends)?\n   - Is there defensive value (pension-grade) or enterprising value?\n   Score guide: 80+ = Strong intrinsic value with margin of safety. 60-79 = Enterprising value, requires monitoring. 40-59 = Speculative, insufficient margin. <40 = Overvalued or deteriorating.\n\n2. **Volatility ("Low"/"Med"/"High")**: Based on earnings consistency, NOT price momentum.\n   - Stable earnings across articles = Low. Mixed signals = Med. Erratic/conflicting = High.\n\n3. **Insight**: One precise sentence (max 15 words) stating the Graham-style value assessment.\n\nRespond ONLY with valid JSON:\n{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`;
+                    } else if (activeLens === 'government') {
+                        systemContent = `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.\n\nAnalyze the "${s.name}" sector using ALL provided data:\n- Recent article headlines and summaries\n- Engagement variance (${variance.toFixed(1)} stddev)\n- Financial metrics when available\n- RAG-retrieved deep context\n\nProduce a GOVERNANCE ASSESSMENT:\n\n1. **Score (0-100)**: Based on GOVERNANCE & POLICY outlook. Consider:\n   - Is the regulatory environment supportive or restrictive?\n   - What is the development impact (jobs, GDP contribution, SDG alignment)?\n   - Is there political stability and policy continuity in this sector?\n   Score guide: 80+ = Priority sector, strong governance support. 60-79 = Strategic potential, some regulatory gaps. 40-59 = Monitor, governance risks present. <40 = Diplomatic caution, significant policy risk.\n\n2. **Volatility ("Low"/"Med"/"High")**: Based on regulatory certainty and political stability.\n\n3. **Insight**: One precise sentence (max 15 words) summarizing the governance/policy take.\n\nRespond ONLY with valid JSON:\n{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`;
+                    } else {
+                        systemContent = `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.\n\nAnalyze the "${s.name}" sector using ALL provided data:\n- Recent article headlines and summaries\n- Engagement variance (${variance.toFixed(1)} stddev)\n- Financial metrics when available\n- RAG-retrieved deep context\n\nProduce an EXPLORER ASSESSMENT:\n\n1. **Score (0-100)**: Based on TOURISM & EXPLORER appeal. Consider:\n   - Does this sector enhance travel experiences (hospitality, infrastructure, culture)?\n   - Is there visitor-relevant safety and accessibility?\n   - Are there unique, world-class experiences in this sector?\n   Score guide: 80+ = Unmissable, world-class tourism relevance. 60-79 = Highly recommended for travelers. 40-59 = Worth exploring if combined with other sectors. <40 = Limited traveler relevance.\n\n2. **Volatility ("Low"/"Med"/"High")**: Based on travel safety consistency and seasonal variations.\n\n3. **Insight**: One precise sentence (max 15 words) summarizing the explorer/tourism take.\n\nRespond ONLY with valid JSON:\n{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`;
+                    }
 
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries (signal quality)
-- Engagement variance (${variance.toFixed(1)} stddev — high variance = volatile sentiment)
-- Financial metrics when available
-- RAG-retrieved deep context from the knowledge base
+                    const userContent = `SECTOR: ${s.name}\nARTICLES (${articles.length} recent):\n                            ${articleContext}\n\nFINANCIAL DATA: ${financialContext}\nARTICLE COUNT: ${s.article_count} total | AVG ENGAGEMENT: ${Math.round(avgEng)} / 100 | ENGAGEMENT STDDEV: ${variance.toFixed(1)}\nTOTAL VIEWS: ${s.total_views || 0}\n\n${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
+                    const prompt = `System: ${systemContent}\nUser: ${userContent}`;
+                    const rawText = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });
 
-Produce a GRAHAM-STYLE assessment:
-
-1. **Score (0-100)**: Based on VALUE INVESTMENT thesis. Consider:
-   - Does the sector exhibit stable, predictable earnings patterns?
-   - Is the sector trading below intrinsic value (margin of safety)?
-   - Are financial fundamentals strong (low debt, high dividends)?
-   - Is there defensive value (pension-grade) or enterprising value?
-   Score guide: 80+ = Strong intrinsic value with margin of safety. 60-79 = Enterprising value, requires monitoring. 40-59 = Speculative, insufficient margin. <40 = Overvalued or deteriorating.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on earnings consistency, NOT price momentum.
-   - Stable earnings across articles = Low. Mixed signals = Med. Erratic/conflicting = High.
-
-3. **Insight**: One precise sentence (max 15 words) stating the Graham-style value assessment.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                                    : activeLens === 'government'
-                                        ? `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.
-
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries
-- Engagement variance (${variance.toFixed(1)} stddev)
-- Financial metrics when available
-- RAG-retrieved deep context
-
-Produce a GOVERNANCE ASSESSMENT:
-
-1. **Score (0-100)**: Based on GOVERNANCE & POLICY outlook. Consider:
-   - Is the regulatory environment supportive or restrictive?
-   - What is the development impact (jobs, GDP contribution, SDG alignment)?
-   - Is there political stability and policy continuity in this sector?
-   Score guide: 80+ = Priority sector, strong governance support. 60-79 = Strategic potential, some regulatory gaps. 40-59 = Monitor, governance risks present. <40 = Diplomatic caution, significant policy risk.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on regulatory certainty and political stability.
-
-3. **Insight**: One precise sentence (max 15 words) summarizing the governance/policy take.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                                        : `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.
-
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries
-- Engagement variance (${variance.toFixed(1)} stddev)
-- Financial metrics when available
-- RAG-retrieved deep context
-
-Produce an EXPLORER ASSESSMENT:
-
-1. **Score (0-100)**: Based on TOURISM & EXPLORER appeal. Consider:
-   - Does this sector enhance travel experiences (hospitality, infrastructure, culture)?
-   - Is there visitor-relevant safety and accessibility?
-   - Are there unique, world-class experiences in this sector?
-   Score guide: 80+ = Unmissable, world-class tourism relevance. 60-79 = Highly recommended for travelers. 40-59 = Worth exploring if combined with other sectors. <40 = Limited traveler relevance.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on travel safety consistency and seasonal variations.
-
-3. **Insight**: One precise sentence (max 15 words) summarizing the explorer/tourism take.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                            },
-                            {
-                                role: 'user',
-                                content: `SECTOR: ${s.name}
-ARTICLES (${articles.length} recent):
-                            ${articleContext}
-
-FINANCIAL DATA: ${financialContext}
-ARTICLE COUNT: ${s.article_count} total | AVG ENGAGEMENT: ${Math.round(avgEng)} / 100 | ENGAGEMENT STDDEV: ${variance.toFixed(1)}
-TOTAL VIEWS: ${s.total_views || 0}
-
-${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`
-                            }
-                        ]
-                    });
-
-                    const raw = (aiResponse as Record<string, any>)?.response || '';
+                    const raw = rawText || '';
                     const match = raw.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
@@ -314,13 +238,9 @@ router.get('/sentiment-divergence', async (c) => {
                     const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                     const context = relevant.matches.map((m: any) => (m.metadata as Record<string, any>).title).join('\n');
 
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: 'You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.' },
-                            { role: 'user', content: `Country: ${c.name}.Recent News: \n${context}` }
-                        ]
-                    });
-                    const score = parseInt((aiResponse as Record<string, any>).response.replace(/[^0-9]/g, ''));
+                    const prompt = `System: You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.\nUser: Country: ${c.name}.Recent News: \n${context}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.2 });
+                    const score = parseInt((aiResponse || '').replace(/[^0-9]/g, ''));
                     return isNaN(score) ? 50 : score;
                 } catch (e) { return 50; }
             },
@@ -451,15 +371,10 @@ router.get('/sector/:id/analytics', async (c) => {
                 const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                 const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}' },
-                        { role: 'user', content: `Sector Context: \n${context}` }
-                    ],
-                    response_format: { type: 'json_object' }
-                });
+                const prompt = `System: Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}\nUser: Sector Context: \n${context}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.2 });
 
-                const raw = (aiResponse as Record<string, any>).response;
+                const raw = aiResponse || '';
                 const match = raw.match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
             } catch (e) {

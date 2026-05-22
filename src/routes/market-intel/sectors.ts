@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../../types';
 import { requireApiKey, rateLimit } from '../../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../../lib/cache';
+import { callConfiguredAI } from '../../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -98,13 +99,9 @@ router.get('/sector/:id', async (c) => {
     if (recentArticles.results && recentArticles.results.length > 0) {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
         try {
-            const response = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.' },
-                    { role: 'user', content: `Sector: ${sector.name}\nHeadlines: ${headlines}` }
-                ]
-            });
-            aiOutlook = response?.response?.trim();
+            const prompt = `System: You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.\nUser: Sector: ${sector.name}\nHeadlines: ${headlines}`;
+            const response = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+            aiOutlook = response?.trim() || aiOutlook;
         } catch (e) { /* Ignore */ }
     }
 
@@ -127,13 +124,9 @@ router.get('/sector/:id', async (c) => {
 
                     if (!context) return "Sector data currently being aggregated.";
 
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: 'Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.' },
-                            { role: 'user', content: `Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}` }
-                        ]
-                    });
-                    return aiResponse?.response?.trim();
+                    const prompt = `System: Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.\nUser: Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                    return aiResponse?.trim();
                 } catch (e) { return null; }
             },
             { ttl: 3600 * 24 } // Cache for 24h

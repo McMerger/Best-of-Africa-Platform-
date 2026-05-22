@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, UserPreference } from '../types';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -366,16 +367,9 @@ router.get('/feed/ai-curated', async (c) => {
              `;
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'You are a Personal Intelligence Officer. Curate a briefing.' },
-                        { role: 'user', content: prompt }
-                    ],
-                    response_format: { type: 'json_object' } // optimization if supported, else parse
-                });
-
-                const rawText = aiResponse?.response || '[]';
-                const jsonMatch = rawText.match(/\[.*\]/s);
+                const aiPrompt = `System: You are a Personal Intelligence Officer. Curate a briefing.\nUser: ${prompt}`;
+                const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 500, temperature: 0.2 });
+                const jsonMatch = (rawText || '[]').match(/\[.*\]/s);
                 const selections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
                 // 3. Hydrate Results
@@ -397,7 +391,7 @@ router.get('/feed/ai-curated', async (c) => {
                     data: finalFeed,
                     meta: {
                         curated_count: finalFeed.length,
-                        model: 'llama-3-8b-curator'
+                        model: 'gemini-2.5-pro'
                     }
                 };
 

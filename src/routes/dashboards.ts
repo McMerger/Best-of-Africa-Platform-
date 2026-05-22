@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, Dashboard } from '../types';
 
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -120,19 +121,15 @@ router.get('/:region', async (c) => {
             // Generate if missing
             // We reuse the logic from countries.ts efficiently via cache check or generate
             // For now, simpler fallback or quick gen
-            const aiRes = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    {
-                        role: 'system', content: activeLens === 'investor'
-                            ? 'You are a Value Investment Strategist (Benjamin Graham school). Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
-                            : activeLens === 'government'
-                                ? 'You are a Chief Policy Strategist advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
-                                : 'You are a Premier Africa Travel Strategist. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.'
-                    },
-                    { role: 'user', content: `Region: ${region}. Trends: ${JSON.stringify(trendingCountries)}` }
-                ]
-            });
-            aiInsight = aiRes?.response?.trim() || "Monitoring regional trends.";
+            const systemPrompt = activeLens === 'investor'
+                ? 'You are a Value Investment Strategist (Benjamin Graham school). Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
+                : activeLens === 'government'
+                    ? 'You are a Chief Policy Strategist advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
+                    : 'You are a Premier Africa Travel Strategist. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.';
+            
+            const prompt = `${systemPrompt}\n\nRegion: ${region}. Trends: ${JSON.stringify(trendingCountries)}`;
+            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.3 });
+            aiInsight = text || "Monitoring regional trends.";
             await c.env.CACHE.put(cacheKey, aiInsight, { expirationTtl: 3600 });
         }
     } catch { }
@@ -290,21 +287,17 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
             .join('\n');
 
         if (context) {
-            const aiResponse = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-70b-instruct', {
-                messages: [
-                    {
-                        role: 'system',
-                        content: `You are the Regional Director for ${region} Africa. 
-                        Write a strict 3-bullet Executive Brief for the last 24 hours.
-                        1. Major Development
-                        2. Key Risk
-                        3. Strategic Opportunity
-                        Be concise and high-level.`
-                    },
-                    { role: 'user', content: `Context:\n${context}` }
-                ]
-            });
-            executiveBrief = aiResponse?.response?.trim() || executiveBrief;
+            const prompt = `You are the Regional Director for ${region} Africa. 
+Write a strict 3-bullet Executive Brief for the last 24 hours.
+1. Major Development
+2. Key Risk
+3. Strategic Opportunity
+Be concise and high-level.
+
+Context:
+${context}`;
+            const text = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.3 });
+            executiveBrief = text || executiveBrief;
         }
     } catch (e) { /* Fallback */ }
 
@@ -394,26 +387,20 @@ router.get('/analytics/summary', async (c) => {
                         ? 'Focus on governance quality, fiscal sustainability, political stability, and development impact. HIGH = strong institutions and policy continuity, VOLATILE = regime instability, fiscal distress, or security risks.'
                         : 'Focus on travel safety, hospitality infrastructure, and tourism appeal. HIGH = safe, accessible, and world-class experiences, VOLATILE = travel advisories, infrastructure gaps, or safety concerns.';
 
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `You are a Market Stability Analyst for African markets. ${lensInstruction}
+                const prompt = `You are a Market Stability Analyst for African markets. ${lensInstruction}
 
 Return ONLY valid JSON: {"score": <0-1000>, "index": "<HIGH|MODERATE|VOLATILE>"}
 
 Scoring guide:
 - 700-1000: HIGH stability (positive outlook, strong fundamentals)
 - 400-699: MODERATE stability (mixed signals, watchful)  
-- 0-399: VOLATILE (significant risks, uncertainty)`
-                        },
-                        {
-                            role: 'user',
-                            content: `Platform Metrics: ${stats?.total_articles || 0} articles this week, avg engagement ${Math.round(avgEngagement)}/100, avg sentiment ${Math.round(avgSentiment)}/100.\n\nLatest Headlines:\n- ${headlineContext}`
-                        }
-                    ]
-                });
-                const raw = (aiResponse as Record<string, any>)?.response || '';
+- 0-399: VOLATILE (significant risks, uncertainty)
+
+Platform Metrics: ${stats?.total_articles || 0} articles this week, avg engagement ${Math.round(avgEngagement)}/100, avg sentiment ${Math.round(avgSentiment)}/100.
+
+Latest Headlines:
+- ${headlineContext}`;
+                const raw = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
                 const match = raw.match(/\{.*\}/s);
                 if (match) {
                     const parsed = JSON.parse(match[0]);
@@ -469,23 +456,13 @@ Scoring guide:
                     : 'You are a Premier Travel Strategist for Best of Africa. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `${lensRole}
+                const prompt = `${lensRole}
 Tone: Professional, Insightful, Forward-looking.
-Do NOT use "Based on the data" or generic openers.`
-                        },
-                        {
-                            role: 'user',
-                            content: `Data: ${JSON.stringify(summaryContext)}`
-                        }
-                    ],
-                    max_tokens: 100,
-                    temperature: 0.7
-                });
-                return aiResponse?.response?.trim() || `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage.`;
+Do NOT use "Based on the data" or generic openers.
+
+Data: ${JSON.stringify(summaryContext)}`;
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.7 });
+                return text || `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage.`;
             } catch (e) {
                 console.error('AI Dashboard Summary Failed', e);
                 return `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} leads coverage with strong engagement.`;

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../../types';
 import { requireApiKey, rateLimit } from '../../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../../lib/cache';
+import { callConfiguredAI } from '../../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -60,19 +61,12 @@ router.get('/country/:code/outlook', async (c) => {
             const context = (recent.results || []).map((a: any) => a.title).join('; ');
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `You are a Strategic Investment Analyst for ${countryData.name}. 
+                const prompt = `System: You are a Strategic Investment Analyst for ${countryData.name}. 
                             Write a 3-sentence "Investment Thesis" based on these recent headlines.
                             Highlight one key opportunity and one potential risk.
-                            Tone: Professional, direct, balance sheet focused.`
-                        },
-                        { role: 'user', content: `Headlines: ${context || 'General economic outlook stable.'}` }
-                    ]
-                });
-                return aiResponse?.response || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
+                            Tone: Professional, direct, balance sheet focused.\nUser: Headlines: ${context || 'General economic outlook stable.'}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                return aiResponse?.trim() || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
             } catch (e) {
                 console.error('AI Commentary Failed', e);
                 return `Investment outlook for ${countryData.name} remains stable.`;

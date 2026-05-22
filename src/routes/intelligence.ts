@@ -6,7 +6,8 @@
 import { Hono } from 'hono';
 import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
+import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 import { validate, CountryCodeParamSchema, UuidParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
 import { z } from 'zod';
 
@@ -207,13 +208,9 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
           if (!headlines) return "Insufficient data for deep analysis.";
 
           try {
-            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-              messages: [
-                { role: 'system', content: `You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as Record<string, any>).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.` },
-                { role: 'user', content: `Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.` }
-              ]
-            });
-            return aiResponse?.response?.trim();
+            const prompt = `System: You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as Record<string, any>).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.\nUser: Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.`;
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
+            return aiResponse?.trim();
           } catch (e) {
             return "Analysis currently unavailable.";
           }
@@ -424,7 +421,7 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
       return `Title: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nDate: ${meta.published_at}`;
     }).join('\n---\n');
 
-    // 4. Generate Response with Llama-3
+    // 4. Generate Response with Gemini
     const systemPrompt = `You are the AI Market Consultant for "Best of Africa", a strategic intelligence platform. 
     Current Date: ${new Date().toLocaleDateString()}.
     Use the provided Real-Time Context to answer the user's question about African markets. 
@@ -434,15 +431,11 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
-    const llmResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: message }
-      ]
-    });
+    const prompt = `System: ${systemPrompt}\nUser: ${message}`;
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
 
     return c.json({
-      response: (llmResponse as Record<string, any>).response,
+      response: llmResponse,
       sources: matches.map(m => (m.metadata as Record<string, any>).title)
     });
 
@@ -550,22 +543,11 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
   try {
     const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
 
-    const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct' as any, {
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a Strategic Advisor. Provide 3 specific strategic recommendations for investors in this country based on recent news. Return array of strings.'
-        },
-        {
-          role: 'user',
-          content: `Country: ${countryName}. News: ${topStories}`
-        }
-      ]
-    });
+    const prompt = `System: You are a Strategic Advisor. Provide 3 specific strategic recommendations for investors in this country based on recent news. Return array of strings.\nUser: Country: ${countryName}. News: ${topStories}`;
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.5 });
 
     // Parse response (simple heuristic)
-    const text = (aiRes as Record<string, any>).response;
-    return text.split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
+    return (text || '').split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
 
   } catch (e) {
     return [];

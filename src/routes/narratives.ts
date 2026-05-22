@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, NarrativeStrategy, Country } from '../types';
 import { requireAdmin } from '../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -108,18 +109,9 @@ router.get('/country/:code', async (c) => {
             const context = (articles.results as any[]).map(a => `- ${a.title} (Tone: ${a.tone})`).join('\n');
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-70b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `You are a Strategic Communications Director. 
-                            Synthesize these headlines into a single, powerful "Narrative Arc" paragraph (3 sentences max).
-                            Explain the cohesive story forming around ${countryData.name}.`
-                        },
-                        { role: 'user', content: context }
-                    ]
-                });
-                return aiResponse?.response?.trim() || "Narrative synthesis unavailable.";
+                const prompt = `System: You are a Strategic Communications Director.\nSynthesize these headlines into a single, powerful "Narrative Arc" paragraph (3 sentences max).\nExplain the cohesive story forming around ${countryData.name}.\nUser: ${context}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.7 });
+                return aiResponse?.trim() || "Narrative synthesis unavailable.";
             } catch (e) {
                 return "Narrative synthesis unavailable.";
             }

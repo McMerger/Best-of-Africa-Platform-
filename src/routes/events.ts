@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -56,13 +57,8 @@ router.get('/:id', async (c) => {
     // Lazy Generate AI Value Proposition if missing
     if (!eventData.ai_value_proposition) {
         try {
-            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'You are an Event Promoter. Write 3 compelling bullet points on why a business leader should attend this event.' },
-                    { role: 'user', content: `Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}` }
-                ]
-            });
-            const generated = aiResponse?.response?.trim();
+            const prompt = `System: You are an Event Promoter. Write 3 compelling bullet points on why a business leader should attend this event.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;
+            const generated = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.7 }).then(res => res?.trim());
 
             if (generated) {
                 eventData.ai_value_proposition = generated;

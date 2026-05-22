@@ -16,28 +16,22 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 router.use('*', requireAdmin);
 
 // Import AI helpers
-import { generateSummary, analyzeSentiment } from '../lib/ai';
+import { generateSummary, analyzeSentiment, callConfiguredAI } from '../lib/ai';
 
 async function generateTags(env: Env, content: string): Promise<string[]> {
     try {
-        const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: 'Generate exactly 5 SEO tags for this article. Respond with a valid JSON array of strings only. Example: ["tag1","tag2","tag3","tag4","tag5"]'
-                },
-                { role: 'user', content: content.slice(0, 1000) }
-            ],
-            response_format: { type: 'json_object' }
-        }) as { response: string };
+        const prompt = `Generate exactly 5 SEO tags for this article. Respond with a valid JSON array of strings only. Example: ["tag1","tag2","tag3","tag4","tag5"]
 
-        // Try direct JSON parse first, then fall back to array extraction
-        const raw = response.response?.trim() || '';
+Article Content:
+${content.slice(0, 1000)}`;
+
+        const raw = await callConfiguredAI(env, { prompt, max_tokens: 100, temperature: 0.1 });
+        
         let parsed: unknown;
         try {
-            parsed = JSON.parse(raw);
+            parsed = JSON.parse(raw || '[]');
         } catch {
-            const match = raw.match(/\[[\s\S]*\]/);
+            const match = (raw || '').match(/\[[\s\S]*\]/);
             if (!match) return ['African Business', 'News'];
             parsed = JSON.parse(match[0]);
         }
@@ -433,15 +427,14 @@ router.get('/intelligence/recommendations', async (c) => {
             // Ideally: We search the `articles` table for "Emerging Tech" and see low results.
 
             try {
-                const aiResponse = await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'You are an Editor-in-Chief. Identify content gaps.' },
-                        { role: 'user', content: `Our Recent Articles: ${internalContext}\n\nTask: Compare this against top current trends in African AgriTech, Fintech, and Mining. Identify 3 specific "Missed Content Opportunities" that are trending globally but missing from our list. Return JSON array.` }
-                    ],
-                    response_format: { type: 'json_object' }
-                }) as { response: string };
+                const prompt = `You are an Editor-in-Chief. Identify content gaps.
 
-                const match = aiResponse.response.match(/\[.*\]/s);
+Our Recent Articles: ${internalContext}
+
+Task: Compare this against top current trends in African AgriTech, Fintech, and Mining. Identify 3 specific "Missed Content Opportunities" that are trending globally but missing from our list. Return JSON array.`;
+
+                const raw = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                const match = (raw || '').match(/\[.*\]/s);
                 return match ? JSON.parse(match[0]) : [];
             } catch (e) {
                 console.error("Failed to generate recommendations:", e);

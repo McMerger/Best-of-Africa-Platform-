@@ -8,6 +8,7 @@ import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
 import { validate, BookingRequestSchema, PaginationSchema, EventRegistrationSchema, IdOrSlugParamSchema, UuidParamSchema, CountryCodeParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
+import { callConfiguredAI } from '../lib/ai';
 import { z } from 'zod';
 import { sendRegistrationConfirmation } from '../lib/email';
 
@@ -58,13 +59,9 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
 
         if (context) {
-            const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'You are a Concierge Director. Write a 1-sentence "Preliminary Note" connecting the user request to recent platform news.' },
-                    { role: 'user', content: `Request: ${keywords}. News: ${context}` }
-                ]
-            });
-            preliminaryNote = aiResponse?.response?.trim();
+            const prompt = `System: You are a Concierge Director. Write a 1-sentence "Preliminary Note" connecting the user request to recent platform news.\nUser: Request: ${keywords}. News: ${context}`;
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.6 });
+            preliminaryNote = aiResponse?.trim();
         }
     } catch (e) {
         console.error('AI Concierge Brief Failed', e);
@@ -234,13 +231,9 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
 
                         if (!context) return "Connecting event to regional trends...";
 
-                        const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                            messages: [
-                                { role: 'system', content: 'Explain why this event matters given current news. 1-2 sentences.' },
-                                { role: 'user', content: `Event: ${data.title}. News: ${context}` }
-                            ]
-                        });
-                        return aiResponse?.response?.trim();
+                        const prompt = `System: Explain why this event matters given current news. 1-2 sentences.\nUser: Event: ${data.title}. News: ${context}`;
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.6 });
+                        return aiResponse?.trim();
                     } catch (e) { return null; }
                 },
                 { ttl: 3600 }

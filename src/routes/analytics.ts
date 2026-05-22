@@ -8,6 +8,7 @@ import type { Env, Variables, AnalyticsEvent } from '../types';
 import { trackEvent } from '../lib/analytics';
 import { requireAuth } from '../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -107,13 +108,9 @@ router.get('/insight', requireAuth, async (c) => {
     const topContext = (topArticles.results as any[]).map(a => `"${a.title}": ${a.views} views`).join(', ');
 
     try {
-        const response = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                { role: 'system', content: 'You are a Data Journalist. Explain the traffic trend based on the top stories. Be concise.' },
-                { role: 'user', content: `Traffic Stats: ${(traffic as Record<string, any>).views} views. Top Stories: ${topContext}` }
-            ]
-        });
-        insight = response?.response?.trim();
+        const prompt = `System: You are a Data Journalist. Explain the traffic trend based on the top stories. Be concise.\nUser: Traffic Stats: ${(traffic as Record<string, any>).views} views. Top Stories: ${topContext}`;
+        const response = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+        insight = response?.trim() || insight;
     } catch (e) { /* Ignore */ }
 
     return c.json({
@@ -263,13 +260,9 @@ router.get('/content-gaps', requireAuth, async (c) => {
             if (!gapContext) return "Coverage is balanced.";
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'You are a Content Strategist. Advise on filling content gaps.' },
-                        { role: 'user', content: `We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.` }
-                    ]
-                });
-                return aiResponse?.response?.trim();
+                const prompt = `System: You are a Content Strategist. Advise on filling content gaps.\nUser: We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.7 });
+                return aiResponse?.trim();
             } catch { return "Focus on underserved regions."; }
         },
         { ttl: CACHE_TTL.DASHBOARD }

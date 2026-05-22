@@ -6,6 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Country } from '../types';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -66,13 +67,9 @@ router.get('/', async (c) => {
                 const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
                 if (context) {
-                    const aiRes = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: 'Summarize the current business climate for this region in 1 sentence. Focus on key opportunities.' },
-                            { role: 'user', content: `Region: ${region}. News: ${context}` }
-                        ]
-                    });
-                    const text = aiRes?.response?.trim();
+                    const prompt = `System: Summarize the current business climate for this region in 1 sentence. Focus on key opportunities.\nUser: Region: ${region}. News: ${context}`;
+                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
+                    const text = aiRes?.trim();
                     if (text) {
                         insights[region] = text;
                         await c.env.CACHE.put(cacheKey, text, { expirationTtl: 3600 * 4 }); // 4 hours
@@ -225,13 +222,9 @@ router.get('/:code', async (c) => {
                 const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
                 if (!headlines) return "Monitoring situation.";
                 try {
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: `SitRep Officer for ${country.name}. 1-sentence current status.` },
-                            { role: 'user', content: headlines }
-                        ]
-                    });
-                    return aiResponse?.response?.trim();
+                    const prompt = `System: SitRep Officer for ${country.name}. 1-sentence current status.\nUser: ${headlines}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.5 });
+                    return aiResponse?.trim();
                 } catch { return "Status Normal."; }
             },
             { ttl: CACHE_TTL.DASHBOARD }
@@ -387,14 +380,9 @@ router.get('/:code/relationships', async (c) => {
 
             // AI: Extract Partners
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: `Extract diplomatic/trade partners for ${data.name} from the news. Return JSON array: [{ "partner": "China", "type": "Trade", "context": "Infrastructure deal" }]` },
-                        { role: 'user', content: context }
-                    ],
-                    response_format: { type: 'json_object' }
-                });
-                const jsonMatch = (aiResponse as Record<string, any>).response.match(/\[.*\]/s);
+                const prompt = `System: Extract diplomatic/trade partners for ${data.name} from the news. Return JSON array: [{ "partner": "China", "type": "Trade", "context": "Infrastructure deal" }]\nUser: ${context}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });
+                const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {
                 return [];

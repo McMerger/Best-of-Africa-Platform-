@@ -135,9 +135,9 @@ router.get('/status', async (c) => {
         recent_tasks: recentTasks.results || [],
         latest_article: latestArticle || null,
         active_provider: providerConfig || {
-            provider: 'workers_ai',
-            label: 'Cloudflare Workers AI',
-            model: '@cf/meta/llama-3.1-70b-instruct',
+            provider: 'gemini',
+            label: 'Google Gemini',
+            model: 'gemini-2.5-pro',
         },
         metrics_7d: metricsRows.results || [],
         generated_at: new Date().toISOString(),
