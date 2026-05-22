@@ -129,10 +129,10 @@ export async function generateArticleFromQueue(
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
         try {
-            const imagePrompt = \`African editorial photography: \${generated.title}. Photojournalistic, high quality.\`;
+            const imagePrompt = `African editorial photography: \${generated.title}. Photojournalistic, high quality.`;
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (imageBuffer) {
-                const imageKey = \`articles/\${articleId}/hero.png\`;
+                const imageKey = `articles/\${articleId}/hero.png`;
                 const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
                 if (imageUrl) {
                     await env.DB.prepare('UPDATE articles SET ai_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();

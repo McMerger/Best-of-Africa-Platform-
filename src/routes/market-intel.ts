@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -98,13 +99,11 @@ router.get('/sector/:id', async (c) => {
     if (recentArticles.results && recentArticles.results.length > 0) {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
         try {
-            const response = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    { role: 'system', content: 'You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.' },
-                    { role: 'user', content: `Sector: ${sector.name}\nHeadlines: ${headlines}` }
-                ]
-            });
-            aiOutlook = response?.response?.trim();
+            const prompt = `You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.
+Sector: ${sector.name}
+Headlines: ${headlines}`;
+            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
+            aiOutlook = text || aiOutlook;
         } catch (e) { /* Ignore */ }
     }
 
@@ -127,13 +126,10 @@ router.get('/sector/:id', async (c) => {
 
                     if (!context) return "Sector data currently being aggregated.";
 
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: 'Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.' },
-                            { role: 'user', content: `Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}` }
-                        ]
-                    });
-                    return aiResponse?.response?.trim();
+                    const prompt = `Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.
+Sector: ${(sector as Record<string, any>).name}. recent Context:
+${context}`;
+                    return await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
                 } catch (e) { return null; }
             },
             { ttl: 3600 * 24 } // Cache for 24h
@@ -268,19 +264,14 @@ router.get('/country/:code/outlook', async (c) => {
             const context = (recent.results || []).map((a: any) => a.title).join('; ');
 
             try {
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system',
-                            content: `You are a Strategic Investment Analyst for ${countryData.name}. 
-                            Write a 3-sentence "Investment Thesis" based on these recent headlines.
-                            Highlight one key opportunity and one potential risk.
-                            Tone: Professional, direct, balance sheet focused.`
-                        },
-                        { role: 'user', content: `Headlines: ${context || 'General economic outlook stable.'}` }
-                    ]
-                });
-                return aiResponse?.response || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
+                const prompt = `You are a Strategic Investment Analyst for ${countryData.name}. 
+Write a 3-sentence "Investment Thesis" based on these recent headlines.
+Highlight one key opportunity and one potential risk.
+Tone: Professional, direct, balance sheet focused.
+
+Headlines: ${context || 'General economic outlook stable.'}`;
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
+                return text || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
             } catch (e) {
                 console.error('AI Commentary Failed', e);
                 return `Investment outlook for ${countryData.name} remains stable.`;
@@ -509,12 +500,8 @@ router.get('/performance', async (c) => {
                     : 'No financial data available';
 
                 try {
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            {
-                                role: 'system',
-                                content: activeLens === 'investor'
-                                    ? `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.
+                    const systemMsg = activeLens === 'investor'
+                        ? `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.
 
 Analyze the "${s.name}" sector using ALL provided data:
 - Recent article headlines and summaries (signal quality)
@@ -538,8 +525,8 @@ Produce a GRAHAM-STYLE assessment:
 
 Respond ONLY with valid JSON:
 {"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                                    : activeLens === 'government'
-                                        ? `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.
+                        : activeLens === 'government'
+                            ? `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.
 
 Analyze the "${s.name}" sector using ALL provided data:
 - Recent article headlines and summaries
@@ -561,7 +548,7 @@ Produce a GOVERNANCE ASSESSMENT:
 
 Respond ONLY with valid JSON:
 {"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                                        : `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.
+                            : `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.
 
 Analyze the "${s.name}" sector using ALL provided data:
 - Recent article headlines and summaries
@@ -582,11 +569,9 @@ Produce an EXPLORER ASSESSMENT:
 3. **Insight**: One precise sentence (max 15 words) summarizing the explorer/tourism take.
 
 Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                            },
-                            {
-                                role: 'user',
-                                content: `SECTOR: ${s.name}
+{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`;
+
+                    const userMsg = `SECTOR: ${s.name}
 ARTICLES (${articles.length} recent):
                             ${articleContext}
 
@@ -594,12 +579,13 @@ FINANCIAL DATA: ${financialContext}
 ARTICLE COUNT: ${s.article_count} total | AVG ENGAGEMENT: ${Math.round(avgEng)} / 100 | ENGAGEMENT STDDEV: ${variance.toFixed(1)}
 TOTAL VIEWS: ${s.total_views || 0}
 
-${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`
-                            }
-                        ]
-                    });
+${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
 
-                    const raw = (aiResponse as Record<string, any>)?.response || '';
+                    const raw = await callConfiguredAI(c.env, {
+                        prompt: `${systemMsg}\n\n${userMsg}`,
+                        max_tokens: 150,
+                        temperature: 0.2
+                    });
                     const match = raw.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
@@ -663,36 +649,66 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`
 // GET /market-intel/leading-sector - Top performing sector (for MarketIntelPage header)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/leading-sector', async (c) => {
-    const result = await c.env.DB.prepare(`
-        SELECT s.name,
-                        SUM(a.view_count) as total_views,
-                        COUNT(a.id) as article_count
-        FROM sectors s
-        INNER JOIN articles a ON a.sector_id = s.id 
-        WHERE a.status = 'published' 
-          AND a.published_at > datetime('now', '-7 days')
-        GROUP BY s.id
-        ORDER BY total_views DESC
-        LIMIT 1
-                        `).first();
+    return c.json(await getCached(
+        c.env,
+        'leading-sector-insight',
+        async () => {
+            const result = await c.env.DB.prepare(`
+                SELECT s.id, s.name,
+                       SUM(a.view_count) as total_views,
+                       COUNT(a.id) as article_count
+                FROM sectors s
+                INNER JOIN articles a ON a.sector_id = s.id 
+                WHERE a.status = 'published' 
+                  AND a.published_at > datetime('now', '-7 days')
+                GROUP BY s.id
+                ORDER BY total_views DESC
+                LIMIT 1
+            `).first() as Record<string, any> | null;
 
-    if (!result) {
-        return c.json({
-            name: 'General Market',
-            growth: 0,
-            trend: 'flat'
-        });
-    }
+            if (!result) {
+                return { name: 'General Market', growth: 0, trend: 'flat', updated_at: new Date().toISOString() };
+            }
 
-    const data = result as Record<string, any>;
-    const growth = Math.min(5 + (data.article_count * 0.8), 20);
+            const articles = await c.env.DB.prepare(`
+                SELECT title FROM articles 
+                WHERE sector_id = ? AND status = 'published' AND published_at > datetime('now', '-7 days')
+                ORDER BY view_count DESC LIMIT 5
+            `).bind(result.id).all();
 
-    return c.json({
-        name: data.name,
-        growth: parseFloat(growth.toFixed(1)),
-        trend: 'up',
-        updated_at: new Date().toISOString()
-    });
+            const headlines = (articles.results || []).map((a: any) => a.title).join('; ');
+
+            let growth = 0;
+            let trend = 'flat';
+            
+            try {
+                const prompt = `You are an expert market analyst for African economies. Evaluate these recent headlines for the "${result.name}" sector:
+Headlines: ${headlines}
+
+Provide a realistic short-term growth percentage estimate (-100 to +100) and an overall sentiment trend ('up', 'down', or 'flat').
+Return ONLY valid JSON matching this schema: {"growth": number, "trend": "up" | "down" | "flat"}`;
+
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
+                const match = text.match(/\{.*\}/s);
+                if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    growth = typeof parsed.growth === 'number' ? parsed.growth : 0;
+                    trend = ['up', 'down', 'flat'].includes(parsed.trend) ? parsed.trend : 'flat';
+                }
+            } catch (e) {
+                growth = Math.min(5 + (result.article_count * 0.8), 20);
+                trend = 'up';
+            }
+
+            return {
+                name: result.name,
+                growth: parseFloat(Number(growth).toFixed(1)),
+                trend,
+                updated_at: new Date().toISOString()
+            };
+        },
+        { ttl: 3600 } // Cache for 1 hour
+    ));
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -725,13 +741,11 @@ router.get('/sentiment-divergence', async (c) => {
                     const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                     const context = relevant.matches.map((m: any) => (m.metadata as Record<string, any>).title).join('\n');
 
-                    const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                        messages: [
-                            { role: 'system', content: 'You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.' },
-                            { role: 'user', content: `Country: ${c.name}.Recent News: \n${context}` }
-                        ]
-                    });
-                    const score = parseInt((aiResponse as Record<string, any>).response.replace(/[^0-9]/g, ''));
+                    const prompt = `You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.
+Country: ${c.name}.Recent News: 
+${context}`;
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 10, temperature: 0.1 });
+                    const score = parseInt(text.replace(/[^0-9]/g, ''));
                     return isNaN(score) ? 50 : score;
                 } catch (e) { return 50; }
             },
@@ -862,16 +876,14 @@ router.get('/sector/:id/analytics', async (c) => {
                 const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                 const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
-                const aiResponse = await (c.env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}' },
-                        { role: 'user', content: `Sector Context: \n${context}` }
-                    ],
-                    response_format: { type: 'json_object' }
-                });
+                const prompt = `Analyze supply chain health for the sector based on this context:
+Sector Context:
+${context}
 
-                const raw = (aiResponse as Record<string, any>).response;
-                const match = raw.match(/\{.*\}/s);
+Return ONLY valid JSON matching this schema: {"upstream":"Stable"|"Strain"|"Blockage", "midstream":"Stable"|"Strain"|"Blockage", "downstream":"Stable"|"Strain"|"Blockage"}`;
+
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
+                const match = text.match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
             } catch (e) {
                 return { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
@@ -947,76 +959,145 @@ router.get('/sector/:id/trend-history', async (c) => {
 router.get('/sector/:id/velocity', async (c) => {
     const sectorId = c.req.param('id');
 
-    // Get sector metrics from market_metrics table
-    const metrics = await c.env.DB.prepare(`
-        SELECT growth_rate, investment_volume_usd, market_size_usd
-        FROM market_metrics
-        WHERE sector_id = ?
-                        ORDER BY year DESC
-        LIMIT 1
-                        `).bind(sectorId).first() as Record<string, any>;
+    return c.json(await getCached(
+        c.env,
+        `sector-velocity-${sectorId}`,
+        async () => {
+            const metrics = await c.env.DB.prepare(`
+                SELECT growth_rate, investment_volume_usd, market_size_usd
+                FROM market_metrics
+                WHERE sector_id = ?
+                ORDER BY year DESC
+                LIMIT 1
+            `).bind(sectorId).first() as Record<string, any>;
 
-    // Get article count for "active projects"
-    const articleStats = await c.env.DB.prepare(`
-        SELECT COUNT(*) as count
-        FROM articles
-        WHERE sector_id = ? AND status = 'published'
-        AND published_at > datetime('now', '-30 days')
-                        `).bind(sectorId).first() as Record<string, any>;
+            const articleStats = await c.env.DB.prepare(`
+                SELECT COUNT(*) as count
+                FROM articles
+                WHERE sector_id = ? AND status = 'published'
+                AND published_at > datetime('now', '-30 days')
+            `).bind(sectorId).first() as Record<string, any>;
 
-    // Calculate 5-year CAGR from available data or use growth rate
-    const cagr = metrics?.growth_rate || 8.5;
-    const dealFlow = metrics?.investment_volume_usd || metrics?.market_size_usd || 0;
-    const activeProjects = articleStats?.count || 0;
+            const sector = await c.env.DB.prepare(`SELECT name FROM sectors WHERE id = ?`).bind(sectorId).first() as Record<string, any>;
 
-    return c.json({
-        sector_id: sectorId,
-        cagr_5yr: Number(cagr.toFixed(1)),
-        deal_flow_usd: dealFlow,
-        active_projects: activeProjects,
-        updated_at: new Date().toISOString()
-    });
+            let cagr = metrics?.growth_rate;
+            let dealFlow = metrics?.investment_volume_usd || metrics?.market_size_usd || 0;
+            const activeProjects = articleStats?.count || 0;
+
+            if (cagr === undefined && sector) {
+                try {
+                    const articles = await c.env.DB.prepare(`
+                        SELECT title FROM articles 
+                        WHERE sector_id = ? AND status = 'published'
+                        ORDER BY published_at DESC LIMIT 5
+                    `).bind(sectorId).all();
+                    const headlines = (articles.results || []).map((a: any) => a.title).join('; ');
+                    
+                    const prompt = `You are an expert economic analyst. Based on these headlines for the ${sector.name} sector in Africa: "${headlines}", estimate a realistic 5-year Compound Annual Growth Rate (CAGR) percentage.
+Return ONLY valid JSON matching this schema: {"cagr": number}`;
+
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.1 });
+                    const match = text.match(/\{.*\}/s);
+                    if (match) {
+                        const parsed = JSON.parse(match[0]);
+                        if (typeof parsed.cagr === 'number') {
+                            cagr = parsed.cagr;
+                        }
+                    }
+                } catch (e) {
+                    cagr = 8.5; // Final fallback if AI fails
+                }
+            } else if (cagr === undefined) {
+                cagr = 8.5;
+            }
+
+            return {
+                sector_id: sectorId,
+                cagr_5yr: Number(Number(cagr).toFixed(1)),
+                deal_flow_usd: dealFlow,
+                active_projects: activeProjects,
+                updated_at: new Date().toISOString()
+            };
+        },
+        { ttl: 3600 * 6 } // cache for 6 hours
+    ));
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /market-intel/opportunities - High-growth intersections
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/opportunities', async (c) => {
-    const opportunities = await c.env.DB.prepare(`
-        SELECT 
-            c.code as country_code,
-                        c.name as country_name,
-                        s.id as sector_id,
-                        s.name as sector_name,
-                        COUNT(a.id) as article_count,
-                        AVG(a.engagement_score) as avg_score,
-                        (SELECT title FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_title,
-                    (SELECT summary FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_summary
-        FROM articles a
-        JOIN countries c ON a.country_code = c.code
-        JOIN sectors s ON a.sector_id = s.id
-        WHERE a.status = 'published'
-        GROUP BY c.code, s.id
-        ORDER BY avg_score DESC
-        LIMIT 6
-    `).all();
+    return c.json(await getCached(
+        c.env,
+        'strategic-opportunities',
+        async () => {
+            const opportunities = await c.env.DB.prepare(`
+                SELECT 
+                    c.code as country_code,
+                    c.name as country_name,
+                    s.id as sector_id,
+                    s.name as sector_name,
+                    COUNT(a.id) as article_count,
+                    AVG(a.engagement_score) as avg_score
+                FROM articles a
+                JOIN countries c ON a.country_code = c.code
+                JOIN sectors s ON a.sector_id = s.id
+                WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
+                GROUP BY c.code, s.id
+                ORDER BY avg_score DESC
+                LIMIT 6
+            `).all();
 
-    const formatted = (opportunities.results || []).map((o: any) => ({
-        country_code: o.country_code,
-        country_name: o.country_name,
-        sector_id: o.sector_id,
-        sector_name: o.sector_name,
-        title: o.top_title || `${o.sector_name} Activity`,
-        summary: o.top_summary || `Analysis pending for ${o.country_name}.`,
-        score: Math.round(o.avg_score || 0)
-    }));
+            const items = opportunities.results || [];
+            
+            if (items.length === 0) return { data: [] };
 
-    // If no real data, fallback to generated examples based on real countries
-    if (formatted.length === 0) {
-        return c.json({ data: [] });
-    }
+            const formatted = await Promise.all(items.map(async (o: any) => {
+                const recentArticles = await c.env.DB.prepare(`
+                    SELECT title FROM articles 
+                    WHERE country_code = ? AND sector_id = ? AND status = 'published'
+                    ORDER BY engagement_score DESC LIMIT 3
+                `).bind(o.country_code, o.sector_id).all();
 
-    return c.json({ data: formatted });
+                const headlines = (recentArticles.results || []).map((a: any) => a.title).join('; ');
+                
+                let generatedTitle = `${o.sector_name} Activity`;
+                let generatedSummary = `Analysis pending for ${o.country_name}.`;
+                
+                try {
+                    const prompt = `You are a strategic investment advisor. Based on these top headlines for ${o.sector_name} in ${o.country_name}, synthesize the core opportunity.
+Headlines: ${headlines}
+
+Return valid JSON with two fields:
+- "title": A compelling, punchy 4-7 word headline describing the opportunity.
+- "summary": A concise 2-sentence summary of the investment or strategic thesis.
+JSON format ONLY.`;
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
+                    const match = text.match(/\{.*\}/s);
+                    if (match) {
+                        const parsed = JSON.parse(match[0]);
+                        if (parsed.title) generatedTitle = parsed.title;
+                        if (parsed.summary) generatedSummary = parsed.summary;
+                    }
+                } catch (e) {
+                    // Fallback to generic text on error
+                }
+
+                return {
+                    country_code: o.country_code,
+                    country_name: o.country_name,
+                    sector_id: o.sector_id,
+                    sector_name: o.sector_name,
+                    title: generatedTitle,
+                    summary: generatedSummary,
+                    score: Math.round(o.avg_score || 0)
+                };
+            }));
+
+            return { data: formatted, updated_at: new Date().toISOString() };
+        },
+        { ttl: 3600 * 12 } // Cache for 12 hours
+    ));
 });
 
 export { router as marketIntelRouter };

@@ -32,14 +32,14 @@ export const ARTICLE_PROMPT_VERSION = 'v1.1';
 // Only used for creative/quality-critical generation (articles, lenses,
 // headlines). Fast deterministic calls (classify, embed) stay on Workers AI.
 // ───────────────────────────────────────────────────────────────────────────────
-interface AICallOptions {
+export interface AICallOptions {
     prompt?: string;
     messages?: { role: string; content: string }[];
     max_tokens?: number;
     temperature?: number;
 }
 
-async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
+export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
     let provider = 'gemini';
     let model = 'gemini-2.5-pro';
     let apiKey: string | undefined;
