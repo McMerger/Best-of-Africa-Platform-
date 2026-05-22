@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import { getSectorIcon } from '@/lib/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InfoCircledIcon } from '@radix-ui/react-icons';
-import { PartnerPromo } from '../components/PartnerPromo';
 
 interface SectorDetailData {
     sector: Sector;
@@ -85,7 +84,7 @@ export const SectorDetailPage: React.FC = () => {
                             Performance
                         </TabsTrigger>
                         <TabsTrigger value="outlook" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-                            Ai Outlook
+                            Outlook
                         </TabsTrigger>
                         <TabsTrigger value="markets" className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-6 py-2.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
                             Regional Heatmap
@@ -164,23 +163,9 @@ export const SectorDetailPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* SECTOR SPONSORED PROMOTION (Contextual Ad) */}
-                        {sector.id && (['finance', 'infrastructure', 'energy'].includes(sector.id.toLowerCase())) && (
-                            <div className="mt-12 mb-12">
-                                <PartnerPromo
-                                    variant="horizontal"
-                                    title="The River Bridge Strategy"
-                                    category="Strategic Investment"
-                                    description={`As we analyze the ${sector.name} sector, River Bridge provides the capital and connectivity required to scale industrial footprints across developing trade corridors.`}
-                                    ctaText="Review Investment Brief"
-                                    imageUrl="https://images.unsplash.com/photo-1454165833767-02acd3546342?auto=format&fit=crop&q=80&w=1200"
-                                    className="border-primary/40 bg-primary/5"
-                                />
-                            </div>
-                        )}
                     </TabsContent>
 
-                    {/* TAB 2: AI OUTLOOK */}
+                    {/* TAB 2: OUTLOOK */}
                     <TabsContent value="outlook" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {data.ai_outlook ? (
                             <div className="rounded-xl border-l-4 border-primary bg-muted/30 p-8 shadow-sm">

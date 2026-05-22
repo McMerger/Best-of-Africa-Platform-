@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { PageTransition } from './components/beta/PageTransition';
 import { Toaster } from "@/components/ui/sonner"
 import { CommandMenu } from '@/components/CommandMenu';
 import { isBeta } from './config/flags';
@@ -10,7 +12,6 @@ import { HomePage } from './pages/HomePage';
 // Lazy-load everything else — Vite will auto-split into separate chunks
 const ArticlesPage = React.lazy(() => import('./pages/ArticlesPage').then(m => ({ default: m.ArticlesPage })));
 const ArticleDetailPage = React.lazy(() => import('./pages/ArticleDetailPage').then(m => ({ default: m.ArticleDetailPage })));
-const CountryDetailPage = React.lazy(() => import('./pages/CountryDetailPage').then(m => ({ default: m.CountryDetailPage })));
 const DashboardsPage = React.lazy(() => import('./pages/DashboardsPage').then(m => ({ default: m.DashboardsPage })));
 const DashboardDetailPage = React.lazy(() => import('./pages/DashboardDetailPage').then(m => ({ default: m.DashboardDetailPage })));
 const MarketIntelPage = React.lazy(() => import('./pages/MarketIntelPage').then(m => ({ default: m.MarketIntelPage })));
@@ -58,6 +59,7 @@ import { MissionProvider } from './context/MissionContext';
 import { LensProvider } from './context/LensContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
+import { MemberProvider } from './context/MemberContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -70,76 +72,87 @@ const PageLoader = () => (
   </div>
 );
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Beta & core public routes (always accessible) */}
+        <Route path="/" element={<PageTransition>{isBeta ? <BetaLanding /> : <HomePage />}</PageTransition>} />
+        <Route path="/membership" element={<PageTransition><BetaMembership /></PageTransition>} />
+        <Route path="/stories" element={<PageTransition><BetaStories /></PageTransition>} />
+        <Route path="/stories/:slug" element={<PageTransition><BetaArticle /></PageTransition>} />
+        <Route path="/countries" element={<PageTransition><BetaCountryTeaser /></PageTransition>} />
+        <Route path="/countries/:code" element={<PageTransition><BetaCountryHub /></PageTransition>} />
+        <Route path="/intel" element={<PageTransition><BetaMarketIntel /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><BetaAbout /></PageTransition>} />
+        <Route path="/newsletter" element={<PageTransition><BetaNewsletter /></PageTransition>} />
+        <Route path="/member-access" element={<PageTransition><BetaMemberAccess /></PageTransition>} />
+
+        {/* Full app routes */}
+        <Route path="/intelligence-briefings" element={<PageTransition><ArticlesPage /></PageTransition>} />
+        <Route path="/articles/:slug" element={<PageTransition><ArticleDetailPage /></PageTransition>} />
+        <Route path="/dashboards" element={<PageTransition><DashboardsPage /></PageTransition>} />
+        <Route path="/dashboards/:region" element={<PageTransition><DashboardDetailPage /></PageTransition>} />
+        <Route path="/market-intel" element={<PageTransition><MarketIntelPage /></PageTransition>} />
+        <Route path="/market-intel/sectors/:id" element={<PageTransition><SectorDetailPage /></PageTransition>} />
+        <Route path="/market-intel/reports" element={<PageTransition><ReportsPage /></PageTransition>} />
+        <Route path="/market-intel/reports/:id" element={<PageTransition><ReportDetailPage /></PageTransition>} />
+        <Route path="/market-intel/country/:code" element={<PageTransition><CountryOutlookPage /></PageTransition>} />
+        <Route path="/market-intel/country/:code/premium" element={<PageTransition><PremiumCountryAnalysisPage /></PageTransition>} />
+        <Route path="/market-intel/audience" element={<PageTransition><AudienceInsightsPage /></PageTransition>} />
+        <Route path="/market-intel/sectors/:id/trends" element={<PageTransition><PremiumSectorTrendsPage /></PageTransition>} />
+        <Route path="/feed" element={<PageTransition><PersonalizedFeedPage /></PageTransition>} />
+        <Route path="/narratives" element={<PageTransition><NarrativesPage /></PageTransition>} />
+        <Route path="/narratives/country/:code" element={<PageTransition><CountryNarrativePage /></PageTransition>} />
+        <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
+        <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><AdminPage /></PageTransition>} />
+        <Route path="/sponsored" element={<PageTransition><SponsoredPage /></PageTransition>} />
+        <Route path="/market-intel/reports/sector/:sectorId" element={<PageTransition><ReportsPage /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><PrivacyPage /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><TermsPage /></PageTransition>} />
+        <Route path="/guidelines" element={<PageTransition><EditorialGuidelinesPage /></PageTransition>} />
+        <Route path="/travel" element={<PageTransition><TravelPage /></PageTransition>} />
+        <Route path="/events" element={<PageTransition><EventsPage /></PageTransition>} />
+        <Route path="/events/:id" element={<PageTransition><EventDetailPage /></PageTransition>} />
+        <Route path="/request-consultation" element={<PageTransition><BookingRequestPage /></PageTransition>} />
+        <Route path="/analyst" element={<PageTransition><AnalystPage /></PageTransition>} />
+        <Route path="/impact" element={<PageTransition><ImpactPage /></PageTransition>} />
+        <Route path="/library" element={<PageTransition><LibraryPage /></PageTransition>} />
+        <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <LanguageProvider>
-            <LensProvider>
-              <MissionProvider>
-                <Router>
-                  <ErrorBoundary>
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        {/* Beta & core public routes (always accessible) */}
-                        <Route path="/" element={isBeta ? <BetaLanding /> : <HomePage />} />
-                        <Route path="/membership" element={<BetaMembership />} />
-                        <Route path="/stories" element={<BetaStories />} />
-                        <Route path="/stories/:slug" element={<BetaArticle />} />
-                        <Route path="/countries" element={<BetaCountryTeaser />} />
-                        <Route path="/countries/:code" element={<BetaCountryHub />} />
-                        <Route path="/intel" element={<BetaMarketIntel />} />
-                        <Route path="/about" element={<BetaAbout />} />
-                        <Route path="/newsletter" element={<BetaNewsletter />} />
-                        <Route path="/member-access" element={<BetaMemberAccess />} />
-
-                        {/* Full app routes */}
-                        <Route path="/intelligence-briefings" element={<ArticlesPage />} />
-                        <Route path="/articles/:slug" element={<ArticleDetailPage />} />
-                        <Route path="/countries/:code" element={<CountryDetailPage />} />
-                        <Route path="/dashboards" element={<DashboardsPage />} />
-                        <Route path="/dashboards/:region" element={<DashboardDetailPage />} />
-                        <Route path="/market-intel" element={<MarketIntelPage />} />
-                        <Route path="/market-intel/sectors/:id" element={<SectorDetailPage />} />
-                        <Route path="/market-intel/reports" element={<ReportsPage />} />
-                        <Route path="/market-intel/reports/:id" element={<ReportDetailPage />} />
-                        <Route path="/market-intel/country/:code" element={<CountryOutlookPage />} />
-                        <Route path="/market-intel/country/:code/premium" element={<PremiumCountryAnalysisPage />} />
-                        <Route path="/market-intel/audience" element={<AudienceInsightsPage />} />
-                        <Route path="/market-intel/sectors/:id/trends" element={<PremiumSectorTrendsPage />} />
-                        <Route path="/feed" element={<PersonalizedFeedPage />} />
-                        <Route path="/narratives" element={<NarrativesPage />} />
-                        <Route path="/narratives/country/:code" element={<CountryNarrativePage />} />
-                        <Route path="/search" element={<SearchPage />} />
-                        <Route path="/settings" element={<SettingsPage />} />
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/admin" element={<AdminPage />} />
-                        <Route path="/sponsored" element={<SponsoredPage />} />
-                        <Route path="/market-intel/reports/sector/:sectorId" element={<ReportsPage />} />
-                        <Route path="/privacy" element={<PrivacyPage />} />
-                        <Route path="/terms" element={<TermsPage />} />
-                        <Route path="/guidelines" element={<EditorialGuidelinesPage />} />
-                        <Route path="/travel" element={<TravelPage />} />
-                        <Route path="/events" element={<EventsPage />} />
-                        <Route path="/events/:id" element={<EventDetailPage />} />
-                        <Route path="/request-consultation" element={<BookingRequestPage />} />
-                        <Route path="/analyst" element={<AnalystPage />} />
-                        <Route path="/impact" element={<ImpactPage />} />
-                        <Route path="/library" element={<LibraryPage />} />
-                        <Route path="/contact" element={<ContactPage />} />
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                      </Routes>
-                    </Suspense>
-                  </ErrorBoundary>
-                  <Toaster />
-                  <CommandMenu />
-                </Router>
-              </MissionProvider>
-            </LensProvider>
-          </LanguageProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <MemberProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <LanguageProvider>
+              <LensProvider>
+                <MissionProvider>
+                  <Router>
+                    <ErrorBoundary>
+                      <Suspense fallback={<PageLoader />}>
+                        <AnimatedRoutes />
+                      </Suspense>
+                    </ErrorBoundary>
+                    <Toaster />
+                    <CommandMenu />
+                  </Router>
+                </MissionProvider>
+              </LensProvider>
+            </LanguageProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </MemberProvider>
     </AuthProvider>
   );
 }

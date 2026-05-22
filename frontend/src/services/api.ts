@@ -12,8 +12,9 @@ const getSessionId = () => {
     return id;
 };
 
-// Auth token helper
+// Auth token helpers
 const getAuthToken = () => localStorage.getItem('boa_auth_token');
+const getAdminToken = () => localStorage.getItem('boa_admin_token');
 
 // Request helper
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -313,9 +314,9 @@ export const api = {
         body: JSON.stringify({ content, comment })
     }),
     triggerAuditScan: () => request('/audit/scan', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('boa_admin_token')}` }
+        headers: { 'Authorization': `Bearer ${getAdminToken()}` }
     }),
     triggerAgentEvolution: () => request('/self-improve/evolve', {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('boa_admin_token')}` }
+        headers: { 'Authorization': `Bearer ${getAdminToken()}` }
     }),
 };

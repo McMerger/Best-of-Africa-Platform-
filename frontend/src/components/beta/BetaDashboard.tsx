@@ -38,7 +38,7 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
         {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-serif text-[32px] mb-1">Welcome back, {memberData.name}</h1>
+            <h1 className="font-serif text-[32px] mb-1 text-white">Welcome back, {memberData.name}</h1>
             <p className="text-white/50 text-sm flex items-center gap-2">
               <CheckCircle size={14} className="text-[#C9A84C]" /> Active Membership
             </p>

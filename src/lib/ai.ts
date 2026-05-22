@@ -6,6 +6,8 @@
 import type { Env } from '../types';
 import { withCircuitBreaker } from './circuit-breaker';
 import { getMoonshotAccessToken } from './moonshot-oauth';
+import { getGeminiAccessToken } from './gemini-oauth';
+import { getProviderToken } from './provider-tokens';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Models Configuration
@@ -38,8 +40,8 @@ interface AICallOptions {
 }
 
 async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
-    let provider = 'workers_ai';
-    let model = MODELS.TEXT_GENERATION;
+    let provider = 'gemini';
+    let model = 'gemini-2.5-pro';
     let apiKey: string | undefined;
     let baseUrl = 'https://api.openai.com/v1';
 
@@ -58,13 +60,33 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
             }
         }
     } catch {
-        // KV unavailable — fall through to Workers AI
+        // KV unavailable — fall through to auto-detect / Workers AI
     }
 
-    const useWorkersAI = provider === 'workers_ai' || !apiKey;
+    // ── Auto-detect provider from env vars when nothing configured in DB ──────
+    if (provider === 'workers_ai') {
+        if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';            apiKey = env.ANTHROPIC_API_KEY; }
+        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro';               apiKey = env.GOOGLE_AI_API_KEY; }
+        else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';              apiKey = env.MOONSHOT_API_KEY; baseUrl = 'https://api.moonshot.cn/v1'; }
+        else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
+        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter.ai/api/v1'; }
+    }
+
+    // ── Auto-detect from OAuth tokens (Gemini / Moonshot subscription auth) ──
+    if (provider === 'workers_ai') {
+        const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
+        if (geminiOAuth) {
+            provider = 'gemini'; model = 'gemini-2.5-pro';
+        } else {
+            const moonshotOAuth = await getMoonshotAccessToken(env).catch(() => null);
+            if (moonshotOAuth) {
+                provider = 'moonshot'; model = 'moonshot-v1-32k'; baseUrl = 'https://api.moonshot.cn/v1';
+            }
+        }
+    }
 
     // ── Workers AI (default fallback) ─────────────────────────────────────────
-    if (useWorkersAI) {
+    if (provider === 'workers_ai') {
         const response = await withCircuitBreaker(
             env,
             'ai-text-gen',
@@ -78,17 +100,15 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
         return ((response as Record<string, any>).response || '').trim();
     }
 
-    // ── Moonshot AI (Kimi) — OAuth subscription token preferred, API key fallback ─
+    // ── Moonshot AI (Kimi) — OAuth token → DB key → bootstrap → env var ─────
     if (provider === 'moonshot') {
-        // Try OAuth access token first (subscription auth).
-        // Falls back to the api_key stored in the provider config only if OAuth
-        // has never been authorized, so the platform keeps working during setup.
-        const oauthToken   = await getMoonshotAccessToken(env).catch(() => null);
-        const effectiveKey = oauthToken || apiKey;
-        if (!effectiveKey) throw new Error('[ai] Moonshot: no OAuth token and no API key configured. Visit /api/v1/agent/moonshot/oauth/authorize to authorize your subscription.');
+        const oauthToken    = await getMoonshotAccessToken(env).catch(() => null);
+        const bootstrapKey  = !oauthToken ? await getProviderToken(env, 'moonshot') : null;
+        const effectiveKey  = oauthToken || apiKey || bootstrapKey || env.MOONSHOT_API_KEY;
+        if (!effectiveKey) throw new Error('[ai] Moonshot: no credentials. Authorize via /api/v1/agent/moonshot/oauth/authorize, bootstrap a key, or set MOONSHOT_API_KEY.');
 
-        if (!oauthToken && apiKey) {
-            console.warn('[moonshot] Using API key fallback — OAuth not yet authorized. Visit /api/v1/agent/moonshot/oauth/authorize.');
+        if (!oauthToken) {
+            console.warn('[moonshot] Using API key fallback — OAuth not yet authorized.');
         }
 
         const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
@@ -104,10 +124,14 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
 
     // ── OpenAI / OpenRouter (shared OpenAI-compatible schema) ────────────────
     if (provider === 'openai' || provider === 'openrouter') {
+        const bootstrapKey = await getProviderToken(env, provider);
+        const effectiveKey = apiKey || bootstrapKey || (provider === 'openai' ? env.OPENAI_API_KEY : env.OPENROUTER_API_KEY);
+        if (!effectiveKey) throw new Error(`[ai] ${provider}: no API key configured.`);
+
         const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
         const res = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${effectiveKey}` },
             body: JSON.stringify({ model, messages, max_tokens: options.max_tokens, temperature: options.temperature }),
         });
         if (!res.ok) throw new Error(`[ai] ${provider} returned HTTP ${res.status}`);
@@ -115,8 +139,12 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
         return (data.choices?.[0]?.message?.content || '').trim();
     }
 
-    // ── Anthropic ─────────────────────────────────────────────────────────────
+    // ── Anthropic (Claude) — DB key → bootstrap → env var ───────────────────
     if (provider === 'anthropic') {
+        const bootstrapKey = await getProviderToken(env, 'anthropic');
+        const effectiveKey = apiKey || bootstrapKey || env.ANTHROPIC_API_KEY;
+        if (!effectiveKey) throw new Error('[ai] Anthropic: no API key. Configure via /agent/providers, bootstrap, or set ANTHROPIC_API_KEY secret.');
+
         const allMessages = options.messages || [{ role: 'user', content: options.prompt || '' }];
         const systemMsg = allMessages.find(m => m.role === 'system')?.content;
         const userMessages = allMessages.filter(m => m.role !== 'system');
@@ -124,7 +152,7 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-api-key': apiKey!,
+                'x-api-key': effectiveKey,
                 'anthropic-version': '2023-06-01',
             },
             body: JSON.stringify({
@@ -139,22 +167,41 @@ async function callConfiguredAI(env: Env, options: AICallOptions): Promise<strin
         return (data.content?.[0]?.text || '').trim();
     }
 
-    // ── Google Gemini ─────────────────────────────────────────────────────────
+    // ── Google Gemini — OAuth token → DB key → bootstrap → env var ──────────
     if (provider === 'gemini') {
-        const text = options.messages
-            ? options.messages.map(m => m.content).join('\n\n')
-            : options.prompt || '';
-        const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text }] }],
-                    generationConfig: { maxOutputTokens: options.max_tokens, temperature: options.temperature },
-                }),
-            }
-        );
+        const oauthToken   = await getGeminiAccessToken(env).catch(() => null);
+        const bootstrapKey = !oauthToken ? await getProviderToken(env, 'gemini') : null;
+        const fallbackKey  = apiKey || bootstrapKey || env.GOOGLE_AI_API_KEY;
+        const effectiveKey = oauthToken || fallbackKey;
+        if (!effectiveKey) throw new Error('[ai] Gemini: no credentials. Authorize via /api/v1/agent/gemini/oauth/authorize, bootstrap, or set GOOGLE_AI_API_KEY secret.');
+
+        const useOAuthBearer = !!oauthToken;
+
+        const allMessages = options.messages || [{ role: 'user', content: options.prompt || '' }];
+        const systemMsg = allMessages.find(m => m.role === 'system')?.content;
+        const userMessages = allMessages.filter(m => m.role !== 'system');
+
+        const contents = userMessages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }],
+        }));
+
+        const reqBody: Record<string, unknown> = {
+            contents,
+            generationConfig: { maxOutputTokens: options.max_tokens, temperature: options.temperature },
+        };
+        if (systemMsg) {
+            reqBody.systemInstruction = { parts: [{ text: systemMsg }] };
+        }
+
+        // OAuth uses Bearer header; API key uses ?key= query param
+        const url = useOAuthBearer
+            ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
+            : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveKey}`;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (useOAuthBearer) headers['Authorization'] = `Bearer ${effectiveKey}`;
+
+        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(reqBody) });
         if (!res.ok) throw new Error(`[ai] Gemini returned HTTP ${res.status}`);
         const data = await res.json() as any;
         return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Layout } from '../components/Layout';
 import { api } from '../services/api';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -69,8 +70,17 @@ export const MarketIntelPage: React.FC = () => {
         <Layout>
             <div className="container py-12">
                 {/* Command Header with Ticker */}
-                <header className="mb-16 border-b border-border pb-12">
-                    <div className="grid gap-8 md:grid-cols-[1fr_300px] md:items-end">
+                <header className="relative mb-16 border-b border-border pb-12 overflow-hidden rounded-3xl p-8 bg-card/50 backdrop-blur-xl border-t-white/5 shadow-sm">
+                    {/* Ambient Glow Backgrounds */}
+                    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-3xl">
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 0.15, scale: 1, x: [0, 40, 0], y: [0, -30, 0] }}
+                            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute top-1/2 left-[20%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary rounded-full blur-[100px]"
+                        />
+                    </div>
+                    <div className="relative z-10 grid gap-8 md:grid-cols-[1fr_300px] md:items-end">
                         <div>
                             <div>
                                 <Badge variant="outline" className="mb-4 border-primary/20 bg-primary/5 text-primary">
@@ -99,21 +109,26 @@ export const MarketIntelPage: React.FC = () => {
 
                             // Determine Volatility Color and Percentage for Gauge
                             let volColor = "bg-muted-foreground/30";
-                            let volWidth = "w-0";
-                            if (vol.toLowerCase() === 'low') { volColor = "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"; volWidth = "w-[33%]"; }
-                            else if (vol.toLowerCase() === 'medium') { volColor = "bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"; volWidth = "w-[66%]"; }
-                            else if (vol.toLowerCase() === 'high') { volColor = "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.8)]"; volWidth = "w-[100%]"; }
+                            let targetWidth = "0%";
+                            if (vol.toLowerCase() === 'low') { volColor = "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"; targetWidth = "33%"; }
+                            else if (vol.toLowerCase() === 'medium') { volColor = "bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"; targetWidth = "66%"; }
+                            else if (vol.toLowerCase() === 'high') { volColor = "bg-destructive shadow-[0_0_10px_rgba(239,68,68,0.8)]"; targetWidth = "100%"; }
 
                             return (
-                                <Link
-                                    to={`/market-intel/sectors/${sector.id}`}
+                                <motion.div
                                     key={sector.id}
-                                    className="group"
-                                    aria-label={`${sector.name} Sector. Sentiment Score ${growth}. Volatility ${vol}. Click for full analysis.`}
-                                    role="listitem"
+                                    whileHover={{ y: -4, scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    transition={{ duration: 0.2 }}
                                 >
-                                    <Card className="h-full border-border transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary group-hover:shadow-xl rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
-                                        <CardContent className="flex flex-col p-8 h-full">
+                                    <Link
+                                        to={`/market-intel/sectors/${sector.id}`}
+                                        className="group block h-full"
+                                        aria-label={`${sector.name} Sector. Sentiment Score ${growth}. Volatility ${vol}. Click for full analysis.`}
+                                        role="listitem"
+                                    >
+                                        <Card className="h-full border-border transition-colors duration-300 group-hover:border-primary group-hover:shadow-[0_8px_40px_rgba(212,175,55,0.12)] rounded-3xl overflow-hidden bg-card/80 backdrop-blur-sm">
+                                            <CardContent className="flex flex-col p-8 h-full">
                                             <div className="mb-6 flex justify-between items-start">
                                                 <div className="text-primary transition-all duration-500 group-hover:scale-110 drop-shadow-md" aria-hidden="true">
                                                     {getSectorIcon(sector.id, "h-12 w-12")}
@@ -142,7 +157,12 @@ export const MarketIntelPage: React.FC = () => {
                                                         )}>{vol}</span>
                                                     </div>
                                                     <div className="h-1.5 w-full bg-muted/50 rounded-full overflow-hidden">
-                                                        <div className={cn("h-full rounded-full transition-all duration-1000", volWidth, volColor)} />
+                                                        <motion.div 
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: targetWidth }}
+                                                            transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                                                            className={cn("h-full rounded-full", volColor)} 
+                                                        />
                                                     </div>
                                                 </div>
 
@@ -156,8 +176,9 @@ export const MarketIntelPage: React.FC = () => {
                                                 </div>
                                             </div>
                                         </CardContent>
-                                    </Card>
-                                </Link>
+                                        </Card>
+                                    </Link>
+                                </motion.div>
                             );
                         })}
                     </div>
@@ -174,21 +195,27 @@ export const MarketIntelPage: React.FC = () => {
 
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {opportunities.length > 0 ? opportunities.map((opp, i) => (
-                            <Link
+                            <motion.div
                                 key={`${opp.country_code}-${opp.sector_id}-${i}`}
-                                to={`/market-intel/sectors/${opp.sector_id}`}
-                                className="group relative overflow-hidden rounded-3xl border border-border bg-card p-6 transition-all hover:border-secondary hover:shadow-md"
+                                whileHover={{ y: -4, scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                transition={{ duration: 0.2 }}
                             >
-                                <div className="mb-4 flex items-center justify-between">
-                                    <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">{opp.sector_name}</Badge>
-                                    <span className="text-xs font-bold text-muted-foreground">{opp.country_name.toUpperCase()}</span>
-                                </div>
-                                <h3 className="mb-2 text-xl font-bold text-foreground">{opp.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '')}</h3>
-                                <p className="text-sm text-muted-foreground">{opp.summary}</p>
-                                <div className="mt-4 flex items-center gap-2 text-xs font-bold text-secondary">
-                                    <ArrowTopRightIcon className="h-4 w-4" /> Score: {opp.score}
-                                </div>
-                            </Link>
+                                <Link
+                                    to={`/market-intel/sectors/${opp.sector_id}`}
+                                    className="group block h-full relative overflow-hidden rounded-3xl border border-border bg-card p-6 transition-colors hover:border-secondary hover:shadow-[0_8px_32px_rgba(212,175,55,0.08)]"
+                                >
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">{opp.sector_name}</Badge>
+                                        <span className="text-xs font-bold text-muted-foreground">{opp.country_name.toUpperCase()}</span>
+                                    </div>
+                                    <h3 className="mb-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">{opp.title.replace(/\*\*/g, '').replace(/^"/, '').replace(/"$/, '')}</h3>
+                                    <p className="text-sm text-muted-foreground">{opp.summary}</p>
+                                    <div className="mt-4 flex items-center gap-2 text-xs font-bold text-secondary">
+                                        <ArrowTopRightIcon className="h-4 w-4" /> Score: {opp.score}
+                                    </div>
+                                </Link>
+                            </motion.div>
                         )) : (
                             <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed rounded-3xl">
                                 System is analyzing emerging opportunities. Check back shortly.

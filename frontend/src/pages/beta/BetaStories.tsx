@@ -6,21 +6,33 @@ import { BetaNav } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
+import { useMember } from '../../context/MemberContext';
 import type { ArticleListItem, SearchResult } from '../../types';
+
+/** Strip Markdown bold markers (**) and surrounding quote wrapping from a string. */
+const stripMarkdown = (text: string): string => {
+  if (!text) return text;
+  let t = text.trim();
+  // Remove leading/trailing ** bold markers
+  t = t.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '');
+  // Remove surrounding double-quote wrapping added by LLMs (e.g. "Title Here")
+  if (t.startsWith('"') && t.endsWith('"') && t.length > 2) t = t.slice(1, -1);
+  return t.trim();
+};
 
 const StoryCardSkeleton = () => (
   <div className="bg-white rounded-xl border border-[#1C1814]/8 h-[380px] animate-pulse">
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <div className="w-8 h-8 bg-white/10 rounded-full" />
-        <div className="w-20 h-4 bg-white/10 rounded" />
+        <div className="w-8 h-8 bg-[#1C1814]/8 rounded-full" />
+        <div className="w-20 h-4 bg-[#1C1814]/8 rounded" />
       </div>
-      <div className="h-6 bg-white/10 rounded mb-2 w-full" />
-      <div className="h-6 bg-white/10 rounded mb-4 w-3/4" />
+      <div className="h-6 bg-[#1C1814]/8 rounded mb-2 w-full" />
+      <div className="h-6 bg-[#1C1814]/8 rounded mb-4 w-3/4" />
       <div className="space-y-2">
-        <div className="h-4 bg-white/5 rounded w-full" />
-        <div className="h-4 bg-white/5 rounded w-5/6" />
-        <div className="h-4 bg-white/5 rounded w-4/6" />
+        <div className="h-4 bg-[#1C1814]/5 rounded w-full" />
+        <div className="h-4 bg-[#1C1814]/5 rounded w-5/6" />
+        <div className="h-4 bg-[#1C1814]/5 rounded w-4/6" />
       </div>
     </div>
   </div>
@@ -32,6 +44,7 @@ export const BetaStories = () => {
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
+  const { isMember } = useMember();
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -133,11 +146,11 @@ export const BetaStories = () => {
           </p>
         </header>
 
-        {/* Subtle notice when live content is unavailable and sample stories are shown */}
+        {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && (
           <div className="mb-6 px-4 py-2.5 rounded-lg bg-[#1C1814]/5 border border-[#1C1814]/10 flex items-center gap-2 text-sm text-[#1C1814]/50">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]/60 shrink-0" />
-            Sample stories shown — live content is loading or unavailable.
+            Live content is currently unavailable. Please check back shortly.
           </div>
         )}
 
@@ -149,6 +162,7 @@ export const BetaStories = () => {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
+            aria-label="Search stories"
             className="w-full md:max-w-lg bg-white border border-[#1C1814]/8 rounded-lg pl-10 pr-10 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/40 focus:outline-none focus:border-[#C9A84C]/60 focus:ring-1 focus:ring-[#C9A84C]/30 transition-colors"
           />
           {searchInput && (
@@ -204,25 +218,34 @@ export const BetaStories = () => {
           {showLoading
             ? Array.from({ length: 6 }).map((_, i) => <StoryCardSkeleton key={i} />)
             : displayArticles.map((article, index) => {
-                // Free after first 4; lock remaining (show 4 free so visitors can sample quality)
-                const isLocked = !isSearchMode && index >= 4;
+                // Free after first 4; lock remaining for non-members
+                const isLocked = !isMember && !isSearchMode && index >= 4;
 
                 if (isLocked) {
                   return (
-                    <Link
-                      key={article.slug}
-                      to="/membership"
-                      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-[#C9A84C]/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors"
+                    <motion.div
+                      key={`locked-${article.slug}`}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <div className="p-6 pb-2 border-b border-[#1C1814]/8 relative z-10 bg-white">
+                      <Link
+                        to="/membership"
+                        className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-[#C9A84C]/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors block"
+                      >
+                      <div className="p-6 pb-2 border-b border-[#1C1814]/8 relative z-10 bg-white" aria-hidden="true">
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-2xl">{article.country_flag}</span>
                           <span className="text-xs font-semibold tracking-wider text-[#1C1814]/50 uppercase">{article.sector_name}</span>
                         </div>
-                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-[#1C1814]">{article.title}</h3>
-                        <p className="text-[#1C1814]/65 text-sm leading-relaxed line-clamp-3">{article.summary}</p>
-                        <div className="mt-4 text-xs font-medium text-[#1C1814]/40 border-t border-[#1C1814]/8 pt-4">
-                          {article.reading_time_minutes} min read
+                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-[#1C1814] blur-[4px] select-none opacity-60">
+                          Premium Intelligence Briefing: Exclusive Market Analysis
+                        </h3>
+                        <p className="text-[#1C1814]/65 text-sm leading-relaxed line-clamp-3 blur-[4px] select-none opacity-60">
+                          Unlock this deep-dive to access proprietary market analysis, sector performance metrics, and on-the-ground reporting from our intelligence desk.
+                        </p>
+                        <div className="mt-4 text-xs font-medium text-[#1C1814]/40 border-t border-[#1C1814]/8 pt-4 blur-[4px] select-none opacity-60">
+                          5 min read
                         </div>
                       </div>
                       <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-[#1C1814]/8">
@@ -234,23 +257,29 @@ export const BetaStories = () => {
                           <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
                           <span className="text-xs text-[#C9A84C] uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </motion.div>
                   );
                 }
 
                 return (
-                  <Link
+                  <motion.div
                     key={article.slug}
-                    to={`/stories/${article.slug}`}
-                    className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col transition-transform hover:-translate-y-1 duration-300 block hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)]"
+                    whileHover={{ y: -4, scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.2 }}
+                    className="h-full"
                   >
-                    {/* Hero thumbnail */}
+                    <Link
+                      to={`/stories/${article.slug}`}
+                      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col transition-colors duration-300 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] block h-full"
+                    >
+                      {/* Hero thumbnail */}
                     {article.hero_image_url ? (
                       <div className="h-44 overflow-hidden shrink-0">
                         <img
                           src={article.hero_image_url}
-                          alt={article.title}
+                          alt={stripMarkdown(article.title)}
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
@@ -266,9 +295,9 @@ export const BetaStories = () => {
                         <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase">{article.sector_name}</span>
                       </div>
                       <h3 className="font-serif text-[21px] leading-snug mb-3 text-[#1C1814] group-hover:text-[#C9A84C] transition-colors">
-                        {article.title}
+                        {stripMarkdown(article.title)}
                       </h3>
-                      <p className="text-[#1C1814]/75 text-sm leading-relaxed line-clamp-2">{article.summary}</p>
+                      <p className="text-[#1C1814]/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
                     </div>
                     <div className="p-6 pt-0 bg-white">
                       <div className="text-xs font-medium text-[#1C1814]/50 border-t border-[#1C1814]/8 pt-4 flex justify-between items-center">
@@ -285,6 +314,7 @@ export const BetaStories = () => {
                       </div>
                     </div>
                   </Link>
+                </motion.div>
                 );
               })
           }

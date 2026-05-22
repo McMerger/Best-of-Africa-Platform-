@@ -161,6 +161,11 @@ body {
      but explicit specificity here ensures it survives dark-mode cascades. */
   .font-serif, [class*="font-serif"] {
     font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.02em;
+  }
+
+  .uppercase {
+    letter-spacing: 0.06em;
   }
 
 

@@ -10,8 +10,8 @@ const links = [
   { name: 'Stories', path: '/stories' },
   { name: 'Countries', path: '/countries' },
   { name: 'Market Intel', path: '/intel' },
+  { name: 'About', path: '/about' },
   { name: 'Member Access', path: '/member-access' },
-  { name: 'Newsletter', path: '/newsletter' },
 ];
 
 export const BetaNav = () => {
@@ -46,8 +46,8 @@ export const BetaNav = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-[#F5F0E8]/95 backdrop-blur-md border-b border-[#1C1814]/10 shadow-[0_1px_20px_rgba(0,0,0,0.08)]'
-            : isDarkHero ? 'bg-transparent py-6 border-b border-white/5' : 'bg-[#F5F0E8]/95 backdrop-blur-md border-b border-[#1C1814]/10 py-3'
+            ? 'bg-[#F5F0E8]/85 backdrop-blur-xl border-b border-[#1C1814]/10 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
+            : isDarkHero ? 'bg-transparent py-6 border-b border-white/5' : 'bg-[#F5F0E8]/70 backdrop-blur-xl border-b border-[#1C1814]/10 py-3 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]'
         }`}
       >
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -55,9 +55,6 @@ export const BetaNav = () => {
           <Link to="/" className="flex-shrink-0 flex items-center gap-2.5 group">
             <span className={`font-serif font-bold text-xl transition-colors ${(scrolled || !isDarkHero) ? 'text-[#1C1814]' : 'text-white'} group-hover:opacity-90`}>
               Best of <span className="text-[#C9A84C]">Africa</span>
-            </span>
-            <span className="text-[9px] font-bold uppercase tracking-widest text-[#C9A84C] border border-[#C9A84C]/40 px-1.5 py-0.5 rounded bg-[#C9A84C]/5 group-hover:bg-[#C9A84C]/15 transition-colors">
-              BETA
             </span>
           </Link>
 

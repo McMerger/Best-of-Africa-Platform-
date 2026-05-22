@@ -124,7 +124,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
           </div>
           <span className="text-[13px] font-medium text-white/70 group-hover:text-white transition-colors">Listen to article</span>
         </div>
-        <span className="text-[10px] uppercase tracking-wider text-white/30 group-hover:text-[#C9A84C] transition-colors font-bold">Generate AI Audio</span>
+        <span className="text-[10px] uppercase tracking-wider text-white/30 group-hover:text-[#C9A84C] transition-colors font-bold">Generate Audio</span>
       </button>
     );
   }

@@ -11,7 +11,7 @@ import { motion } from 'framer-motion';
 import { BetaNav, BetaFooter } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { memberAuth } from './BetaMemberAccess';
+import { useMember } from '../../context/MemberContext';
 import { KO_FI_URL } from '../../constants/beta';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ const VolatilityBadge = ({ v }: { v: string }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const BetaMarketIntel = () => {
-  const isMember = memberAuth.isMember();
+  const { isMember } = useMember();
 
   const [leadingQuery, performanceQuery, opportunitiesQuery, divergenceQuery] = useQueries({
     queries: [
@@ -155,44 +155,22 @@ export const BetaMarketIntel = () => {
           </div>
 
           {!isMember ? (
-            <div className="relative bg-white rounded-2xl border border-[#1C1814]/8 overflow-hidden">
-              {/* blurred preview rows */}
-              <div className="blur-sm pointer-events-none select-none p-0">
-                <table className="w-full">
-                  <thead className="border-b border-[#1C1814]/8">
-                    <tr>
-                      {['Sector', 'YoY Growth', 'Volatility', 'Coverage'].map(h => (
-                        <th key={h} className="text-left text-[10px] font-bold uppercase tracking-widest text-[#1C1814]/40 px-5 py-4">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {['Technology', 'Energy', 'Agriculture', 'Finance', 'Tourism'].map((name, i) => (
-                      <tr key={name} className="border-b border-[#1C1814]/5">
-                        <td className="px-5 py-4 font-semibold text-[#1C1814]">{name}</td>
-                        <td className="px-5 py-4 text-emerald-600 font-bold">+{(8 + i * 3).toFixed(1)}%</td>
-                        <td className="px-5 py-4"><VolatilityBadge v={['low','low','medium','high','medium'][i]} /></td>
-                        <td className="px-5 py-4 text-[#1C1814]/50">{12 + i * 7} stories</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-10 flex flex-col items-center justify-center text-center">
+              <div className="bg-[#C9A84C]/10 p-4 rounded-full mb-5">
+                <Lock size={24} className="text-[#C9A84C]" />
               </div>
-              <div className="absolute inset-0 bg-[#F5F0E8]/75 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl">
-                <Lock size={24} className="text-[#C9A84C] mb-3" />
-                <p className="font-semibold text-[#1C1814] mb-1">Founding Members Only</p>
-                <p className="text-sm text-[#1C1814]/50 mb-5 text-center max-w-xs">
-                  Full sector performance, volatility signals, and coverage depth.
-                </p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
-                >
-                  Become a Founding Member
-                </a>
-              </div>
+              <p className="font-serif text-xl font-semibold text-[#1C1814] mb-2">Sector Performance Data</p>
+              <p className="text-sm text-[#1C1814]/50 mb-6 max-w-sm">
+                Growth trends, volatility signals, and coverage depth across every African market — updated daily for founding members.
+              </p>
+              <a
+                href={KO_FI_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+              >
+                Become a Founding Member
+              </a>
             </div>
           ) : performanceQuery.isLoading ? (
             <div className="bg-white rounded-2xl border border-[#1C1814]/8 overflow-hidden animate-pulse">
@@ -259,31 +237,22 @@ export const BetaMarketIntel = () => {
           </div>
 
           {!isMember ? (
-            <div className="relative rounded-2xl overflow-hidden">
-              <div className="grid sm:grid-cols-2 gap-4 blur-sm pointer-events-none select-none">
-                {['Nigeria · Fintech', 'Kenya · Green Energy', 'Morocco · Manufacturing', 'Ghana · Agritech'].map(label => (
-                  <div key={label} className="bg-white rounded-xl border border-[#1C1814]/8 p-5">
-                    <p className="text-[10px] font-bold text-[#C9A84C] uppercase tracking-widest mb-2">{label}</p>
-                    <div className="h-4 bg-[#1C1814]/8 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-[#1C1814]/5 rounded w-full" />
-                  </div>
-                ))}
+            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-10 flex flex-col items-center justify-center text-center">
+              <div className="bg-[#C9A84C]/10 p-4 rounded-full mb-5">
+                <TrendingUp size={24} className="text-[#C9A84C]" />
               </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F5F0E8]/75 backdrop-blur-[2px] rounded-2xl">
-                <Lock size={24} className="text-[#C9A84C] mb-3" />
-                <p className="font-semibold text-[#1C1814] mb-1">Founding Members Only</p>
-                <p className="text-sm text-[#1C1814]/50 mb-5 text-center max-w-xs">
-                  AI-scored strategic opportunities across every African market.
-                </p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
-                >
-                  Become a Founding Member
-                </a>
-              </div>
+              <p className="font-serif text-xl font-semibold text-[#1C1814] mb-2">Strategic Opportunity Signals</p>
+              <p className="text-sm text-[#1C1814]/50 mb-6 max-w-sm">
+                Investment and expansion opportunities scored across every African market — curated weekly for founding members.
+              </p>
+              <a
+                href={KO_FI_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+              >
+                Become a Founding Member
+              </a>
             </div>
           ) : opportunitiesQuery.isLoading ? (
             <div className="grid sm:grid-cols-2 gap-4">
@@ -326,17 +295,36 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── Sentiment Divergence (members only) ───────────────────────── */}
-        {isMember && (
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <Globe size={18} className="text-[#C9A84C]" />
-              <h2 className="font-serif text-2xl text-[#1C1814]">Narrative vs. Reality</h2>
+        <section>
+          <div className="flex items-center gap-3 mb-6">
+            <Globe size={18} className="text-[#C9A84C]" />
+            <h2 className="font-serif text-2xl text-[#1C1814]">Narrative vs. Reality</h2>
+            {isMember && (
               <span className="text-[11px] text-[#1C1814]/40 font-medium">
                 — where perception gaps signal opportunity
               </span>
-            </div>
+            )}
+          </div>
 
-            {divergenceQuery.isLoading ? (
+          {!isMember ? (
+            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-10 flex flex-col items-center justify-center text-center">
+              <div className="bg-[#C9A84C]/10 p-4 rounded-full mb-5">
+                <Globe size={24} className="text-[#C9A84C]" />
+              </div>
+              <p className="font-serif text-xl font-semibold text-[#1C1814] mb-2">Narrative vs. Reality</p>
+              <p className="text-sm text-[#1C1814]/50 mb-6 max-w-sm">
+                Where global perception gaps signal real investment opportunity — sentiment divergence scores across all 54 African markets, updated weekly.
+              </p>
+              <a
+                href={KO_FI_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+              >
+                Become a Founding Member
+              </a>
+            </div>
+          ) : divergenceQuery.isLoading ? (
               <div className="space-y-3">
                 {[1,2,3].map(i => (
                   <div key={i} className="bg-white rounded-xl border border-[#1C1814]/8 p-5 animate-pulse flex gap-4">
@@ -392,7 +380,6 @@ export const BetaMarketIntel = () => {
               </div>
             )}
           </section>
-        )}
 
         {/* ── Explore Stories CTA ────────────────────────────────────────── */}
         <section className="bg-[#1C1814] rounded-2xl p-10 text-white text-center">

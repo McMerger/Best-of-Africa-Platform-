@@ -6,6 +6,8 @@ import { BetaNav, BetaFooter } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
 
+const MIN_DISPLAY_SUBSCRIBERS = 50;
+
 export const BetaNewsletter = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -100,6 +102,7 @@ export const BetaNewsletter = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="Your email address"
+              aria-label="Email address"
               required
               disabled={status === 'loading'}
               autoComplete="email"
@@ -134,7 +137,7 @@ export const BetaNewsletter = () => {
           </div>
 
           <p className="text-sm font-medium text-[#1C1814]/50 mb-12 uppercase tracking-wide">
-            {subscriberCount !== null && subscriberCount >= 50
+            {subscriberCount !== null && subscriberCount >= MIN_DISPLAY_SUBSCRIBERS
               ? `${subscriberCount.toLocaleString()} readers already on the list`
               : `Join the first wave of continental intelligence`
             }

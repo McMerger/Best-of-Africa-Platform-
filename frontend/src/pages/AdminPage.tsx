@@ -88,7 +88,7 @@ export const AdminPage: React.FC = () => {
         if (!selectedArticle) return;
         try {
             await api.rejectArticle(selectedArticle.id, reason);
-            toast.success("Article Rejected", { description: "Feedback logged. Agent will evolve." });
+            toast.success("Article Rejected", { description: "Feedback logged. Editorial rules updated." });
             fetchArticles();
         } catch {
             toast.error("Rejection Failed", { description: "Check logs for details." });
@@ -105,9 +105,9 @@ export const AdminPage: React.FC = () => {
 
     const triggerEvolution = async () => {
         toast.promise(api.triggerAgentEvolution(), {
-            loading: 'Queuing instruction evolution...',
-            success: 'Evolution task created. Agent is learning.',
-            error: 'Evolution trigger failed.'
+            loading: 'Updating editorial rules...',
+            success: 'Editorial rules updated successfully.',
+            error: 'Update failed.'
         });
     };
 
@@ -132,7 +132,7 @@ export const AdminPage: React.FC = () => {
                                 <MagnifyingGlassIcon className="h-4 w-4" /> Proactive Audit
                             </TabsTrigger>
                             <TabsTrigger value="evolution" className="rounded-xl px-6 py-2 flex gap-2 text-blue-600">
-                                <MagicWandIcon className="h-4 w-4" /> Agent Intelligence
+                                <MagicWandIcon className="h-4 w-4" /> Editorial Rules
                             </TabsTrigger>
                         </TabsList>
 
@@ -244,19 +244,19 @@ export const AdminPage: React.FC = () => {
                         <TabsContent value="evolution" className="space-y-6">
                             <Alert className="bg-blue-50/50 border-blue-200 rounded-3xl">
                                 <MagicWandIcon className="h-4 w-4 text-blue-600" />
-                                <AlertTitle className="text-blue-900 font-bold">Self-Improvement Protocol</AlertTitle>
+                                <AlertTitle className="text-blue-900 font-bold">Editorial Rule Updates</AlertTitle>
                                 <AlertDescription className="text-blue-800">
-                                    Triggering evolution parses recent editorial feedback and updates the agent's core instructions. 
-                                    This process typically takes 30-60 seconds.
+                                    This consolidates recent editorial feedback into updated publishing rules.
+                                    The process typically takes 30-60 seconds.
                                 </AlertDescription>
                             </Alert>
 
                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 <Card className="border-border rounded-3xl p-6 border-blue-200/30">
-                                    <CardTitle className="text-lg font-serif mb-2">Evolve Instructions</CardTitle>
-                                    <CardDescription className="mb-6">Consolidate all pending human feedback into agent rules.</CardDescription>
+                                    <CardTitle className="text-lg font-serif mb-2">Update Rules</CardTitle>
+                                    <CardDescription className="mb-6">Consolidate all pending editorial feedback into publishing rules.</CardDescription>
                                     <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold" onClick={triggerEvolution}>
-                                        Trigger Evolution
+                                        Update Rules
                                     </Button>
                                 </Card>
                             </div>
@@ -268,7 +268,7 @@ export const AdminPage: React.FC = () => {
                         onClose={() => setFeedbackOpen(false)}
                         onSubmit={handleRejectSubmit}
                         title="Reject Intelligence Briefing"
-                        description="Rejecting an article will remove it from circulation and log the reason for agent self-improvement."
+                        description="Rejecting an article will remove it from circulation and log the reason for editorial review."
                         actionLabel="Reject & Flag"
                     />
                 </div>

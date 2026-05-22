@@ -161,7 +161,7 @@ export function EventDetailPage() {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-10">
 
-                        {/* AI Brief */}
+                        {/* Strategic Context Brief */}
                         {event.ai_context_brief && (
                             <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-3xl p-6">
                                 <div className="flex items-start gap-3">

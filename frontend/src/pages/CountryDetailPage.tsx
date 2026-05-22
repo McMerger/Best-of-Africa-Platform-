@@ -405,7 +405,7 @@ export const CountryDetailPage: React.FC = () => {
                                 <div className="col-span-full flex flex-col items-center justify-center rounded-3xl bg-muted/20 py-24 text-muted-foreground border border-dashed border-border">
                                     <InfoCircledIcon className="h-12 w-12 mb-4 opacity-10" />
                                     <p className="text-lg font-medium">Monitoring active narratives for {country.name}...</p>
-                                    <p className="text-sm">Intelligence collection agents are currently scouring 50+ regional sources.</p>
+                                    <p className="text-sm">We're currently gathering intelligence from 50+ regional sources.</p>
                                 </div>
                             ) : (
                                 <div className="col-span-full p-8 rounded-3xl bg-muted/10 border border-border/50 text-center">
@@ -430,8 +430,8 @@ export const CountryDetailPage: React.FC = () => {
                             ) : (
                                 <div className="text-center py-12">
                                     <InfoCircledIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                                    <h3 className="text-xl font-bold mb-2">History Under Construction</h3>
-                                    <p className="text-muted-foreground">We are currently cataloguing the deep historical narratives of {country.name}.</p>
+                                    <h3 className="text-xl font-bold mb-2">Historical Narratives</h3>
+                                    <p className="text-muted-foreground">Historical narratives for {country.name} are being prepared by our editorial team.</p>
                                 </div>
                             )}
                         </div>

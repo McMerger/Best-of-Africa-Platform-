@@ -13,7 +13,6 @@ import { Link } from 'react-router-dom';
 import { LiquidChromeButton } from "@/components/ui/liquid-chrome-button";
 import type { Dashboard } from '../types';
 import { cn } from "@/lib/utils";
-import { PartnerPromo } from '../components/PartnerPromo';
 import { useLanguage } from '@/context/LanguageContext';
 
 export const HomePage: React.FC = () => {
@@ -94,9 +93,14 @@ export const HomePage: React.FC = () => {
             {/* 1. HERO SECTION: The Narrative Engine */}
             <div className="border-b border-border bg-background relative overflow-hidden">
                 {/* Cinematic Gradient Background */}
-                <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+                <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-[#020C17] via-[#0a1628] to-[#1a0e05]" />
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
+                    <motion.div 
+                        initial={{ opacity: 0.5, scale: 0.8 }}
+                        animate={{ opacity: 0.8, scale: 1.1, x: [0, 50, 0], y: [0, -40, 0] }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute -top-[20%] -left-[10%] w-[800px] h-[800px] bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.15)_0%,transparent_60%)] rounded-full blur-[100px]"
+                    />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--background)_100%)]" />
                 </div>
 
@@ -214,16 +218,18 @@ export const HomePage: React.FC = () => {
                                         </div>
 
                                         <Link to={`/articles/${featured[currentIndex].slug}`} className="group block">
-                                            <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight group-hover:text-primary transition-colors drop-shadow-lg">
-                                                {(featured[currentIndex].title || '').replace(/\*\*/g, '').replace(/##/g, '')}
-                                            </h3>
-                                            <p className="text-lg md:text-xl text-gray-300 max-w-2xl line-clamp-3 leading-relaxed drop-shadow-md border-l-2 border-primary/50 pl-4">
-                                                {(featured[currentIndex].summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
-                                            </p>
+                                            <motion.div whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 400, damping: 25 }}>
+                                                <h3 className="text-3xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight group-hover:text-primary transition-colors drop-shadow-[0_4px_24px_rgba(212,175,55,0.4)]">
+                                                    {(featured[currentIndex].title || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                                </h3>
+                                                <p className="text-lg md:text-xl text-gray-300 max-w-2xl line-clamp-3 leading-relaxed drop-shadow-md border-l-2 border-primary/50 pl-4 group-hover:border-primary transition-colors">
+                                                    {(featured[currentIndex].summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
+                                                </p>
 
-                                            <div className="mt-8 flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">
-                                                {t("home.read_brief", "Read Full Intelligence Brief")} <ArrowTopRightIcon className="h-5 w-5" />
-                                            </div>
+                                                <div className="mt-8 flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">
+                                                    {t("home.read_brief", "Read Full Intelligence Brief")} <ArrowTopRightIcon className="h-5 w-5" />
+                                                </div>
+                                            </motion.div>
                                         </Link>
                                     </div>
                                 </motion.div>
@@ -256,9 +262,13 @@ export const HomePage: React.FC = () => {
                     </div>
                 </section>
 
-                {/* 3. STRATEGIC PARTNERS (NEW Advertising Layer) */}
+                {/* 3. STRATEGIC PARTNERS */}
                 <section className="mb-24 py-12 border-y border-border/50 bg-muted/5 relative overflow-hidden rounded-3xl">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                    <motion.div 
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" 
+                    />
 
                     <div className="flex flex-col md:flex-row items-center justify-between mb-12 px-8">
                         <div>
@@ -270,51 +280,37 @@ export const HomePage: React.FC = () => {
                         </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8">
-                        <PartnerPromo
-                            title="River Bridge Investment"
-                            category="Infrastructure Fund"
-                            description="Driving cross-border connectivity through strategic rail and port infrastructure across the Southern Africa Development Community."
-                            ctaText="Explore Fund"
-                            imageUrl="https://images.unsplash.com/photo-1473842106208-8e68e4ca4515?auto=format&fit=crop&q=80&w=800"
-                        />
-                        <PartnerPromo
-                            title="Pan-African Tech Hub"
-                            category="Innovation Partner"
-                            description="The premier ecosystem for high-growth African startups. Scale your venture with specialized capital and market access."
-                            ctaText="Join Ecosystem"
-                            imageUrl="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&q=80&w=800"
-                        />
-                        <PartnerPromo
-                            title="Green Sahara Initiative"
-                            category="ESG / Sustainability"
-                            description="Revolutionizing renewable energy in the Sahel. Partnering for a carbon-neutral industrial revolution on the continent."
-                            ctaText="View Projects"
-                            imageUrl="https://images.unsplash.com/photo-1466611653911-95282fc3656b?auto=format&fit=crop&q=80&w=800"
-                        />
+                    <div className="px-8 py-16 text-center">
+                        <p className="text-muted-foreground text-sm uppercase tracking-widest font-semibold mb-2">{t("home.partners_coming", "Partnership opportunities")}</p>
+                        <p className="text-muted-foreground/70 text-sm">Interested in partnering with Best of Africa? <Link to="/contact" className="text-primary hover:underline">Get in touch</Link>.</p>
                     </div>
                 </section>
 
                 {/* 4. INTELLIGENCE STREAM (Flat, No blinking lights) */}
                 <section className="mb-24">
-                    <div className="rounded-lg border border-border bg-muted/30 p-8">
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <motion.div 
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                        className="rounded-3xl border border-border/40 border-t-white/10 bg-card/40 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] p-8 hover:border-primary/50 transition-colors group cursor-pointer"
+                        onClick={() => { if (featured[1]?.slug) window.location.href = `/articles/${featured[1].slug}` }}
+                    >
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pointer-events-none">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
                                     {t("home.latest_analysis", "Latest Sector Analysis")}
                                 </div>
-                                <h3 className="text-2xl font-bold text-foreground">
+                                <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                                     {(featured[1]?.title || "Loading Sector Analysis...").replace(/\*\*/g, '').replace(/##/g, '')}
                                 </h3>
                                 <p className="text-muted-foreground max-w-3xl truncate">
                                     {(featured[1]?.summary || '').replace(/\*\*/g, '').replace(/##/g, '')}
                                 </p>
                             </div>
-                            <Button variant="outline" asChild className="shrink-0 bg-background font-bold">
+                            <Button variant="outline" asChild className="shrink-0 bg-background/50 backdrop-blur-sm font-bold pointer-events-auto border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                                 <Link to={`/articles/${featured[1]?.slug}`}>{t("home.read_analysis", "Read Analysis")} &rarr;</Link>
                             </Button>
                         </div>
-                    </div>
+                    </motion.div>
                 </section>
 
                 {/* 4. BUSINESS TRAVEL */}

@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { Lock, Search, Globe, X, ArrowRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Globe, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -19,68 +19,7 @@ interface CountriesApiResponse {
   by_region: Record<string, RegionData>;
 }
 
-// ─── Fallback: all 54 African countries ──────────────────────────────────────
-const FALLBACK_COUNTRIES: Partial<Country>[] = [
-  // North
-  { code: 'DZ', name: 'Algeria',   region: 'North',    flag_emoji: '🇩🇿', investment_highlights: ['Energy & Gas','Green Hydrogen','Manufacturing Zones'] },
-  { code: 'EG', name: 'Egypt',     region: 'North',    flag_emoji: '🇪🇬', investment_highlights: ['Suez Canal Logistics','Tourism','Renewable Energy'] },
-  { code: 'LY', name: 'Libya',     region: 'North',    flag_emoji: '🇱🇾', investment_highlights: ['Proven Oil Reserves','Reconstruction','Ports'] },
-  { code: 'MA', name: 'Morocco',   region: 'North',    flag_emoji: '🇲🇦', investment_highlights: ['Phosphate Mining','Tourism','Automotive'] },
-  { code: 'MR', name: 'Mauritania',region: 'North',    flag_emoji: '🇲🇷', investment_highlights: ['Iron Ore','Atlantic Fisheries','Strategic Location'] },
-  { code: 'SD', name: 'Sudan',     region: 'North',    flag_emoji: '🇸🇩', investment_highlights: ['Agricultural Potential','Mineral Resources','Transition'] },
-  { code: 'TN', name: 'Tunisia',   region: 'North',    flag_emoji: '🇹🇳', investment_highlights: ['Offshore Gas','Tourism','Phosphate Exports'] },
-  // West
-  { code: 'BJ', name: 'Benin',        region: 'West', flag_emoji: '🇧🇯', investment_highlights: ['Cotton Exports','Port of Cotonou','Stable Democracy'] },
-  { code: 'BF', name: 'Burkina Faso', region: 'West', flag_emoji: '🇧🇫', investment_highlights: ['Gold Mining','Cotton','Mineral Exploration'] },
-  { code: 'CV', name: 'Cabo Verde',   region: 'West', flag_emoji: '🇨🇻', investment_highlights: ['Diaspora Remittances','Tourism','Atlantic Fisheries'] },
-  { code: 'CI', name: 'Côte d\'Ivoire',region:'West', flag_emoji: '🇨🇮', investment_highlights: ['Cocoa Production','Port of Abidjan','Financial Hub'] },
-  { code: 'GM', name: 'Gambia',       region: 'West', flag_emoji: '🇬🇲', investment_highlights: ['Eco-Tourism','Groundnuts','Atlantic Fisheries'] },
-  { code: 'GH', name: 'Ghana',        region: 'West', flag_emoji: '🇬🇭', investment_highlights: ['Gold & Cocoa','Stable Democracy','Tech Ecosystem'] },
-  { code: 'GN', name: 'Guinea',       region: 'West', flag_emoji: '🇬🇳', investment_highlights: ['World\'s Largest Bauxite','Iron Ore','Hydropower'] },
-  { code: 'GW', name: 'Guinea-Bissau',region: 'West', flag_emoji: '🇬🇼', investment_highlights: ['Cashew Production','Coastal Fisheries','Agriculture'] },
-  { code: 'LR', name: 'Liberia',      region: 'West', flag_emoji: '🇱🇷', investment_highlights: ['Iron Ore','Rubber Industry','Rebuilding Economy'] },
-  { code: 'ML', name: 'Mali',         region: 'West', flag_emoji: '🇲🇱', investment_highlights: ['Gold Mining','Agricultural Land','Trans-Saharan Trade'] },
-  { code: 'NE', name: 'Niger',        region: 'West', flag_emoji: '🇳🇪', investment_highlights: ['Uranium Exports','Oil Production','Agricultural Expansion'] },
-  { code: 'NG', name: 'Nigeria',      region: 'West', flag_emoji: '🇳🇬', investment_highlights: ['Africa\'s Largest Economy','Fintech Hub','Oil & Gas'] },
-  { code: 'SN', name: 'Senegal',      region: 'West', flag_emoji: '🇸🇳', investment_highlights: ['New Oil & Gas','Tourism','Stable Democracy'] },
-  { code: 'SL', name: 'Sierra Leone', region: 'West', flag_emoji: '🇸🇱', investment_highlights: ['Diamond Exports','Iron Ore','Agricultural Rebuilding'] },
-  { code: 'TG', name: 'Togo',         region: 'West', flag_emoji: '🇹🇬', investment_highlights: ['Phosphate Mining','Port of Lomé','Transit Hub'] },
-  // East
-  { code: 'BI', name: 'Burundi',      region: 'East', flag_emoji: '🇧🇮', investment_highlights: ['Coffee & Tea','Agricultural Land','Rebuilding'] },
-  { code: 'KM', name: 'Comoros',      region: 'East', flag_emoji: '🇰🇲', investment_highlights: ['Vanilla & Cloves','Marine Tourism','Biodiversity'] },
-  { code: 'DJ', name: 'Djibouti',     region: 'East', flag_emoji: '🇩🇯', investment_highlights: ['Strategic Port','Data Cable Hub','Logistics'] },
-  { code: 'ER', name: 'Eritrea',      region: 'East', flag_emoji: '🇪🇷', investment_highlights: ['Red Sea Access','Mining Potential','Fisheries'] },
-  { code: 'ET', name: 'Ethiopia',     region: 'East', flag_emoji: '🇪🇹', investment_highlights: ['Aviation & Logistics','Manufacturing','Agriculture'] },
-  { code: 'KE', name: 'Kenya',        region: 'East', flag_emoji: '🇰🇪', investment_highlights: ['Fintech & Mobile Money','Geothermal Energy','Regional Tech Hub'] },
-  { code: 'MG', name: 'Madagascar',   region: 'East', flag_emoji: '🇲🇬', investment_highlights: ['Vanilla Production','Nickel & Cobalt','Biodiversity Tourism'] },
-  { code: 'MU', name: 'Mauritius',    region: 'East', flag_emoji: '🇲🇺', investment_highlights: ['Financial Services','Tourism','Textile Manufacturing'] },
-  { code: 'MW', name: 'Malawi',       region: 'East', flag_emoji: '🇲🇼', investment_highlights: ['Tea & Tobacco','Agricultural Exports','Growing Services'] },
-  { code: 'MZ', name: 'Mozambique',   region: 'East', flag_emoji: '🇲🇿', investment_highlights: ['LNG Exports','Agricultural Expansion','Tourism'] },
-  { code: 'RW', name: 'Rwanda',       region: 'East', flag_emoji: '🇷🇼', investment_highlights: ['Tech-Forward Governance','Services Sector','Tourism'] },
-  { code: 'SC', name: 'Seychelles',   region: 'East', flag_emoji: '🇸🇨', investment_highlights: ['Island Tourism','High-Income Economy','Financial Services'] },
-  { code: 'SO', name: 'Somalia',      region: 'East', flag_emoji: '🇸🇴', investment_highlights: ['Livestock Exports','Diaspora Remittances','Coastal Fisheries'] },
-  { code: 'SS', name: 'South Sudan',  region: 'East', flag_emoji: '🇸🇸', investment_highlights: ['Oil Reserves','Agricultural Land','Infrastructure Rebuilding'] },
-  { code: 'TZ', name: 'Tanzania',     region: 'East', flag_emoji: '🇹🇿', investment_highlights: ['Gold Mining','Natural Gas','Safari Tourism'] },
-  { code: 'UG', name: 'Uganda',       region: 'East', flag_emoji: '🇺🇬', investment_highlights: ['Emerging Oil Sector','Agricultural Hub','Tech Growth'] },
-  // Central
-  { code: 'AO', name: 'Angola',                   region: 'Central', flag_emoji: '🇦🇴', investment_highlights: ['Oil Production','Diamond Mining','Diversification'] },
-  { code: 'CM', name: 'Cameroon',                 region: 'Central', flag_emoji: '🇨🇲', investment_highlights: ['Oil & Gas','Port of Douala','Agricultural Exports'] },
-  { code: 'CF', name: 'Central African Republic', region: 'Central', flag_emoji: '🇨🇫', investment_highlights: ['Diamond & Gold Potential','Forestry','Rebuilding Economy'] },
-  { code: 'TD', name: 'Chad',                     region: 'Central', flag_emoji: '🇹🇩', investment_highlights: ['Oil Production','Livestock Exports','Agricultural Land'] },
-  { code: 'CD', name: 'DR Congo',                 region: 'Central', flag_emoji: '🇨🇩', investment_highlights: ['Cobalt & Copper','Coltan Mining','Hydropower Potential'] },
-  { code: 'CG', name: 'Congo',                    region: 'Central', flag_emoji: '🇨🇬', investment_highlights: ['Oil Production','Forestry','Port of Brazzaville'] },
-  { code: 'GQ', name: 'Equatorial Guinea',        region: 'Central', flag_emoji: '🇬🇶', investment_highlights: ['Major Oil Producer','Highest Regional GDP PC','LNG'] },
-  { code: 'GA', name: 'Gabon',                    region: 'Central', flag_emoji: '🇬🇦', investment_highlights: ['Manganese Exports','Eco-Tourism','Timber Industry'] },
-  { code: 'ST', name: 'São Tomé & Príncipe',      region: 'Central', flag_emoji: '🇸🇹', investment_highlights: ['Cocoa Exports','Emerging Oil','Sustainable Agriculture'] },
-  // Southern
-  { code: 'BW', name: 'Botswana',    region: 'Southern', flag_emoji: '🇧🇼', investment_highlights: ['Diamond Mining','Strong Governance','Wildlife Tourism'] },
-  { code: 'SZ', name: 'Eswatini',   region: 'Southern', flag_emoji: '🇸🇿', investment_highlights: ['Sugar Production','Textile Manufacturing','Financial Services'] },
-  { code: 'LS', name: 'Lesotho',    region: 'Southern', flag_emoji: '🇱🇸', investment_highlights: ['Water Exports','Textile Manufacturing','Mountain Tourism'] },
-  { code: 'NA', name: 'Namibia',    region: 'Southern', flag_emoji: '🇳🇦', investment_highlights: ['Uranium & Diamonds','Green Hydrogen Potential','Safari Tourism'] },
-  { code: 'ZA', name: 'South Africa',region:'Southern', flag_emoji: '🇿🇦', investment_highlights: ['Mining & Manufacturing','Financial Services Hub','Biotech'] },
-  { code: 'ZM', name: 'Zambia',     region: 'Southern', flag_emoji: '🇿🇲', investment_highlights: ['Copper Production','Safari Tourism','Agricultural Exports'] },
-  { code: 'ZW', name: 'Zimbabwe',   region: 'Southern', flag_emoji: '🇿🇼', investment_highlights: ['Gold & Platinum','Lithium Reserves','Agricultural Comeback'] },
-];
+// No hardcoded fallback — countries are always fetched from the API.
 
 const REGIONS = ['All', 'North', 'West', 'East', 'Central', 'Southern'] as const;
 type Region = typeof REGIONS[number];
@@ -88,39 +27,44 @@ type Region = typeof REGIONS[number];
 // ─── Compact Card (for full grid) ────────────────────────────────────────────
 const CountryCard = ({
   country,
-  onClick,
 }: {
   country: Partial<Country>;
-  onClick: () => void;
 }) => {
   const tag = Array.isArray(country.investment_highlights) && country.investment_highlights.length > 0
     ? country.investment_highlights[0]
     : country.region || '';
 
+  if (!country.code) return null;
+
   return (
-    <motion.button
+    <motion.div
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
-      onClick={onClick}
-      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col text-left transition-all duration-300 hover:-translate-y-1 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5"
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
-        <span className="text-[9px] font-bold uppercase tracking-widest text-[#C9A84C]/70 bg-[#C9A84C]/10 px-2 py-1 rounded-full border border-[#C9A84C]/15">
-          {country.region}
-        </span>
-      </div>
-      <h3 className="font-serif text-[17px] font-semibold text-[#1C1814] group-hover:text-[#C9A84C] transition-colors leading-tight mb-1">
-        {country.name}
-      </h3>
-      {tag && (
-        <p className="text-[11px] text-[#1C1814]/40 font-medium leading-tight line-clamp-1">{tag}</p>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
-    </motion.button>
+      <Link
+        to={`/countries/${country.code.toLowerCase()}`}
+        className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col text-left transition-colors duration-300 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-[#C9A84C]/70 bg-[#C9A84C]/10 px-2 py-1 rounded-full border border-[#C9A84C]/15">
+            {country.region}
+          </span>
+        </div>
+        <h3 className="font-serif text-[17px] font-semibold text-[#1C1814] group-hover:text-[#C9A84C] transition-colors leading-tight mb-1">
+          {country.name}
+        </h3>
+        {tag && (
+          <p className="text-[11px] text-[#1C1814]/40 font-medium leading-tight line-clamp-1">{tag}</p>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+      </Link>
+    </motion.div>
   );
 };
 
@@ -135,12 +79,10 @@ const CountryCardSkeleton = () => (
   </div>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────
 export const BetaCountryTeaser = () => {
   const [activeRegion, setActiveRegion] = useState<Region>('All');
   const [search, setSearch] = useState('');
-  const [activeModal, setActiveModal] = useState<string | null>(null);
-  const [activeCountry, setActiveCountry] = useState<Partial<Country> | null>(null);
 
   const { data, isLoading } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
@@ -161,13 +103,12 @@ export const BetaCountryTeaser = () => {
     return map;
   }, [data]);
 
-  // Flatten API response or use fallback
+  // Flatten API response
   const allCountries: Partial<Country>[] = useMemo(() => {
     if (data?.by_region) {
-      const fromApi = Object.values(data.by_region).flatMap((r: RegionData) => r.countries || []);
-      return fromApi.length >= 10 ? fromApi : FALLBACK_COUNTRIES;
+      return Object.values(data.by_region).flatMap((r: RegionData) => r.countries || []);
     }
-    return FALLBACK_COUNTRIES;
+    return [];
   }, [data]);
 
   // Filter by region + search
@@ -195,24 +136,6 @@ export const BetaCountryTeaser = () => {
     return counts;
   }, [allCountries]);
 
-  const openModal = (country: Partial<Country>) => {
-    setActiveModal(country.code || null);
-    setActiveCountry(country);
-  };
-
-  // M7 FIX: useCallback so the reference is stable and can be in the useEffect dep array
-  const closeModal = useCallback(() => {
-    setActiveModal(null);
-    setActiveCountry(null);
-  }, []);
-
-  useEffect(() => {
-    if (!activeModal) return;
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-    // M7 FIX: closeModal is now stable (useCallback) + in the dependency array
-  }, [activeModal, closeModal]);
 
   return (
     <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] pb-32">
@@ -240,6 +163,7 @@ export const BetaCountryTeaser = () => {
           <input
             type="text"
             placeholder="Search countries or sectors…"
+            aria-label="Search countries or sectors"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-white border border-[#1C1814]/10 rounded-xl pl-10 pr-4 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all"
@@ -298,7 +222,6 @@ export const BetaCountryTeaser = () => {
                     <CountryCard
                       key={country.code}
                       country={country}
-                      onClick={() => openModal(country)}
                     />
                   ))
                 : (
@@ -328,129 +251,6 @@ export const BetaCountryTeaser = () => {
           </a>
         </div>
       </div>
-
-      {/* Intelligence Modal */}
-      <AnimatePresence>
-        {activeModal && activeCountry && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#F5F0E8]/85 backdrop-blur-sm"
-            onClick={closeModal}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl relative max-h-[90vh] overflow-y-auto"
-              onClick={e => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 text-[#1C1814]/40 hover:text-[#1C1814] transition-colors p-1"
-                aria-label="Close modal"
-              >
-                {/* m9 FIX: use lucide X icon — consistent with the rest of the codebase */}
-                <X size={20} />
-              </button>
-
-              {/* Header */}
-              <div className="flex items-center gap-4 mb-6 pt-1">
-                <span className="text-5xl">{activeCountry.flag_emoji || '🌍'}</span>
-                <div>
-                  <h3 className="font-serif text-2xl text-[#1C1814]">{activeCountry.name}</h3>
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#C9A84C]/70">
-                    {activeCountry.region} Africa
-                  </span>
-                </div>
-              </div>
-
-              {/* Intelligence Preview — article count + key opportunities */}
-              <div className="bg-[#F5F0E8] rounded-xl border border-[#1C1814]/8 p-5 mb-5">
-                <p className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase mb-4">Intelligence Preview</p>
-                {(() => {
-                  const count = activeCountry.code ? (articleCountMap[activeCountry.code] ?? null) : null;
-                  return count !== null && count > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-4xl font-serif font-bold text-[#C9A84C]">{count}</span>
-                        <div>
-                          <p className="text-sm text-[#1C1814] font-medium leading-tight">
-                            {count === 1 ? 'story published' : 'stories published'}
-                          </p>
-                          <p className="text-xs text-[#1C1814]/40">and growing across the continent</p>
-                        </div>
-                      </div>
-                      <div className="h-px bg-[#1C1814]/5 my-3" />
-                      <p className="text-[10px] text-[#1C1814]/30 flex items-center gap-1.5">
-                        <Lock size={10} className="text-[#C9A84C]" />
-                        Full 12-point country dossier for Founding Members
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {['Investment Climate', 'Trade Position', 'Economic Momentum', 'Infrastructure Score'].map((label) => (
-                        <div key={label}>
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className="text-xs text-[#1C1814]/40">{label}</span>
-                            <Lock size={10} className="text-[#1C1814]/20" />
-                          </div>
-                          <div className="h-1.5 bg-[#1C1814]/5 rounded-full" />
-                        </div>
-                      ))}
-                      <p className="text-[10px] text-[#1C1814]/30 mt-3 flex items-center gap-1.5">
-                        <Lock size={10} className="text-[#C9A84C]" />
-                        Full dossier unlocked for Founding Members
-                      </p>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Investment Highlights */}
-              {Array.isArray(activeCountry.investment_highlights) && activeCountry.investment_highlights.length > 0 && (
-                <div className="mb-5">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#1C1814]/40 mb-3">Key Opportunities</p>
-                  <div className="flex flex-wrap gap-2">
-                    {(activeCountry.investment_highlights as string[]).map((h: string) => (
-                      <span key={h} className="text-xs bg-[#1C1814]/5 border border-[#1C1814]/8 text-[#1C1814]/70 px-3 py-1 rounded-full">
-                        {h}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <p className="text-[#1C1814]/60 text-sm leading-relaxed mb-6">
-                Deep-dive dossiers, localized intelligence hubs, and real-time signals for all 54 nations.
-              </p>
-
-              <div className="space-y-3">
-                {activeCountry?.code && (
-                  <Link
-                    to={`/countries/${activeCountry.code.toLowerCase()}`}
-                    onClick={closeModal}
-                    className="flex items-center justify-center gap-2 w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-6 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
-                  >
-                    Open {activeCountry.name} Hub <ArrowRight size={15} />
-                  </Link>
-                )}
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full text-center text-[#1C1814]/50 hover:text-[#1C1814] text-sm transition-colors py-2"
-                >
-                  Not a member yet? Join on Ko-fi →
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

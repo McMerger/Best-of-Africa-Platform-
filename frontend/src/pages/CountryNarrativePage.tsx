@@ -72,7 +72,7 @@ export const CountryNarrativePage: React.FC = () => {
 
                 <div className="grid lg:grid-cols-[2fr_1fr] gap-16">
                     <main>
-                        {/* GAP ANALYSIS (New AI Feature) */}
+                        {/* GAP ANALYSIS */}
                         {data.ai_gap_analysis && (
                             <section className="mb-16">
                                 <h2 className="mb-6 flex items-center gap-3 text-xl font-bold text-foreground uppercase tracking-wide">

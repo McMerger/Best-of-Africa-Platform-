@@ -13,7 +13,7 @@ export const EditorialGuidelinesPage: React.FC = () => {
                         <span className="text-primary italic">Standards of Transparency</span>
                     </h1>
                     <p className="mx-auto max-w-2xl text-xl text-muted-foreground">
-                        How we maintain the delicate balance between AI-driven intelligence, human curation, and commercial partnerships.
+                        How we maintain the delicate balance between data-driven intelligence, editorial curation, and commercial partnerships.
                     </p>
                 </div>
 
@@ -25,7 +25,7 @@ export const EditorialGuidelinesPage: React.FC = () => {
                         <h3 className="mb-3 text-2xl font-bold">Narrative Integrity</h3>
                         <p className="text-muted-foreground leading-relaxed">
                             Our central engine detects and corrects narrative gaps, but final editorial oversight is strictly human.
-                            We do not publish AI-hallucinated facts. Every strategic narrative conforms to verified ground-truth data.
+                            We do not publish unverified claims. Every strategic narrative conforms to verified ground-truth data.
                         </p>
                     </div>
                     <div className="rounded-xl border border-border bg-card p-8">

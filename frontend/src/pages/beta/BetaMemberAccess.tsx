@@ -4,16 +4,7 @@ import { BetaNav, BetaFooter, BetaDashboard } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
-
-// ─── Token storage helpers ────────────────────────────────────────────────────
-export const memberAuth = {
-  getToken: () => localStorage.getItem('boa_auth_token'),
-  setToken: (token: string) => localStorage.setItem('boa_auth_token', token),
-  clearToken: () => localStorage.removeItem('boa_auth_token'),
-  isMember: () => !!localStorage.getItem('boa_auth_token'),
-};
-
-
+import { useMember } from '../../context/MemberContext';
 
 export const BetaMemberAccess = () => {
   const [email, setEmail] = useState('');
@@ -21,49 +12,26 @@ export const BetaMemberAccess = () => {
   const [phase, setPhase] = useState<'checking' | 'form' | 'otp' | 'success' | 'error' | 'expired'>('checking');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [memberData, setMemberData] = useState<{ tier: string; name: string; expires_in_days?: number | null } | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendSuccess, setResendSuccess] = useState(false);
   const otpInputRef = useRef<HTMLInputElement>(null);
 
-  // On mount: check if an existing token is still valid
-  useEffect(() => {
-    const token = memberAuth.getToken();
-    if (!token) { setPhase('form'); return; }
+  const { isMember, memberData, login, logout, isLoading } = useMember();
 
-    // C5 FIX: Must pass the Authorization header so the server can validate the JWT.
-    // Without this, /members/me always returns {member: false} regardless of stored token.
-    request<{ member: boolean; tier?: string; name?: string; expires_in_days?: number | null; reason?: string }>(
-      '/members/me',
-      { headers: { Authorization: `Bearer ${token}` } },
-    )
-      .then(res => {
-        if (res.member && res.tier && res.name) {
-          setMemberData({ tier: res.tier, name: res.name, expires_in_days: res.expires_in_days ?? null });
-          setPhase('success');
-        } else if (res.reason === 'expired') {
-          memberAuth.clearToken();
-          setPhase('expired');
-        } else {
-          memberAuth.clearToken();
-          setPhase('form');
-        }
-      })
-      .catch(() => setPhase('form'));
-  }, []);
-
-  // Listen for global 401 events from the API layer — show the expired screen so
-  // users know why they were logged out rather than silently seeing the login form.
+  // Sync local phase with MemberContext state
   useEffect(() => {
-    const handler = () => {
-      if (!memberAuth.getToken()) return; // already logged out, ignore
-      memberAuth.clearToken();
-      setMemberData(null);
-      setPhase('expired');
-    };
-    window.addEventListener('boa:auth:unauthorized', handler);
-    return () => window.removeEventListener('boa:auth:unauthorized', handler);
-  }, []);
+    if (isLoading) {
+      setPhase('checking');
+    } else if (isMember) {
+      setPhase('success');
+    } else if (phase === 'success' || phase === 'checking') {
+      // If we were checking or succeeded and now we're not a member,
+      // it means the token was invalid, expired, or logged out.
+      // We don't have a specific 'expired' distinction from the context yet,
+      // so default to 'form'. The context clears the token on unauthorized.
+      setPhase('form');
+    }
+  }, [isLoading, isMember, phase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,8 +82,7 @@ export const BetaMemberAccess = () => {
 
       setIsSubmitting(false);
       if (res.ok && res.token) {
-        memberAuth.setToken(res.token);
-        setMemberData({ tier: res.tier, name: res.name, expires_in_days: null });
+        login(res.token, { tier: res.tier, name: res.name, expires_in_days: null });
         setPhase('success');
       } else {
         throw new Error('Invalid verification code');
@@ -234,9 +201,8 @@ export const BetaMemberAccess = () => {
             <BetaDashboard
               memberData={memberData}
               onLogout={() => {
-                memberAuth.clearToken(); // M5 FIX: use shared abstraction instead of direct localStorage
+                logout();
                 setPhase('form');
-                setMemberData(null);
               }}
             />
           ) : phase === 'otp' ? (

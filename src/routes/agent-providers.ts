@@ -6,6 +6,7 @@
 
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
+import { getProviderToken, storeProviderToken, clearProviderToken } from '../lib/provider-tokens';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -61,10 +62,12 @@ router.post('/', async (c) => {
         return c.json({ error: 'invalid_provider', message: `Provider must be one of: ${VALID_PROVIDERS.join(', ')}` }, 400);
     }
 
-    // Moonshot can authenticate via OAuth (no api_key needed if OAuth is authorized).
-    // All other external providers require an api_key.
+    // External providers need an api_key unless they have a bootstrap token or OAuth.
     if (body.provider !== 'workers_ai' && body.provider !== 'moonshot' && !body.api_key) {
-        return c.json({ error: 'api_key_required', message: 'api_key is required for this provider' }, 400);
+        const hasBootstrap = await getProviderToken(c.env, body.provider);
+        if (!hasBootstrap) {
+            return c.json({ error: 'api_key_required', message: 'api_key is required (or bootstrap a key first via POST /agent/providers/bootstrap/:provider)' }, 400);
+        }
     }
 
     const prov = body.provider as ProviderName;
@@ -291,5 +294,108 @@ async function syncProvidersToKV(env: Env): Promise<void> {
         // Non-critical — don't fail the main request
     }
 }
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /agent/providers/bootstrap/:provider
+// Inject an API key at runtime — stored in KV, no redeployment needed.
+//
+// Body: { "api_key": "sk-...", "expires_in": 86400 }
+// expires_in is optional (seconds); omit for non-expiring keys.
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/bootstrap/:provider', async (c) => {
+    const provider = c.req.param('provider') as ProviderName;
+    if (!VALID_PROVIDERS.includes(provider) || provider === 'workers_ai') {
+        return c.json({ error: 'invalid_provider', message: `Bootstrap supports: ${VALID_PROVIDERS.filter(p => p !== 'workers_ai').join(', ')}` }, 400);
+    }
+
+    const body = await c.req.json<{ api_key: string; expires_in?: number }>();
+    if (!body.api_key) return c.json({ error: 'api_key is required' }, 400);
+
+    const { expires_at } = await storeProviderToken(c.env, provider, body.api_key, body.expires_in);
+
+    return c.json({
+        success: true,
+        provider,
+        expires_at,
+        message: `${PROVIDER_DEFAULTS[provider].label} API key bootstrapped. The platform will use it for all AI generation.`,
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /agent/providers/bootstrap/:provider/status
+// Check if a provider has a bootstrapped key.
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/bootstrap/:provider/status', async (c) => {
+    const provider = c.req.param('provider') as ProviderName;
+    if (!VALID_PROVIDERS.includes(provider)) {
+        return c.json({ error: 'invalid_provider' }, 400);
+    }
+
+    const token = await getProviderToken(c.env, provider);
+    const envVarMap: Partial<Record<ProviderName, string | undefined>> = {
+        anthropic:  c.env.ANTHROPIC_API_KEY,
+        gemini:     c.env.GOOGLE_AI_API_KEY,
+        moonshot:   c.env.MOONSHOT_API_KEY,
+        openai:     c.env.OPENAI_API_KEY,
+        openrouter: c.env.OPENROUTER_API_KEY,
+    };
+
+    return c.json({
+        provider,
+        bootstrap_active: !!token,
+        env_var_set: !!envVarMap[provider],
+        ready: !!token || !!envVarMap[provider],
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// DELETE /agent/providers/bootstrap/:provider
+// Clear bootstrapped key — reverts to DB config or env var.
+// ───────────────────────────────────────────────────────────────────────────────
+router.delete('/bootstrap/:provider', async (c) => {
+    const provider = c.req.param('provider') as ProviderName;
+    if (!VALID_PROVIDERS.includes(provider)) {
+        return c.json({ error: 'invalid_provider' }, 400);
+    }
+
+    await clearProviderToken(c.env, provider);
+    return c.json({ success: true, message: `Bootstrapped key for ${PROVIDER_DEFAULTS[provider].label} cleared.` });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /agent/providers/bootstrap/:provider/probe
+// Validate a key by making a cheap live call to the provider's API.
+// Body: { "api_key": "sk-..." }
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/bootstrap/:provider/probe', async (c) => {
+    const provider = c.req.param('provider') as ProviderName;
+    const { api_key } = await c.req.json<{ api_key: string }>();
+    if (!api_key) return c.json({ error: 'api_key is required' }, 400);
+
+    try {
+        let valid = false;
+        if (provider === 'anthropic') {
+            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: { 'x-api-key': api_key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+                body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'ping' }] }),
+            });
+            valid = res.ok;
+        } else if (provider === 'gemini') {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${api_key}`);
+            valid = res.ok;
+        } else if (provider === 'openai' || provider === 'openrouter') {
+            const base = PROVIDER_DEFAULTS[provider].base_url;
+            const res = await fetch(`${base}/models`, { headers: { Authorization: `Bearer ${api_key}` } });
+            valid = res.ok;
+        } else if (provider === 'moonshot') {
+            const res = await fetch('https://api.moonshot.cn/v1/models', { headers: { Authorization: `Bearer ${api_key}` } });
+            valid = res.ok;
+        }
+        return c.json({ valid, provider });
+    } catch (err) {
+        return c.json({ valid: false, error: err instanceof Error ? err.message : 'Connection failed' });
+    }
+});
 
 export { router as agentProvidersRouter };

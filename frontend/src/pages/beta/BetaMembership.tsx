@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BetaNav, BetaFooter, MembershipTiersGrid } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { KO_FI_URL } from '../../constants/beta';
@@ -7,7 +8,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 const FAQ_ITEMS = [
   {
     q: 'What does my membership actually fund?',
-    a: 'Every dollar goes toward domain and hosting costs, AI infrastructure for content research, and the time required to produce original, rigorous reporting. We publish a transparent breakdown on our About page.',
+    a: 'Every dollar goes toward domain and hosting costs, research infrastructure, and the time required to produce original, rigorous reporting. We publish a transparent breakdown on our About page.',
   },
   {
     q: 'Is there a free trial or refund policy?',
@@ -15,7 +16,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What is the beta platform hub?',
-    a: 'Founding Members get early access to country intelligence hubs, extended story archives, AI briefings, and priority access to all new features as the platform develops.',
+    a: 'Founding Members get early access to country intelligence hubs, extended story archives, strategic briefings, and priority access to all new features as the platform develops.',
   },
   {
     q: 'How is this different from other Africa-focused media?',
@@ -42,29 +43,64 @@ function FAQItem({ q, a }: { q: string; a: string }) {
           : <ChevronDown size={16} className="text-[#1C1814]/40 shrink-0 group-hover:text-[#1C1814]/70 transition-colors" />
         }
       </button>
-      {open && <p className="text-[#1C1814]/60 text-sm leading-relaxed pb-5">{a}</p>}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <p className="text-[#1C1814]/60 text-sm leading-relaxed pb-5">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-export const BetaMembership = () => (
-  <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814]">
-    <SEO 
-      title="Membership | Best of Africa" 
-      description="Become a Founding Member to unlock all stories, market intelligence, and deep-dives across 54 countries."
-    />
-    <BetaNav />
+export const BetaMembership = () => {
+  const [isAnnual, setIsAnnual] = useState(true);
 
-    {/* Tiers */}
-    <section className="py-24 px-6 max-w-6xl mx-auto">
-      <div className="text-center mb-16">
-        <h1 className="font-serif text-[32px] md:text-[44px] leading-tight mb-4">Join before the official launch</h1>
-        <p className="text-[18px] text-[#1C1814]/70 max-w-2xl mx-auto leading-relaxed">
-          Your support right now covers domains, tools, and the time to report and ship.
-        </p>
-      </div>
-      <MembershipTiersGrid />
-    </section>
+  return (
+    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814]">
+      <SEO 
+        title="Membership | Best of Africa" 
+        description="Become a Founding Member to unlock all stories, market intelligence, and deep-dives across 54 countries."
+      />
+      <BetaNav />
+
+      {/* Tiers */}
+      <section className="py-24 px-6 max-w-6xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="font-serif text-[32px] md:text-[44px] leading-tight mb-4">Join before the official launch</h1>
+          <p className="text-[18px] text-[#1C1814]/70 max-w-2xl mx-auto leading-relaxed mb-8">
+            Your support right now covers domains, tools, and the time to report and ship.
+          </p>
+
+          {/* Billing Toggle */}
+          <div className="inline-flex items-center p-1 bg-white border border-[#1C1814]/8 rounded-full shadow-sm">
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                !isAnnual ? 'bg-[#1C1814] text-white' : 'text-[#1C1814]/60 hover:text-[#1C1814]'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
+                isAnnual ? 'bg-[#1C1814] text-white' : 'text-[#1C1814]/60 hover:text-[#1C1814]'
+              }`}
+            >
+              Annual <span className="text-[10px] bg-[#C9A84C]/20 text-[#C9A84C] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">~2 mo free</span>
+            </button>
+          </div>
+        </div>
+        <MembershipTiersGrid isAnnual={isAnnual} />
+      </section>
 
     {/* One-off tip */}
     <section className="py-16 px-6 border-t border-[#1C1814]/8">
@@ -92,6 +128,7 @@ export const BetaMembership = () => (
       </div>
     </section>
 
-    <BetaFooter />
-  </div>
-);
+      <BetaFooter />
+    </div>
+  );
+};

@@ -51,7 +51,7 @@ queue = "headline-optimization"
 [[queues.consumers]]
 queue = "content-generation"
 max_batch_size = 1      # Process one at a time — AI generation can run >30s
-max_batch_timeout = 120 # 2-minute window for a single generation task
+max_batch_timeout = 60  # Maximum batch timeout allowed by Cloudflare is 60s
 max_retries = 5
 
 [[queues.consumers]]
@@ -89,9 +89,7 @@ new_classes = ["LiveCounter"]
 # ═══════════════════════════════════════════════════════════════════════════════
 [triggers]
 crons = [
-  "* * * * *",     # Ingestion: Every minute
-  "*/2 * * * *",   # Optimization: Every 2 minutes
-  "0 5 * * *"      # Reporting: Daily at 5am UTC
+  "* * * * *"      # Master Cron (handles 1m, 2m, daily internally)
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════

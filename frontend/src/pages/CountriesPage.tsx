@@ -26,7 +26,7 @@ export const CountriesPage: React.FC = () => {
             api.getPlatformStats(),
             api.getIntelligence()
         ]).then(([countriesRes, statsRes, intelRes]) => {
-            // Transform API response to match Page State (add placeholder AI insights)
+            // Transform API response to match Page State
             const byRegionTransformed = Object.entries(countriesRes.by_region || {}).reduce((acc, [region, regionData]) => {
                 acc[region] = {
                     countries: regionData.countries || [],

@@ -6,6 +6,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BetaNav, BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
+import { useReadingProgress } from '../../hooks/useReadingProgress';
+import { useMember } from '../../context/MemberContext';
 import { api } from '../../services/api';
 import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
 import type { Article, ArticleListItem, Country } from '../../types';
@@ -20,14 +22,21 @@ interface ArticleResponse {
 function useReadingProgress(targetId: string) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
+    let ticking = false;
     const handleScroll = () => {
-      const el = document.getElementById(targetId);
-      if (!el) return;
-      const { top, height } = el.getBoundingClientRect();
-      const windowH = window.innerHeight;
-      const scrollable = height - windowH;
-      if (scrollable <= 0) { setProgress(100); return; }
-      setProgress(Math.min(100, Math.max(0, (-top / scrollable) * 100)));
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const el = document.getElementById(targetId);
+          if (!el) { ticking = false; return; }
+          const { top, height } = el.getBoundingClientRect();
+          const windowH = window.innerHeight;
+          const scrollable = height - windowH;
+          if (scrollable <= 0) { setProgress(100); ticking = false; return; }
+          setProgress(Math.min(100, Math.max(0, (-top / scrollable) * 100)));
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -45,8 +54,26 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleNativeShare = async () => {
+    // navigator.share is usually available in secure contexts (HTTPS) and mobile
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+      } catch (err) {
+        // user cancelled or share failed, fallback to copy
+        if ((err as Error).name !== 'AbortError') copyLink();
+      }
+    } else {
+      copyLink();
+    }
+  };
+
   const encodedTitle = encodeURIComponent(title);
   const encodedUrl = encodeURIComponent(url);
+
+  // We only show Twitter/LinkedIn buttons on larger screens, and rely on native share on small screens
+  // if navigator.share is supported.
+  const hasShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   return (
     <div className="flex items-center gap-2">
@@ -56,7 +83,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on X / Twitter"
-        className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
+        className={`p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Twitter size={13} />
       </a>
@@ -65,13 +92,13 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on LinkedIn"
-        className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
+        className={`p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Linkedin size={13} />
       </a>
       <button
-        onClick={copyLink}
-        aria-label="Copy link"
+        onClick={hasShare ? handleNativeShare : copyLink}
+        aria-label={hasShare ? "Share story" : "Copy link"}
         className="p-2 rounded-lg bg-[#1C1814]/5 hover:bg-white/10 text-[#1C1814]/40 hover:text-[#1C1814] transition-all"
       >
         {copied ? <Check size={13} className="text-[#C9A84C]" /> : <Link2 size={13} />}
@@ -123,12 +150,23 @@ function ArticleMarkdown({ content }: { content: string }) {
         ol: ({ children }) => (
           <ol className="my-4 space-y-2 ml-4 list-decimal">{children}</ol>
         ),
-        li: ({ children }) => (
-          <li className="text-[#1C1814]/80 text-[16px] leading-relaxed flex gap-3">
-            <span className="text-[#C9A84C] mt-1 shrink-0">→</span>
-            <span>{children}</span>
-          </li>
-        ),
+        li: ({ children, ...props }) => {
+          // react-markdown passes `ordered` on the parent list; check via node type
+          const isOrdered = (props as { ordered?: boolean }).ordered;
+          if (isOrdered) {
+            return (
+              <li className="text-[#1C1814]/80 text-[16px] leading-relaxed list-decimal ml-5">
+                {children}
+              </li>
+            );
+          }
+          return (
+            <li className="text-[#1C1814]/80 text-[16px] leading-relaxed flex gap-3">
+              <span className="text-[#C9A84C] mt-1 shrink-0">→</span>
+              <span>{children}</span>
+            </li>
+          );
+        },
         blockquote: ({ children }) => (
           <blockquote className="my-6 border-l-4 border-[#C9A84C] pl-6 text-[#1C1814]/60 font-serif italic text-lg leading-relaxed">
             {children}
@@ -148,6 +186,7 @@ function ArticleMarkdown({ content }: { content: string }) {
 export const BetaArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const readingProgress = useReadingProgress('article-root');
+  const { isMember } = useMember();
 
   const { data, isLoading, isError } = useQuery<ArticleResponse>({
     queryKey: ['article', slug],
@@ -195,7 +234,6 @@ export const BetaArticle = () => {
   // ── Paywall: trust the API's server-side decision ─────────────────────────
   // The backend already truncated content for non-members and set paywall:true
   const isPaywalled = !!article.paywall;
-  const isMember = !!data.member;
 
   // Content is whatever the API returned — full for members, truncated for guests
   const articleContent = article.content || '';

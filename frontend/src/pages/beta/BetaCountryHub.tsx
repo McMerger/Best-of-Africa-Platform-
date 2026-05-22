@@ -4,6 +4,7 @@
 // Route: /countries/:code
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
 import { ArrowLeft, Lock, Globe, FileText, TrendingUp, BarChart2, ExternalLink } from 'lucide-react';
@@ -11,9 +12,30 @@ import { motion } from 'framer-motion';
 import { BetaNav, BetaFooter } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { memberAuth } from './BetaMemberAccess';
+import { useMember } from '../../context/MemberContext';
 import { KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+
+/** Strip leading/trailing Markdown bold markers and whitespace from a string. */
+const stripMarkdown = (text: string): string =>
+  text.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '').trim();
+
+/**
+ * Generate stable-looking placeholder scores for the paywall blur preview.
+ * Uses a simple hash of the country code so values differ per country
+ * but are never the real data.
+ */
+const previewScores = (code: string): number[] => {
+  const base = code.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  return [
+    40 + (base * 7) % 45,
+    35 + (base * 11) % 50,
+    38 + (base * 13) % 48,
+    42 + (base * 17) % 44,
+  ];
+};
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -56,7 +78,7 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
         </span>
       )}
       <h3 className="font-serif text-[15px] font-semibold text-[#1C1814] leading-snug group-hover:text-[#C9A84C] transition-colors line-clamp-2">
-        {article.title}
+        {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
         <p className="text-[13px] text-[#1C1814]/50 mt-2 line-clamp-2 leading-relaxed">{article.summary}</p>
@@ -81,7 +103,7 @@ const SkeletonCard = () => (
 
 export const BetaCountryHub = () => {
   const { code } = useParams<{ code: string }>();
-  const isMember = memberAuth.isMember();
+  const { isMember } = useMember();
   const upperCode = (code || '').toUpperCase();
 
   const [countryQuery, outlookQuery, narrativeQuery, articlesQuery] = useQueries({
@@ -182,7 +204,7 @@ export const BetaCountryHub = () => {
                 <>
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-[#C9A84C] bg-[#C9A84C]/10 border border-[#C9A84C]/20 px-3 py-1 rounded-full">
-                      {region} Africa
+                      {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
                       <span className="text-[11px] font-bold uppercase tracking-widest text-white/30 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
@@ -223,10 +245,10 @@ export const BetaCountryHub = () => {
 
           {!isMember ? (
             <div className="relative bg-white rounded-2xl border border-[#1C1814]/8 p-8 overflow-hidden">
-              {/* blurred preview */}
-              <div className="space-y-5 blur-sm pointer-events-none select-none">
+              {/* blurred placeholder preview — scores are NOT real data */}
+              <div className="space-y-5 blur-sm pointer-events-none select-none" aria-hidden="true">
                 {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
-                  <ScoreBar key={l} label={l} value={[72, 58, 65, 81][i]} delay={i * 0.1} />
+                  <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
                 ))}
               </div>
               <div className="absolute inset-0 bg-[#F5F0E8]/70 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl">
@@ -340,12 +362,12 @@ export const BetaCountryHub = () => {
           </section>
         )}
 
-        {/* ── AI Situation Report (if available) ────────────────────────────── */}
+        {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <section>
             <div className="bg-[#1C1814] rounded-2xl p-8 text-white relative overflow-hidden">
               <div className="absolute top-4 right-4 text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase bg-[#C9A84C]/10 border border-[#C9A84C]/20 px-3 py-1 rounded-full">
-                AI Situation Report
+                Situation Report
               </div>
               <div className="w-8 h-px bg-[#C9A84C]/40 mb-5" />
               <p className="text-white/80 leading-relaxed text-[15px] max-w-2xl">{country.ai_situation_report}</p>
@@ -429,7 +451,7 @@ export const BetaCountryHub = () => {
             <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-12 text-center">
               <Globe size={36} className="text-[#1C1814]/20 mx-auto mb-4" />
               <p className="text-[#1C1814]/50">No stories published for {countryName} yet.</p>
-              <p className="text-[#1C1814]/30 text-sm mt-1">Our AI editorial team is monitoring this market continuously.</p>
+              <p className="text-[#1C1814]/30 text-sm mt-1">Our editorial team is monitoring this market continuously.</p>
             </div>
           )}
         </section>

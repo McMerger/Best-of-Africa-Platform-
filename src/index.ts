@@ -16,7 +16,7 @@ import {
     servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
     eventsRouter, campaignsRouter, configRouter, devRouter,
     bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
-    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter
+    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter, geminiOAuthRouter
 } from './routes';
 import { LiveCounter } from './durable-objects/live-counter';
 
@@ -111,6 +111,56 @@ app.get('/health', (c) => {
     return c.json({ status: 'ok' });
 });
 
+// Public AI provider status — shows active model without exposing credentials
+app.get('/api/v1/ai-status', async (c) => {
+    const env = c.env as any;
+    let provider = 'workers_ai';
+    let model = '@cf/meta/llama-3.1-70b-instruct';
+    let source = 'fallback';
+
+    // Mirror the priority chain from ai.ts / callConfiguredAI
+    try {
+        const configRaw = await env.CACHE?.get('zeroclaw:provider_config');
+        if (configRaw) {
+            const config = JSON.parse(configRaw);
+            const defaults = config?.agents?.defaults;
+            if (defaults?.provider && defaults.provider !== 'workers_ai') {
+                provider = defaults.provider;
+                model = defaults.model || model;
+                source = 'db_config';
+            }
+        }
+    } catch {}
+
+    if (source === 'fallback') {
+        if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';           source = 'env_key'; }
+        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro';              source = 'env_key'; }
+        else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';             source = 'env_key'; }
+        else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                      source = 'env_key'; }
+        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6'; source = 'env_key'; }
+    }
+
+    // Check OAuth tokens (higher priority than API keys)
+    if (source === 'env_key' || source === 'fallback') {
+        try {
+            const { getGeminiAccessToken } = await import('./lib/gemini-oauth');
+            const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
+            if (geminiOAuth) { provider = 'gemini'; model = 'gemini-2.5-pro'; source = 'oauth'; }
+        } catch {}
+    }
+
+    return c.json({
+        provider,
+        model,
+        source,
+        gemini_key_configured: !!env.GOOGLE_AI_API_KEY,
+        gemini_oauth_configured: !!(await env.CACHE?.get('gemini:oauth:refresh_token').catch(() => null)),
+        anthropic_configured: !!env.ANTHROPIC_API_KEY,
+        timestamp: new Date().toISOString(),
+    });
+});
+
+
 // ───────────────────────────────────────────────────────────────────────────────
 // SEO & Discoverability (Mounted at worker root)
 // ───────────────────────────────────────────────────────────────────────────────
@@ -145,6 +195,7 @@ api.route('/config', configRouter);
 api.route('/newsletter', newsletterRouter);
 api.route('/agent/providers', agentProvidersRouter);
 api.route('/agent/moonshot/oauth', moonshotOAuthRouter);
+api.route('/agent/gemini/oauth', geminiOAuthRouter);
 api.route('/members', membersRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
@@ -204,30 +255,27 @@ app.onError((err, c) => {
 // Scheduled Worker Handler (Cron)
 // ───────────────────────────────────────────────────────────────────────────────
 async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    const { cron } = event;
+    console.log('Running master cron worker...');
+    
+    // 1. Ingestion: every minute
+    console.log('Running ingestion worker...');
+    await runIngestion(env);
 
-    switch (cron) {
-        case '* * * * *':
-            // Ingestion: every minute
-            console.log('Running ingestion worker...');
-            await runIngestion(env);
-            break;
+    const date = new Date(event.scheduledTime || Date.now());
+    const minutes = date.getUTCMinutes();
+    const hours = date.getUTCHours();
 
-        case '*/2 * * * *':
-            // Optimization + stale task recovery: every 2 minutes
-            console.log('Running optimization worker...');
-            await runOptimization(env);
-            await runStaleTaskRecovery(env);
-            break;
+    // 2. Optimization + stale task recovery: every 2 minutes
+    if (minutes % 2 === 0) {
+        console.log('Running optimization worker...');
+        await runOptimization(env);
+        await runStaleTaskRecovery(env);
+    }
 
-        case '0 5 * * *':
-            // Reporting: Daily at 5am UTC
-            console.log('Running daily reporting worker...');
-            await runDailyReporting(env);
-            break;
-
-        default:
-            console.log(`Unknown cron: ${cron}`);
+    // 3. Reporting: Daily at 5am UTC
+    if (hours === 5 && minutes === 0) {
+        console.log('Running daily reporting worker...');
+        await runDailyReporting(env);
     }
 }
 

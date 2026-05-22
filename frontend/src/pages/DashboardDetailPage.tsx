@@ -115,7 +115,7 @@ export const DashboardDetailPage: React.FC = () => {
                         </div>
 
 
-                        {/* Situation Report (AI Summary & Stability Index) */}
+                        {/* Situation Report */}
                         <div className={`grid md:grid-cols-[3fr_1fr] transition-all duration-300 ${density === 'compact' ? 'gap-3' : 'gap-6'}`}>
                             {/* Executive Summary */}
                             <Card className="relative overflow-hidden border-border shadow-sm">

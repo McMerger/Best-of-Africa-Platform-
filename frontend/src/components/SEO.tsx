@@ -13,7 +13,7 @@ export const SEO: React.FC<SEOProps> = ({
     title,
     description,
     image,
-    type = 'article',
+    type = 'website',
     publishedTime,
     author = 'Best of Africa'
 }) => {

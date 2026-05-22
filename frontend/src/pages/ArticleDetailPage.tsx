@@ -14,7 +14,6 @@ import { ActionBar } from '@/components/ActionBar';
 import { SEO } from '@/components/SEO';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
-import { PartnerPromo } from '../components/PartnerPromo';
 import { ArticleVideo } from '../components/ArticleVideo';
 
 export const ArticleDetailPage: React.FC = () => {
@@ -137,7 +136,7 @@ export const ArticleDetailPage: React.FC = () => {
 
                 <div className={cn("grid gap-12 lg:grid-cols-[2fr_350px]", showPaywall && "blur-sm select-none pointer-events-none transition-filter duration-1000")}>
                     <div className="space-y-10">
-                        {/* AI Briefing Video Prototype */}
+                        {/* Briefing Video */}
                         {article.ai_video_url && (
                             <ArticleVideo
                                 videoUrl={article.ai_video_url}
@@ -251,7 +250,7 @@ export const ArticleDetailPage: React.FC = () => {
                                 </div>
 
 
-                                {/* Alternative Angles (AI Headlines) */}
+                                {/* Alternative Angles */}
                                 {article.ai_headline_variants && (JSON.parse(article.ai_headline_variants as unknown as string) as string[]).length > 0 && (
                                     <div className="mt-4 pt-4 border-t border-border/50">
                                         <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-2">{t("article.alternative_angles", "Alternative Angles")}</div>
@@ -437,7 +436,7 @@ export const ArticleDetailPage: React.FC = () => {
                                         </nav>
                                     </div>
 
-                                    {/* Sentiment Signal (AI or Country Proxy) */}
+                                    {/* Sentiment Signal */}
                                     {(article.ai_sentiment_score !== undefined || country) && (
                                         <div className="mb-8 p-4 bg-muted/30 rounded-3xl border border-border">
                                             <div className="flex justify-between items-center mb-2">
@@ -527,18 +526,6 @@ export const ArticleDetailPage: React.FC = () => {
                                         </Button>
                                     </div>
 
-                                    {/* CONTEXTUAL AD: Advertising Layer */}
-                                    {sector && (['infrastructure', 'finance', 'energy'].includes(sector.id.toLowerCase())) && (
-                                        <div className="mt-8">
-                                            <PartnerPromo
-                                                title="River Bridge Phase II"
-                                                category="Investment Opportunity"
-                                                description="Join the coalition of institutional investors funding the next generation of African logistics."
-                                                ctaText="Request Deck"
-                                                className="border-primary/30"
-                                            />
-                                        </div>
-                                    )}
                                 </CardContent>
                             </Card>
                         </div>

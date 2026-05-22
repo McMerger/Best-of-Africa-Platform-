@@ -12,7 +12,16 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(cmd /c \"npx tsc --noEmit --skipLibCheck 2>&1\")",
       "Read(//tmp/**)",
-      "Bash(node_modules/.bin/tsc --noEmit --skipLibCheck)"
+      "Bash(node_modules/.bin/tsc --noEmit --skipLibCheck)",
+      "PowerShell(& npx -p typescript tsc --noEmit --project \"C:\\\\Users\\\\corte\\\\Documents\\\\GitHub\\\\Best-of-Africa-Platform-\\\\tsconfig.json\" 2>&1 | Select-Object -First 40)",
+      "PowerShell(& npx -p typescript tsc --noEmit --project \"C:\\\\Users\\\\corte\\\\Documents\\\\GitHub\\\\Best-of-Africa-Platform-\\\\tsconfig.json\" 2>&1)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(if \\($env:CLOUDFLARE_API_TOKEN\\) { \"Token set\" } else { \"No CLOUDFLARE_API_TOKEN\" }; if \\($env:CF_API_TOKEN\\) { \"CF token set\" } else { \"No CF_API_TOKEN\" })",
+      "Bash(Select-Object -First 40)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\corte\\\\Documents\\\\GitHub\\\\Best-of-Africa-Platform-\\\\frontend\\\\src\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(xargs grep -l \"from.*beta\\\\|from '.*beta\")"
     ]
   }
 }

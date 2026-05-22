@@ -73,35 +73,82 @@ export async function generateArticleFromQueue(
             sectorName = (sector as Record<string, any>)?.name;
         }
 
-        // Queue task for the external Autonomous Agent to generate the article
-        console.log(`Queuing generation task for agent...`);
-        const taskId = crypto.randomUUID();
-        
+        // Direct generation on the backend using Gemini
+        console.log(`Generating article synchronously on the backend using Gemini...`);
+
+        // Generate article content
+        const generated = await generateArticleContent(
+            env,
+            itemData.title || '',
+            itemData.content || '',
+            countryName ?? null,
+            sectorName ?? null,
+        );
+
+        if (!generated?.title || !generated?.content) {
+            throw new Error('generateArticle returned empty title or content');
+        }
+
+        const articleId = crypto.randomUUID();
+        const readingTime = Math.ceil(generated.content.split(/\\s+/).length / 200);
+        const slug = generateSlug(generated.title);
+
         await env.DB.prepare(`
-            INSERT INTO agent_tasks (id, type, payload, status)
-            VALUES (?, ?, ?, 'pending')
+            INSERT INTO articles (
+                id, slug, title, subtitle, content, summary,
+                country_code, sector_id, tags,
+                reading_time_minutes, source_url, source_title, source_published_at,
+                generation_prompt_version,
+                status, published_at, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
         `).bind(
-            taskId,
-            'generate_article',
-            JSON.stringify({
-                ingested_item_id: message.ingested_item_id,
-                title: itemData.title,
-                content: itemData.content,
-                country_code: countryCode, 
-                country_name: countryName,
-                sector_id: sectorId,
-                sector_name: sectorName,
-                url: itemData.url,
-                published_at: itemData.published_at
-            })
+            articleId, slug,
+            generated.title,
+            generated.subtitle ?? null,
+            generated.content,
+            generated.summary ?? null,
+            countryCode ?? null,
+            sectorId    ?? null,
+            generated.tags ? JSON.stringify(generated.tags) : '[]',
+            readingTime,
+            itemData.url           ?? null,
+            itemData.title         ?? null,
+            itemData.published_at  ?? null,
+            ARTICLE_PROMPT_VERSION,
         ).run();
 
-        // Update the item status to reflect it's waiting for the agent
+        // Mark as completed
         await env.DB.prepare(`
-            UPDATE ingested_items SET status = 'queued_for_agent' WHERE id = ?
+            UPDATE ingested_items SET status = 'completed' WHERE id = ?
         `).bind(message.ingested_item_id).run();
 
-        console.log(`Successfully queued agent task: ${taskId} for item: ${message.ingested_item_id}`);
+        console.log(`Successfully generated and published article: ${articleId} from item: ${message.ingested_item_id}`);
+
+        // Async follow-up tasks (Image, Translation, Vector indexing)
+        // We do this in the background so it doesn't block the queue consumer.
+        // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
+        // but we'll await them to ensure they complete within the generous queue limits.
+        try {
+            const imagePrompt = \`African editorial photography: \${generated.title}. Photojournalistic, high quality.\`;
+            const imageBuffer = await generateArticleImage(env, imagePrompt);
+            if (imageBuffer) {
+                const imageKey = \`articles/\${articleId}/hero.png\`;
+                const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
+                if (imageUrl) {
+                    await env.DB.prepare('UPDATE articles SET ai_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();
+                }
+            }
+        } catch (err) { console.error('Image gen failed:', err); }
+
+        try {
+            await autoTranslateArticle(env, articleId, {
+                title: generated.title, subtitle: generated.subtitle, summary: generated.summary, content: generated.content, country_code: countryCode ?? null,
+            });
+        } catch (err) { console.error('Translation failed:', err); }
+
+        try {
+            await indexArticle(env, articleId, generated.title, generated.content, { country_code: countryCode ?? null, sector_id: sectorId ?? null });
+        } catch (err) { console.error('Vectorization failed:', err); }
 
     } catch (error) {
         console.error('Article generation failed:', error);

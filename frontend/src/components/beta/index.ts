@@ -9,4 +9,3 @@ export * from './BetaFooter';
 export * from './MembershipTiersGrid';
 export * from './BetaDashboard';
 export * from './BetaAudioPlayer';
-export { AgentStatusPanel } from './AgentStatusPanel';

@@ -145,9 +145,9 @@ export function BookingRequestPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold mb-2 flex items-center gap-2">
-                                    AI Preliminary Assessment
+                                    Preliminary Assessment
                                     <span className="text-xs uppercase tracking-wider text-muted-foreground bg-background px-2 py-0.5 rounded border">
-                                        Instant Generated
+                                        Instant
                                     </span>
                                 </h3>
                                 <div className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground">
@@ -178,7 +178,7 @@ export function BookingRequestPage() {
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-serif font-bold mb-3">{config?.['booking_hero_headline'] || "Concierge Request"}</h1>
                     <p className="text-muted-foreground max-w-xl mx-auto">
-                        {config?.['booking_hero_subhead'] || "Book strategic services tailored to your market entry and expansion needs. Receive an instant AI preliminary assessment upon submission."}
+                        {config?.['booking_hero_subhead'] || "Book strategic services tailored to your market entry and expansion needs. Receive an instant preliminary assessment upon submission."}
                     </p>
                 </div>
 

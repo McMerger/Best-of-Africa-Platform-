@@ -13,14 +13,30 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 // GET /events - List upcoming events
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/', async (c) => {
-    const events = await c.env.DB.prepare(`
-        SELECT id, title, slug, date, location, country_code, event_type, status, hero_image_url
-        FROM events
-        WHERE status != 'Cancelled' AND date >= date('now')
-        ORDER BY date ASC
-    `).all();
+    const { status, limit } = c.req.query();
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
 
-    return c.json({ data: events.results || [] });
+    // Build WHERE clause
+    let whereClause = "status != 'Cancelled' AND date >= date('now')";
+    if (status === 'upcoming') {
+        whereClause = "status IN ('Upcoming', 'upcoming', 'Active', 'active') AND date >= date('now')";
+    }
+
+    try {
+        const events = await c.env.DB.prepare(`
+            SELECT id, title, slug, date, location, country_code, event_type, status, hero_image_url
+            FROM events
+            WHERE ${whereClause}
+            ORDER BY date ASC
+            LIMIT ?
+        `).bind(limitNum).all();
+
+        return c.json({ success: true, data: events.results || [] });
+    } catch (err) {
+        // Table may not exist yet or query failed — return empty rather than 500
+        console.error('[events] list failed:', err);
+        return c.json({ success: true, data: [], message: 'Events temporarily unavailable' });
+    }
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

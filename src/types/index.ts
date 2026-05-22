@@ -49,6 +49,9 @@ export interface Env {
     MOONSHOT_CLIENT_SECRET?: string;
     // Override Moonshot token endpoint if needed (defaults to api.moonshot.cn/oauth/token)
     MOONSHOT_TOKEN_URL?: string;
+    // Google OAuth credentials (from Google Cloud Console → APIs & Services → Credentials)
+    GOOGLE_CLIENT_ID?: string;
+    GOOGLE_CLIENT_SECRET?: string;
 
     // Ko-fi webhook verification token (set via `wrangler secret put KOFI_TOKEN`)
     KOFI_TOKEN?: string;

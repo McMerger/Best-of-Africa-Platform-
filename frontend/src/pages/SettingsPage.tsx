@@ -227,5 +227,3 @@ export const SettingsPage: React.FC = () => {
     );
 };
 
-// Mock Icon removed
-

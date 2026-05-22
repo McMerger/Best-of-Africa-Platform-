@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Lock, ArrowRight, MapPin, ChevronDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -11,13 +11,21 @@ import {
   CardReveal,
   GoldDivider,
   StatCounter,
-  AgentStatusPanel,
   MembershipTiersGrid,
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
+
+/** Strip Markdown bold markers (**) and surrounding quote wrapping from LLM-generated text. */
+const stripMarkdown = (text: string): string => {
+  if (!text) return text;
+  let t = text.trim();
+  t = t.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '');
+  if (t.startsWith('"') && t.endsWith('"') && t.length > 2) t = t.slice(1, -1);
+  return t.trim();
+};
 
 // Rotating subheadline — cycles through theme words under the main hero headline
 const SUBHEADLINES = ['Business.', 'Culture.', 'Capital.', 'Strategy.', 'Stories.'];
@@ -50,6 +58,7 @@ function RotatingSubheadline() {
 export const BetaLanding = () => {
   const [isAnnual, setIsAnnual] = useState(false);
   const [heroScrolled, setHeroScrolled] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const onScroll = () => setHeroScrolled(window.scrollY > 80);
@@ -93,12 +102,18 @@ export const BetaLanding = () => {
       {/* 1. HERO SECTION — stays dark for brand impact */}
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20 pb-32 overflow-hidden border-b border-white/5 bg-[#1C1814]">
         {/* Background Gradients & Glows */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.15, scale: 1 }}
-            transition={{ duration: 3, ease: "easeOut" }}
-            className="w-[600px] h-[600px] bg-[#C9A84C] rounded-full blur-[120px]"
+            animate={prefersReducedMotion ? { opacity: 0.15, scale: 1 } : { opacity: 0.15, scale: 1, x: [0, 30, 0], y: [0, -20, 0] }}
+            transition={{ duration: prefersReducedMotion ? 1 : 8, repeat: prefersReducedMotion ? 0 : Infinity, ease: "easeInOut" }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#C9A84C] rounded-full blur-[120px]"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={prefersReducedMotion ? { opacity: 0.08, scale: 1.1 } : { opacity: 0.08, scale: 1.1, x: [0, -40, 0], y: [0, 30, 0] }}
+            transition={{ duration: prefersReducedMotion ? 1 : 10, repeat: prefersReducedMotion ? 0 : Infinity, ease: "easeInOut", delay: prefersReducedMotion ? 0 : 1 }}
+            className="absolute top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-[#E8C96A] rounded-full blur-[100px]"
           />
         </div>
 
@@ -117,7 +132,7 @@ export const BetaLanding = () => {
         </div>
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
-          <SectionLabel text="Beta Access" />
+          <SectionLabel text="Early Access" />
           
           <AnimatedHeadline 
             text="Africa without the filter." 
@@ -163,8 +178,8 @@ export const BetaLanding = () => {
           aria-hidden="true"
         >
           <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
+            animate={prefersReducedMotion ? { y: 0 } : { y: [0, 8, 0] }}
+            transition={{ repeat: prefersReducedMotion ? 0 : Infinity, duration: 1.8, ease: 'easeInOut' }}
           >
             <ChevronDown size={22} />
           </motion.div>
@@ -176,13 +191,13 @@ export const BetaLanding = () => {
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-4 divide-y-2 divide-x-0 md:divide-y-0 md:divide-x divide-white/5">
             <div className="pt-8 md:pt-0 text-center">
-              {stats ? <StatCounter value={Math.max(stats.total_articles, 40)} label="Stories Published" suffix="+" /> : <div className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
+              {stats ? <StatCounter value={stats.total_articles} label="Stories Published" suffix="+" /> : <div role="status" aria-label="Loading stories count" className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
             </div>
             <div className="pt-8 md:pt-0 text-center">
-              {stats ? <StatCounter value={Math.max(stats.total_countries, 54)} label="Countries Covered" /> : <div className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
+              {stats ? <StatCounter value={stats.total_countries} label="Countries Covered" /> : <div role="status" aria-label="Loading countries count" className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
             </div>
             <div className="pt-8 md:pt-0 text-center">
-              {stats ? <StatCounter value={Math.max(stats.total_views, 8500)} label="Readers This Month" suffix="+" /> : <div className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
+              {stats ? <StatCounter value={stats.total_views} label="Readers This Month" suffix="+" /> : <div role="status" aria-label="Loading readers count" className="animate-pulse h-16 w-32 bg-[#1C1814]/8 rounded mx-auto" />}
             </div>
             <div className="pt-8 md:pt-0 text-center">
               <StatCounter value={54} label="Nations on the Map" />
@@ -193,19 +208,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 3. EDITORIAL OPERATIONS MONITOR */}
-      <section className="py-20 px-6 border-b border-white/5 bg-[#0B0907]">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-10">
-            <SectionLabel text="Editorial Operations" />
-            <h2 className="font-serif text-[2rem] md:text-[2.75rem] leading-tight text-white">Live from the newsroom</h2>
-            <p className="text-white/50 mt-3 text-base max-w-xl mx-auto">Our editorial team works around the clock — researching, fact-checking, and publishing every story on this platform.</p>
-          </div>
-          <AgentStatusPanel />
-        </div>
-      </section>
-
-      {/* 4. STORIES PREVIEW — white cards on parchment */}
+      {/* 3. STORIES PREVIEW — white cards on parchment */}
       <section className="py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center md:text-left mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
@@ -238,8 +241,8 @@ export const BetaLanding = () => {
                             </div>
                             <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase bg-[#C9A84C]/10 px-3 py-1 rounded-full border border-[#C9A84C]/20">{article.sector_name}</span>
                           </div>
-                          <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-[#1C1814] group-hover:text-[#C9A84C] transition-colors">{article.title}</h3>
-                          <p className="text-[#1C1814]/60 text-[0.9375rem] leading-relaxed line-clamp-3">{article.summary}</p>
+                          <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-[#1C1814] group-hover:text-[#C9A84C] transition-colors">{stripMarkdown(article.title)}</h3>
+                          <p className="text-[#1C1814]/60 text-[0.9375rem] leading-relaxed line-clamp-3">{stripMarkdown(article.summary)}</p>
                         </div>
                         <div className="mt-8 pt-6 border-t border-[#1C1814]/8 flex justify-between items-center text-xs font-medium text-[#1C1814]/40">
                           <span>{article.reading_time_minutes} min read</span>
@@ -265,8 +268,8 @@ export const BetaLanding = () => {
                         </div>
                         <span className="text-xs font-semibold tracking-wider text-[#1C1814]/50 uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-[#1C1814]">{article.title}</h3>
-                      <p className="text-[#1C1814]/55 text-[0.9375rem] leading-relaxed line-clamp-3">{article.summary}</p>
+                      <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-[#1C1814]">{stripMarkdown(article.title)}</h3>
+                      <p className="text-[#1C1814]/55 text-[0.9375rem] leading-relaxed line-clamp-3">{stripMarkdown(article.summary)}</p>
                     </div>
                     <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-[#1C1814]/8 flex flex-col items-center justify-center">
                       <div className="absolute inset-0 backdrop-blur-[6px] bg-[#0E0C0A]/60 transition-opacity duration-300" />
@@ -293,7 +296,7 @@ export const BetaLanding = () => {
 
       <GoldDivider />
 
-      {/* 5. UPCOMING EVENTS STRIP */}
+      {/* 4. UPCOMING EVENTS STRIP */}
       {upcomingEvents.length > 0 && (
         <section className="py-24 px-6 border-b border-[#1C1814]/8 bg-[#EDE8DF]">
           <div className="container mx-auto max-w-6xl">
@@ -329,7 +332,7 @@ export const BetaLanding = () => {
         </section>
       )}
 
-      {/* 7. MISSION BLOCK */}
+      {/* 5. MISSION BLOCK */}
       <section className="py-32 px-6 container mx-auto max-w-4xl text-center">
         <CardReveal>
           <span className="text-6xl mb-8 block opacity-80">🌍</span>
@@ -343,12 +346,12 @@ export const BetaLanding = () => {
         </CardReveal>
       </section>
 
-      {/* 8. MEMBERSHIP TIERS */}
+      {/* 6. MEMBERSHIP TIERS */}
       <section className="py-32 bg-[#050810] border-y border-white/5 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl h-[400px] bg-[#C9A84C] opacity-5 blur-[150px] pointer-events-none rounded-full" />
         <div className="container mx-auto px-6 max-w-6xl relative z-10">
           <div className="text-center mb-16">
-            <SectionLabel text="Support the Beta" />
+            <SectionLabel text="Founding Membership" />
             <h2 className="font-serif text-[3rem] md:text-[4.5rem] leading-[1.1] mb-6">Join before launch</h2>
             <p className="text-white/60 text-lg max-w-2xl mx-auto mb-10">Your support right now covers domains, tools, and the time to report and ship. Join the founding cohort.</p>
             {/* Annual billing toggle */}
@@ -378,7 +381,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 9. TRANSPARENCY SECTION */}
+      {/* 7. TRANSPARENCY SECTION */}
       <section className="py-24 px-6 container mx-auto max-w-5xl text-center">
         <h3 className="font-sans font-medium text-[#1C1814]/40 uppercase tracking-widest text-sm mb-12">Where early support goes</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">

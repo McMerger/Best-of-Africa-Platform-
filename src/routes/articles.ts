@@ -99,14 +99,18 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     // Get total count
-    const countResult = await c.env.DB.prepare(
-        `SELECT COUNT(*) as total FROM articles ${whereClause}`
-    ).bind(...params).first<{ total: number }>();
+    let total = 0;
+    let articleResults: ArticleListItem[] = [];
 
-    const total = countResult?.total || 0;
+    try {
+        const countResult = await c.env.DB.prepare(
+            `SELECT COUNT(*) as total FROM articles ${whereClause}`
+        ).bind(...params).first<{ total: number }>();
 
-    // Get articles with country and sector names
-    const articles = await c.env.DB.prepare(`
+        total = countResult?.total || 0;
+
+        // Get articles with country and sector names
+        const articles = await c.env.DB.prepare(`
     SELECT 
       a.id, a.slug, a.title, a.subtitle, a.summary,
       a.country_code, c.name as country_name, c.flag_emoji as country_flag,
@@ -121,8 +125,14 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     LIMIT ? OFFSET ?
   `).bind(...params, limitNum, offset).all<ArticleListItem>();
 
+        articleResults = articles.results || [];
+    } catch (err) {
+        console.error('[articles] list query failed:', err);
+        // Return empty paginated response rather than 500
+    }
+
     const response: PaginatedResponse<ArticleListItem> = {
-        data: articles.results || [],
+        data: articleResults,
         pagination: {
             page: pageNum,
             limit: limitNum,
@@ -597,7 +607,7 @@ router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
             audio_url: audioUrl,
             duration_seconds: durationSeconds,
             message: message,
-            note: c.env.ELEVENLABS_API_KEY ? 'Powered by ElevenLabs' : 'Mock generated'
+            note: c.env.ELEVENLABS_API_KEY ? 'Powered by ElevenLabs' : 'Text-to-speech service not configured'
         });
 
     } catch (err) {
