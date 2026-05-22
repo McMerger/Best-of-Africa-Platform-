@@ -41,7 +41,7 @@ export interface AICallOptions {
 
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
     let provider = 'gemini';
-    let model = 'gemini-2.5-pro';
+    let model = 'gemini-2.5-pro-preview-05-06';
     let apiKey: string | undefined;
     let baseUrl = 'https://api.openai.com/v1';
 
@@ -66,7 +66,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
     // ── Auto-detect provider from env vars when nothing configured in DB ──────
     if (provider === 'workers_ai') {
         if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';            apiKey = env.ANTHROPIC_API_KEY; }
-        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro';               apiKey = env.GOOGLE_AI_API_KEY; }
+        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro-preview-05-06';   apiKey = env.GOOGLE_AI_API_KEY; }
         else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';              apiKey = env.MOONSHOT_API_KEY; baseUrl = 'https://api.moonshot.cn/v1'; }
         else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
         else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter.ai/api/v1'; }
@@ -76,7 +76,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
     if (provider === 'workers_ai') {
         const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
         if (geminiOAuth) {
-            provider = 'gemini'; model = 'gemini-2.5-pro';
+            provider = 'gemini'; model = 'gemini-2.5-pro-preview-05-06';
         } else {
             const moonshotOAuth = await getMoonshotAccessToken(env).catch(() => null);
             if (moonshotOAuth) {
@@ -228,7 +228,7 @@ export async function generateArticle(
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 2000, temperature: 0.7 });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.7 });
     return parseArticleResponse(text);
 }
 
@@ -468,7 +468,7 @@ Structure your response EXACTLY as follows:
 
     TAGS: [comma - separated list of 3 - 5 relevant tags]`;
 
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 2000, temperature: 0.8 });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.8 });
     return parseArticleResponse(text);
 }
 
@@ -673,7 +673,7 @@ Produce your analysis now. Be definitive. No hedging.`;
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
         ],
-        max_tokens: 2500,
+        max_tokens: 4000,
         temperature: 0.4,
     });
     return text || content;
