@@ -5,6 +5,7 @@
 
 import type { Env } from '../types';
 import { getCached, CACHE_TTL } from './cache';
+import { callConfiguredAI } from './ai';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Trend Detection - Track Article Velocity
@@ -114,11 +115,7 @@ export async function analyzeSentiment(
     content: string
 ): Promise<SentimentResult> {
     try {
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are a financial news sentiment analyst. Analyze the sentiment of articles about African markets.
+        const prompt = `System: You are a financial news sentiment analyst. Analyze the sentiment of articles about African markets.
                     
 Respond in JSON format:
 {
@@ -128,17 +125,13 @@ Respond in JSON format:
     "negative_signals": ["signal1", "signal2"]
 }
 
-Focus on investment/business implications. Positive = growth, investment, opportunity. Negative = risk, decline, instability.`
-                },
-                {
-                    role: 'user',
-                    content: `Title: ${title}\n\nContent: ${content.slice(0, 1500)}`
-                }
-            ],
-            max_tokens: 200
-        });
+Focus on investment/business implications. Positive = growth, investment, opportunity. Negative = risk, decline, instability.
 
-        const text = response?.response || '';
+User: Title: ${title}\n\nContent: ${content.slice(0, 1500)}`;
+        
+        const aiResponseRaw = await callConfiguredAI(env, { prompt, max_tokens: 200 });
+
+        const text = aiResponseRaw || '';
 
         // Parse JSON from response
         const jsonMatch = text.match(/\{[\s\S]*\}/);

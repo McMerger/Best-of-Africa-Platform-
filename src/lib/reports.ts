@@ -5,6 +5,7 @@
 
 import type { Env } from '../types';
 import { getKeyEconomicStats } from './economics';
+import { callConfiguredAI } from './ai';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Report Types
@@ -72,20 +73,12 @@ export async function generateCountryBrief(
 
     let aiSummary = '';
     try {
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a senior analyst writing executive country briefs for investors. Be concise and focus on opportunities and risks.',
-                },
-                {
-                    role: 'user',
-                    content: `Write a 3-4 paragraph executive summary for ${c.name} based on recent coverage:\n\n${articleContext}`,
-                },
-            ],
-            max_tokens: 400,
-        });
-        aiSummary = response?.response || '';
+        const prompt = `System: You are a senior analyst writing executive country briefs for investors. Be concise and focus on opportunities and risks.
+
+User: Write a 3-4 paragraph executive summary for ${c.name} based on recent coverage:
+
+${articleContext}`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
     } catch (e) {
         console.error('AI summary failed:', e);
     }
@@ -177,20 +170,11 @@ export async function generateSectorAnalysis(
             `${a.title} (${a.country_name})`
         ).join('\n');
 
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a sector analyst. Provide a concise industry outlook with opportunities and trends.',
-                },
-                {
-                    role: 'user',
-                    content: `Write a sector analysis for "${s.name}" across Africa based on:\n${context}`,
-                },
-            ],
-            max_tokens: 400,
-        });
-        aiAnalysis = response?.response || '';
+        const prompt = `System: You are a sector analyst. Provide a concise industry outlook with opportunities and trends.
+
+User: Write a sector analysis for "${s.name}" across Africa based on:
+${context}`;
+        aiAnalysis = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
     } catch (e) {
         console.error('AI analysis failed:', e);
     }

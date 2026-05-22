@@ -81,7 +81,7 @@ export async function fillContentGaps(env: Env): Promise<void> {
                     generated.title,
                     generated.summary?.slice(0, 160),
                     readingTime,
-                    '@cf/meta/llama-3.1-70b-instruct',
+                    'gemini-2.5-pro',
                     'v1-gap-fill'
                 ).run();
 

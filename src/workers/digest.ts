@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { callConfiguredAI } from '../lib/ai';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Types
@@ -95,21 +96,15 @@ export async function generateDailyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are an executive briefing writer. Synthesize internal articles with global context.'
-                },
-                {
-                    role: 'user',
-                    content: `Global Context: ${globalContext}\n\nInternal Coverage:\n${briefContext}\n\nWrite a 3-4 sentence Executive Summary connecting our stories to the global picture.`
-                }
-            ],
-            max_tokens: 250
-        });
+        const prompt = `System: You are an executive briefing writer. Synthesize internal articles with global context.
 
-        aiSummary = response?.response || '';
+User: Global Context: ${globalContext}
+
+Internal Coverage:
+${briefContext}
+
+Write a 3-4 sentence Executive Summary connecting our stories to the global picture.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 250 })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for digest:', error);
     }
@@ -175,21 +170,15 @@ export async function generateWeeklyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: 'You are a strategic analyst. Write a weekly briefing connecting our coverage to major external events.'
-                },
-                {
-                    role: 'user',
-                    content: `Major External Events: ${globalContext}\n\nOur Sector Coverage:\n${sectorSummaries}\n\nWrite a 5-sentence "Week in Review" analyzing how our coverage reflects or misses these broader trends.`
-                }
-            ],
-            max_tokens: 300
-        });
+        const prompt = `System: You are a strategic analyst. Write a weekly briefing connecting our coverage to major external events.
 
-        aiSummary = response?.response || '';
+User: Major External Events: ${globalContext}
+
+Our Sector Coverage:
+${sectorSummaries}
+
+Write a 5-sentence "Week in Review" analyzing how our coverage reflects or misses these broader trends.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 300 })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for weekly digest:', error);
     }

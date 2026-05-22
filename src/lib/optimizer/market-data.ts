@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, OptimizationMessage } from '../../types';
-import { generateHeadlineVariants, fillNarrativeGap } from '../../lib/ai';
+import { generateHeadlineVariants, fillNarrativeGap, callConfiguredAI } from '../../lib/ai';
 import { findNarrativeGaps, indexArticle } from '../../lib/vectorize';
 import { updateArticleEngagement } from '../../lib/analytics';
 
@@ -50,18 +50,17 @@ export async function populateMarketMetrics(env: Env): Promise<void> {
 
             const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
             if (context) {
-                const aiResponse = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'Extract market metrics. Return JSON: {"size_usd": number, "growth_percent": number, "outlook": "Favorable/Neutral/Challenging"}' },
-                        { role: 'user', content: `Sector: ${sector.name}. Context:\n${context}` }
-                    ],
-                    response_format: { type: 'json_object' }
-                });
+                const prompt = `System: Extract market metrics. Return JSON only: {"size_usd": number, "growth_percent": number, "outlook": "Favorable/Neutral/Challenging"}
 
-                const data = JSON.parse((aiResponse as Record<string, any>).response);
-                if (data.size_usd) marketSize = data.size_usd;
-                if (data.growth_percent) growthRate = data.growth_percent;
-                if (data.outlook) outlook = data.outlook;
+User: Sector: ${sector.name}. Context:\n${context}`;
+                const aiResponseRaw = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.2 });
+                const jsonMatch = (aiResponseRaw || '').match(/\{[^}]+\}/);
+                if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    if (data.size_usd) marketSize = data.size_usd;
+                    if (data.growth_percent) growthRate = data.growth_percent;
+                    if (data.outlook) outlook = data.outlook;
+                }
             }
         } catch (e) {
             console.error('AI Market Research Failed', e);
@@ -118,20 +117,12 @@ export async function populateNarrativeStrategies(env: Env): Promise<void> {
             let theme = `${country.name} Opportunity`;
 
             try {
-                const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        {
-                            role: 'system', content: `You are a StratComms expert for ${country.name}. 
-                          Target Audience: ${audience}.
-                          Recent Events: \n${contextText}
-                          Generate a "Narrative Theme" (short title) and 2 "Key Messages" (strategic talking points).
-                          Format JSON: {"theme": "...", "messages": ["...", "..."]}`
-                        },
-                        { role: 'user', content: "Generate strategy." }
-                    ]
-                });
+                const prompt = `System: You are a StratComms expert for ${country.name}. Target Audience: ${audience}. Recent Events:\n${contextText}\nGenerate a "Narrative Theme" (short title) and 2 "Key Messages". Return JSON only: {"theme": "...", "messages": ["...", "..."]}
 
-                const json = JSON.parse((aiRes as Record<string, any>).response.match(/\{.*\}/s)?.[0] || '{}');
+User: Generate strategy.`;
+                const aiResRaw = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.5 });
+                const jsonMatch = (aiResRaw || '').match(/\{[\s\S]*\}/);
+                const json = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
                 if (json.theme) theme = json.theme;
                 if (json.messages) keyMessages = json.messages;
 
@@ -180,13 +171,11 @@ export async function generateDynamicSectorSummaries(env: Env): Promise<void> {
 
         if (contextText) {
             try {
-                const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                    messages: [
-                        { role: 'system', content: 'Generate a 3-5 word "Current Trend Summary" for this sector based on headlines. Example: "Lithium Export Bans effective". No quotes.' },
-                        { role: 'user', content: `Sector: ${sector}\nHeadlines:\n${contextText}` }
-                    ]
-                });
-                summary = (aiRes as Record<string, any>).response.trim().replace(/^"|"$/g, '');
+                const prompt = `System: Generate a 3-5 word "Current Trend Summary" for this sector based on headlines. Example: "Lithium Export Bans effective". No quotes.
+
+User: Sector: ${sector}\nHeadlines:\n${contextText}`;
+                const aiResRaw = await callConfiguredAI(env, { prompt, max_tokens: 30, temperature: 0.5 });
+                summary = (aiResRaw || '').trim().replace(/^"|"$/g, '') || summary;
             } catch (e) {
                 console.error(`AI Sector Summary failed for ${sector}`, e);
             }
@@ -229,18 +218,12 @@ export async function generateHomePageDynamicContent(env: Env): Promise<void> {
 
     if (trendingContext) {
         try {
-            const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a Chief Editor. Write a "Hero Headline" (3-5 words) and "Subhead" (1 sentence) for the home page based on these trending stories. Tone: Professional, Epic, Urgent. Return JSON: {"headline": "...", "subhead": "...", "cta": "View [Topic] Report"}'
-                    },
-                    { role: 'user', content: `Trending Stories:\n${trendingContext}` }
-                ],
-                response_format: { type: 'json_object' }
-            });
+            const prompt = `System: You are a Chief Editor. Write a "Hero Headline" (3-5 words) and "Subhead" (1 sentence) for the home page based on trending stories. Tone: Professional, Epic, Urgent. Return JSON only: {"headline": "...", "subhead": "...", "cta": "View [Topic] Report"}
 
-            const json = JSON.parse((aiRes as Record<string, any>).response);
+User: Trending Stories:\n${trendingContext}`;
+            const aiResRaw = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.5 });
+            const jsonMatch = (aiResRaw || '').match(/\{[\s\S]*\}/);
+            const json = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
             if (json.headline) headline = json.headline;
             if (json.subhead) subhead = json.subhead;
             if (json.cta) cta = json.cta;
@@ -365,28 +348,12 @@ export async function generateMarketingContent(env: Env): Promise<void> {
 
     // Generate Home Page Mission Section
     try {
-        const homeRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `You are the CMO for "Best of Africa", a premium pan-African intelligence platform. 
-Generate marketing copy for the Mission Support section of our homepage.
-Platform stats: ${stats.articles} articles, ${stats.countries} countries.
-Trending topics: ${trendingContext}
-Output JSON: {
-  "headline": "3-5 words, impactful",
-  "body": "2 sentences, professional but compelling",
-  "cta": "3-4 words action button text",
-  "testimonial": "One sentence client quote",
-  "testimonial_author": "Title only, no name"
-}`
-                },
-                { role: 'user', content: 'Generate the homepage mission content.' }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const homePrompt = `System: You are the CMO for "Best of Africa", a premium pan-African intelligence platform. Generate marketing copy for the Mission Support section of our homepage. Platform stats: ${stats.articles} articles, ${stats.countries} countries. Trending topics: ${trendingContext}. Return JSON only: {"headline": "3-5 words, impactful", "body": "2 sentences, professional but compelling", "cta": "3-4 words action button text", "testimonial": "One sentence client quote", "testimonial_author": "Title only, no name"}
 
-        const home = JSON.parse((homeRes as Record<string, any>).response);
+User: Generate the homepage mission content.`;
+        const homeRaw = await callConfiguredAI(env, { prompt: homePrompt, max_tokens: 250, temperature: 0.7 });
+        const homeJson = (homeRaw || '').match(/\{[\s\S]*\}/);
+        const home = homeJson ? JSON.parse(homeJson[0]) : {};
 
         if (home.headline) await saveConfig(env, 'home_mission_headline', home.headline);
         if (home.body) await saveConfig(env, 'home_mission_body', home.body);
@@ -401,32 +368,12 @@ Output JSON: {
 
     // Generate Membership Page Content
     try {
-        const membershipRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `Generate membership page marketing copy for a premium intelligence platform.
-Target: C-suite executives, investors, government officials.
-Tone: Exclusive, authoritative, premium.
-Output JSON: {
-  "headline": "4-6 words with gravitas",
-  "subhead": "One compelling sentence",
-  "tier_desc": "One sentence about the intelligence suite",
-  "cta": "3-4 words action text",
-  "features": [
-    {"title": "Feature name", "desc": "Short description"},
-    {"title": "Feature name", "desc": "Short description"},
-    {"title": "Feature name", "desc": "Short description"},
-    {"title": "Feature name", "desc": "Short description"}
-  ]
-}`
-                },
-                { role: 'user', content: 'Generate membership page content.' }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const memPrompt = `System: Generate membership page marketing copy for a premium intelligence platform. Target: C-suite executives, investors, government officials. Tone: Exclusive, authoritative, premium. Return JSON only: {"headline": "4-6 words with gravitas", "subhead": "One compelling sentence", "tier_desc": "One sentence about the intelligence suite", "cta": "3-4 words action text", "features": [{"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}]}
 
-        const mem = JSON.parse((membershipRes as Record<string, any>).response);
+User: Generate membership page content.`;
+        const memRaw = await callConfiguredAI(env, { prompt: memPrompt, max_tokens: 300, temperature: 0.7 });
+        const memJson = (memRaw || '').match(/\{[\s\S]*\}/);
+        const mem = memJson ? JSON.parse(memJson[0]) : {};
 
         if (mem.headline) await saveConfig(env, 'membership_headline', mem.headline);
         if (mem.subhead) await saveConfig(env, 'membership_subhead', mem.subhead);
@@ -447,29 +394,12 @@ Output JSON: {
 
     // Generate Travel/Services Page Content
     try {
-        const travelRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `Generate corporate travel/logistics page content for executives entering African markets.
-Services: Executive mobility, security intelligence, local fixers.
-Tone: Professional, capable, mission-critical.
-Output JSON: {
-  "headline": "3-5 words",
-  "subhead": "One sentence about mission support",
-  "services": [
-    {"title": "Service name", "desc": "1-2 sentences describing the service"},
-    {"title": "Service name", "desc": "1-2 sentences describing the service"},
-    {"title": "Service name", "desc": "1-2 sentences describing the service"}
-  ]
-}`
-                },
-                { role: 'user', content: 'Generate travel services page content.' }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const travelPrompt = `System: Generate corporate travel/logistics page content for executives entering African markets. Services: Executive mobility, security intelligence, local fixers. Tone: Professional, capable, mission-critical. Return JSON only: {"headline": "3-5 words", "subhead": "One sentence about mission support", "services": [{"title": "Service name", "desc": "1-2 sentences"}, {"title": "Service name", "desc": "1-2 sentences"}, {"title": "Service name", "desc": "1-2 sentences"}]}
 
-        const travel = JSON.parse((travelRes as Record<string, any>).response);
+User: Generate travel services page content.`;
+        const travelRaw = await callConfiguredAI(env, { prompt: travelPrompt, max_tokens: 300, temperature: 0.7 });
+        const travelJson = (travelRaw || '').match(/\{[\s\S]*\}/);
+        const travel = travelJson ? JSON.parse(travelJson[0]) : {};
 
         if (travel.headline) await saveConfig(env, 'travel_hero_headline', travel.headline);
         if (travel.subhead) await saveConfig(env, 'travel_hero_subhead', travel.subhead);
@@ -488,24 +418,12 @@ Output JSON: {
 
     // Generate Events Page Content
     try {
-        const eventsRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `Generate marketing copy for the "Events & Summits" page of a premium African intelligence platform.
-Target: High-level delegates, investors, policymakers.
-Tone: Grand, consequential, exclusive.
-Output JSON: {
-  "headline": "3-5 words, powerful",
-  "subhead": "One sentence about the value of convened power."
-}`
-                },
-                { role: 'user', content: 'Generate events page content.' }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const eventsPrompt = `System: Generate marketing copy for the "Events & Summits" page of a premium African intelligence platform. Target: High-level delegates, investors, policymakers. Tone: Grand, consequential, exclusive. Return JSON only: {"headline": "3-5 words, powerful", "subhead": "One sentence about the value of convened power."}
 
-        const events = JSON.parse((eventsRes as Record<string, any>).response);
+User: Generate events page content.`;
+        const eventsRaw = await callConfiguredAI(env, { prompt: eventsPrompt, max_tokens: 150, temperature: 0.7 });
+        const eventsJson = (eventsRaw || '').match(/\{[\s\S]*\}/);
+        const events = eventsJson ? JSON.parse(eventsJson[0]) : {};
 
         if (events.headline) await saveConfig(env, 'events_hero_headline', events.headline);
         if (events.subhead) await saveConfig(env, 'events_hero_subhead', events.subhead);
@@ -517,24 +435,12 @@ Output JSON: {
 
     // Generate Booking/Concierge Page Content
     try {
-        const bookingRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                {
-                    role: 'system',
-                    content: `Generate marketing copy for the "Concierge Services" booking page.
-Target: Executives needing market entry support.
-Tone: Helpful, efficient, elite.
-Output JSON: {
-  "headline": "2-4 words, clear service name",
-  "subhead": "One sentence about the outcome/benefit."
-}`
-                },
-                { role: 'user', content: 'Generate booking page content.' }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const bookingPrompt = `System: Generate marketing copy for the "Concierge Services" booking page. Target: Executives needing market entry support. Tone: Helpful, efficient, elite. Return JSON only: {"headline": "2-4 words, clear service name", "subhead": "One sentence about the outcome/benefit."}
 
-        const booking = JSON.parse((bookingRes as Record<string, any>).response);
+User: Generate booking page content.`;
+        const bookingRaw = await callConfiguredAI(env, { prompt: bookingPrompt, max_tokens: 100, temperature: 0.7 });
+        const bookingJson = (bookingRaw || '').match(/\{[\s\S]*\}/);
+        const booking = bookingJson ? JSON.parse(bookingJson[0]) : {};
 
         if (booking.headline) await saveConfig(env, 'booking_hero_headline', booking.headline);
         if (booking.subhead) await saveConfig(env, 'booking_hero_subhead', booking.subhead);
@@ -569,23 +475,11 @@ export async function generateEventDescriptions(env: Env): Promise<void> {
                 SELECT name FROM countries WHERE code = ?
             `).bind(event.country_code).first<{ name: string }>();
 
-            const aiRes = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    {
-                        role: 'system',
-                        content: `Generate a professional 2-3 sentence description for this African business event.
-Tone: Authoritative, exclusive, opportunity-focused.
-Event: ${event.title}
-Type: ${event.event_type}
-Location: ${event.location}, ${country?.name || 'Africa'}
-Date: ${event.date}
-Output only the description text, no JSON.`
-                    },
-                    { role: 'user', content: 'Generate the event description.' }
-                ]
-            });
+            const prompt = `System: Generate a professional 2-3 sentence description for this African business event. Tone: Authoritative, exclusive, opportunity-focused. Event: ${event.title}. Type: ${event.event_type}. Location: ${event.location}, ${country?.name || 'Africa'}. Date: ${event.date}. Output only the description text, no JSON.
 
-            const description = (aiRes as Record<string, any>).response?.trim();
+User: Generate the event description.`;
+            const aiResRaw = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.7 });
+            const description = (aiResRaw || '').trim();
 
             if (description && description.length > 20) {
                 await env.DB.prepare(`

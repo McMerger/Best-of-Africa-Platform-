@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { callConfiguredAI } from './ai';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Alert Types
@@ -163,16 +164,9 @@ export async function onArticlePublished(
     // Fallback: Generate if missing (e.g. old article)
     if (!pushMessage || pushMessage === article.title) {
         try {
-            const response = await (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a Mobile Notification Editor. Rewrite this headline into a <120 char push notification. Urgent, high-signal, no clickbait.'
-                    },
-                    { role: 'user', content: `Headline: ${article.title}\nSummary: ${article.summary || ''}` }
-                ]
-            });
-            const generated = response?.response?.trim();
+            const prompt = `System: You are a Mobile Notification Editor. Rewrite this headline into a <120 char push notification. Urgent, high-signal, no clickbait.\n\nUser: Headline: ${article.title}\nSummary: ${article.summary || ''}`;
+            const aiResponseRaw = await callConfiguredAI(env, { prompt });
+            const generated = (aiResponseRaw || "").trim();
             if (generated && generated.length < 140) {
                 pushMessage = generated.replace(/^"/, '').replace(/"$/, '');
             }

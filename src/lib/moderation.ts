@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { callConfiguredAI } from './ai';
 
 export interface ModerationResult {
     status: 'approved' | 'flagged' | 'needs_review';
@@ -45,17 +46,11 @@ export async function checkContentIntegrity(
     `;
 
     try {
-        const response = await (env.AI as any).run('@cf/meta/llama-3.1-8b-instruct', {
-            messages: [
-                { role: 'system', content: 'You are a rigorous Editorial Auditor. Your goal is to catch hallucinations and ensure platform credibility.' },
-                { role: 'user', content: moderationPrompt }
-            ],
-            response_format: { type: 'json_object' }
-        });
+        const prompt = `System: You are a rigorous Editorial Auditor. Your goal is to catch hallucinations and ensure platform credibility.\n\nUser: ${moderationPrompt}`;
+        const aiResponseRaw = await callConfiguredAI(env, { prompt, max_tokens: 1000, temperature: 0.2 });
 
-        const result = typeof response.response === 'string'
-            ? JSON.parse(response.response)
-            : response.response;
+        const jsonMatch = aiResponseRaw.match(/\{.*\}/s);
+        const result = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(aiResponseRaw);
 
         // Clean up status based on score threshold if necessary
         if (result.score < 0.7 && result.status === 'approved') {

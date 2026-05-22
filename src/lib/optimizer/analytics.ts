@@ -160,7 +160,7 @@ export async function logRefinement(
         afterValue,
         triggerReason,
         triggerReason,
-        '@cf/meta/llama-3.1-8b-instruct' as any,
+        'gemini-2.5-pro' as any,
         'v1'
     ).run();
 
