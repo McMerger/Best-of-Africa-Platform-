@@ -201,6 +201,20 @@ export const BetaArticle = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Dedicated related-articles query: same country or sector, excluding current
+  // Must be called unconditionally before any early returns (Rules of Hooks)
+  const articleCountryCode = data?.article?.country_code || '';
+  const articleSectorId = data?.article?.sector_id || '';
+  const { data: relatedData } = useQuery({
+    queryKey: ['related-articles', articleCountryCode, articleSectorId],
+    queryFn: () => api.getArticles({
+      country: articleCountryCode,
+      limit: '6',
+    }),
+    enabled: !!articleCountryCode,
+    staleTime: 10 * 60 * 1000,
+  });
+
   if (isLoading) return <ArticleSkeleton />;
 
   // Show a proper error page instead of silently redirecting
@@ -242,16 +256,6 @@ export const BetaArticle = () => {
     .filter((a: ArticleListItem) => a.slug !== slug)
     .slice(0, 3);
 
-  // Dedicated related-articles query: same country or sector, excluding current
-  const { data: relatedData } = useQuery({
-    queryKey: ['related-articles', article.country_code, article.sector_id],
-    queryFn: () => api.getArticles({
-      country: article.country_code || '',
-      limit: '6',
-    }),
-    enabled: !!article.country_code,
-    staleTime: 10 * 60 * 1000,
-  });
 
   const smartRelated: ArticleListItem[] = (relatedData?.data || [])
     .filter((a: ArticleListItem) => a.slug !== slug)
