@@ -100,7 +100,7 @@ ENVIRONMENT = "production"
 API_VERSION = "v1"
 # Comma-separated extra CORS origins beyond bestofafrica.com (e.g. staging domain).
 # For local frontend dev add "http://localhost:5173" to .dev.vars instead.
-ADDITIONAL_ORIGINS = ""
+ADDITIONAL_ORIGINS = "https://best-of-africa.pages.dev"
 
 # ── Secrets — set via wrangler CLI before deploying ───────────────────────────
 # wrangler secret put JWT_SECRET       # openssl rand -hex 32
