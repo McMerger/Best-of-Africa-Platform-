@@ -55,8 +55,8 @@ export const api = {
         return request<PaginatedResponse<ArticleListItem>>(`/articles?${searchParams}`);
     },
     getArticle: (slug: string) => request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(`/articles/${slug}`),
-    getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured'),
-    getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest'),
+    getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured?limit=20'),
+    getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest?limit=20'),
     getEvents: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
         return request<{ success: boolean; data: CalendarEvent[] }>(`/events?${searchParams}`);
