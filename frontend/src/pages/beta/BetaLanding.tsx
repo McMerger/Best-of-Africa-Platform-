@@ -187,30 +187,15 @@ export const BetaLanding = () => {
           <div className="bg-white rounded-2xl p-8 border border-primary/10 shadow-sm flex flex-col items-center">
             <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-primary/40 mb-6">Launch Funding Progress</h3>
             
-            <div className="w-full max-w-md mb-4">
-              <div className="flex justify-between text-sm font-medium text-primary mb-2">
-                <span>$304 raised</span>
-                <span>$800 goal</span>
-              </div>
-              <div className="w-full bg-primary/5 rounded-full h-3 overflow-hidden border border-primary/10">
+            <div className="w-full max-w-md mb-4 text-primary font-serif">
+              <p className="text-lg">Page Status: Active — <strong className="text-accent">38% of $800 goal funded</strong>, <strong>62 coffees received</strong></p>
+              <div className="w-full bg-primary/5 rounded-full h-3 overflow-hidden border border-primary/10 mt-4">
                 <div 
                   className="bg-accent h-full rounded-full transition-all duration-1000 ease-out relative"
                   style={{ width: '38%' }}
                 >
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6 mt-4 text-primary/80 font-serif">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">☕</span>
-                <span><strong className="text-primary text-xl">62</strong> coffees received</span>
-              </div>
-              <div className="w-px h-6 bg-primary/10" />
-              <div className="flex items-center gap-2">
-                <span className="text-accent text-xl font-bold">38%</span>
-                <span>funded</span>
               </div>
             </div>
             
