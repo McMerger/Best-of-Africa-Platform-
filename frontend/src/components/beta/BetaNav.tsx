@@ -7,11 +7,11 @@ import { GoldButton } from './GoldButton';
 import { KO_FI_URL } from '../../constants/beta';
 
 const links = [
-  { name: 'Stories', path: '/stories' },
-  { name: 'Countries', path: '/countries' },
-  { name: 'Market Intel', path: '/intel' },
   { name: 'About', path: '/about' },
-  { name: 'Member Access', path: '/member-access' },
+  { name: 'Membership', path: '/membership' },
+  { name: 'Gallery', path: '/gallery' },
+  { name: 'Posts', path: '/posts' },
+  { name: 'Supporter Feed', path: '/supporter-feed' },
 ];
 
 export const BetaNav = () => {
@@ -46,15 +46,15 @@ export const BetaNav = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-[#F5F0E8]/85 backdrop-blur-xl border-b border-[#1C1814]/10 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
-            : isDarkHero ? 'bg-transparent py-6 border-b border-white/5' : 'bg-[#F5F0E8]/70 backdrop-blur-xl border-b border-[#1C1814]/10 py-3 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]'
+            ? 'bg-background/85 backdrop-blur-xl border-b border-primary/10 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
+            : isDarkHero ? 'bg-primary py-6 border-b border-white/5' : 'bg-background/70 backdrop-blur-xl border-b border-primary/10 py-3 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]'
         }`}
       >
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           
           <Link to="/" className="flex-shrink-0 flex items-center gap-2.5 group">
-            <span className={`font-serif font-bold text-xl transition-colors ${(scrolled || !isDarkHero) ? 'text-[#1C1814]' : 'text-white'} group-hover:opacity-90`}>
-              Best of <span className="text-[#C9A84C]">Africa</span>
+            <span className={`font-serif font-bold text-xl transition-colors ${(scrolled || !isDarkHero) ? 'text-primary' : 'text-white'} group-hover:opacity-90`}>
+              BOA-<span className="text-accent">Story</span>
             </span>
           </Link>
 
@@ -71,7 +71,7 @@ export const BetaNav = () => {
                         to={link.path}
                         className={`font-sans font-medium text-[0.9375rem] transition-colors duration-150 ${
                           (scrolled || !isDarkHero)
-                            ? isActive ? 'text-[#1C1814]' : 'text-[#1C1814]/60 hover:text-[#1C1814]'
+                            ? isActive ? 'text-primary' : 'text-primary/60 hover:text-primary'
                             : isActive ? 'text-white' : 'text-white/70 hover:text-white'
                         }`}
                       >
@@ -87,11 +87,11 @@ export const BetaNav = () => {
           {/* Right side CTA / Mobile Toggle */}
           <div className="flex items-center gap-4">
             <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="hidden md:block">
-              <GoldButton variant="primary" size="small">Join Now</GoldButton>
+              <GoldButton variant="primary" size="small">Support on Ko-fi</GoldButton>
             </a>
             
             <button 
-              className={`md:hidden transition-colors ${(scrolled || !isDarkHero) ? 'text-[#1C1814]/80 hover:text-[#1C1814]' : 'text-white/80 hover:text-white'}`}
+              className={`md:hidden transition-colors ${(scrolled || !isDarkHero) ? 'text-primary/80 hover:text-primary' : 'text-white/80 hover:text-white'}`}
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -109,10 +109,10 @@ export const BetaNav = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-[#F5F0E8] flex flex-col px-6 pt-16 pb-8 border-b border-[#1C1814]/10 overflow-y-auto"
+            className="fixed inset-0 z-[60] bg-background flex flex-col px-6 pt-16 pb-8 border-b border-primary/10 overflow-y-auto"
           >
             <button
-              className="absolute top-4 right-4 text-[#1C1814]/80 hover:text-[#1C1814] p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A84C]/60 rounded-lg"
+              className="absolute top-4 right-4 text-primary/80 hover:text-primary p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-lg"
               onClick={() => setMobileMenuOpen(false)}
               aria-label="Close menu"
             >
@@ -124,15 +124,15 @@ export const BetaNav = () => {
                   key={link.path}
                   to={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-3xl font-serif text-[#1C1814]/80 hover:text-[#1C1814] transition-colors"
+                  className="text-3xl font-serif text-primary/80 hover:text-primary transition-colors"
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="pt-10 mt-6 border-t border-[#1C1814]/10">
-                <Link to="/membership" onClick={() => setMobileMenuOpen(false)} className="block w-full">
-                  <GoldButton variant="primary" className="w-full">Become a Founding Member</GoldButton>
-                </Link>
+              <div className="pt-10 mt-6 border-t border-primary/10">
+                <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="block w-full">
+                  <GoldButton variant="primary" className="w-full">Support on Ko-fi</GoldButton>
+                </a>
               </div>
             </nav>
           </motion.div>

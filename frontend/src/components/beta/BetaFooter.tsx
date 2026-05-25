@@ -6,27 +6,27 @@ import { KO_FI_URL } from '../../constants/beta';
  * BetaLanding uses its own full footer; this is for the secondary pages.
  */
 export const BetaFooter = () => (
-  <footer className="bg-[#1C1814] border-t border-white/5 py-10 px-6 mt-16">
+  <footer className="bg-primary border-t border-white/5 py-10 px-6 mt-16 text-primary-foreground">
     <div className="max-w-4xl mx-auto flex flex-col items-center gap-5 text-center">
       <Link to="/" className="font-serif text-lg font-bold text-white">
-        Best of <span className="text-[#C9A84C]">Africa</span>
+        BOA-<span className="text-accent">Story</span>
       </Link>
       <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/40">
-        <Link to="/stories"       className="hover:text-white transition-colors">Stories</Link>
-        <Link to="/countries"     className="hover:text-white transition-colors">Countries</Link>
-        <Link to="/intel"         className="hover:text-white transition-colors">Market Intel</Link>
         <Link to="/about"         className="hover:text-white transition-colors">About</Link>
         <Link to="/membership"    className="hover:text-white transition-colors">Membership</Link>
+        <Link to="/gallery"       className="hover:text-white transition-colors">Gallery</Link>
+        <Link to="/posts"         className="hover:text-white transition-colors">Posts</Link>
+        <Link to="/supporter-feed" className="hover:text-white transition-colors">Supporter Feed</Link>
         <Link to="/newsletter"    className="hover:text-white transition-colors">Newsletter</Link>
-        <Link to="/member-access" className="hover:text-[#C9A84C] transition-colors">Member Access</Link>
+        <Link to="/member-access" className="hover:text-accent transition-colors">Member Access</Link>
         <a
           href={KO_FI_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-[#C9A84C] transition-colors"
+          className="hover:text-accent transition-colors"
         >Ko-fi ↗</a>
       </nav>
-      <p className="text-xs text-white/30">© {new Date().getFullYear()} Best of Africa. All rights reserved.</p>
+      <p className="text-xs text-white/30">© {new Date().getFullYear()} BOA-Story. All rights reserved.</p>
     </div>
   </footer>
 );
