@@ -8,8 +8,8 @@ export const SectionLabel = ({ text }: { text: string }) => {
   if (prefersReducedMotion) {
     return (
       <div className="flex items-center gap-4 mb-6">
-        <div className="w-8 h-[2px] bg-[#C9A84C]" />
-        <span className="text-[#C9A84C] font-sans font-semibold text-[0.6875rem] tracking-[0.16em] uppercase">{text}</span>
+        <div className="w-8 h-[2px] bg-accent" />
+        <span className="text-accent font-sans font-semibold text-[0.6875rem] tracking-[0.16em] uppercase">{text}</span>
       </div>
     );
   }
@@ -22,8 +22,8 @@ export const SectionLabel = ({ text }: { text: string }) => {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="flex items-center gap-4 mb-6"
     >
-      <div className="w-8 h-[2px] bg-[#C9A84C]" />
-      <span className="text-[#C9A84C] font-sans font-semibold text-[0.6875rem] tracking-[0.16em] uppercase">
+      <div className="w-8 h-[2px] bg-accent" />
+      <span className="text-accent font-sans font-semibold text-[0.6875rem] tracking-[0.16em] uppercase">
         {text}
       </span>
     </motion.div>

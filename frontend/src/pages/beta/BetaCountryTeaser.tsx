@@ -48,19 +48,19 @@ const CountryCard = ({
     >
       <Link
         to={`/countries/${country.code.toLowerCase()}`}
-        className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col text-left transition-colors duration-300 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
+        className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col text-left transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-[#C9A84C]/70 bg-[#C9A84C]/10 px-2 py-1 rounded-full border border-[#C9A84C]/15">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-accent/70 bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
             {country.region}
           </span>
         </div>
-        <h3 className="font-serif text-[17px] font-semibold text-[#1C1814] group-hover:text-[#C9A84C] transition-colors leading-tight mb-1">
+        <h3 className="font-serif text-[17px] font-semibold text-primary group-hover:text-accent transition-colors leading-tight mb-1">
           {country.name}
         </h3>
         {tag && (
-          <p className="text-[11px] text-[#1C1814]/40 font-medium leading-tight line-clamp-1">{tag}</p>
+          <p className="text-[11px] text-primary/40 font-medium leading-tight line-clamp-1">{tag}</p>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
       </Link>
@@ -69,13 +69,13 @@ const CountryCard = ({
 };
 
 const CountryCardSkeleton = () => (
-  <div className="bg-white rounded-xl border border-[#1C1814]/8 p-5 animate-pulse">
+  <div className="bg-white rounded-xl border border-primary/8 p-5 animate-pulse">
     <div className="flex items-center justify-between mb-3">
       <div className="w-8 h-8 bg-white/10 rounded-full" />
       <div className="w-16 h-4 bg-white/10 rounded-full" />
     </div>
     <div className="h-4 bg-white/10 rounded w-2/3 mb-2" />
-    <div className="h-3 bg-[#1C1814]/5 rounded w-1/2" />
+    <div className="h-3 bg-primary/5 rounded w-1/2" />
   </div>
 );
 
@@ -127,40 +127,40 @@ export const BetaCountryTeaser = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] pb-32">
+    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
       <BetaNav />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
 
         {/* Header */}
         <header className="mb-14 text-center">
-          <div className="inline-flex items-center gap-2 bg-[#C9A84C]/10 border border-[#C9A84C]/25 text-[#C9A84C] text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
             54 African Nations
           </div>
           <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
             One Continent. Every Story.
           </h1>
-          <p className="text-lg text-[#1C1814]/60 max-w-2xl mx-auto leading-relaxed">
-            From the Atlantic to the Indian Ocean — deep-dive intelligence for every African nation, coming to Founding Members.
+          <p className="text-lg text-primary/60 max-w-2xl mx-auto leading-relaxed">
+            From the Atlantic to the Indian Ocean — narrative deep-dives for every African nation, coming to Founding Members.
           </p>
         </header>
 
         {/* Search */}
         <div className="relative max-w-md mx-auto mb-10">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/30 pointer-events-none" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
           <input
             type="text"
             placeholder="Search countries or sectors…"
             aria-label="Search countries or sectors"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white border border-[#1C1814]/10 rounded-xl pl-10 pr-4 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all"
+            className="w-full bg-white border border-primary/10 rounded-xl pl-10 pr-4 py-3 text-sm text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1C1814]/30 hover:text-[#1C1814]/70 transition-colors p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary/70 transition-colors p-1"
               aria-label="Clear search"
             >
               {/* m9 FIX: use lucide X icon instead of literal × string */}
@@ -178,12 +178,12 @@ export const BetaCountryTeaser = () => {
                 onClick={() => setActiveRegion(region)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
-                    ? 'bg-[#C9A84C] text-[#0E0C0A] shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
-                    : 'bg-[#1C1814]/5 text-[#1C1814]/60 hover:bg-white/10 hover:text-[#1C1814] border border-[#1C1814]/8'
+                    ? 'bg-accent text-card shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
+                    : 'bg-primary/5 text-primary/60 hover:bg-white/10 hover:text-primary border border-primary/8'
                 }`}
               >
                 {region}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-[#0E0C0A]/70' : 'text-[#1C1814]/30'}`}>
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-card/70' : 'text-primary/30'}`}>
                   {regionCounts[region]}
                 </span>
               </button>
@@ -193,7 +193,7 @@ export const BetaCountryTeaser = () => {
 
         {/* Search result count */}
         {search.length >= 2 && (
-          <p className="text-center text-[#1C1814]/40 text-sm mb-8">
+          <p className="text-center text-primary/40 text-sm mb-8">
             {filtered.length} {filtered.length === 1 ? 'country' : 'countries'} matching "{search}"
           </p>
         )}
@@ -217,7 +217,7 @@ export const BetaCountryTeaser = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="col-span-full text-center py-20 text-[#1C1814]/40"
+                    className="col-span-full text-center py-20 text-primary/40"
                   >
                     <Globe size={40} className="mx-auto mb-4 opacity-30" />
                     <p className="text-lg">No countries found for "{search}"</p>
@@ -229,12 +229,12 @@ export const BetaCountryTeaser = () => {
 
         {/* Bottom CTA */}
         <div className="text-center">
-          <p className="text-[#1C1814]/40 text-sm mb-5">Full country intelligence hubs unlock for Founding Members</p>
+          <p className="text-primary/40 text-sm mb-5">Full country story hubs unlock for Founding Members</p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+            className="inline-block bg-accent text-card font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
             Unlock All 54 Country Hubs — Join as a Founding Member
           </a>

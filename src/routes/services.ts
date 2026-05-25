@@ -59,7 +59,7 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
 
         if (context) {
-            const prompt = `System: You are a Concierge Director. Write a 1-sentence "Preliminary Note" connecting the user request to recent platform news.\nUser: Request: ${keywords}. News: ${context}`;
+            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Request: ${keywords}. News: ${context}`;
             const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.6 });
             preliminaryNote = aiResponse?.trim();
         }
@@ -231,7 +231,7 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
 
                         if (!context) return "Connecting event to regional trends...";
 
-                        const prompt = `System: Explain why this event matters given current news. 1-2 sentences.\nUser: Event: ${data.title}. News: ${context}`;
+                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${data.title}. News: ${context}`;
                         const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.6 });
                         return aiResponse?.trim();
                     } catch (e) { return null; }

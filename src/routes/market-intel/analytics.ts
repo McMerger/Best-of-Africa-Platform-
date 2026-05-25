@@ -238,7 +238,7 @@ router.get('/sentiment-divergence', async (c) => {
                     const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                     const context = relevant.matches.map((m: any) => (m.metadata as Record<string, any>).title).join('\n');
 
-                    const prompt = `System: You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.\nUser: Country: ${c.name}.Recent News: \n${context}`;
+                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Country: ${c.name}.Recent News: \n${context}`;
                     const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.2 });
                     const score = parseInt((aiResponse || '').replace(/[^0-9]/g, ''));
                     return isNaN(score) ? 50 : score;
@@ -371,7 +371,7 @@ router.get('/sector/:id/analytics', async (c) => {
                 const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
                 const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
-                const prompt = `System: Analyze supply chain health. Return JSON: {"upstream":"Stable/Strain/Blockage", "midstream":"...", "downstream":"..."}\nUser: Sector Context: \n${context}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Sector Context: \n${context}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.2 });
 
                 const raw = aiResponse || '';

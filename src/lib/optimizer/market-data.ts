@@ -264,7 +264,7 @@ export async function generateSystemicDynamicContent(env: Env): Promise<void> {
         'stats_total_articles': String(articleCount?.count || 0),
         'stats_countries_covered': String(countryCount?.count || 0),
         'stats_sectors_active': String(sectorCount?.count || 0),
-        'footer_tagline': 'The Intelligence Platform for African Markets'
+        'footer_tagline': 'The storytelling platform for African Markets'
     };
 
     for (const [key, value] of Object.entries(updates)) {
@@ -348,7 +348,7 @@ export async function generateMarketingContent(env: Env): Promise<void> {
 
     // Generate Home Page Mission Section
     try {
-        const homePrompt = `System: You are the CMO for "Best of Africa", a premium pan-African intelligence platform. Generate marketing copy for the Mission Support section of our homepage. Platform stats: ${stats.articles} articles, ${stats.countries} countries. Trending topics: ${trendingContext}. Return JSON only: {"headline": "3-5 words, impactful", "body": "2 sentences, professional but compelling", "cta": "3-4 words action button text", "testimonial": "One sentence client quote", "testimonial_author": "Title only, no name"}
+        const homePrompt = `System: You are the CMO for "BOA-Story", a independent narrative project. Generate marketing copy for the Mission Support section of our homepage. Platform stats: ${stats.articles} articles, ${stats.countries} countries. Trending topics: ${trendingContext}. Return JSON only: {"headline": "3-5 words, impactful", "body": "2 sentences, professional but compelling", "cta": "3-4 words action button text", "testimonial": "One sentence client quote", "testimonial_author": "Title only, no name"}
 
 User: Generate the homepage mission content.`;
         const homeRaw = await callConfiguredAI(env, { prompt: homePrompt, max_tokens: 250, temperature: 0.7 });
@@ -368,7 +368,7 @@ User: Generate the homepage mission content.`;
 
     // Generate Membership Page Content
     try {
-        const memPrompt = `System: Generate membership page marketing copy for a premium intelligence platform. Target: C-suite executives, investors, government officials. Tone: Exclusive, authoritative, premium. Return JSON only: {"headline": "4-6 words with gravitas", "subhead": "One compelling sentence", "tier_desc": "One sentence about the intelligence suite", "cta": "3-4 words action text", "features": [{"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}]}
+        const memPrompt = `System: Generate membership page marketing copy for a premium storytelling platform. Target: C-suite executives, investors, government officials. Tone: Exclusive, authoritative, premium. Return JSON only: {"headline": "4-6 words with gravitas", "subhead": "One compelling sentence", "tier_desc": "One sentence about the intelligence suite", "cta": "3-4 words action text", "features": [{"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}, {"title": "Feature name", "desc": "Short description"}]}
 
 User: Generate membership page content.`;
         const memRaw = await callConfiguredAI(env, { prompt: memPrompt, max_tokens: 300, temperature: 0.7 });
@@ -418,7 +418,7 @@ User: Generate travel services page content.`;
 
     // Generate Events Page Content
     try {
-        const eventsPrompt = `System: Generate marketing copy for the "Events & Summits" page of a premium African intelligence platform. Target: High-level delegates, investors, policymakers. Tone: Grand, consequential, exclusive. Return JSON only: {"headline": "3-5 words, powerful", "subhead": "One sentence about the value of convened power."}
+        const eventsPrompt = `System: Generate marketing copy for the "Events & Summits" page of a premium African stories platform. Target: High-level delegates, investors, policymakers. Tone: Grand, consequential, exclusive. Return JSON only: {"headline": "3-5 words, powerful", "subhead": "One sentence about the value of convened power."}
 
 User: Generate events page content.`;
         const eventsRaw = await callConfiguredAI(env, { prompt: eventsPrompt, max_tokens: 150, temperature: 0.7 });

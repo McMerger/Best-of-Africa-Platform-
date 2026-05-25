@@ -40,7 +40,7 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
           <div>
             <h1 className="font-serif text-[32px] mb-1 text-white">Welcome back, {memberData.name}</h1>
             <p className="text-white/50 text-sm flex items-center gap-2">
-              <CheckCircle size={14} className="text-[#C9A84C]" /> Active Membership
+              <CheckCircle size={14} className="text-accent" /> Active Membership
             </p>
           </div>
           <button 
@@ -53,13 +53,13 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
         </div>
 
         {/* Current Tier Panel */}
-        <div className="bg-[#1A1714] border border-[#C9A84C]/30 rounded-2xl p-6 mb-8 relative overflow-hidden">
+        <div className="bg-card border border-accent/30 rounded-2xl p-6 mb-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none select-none text-[120px] leading-none">
             {tierIcon}
           </div>
           
           <div className="relative z-10">
-            <span className="text-xs font-bold tracking-widest text-[#C9A84C] uppercase block mb-2">Current Tier</span>
+            <span className="text-xs font-bold tracking-widest text-accent uppercase block mb-2">Current Tier</span>
             <h2 className="font-serif text-[28px] text-white flex items-center gap-3">
               {tierIcon} {tierInfo.title}
             </h2>
@@ -81,35 +81,35 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
 
         {/* Access Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link to="/stories" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
-            <BookOpen size={16} className="text-[#C9A84C]" />
-            <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">All Stories</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Full market reports and narratives.</p>
+          <Link to="/stories" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+            <BookOpen size={16} className="text-accent" />
+            <h3 className="font-medium text-white group-hover:text-accent transition-colors">All Stories</h3>
+            <p className="text-xs text-white/50 leading-relaxed">Full narrative reports and deep dives.</p>
           </Link>
-          <Link to="/countries" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
-            <Globe size={16} className="text-[#C9A84C]" />
-            <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">Country Hubs</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Intelligence for all 54 nations.</p>
+          <Link to="/countries" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+            <Globe size={16} className="text-accent" />
+            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Country Hubs</h3>
+            <p className="text-xs text-white/50 leading-relaxed">Stories from across the 54 nations.</p>
           </Link>
-          <Link to="/intel" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
-            <BarChart2 size={16} className="text-[#C9A84C]" />
-            <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">Market Intel</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Sector signals and opportunities.</p>
+          <Link to="/intel" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+            <BarChart2 size={16} className="text-accent" />
+            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Supporter Feed</h3>
+            <p className="text-xs text-white/50 leading-relaxed">Behind-the-scenes data and updates.</p>
           </Link>
-          <Link to="/newsletter" className="group bg-[#0E0C0A] border border-white/20 p-5 rounded-xl hover:border-[#C9A84C]/40 transition-colors flex flex-col gap-2">
-            <Mail size={16} className="text-[#C9A84C]" />
-            <h3 className="font-medium text-white group-hover:text-[#C9A84C] transition-colors">Dispatch</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Weekly briefings to your inbox.</p>
+          <Link to="/newsletter" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+            <Mail size={16} className="text-accent" />
+            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Dispatch</h3>
+            <p className="text-xs text-white/50 leading-relaxed">Weekly stories sent to your inbox.</p>
           </Link>
         </div>
 
         {/* What's included at this tier */}
-        <div className="bg-[#0E0C0A] rounded-xl border border-white/20 p-5 mb-8">
+        <div className="bg-card rounded-xl border border-white/20 p-5 mb-8">
           <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4">Included in your membership</p>
           <ul className="space-y-2">
             {tierInfo.perks.map((perk) => (
               <li key={perk} className="flex items-center gap-2 text-sm text-white/70">
-                <CheckCircle size={13} className="text-[#C9A84C] shrink-0" />
+                <CheckCircle size={13} className="text-accent shrink-0" />
                 {perk}
               </li>
             ))}

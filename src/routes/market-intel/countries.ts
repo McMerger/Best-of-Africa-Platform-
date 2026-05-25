@@ -61,10 +61,7 @@ router.get('/country/:code/outlook', async (c) => {
             const context = (recent.results || []).map((a: any) => a.title).join('; ');
 
             try {
-                const prompt = `System: You are a Strategic Investment Analyst for ${countryData.name}. 
-                            Write a 3-sentence "Investment Thesis" based on these recent headlines.
-                            Highlight one key opportunity and one potential risk.
-                            Tone: Professional, direct, balance sheet focused.\nUser: Headlines: ${context || 'General economic outlook stable.'}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Headlines: ${context || 'General economic outlook stable.'}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
                 return aiResponse?.trim() || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
             } catch (e) {

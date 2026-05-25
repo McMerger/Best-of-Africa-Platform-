@@ -9,8 +9,8 @@ echo Provider: Gemini (OAuth - no API key required)
 echo Skills: article-generator, proactive-editorial, self-improving-editorial
 echo.
 
-REM Point to the built binary inside the cloned zeroclaw/ subfolder
-set ZEROCLAW_BIN=%~dp0..\zeroclaw\target\release\zeroclaw.exe
+REM Point to the prebuilt binary
+set ZEROCLAW_BIN=%USERPROFILE%\.zeroclaw\bin\zeroclaw.exe
 
 REM Set Gemini OAuth Client ID (from Gemini CLI)
 set GEMINI_OAUTH_CLIENT_ID=681255809395-oo8ft2oprdrnc9e3aqf6av3hmdib135j.apps.googleusercontent.com

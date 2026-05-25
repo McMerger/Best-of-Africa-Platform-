@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPENAPI ROUTER
-// Serves API documentation for the Best of Africa platform
+// Serves API documentation for the BOA-Story platform
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
@@ -10,7 +10,7 @@ const router = new Hono();
 const openApiSpec = {
     openapi: '3.0.0',
     info: {
-        title: 'Best of Africa API',
+        title: 'BOA-Story API',
         version: '1.0.0',
         description: 'Pan-African narrative diplomacy and market intelligence platform API',
     },
@@ -75,7 +75,7 @@ router.get('/', (c) => {
         <!DOCTYPE html>
         <html>
         <head>
-            <title>Best of Africa API Documentation</title>
+            <title>BOA-Story API Documentation</title>
             <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
         </head>
         <body>

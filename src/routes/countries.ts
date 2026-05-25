@@ -67,7 +67,7 @@ router.get('/', async (c) => {
                 const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
 
                 if (context) {
-                    const prompt = `System: Summarize the current business climate for this region in 1 sentence. Focus on key opportunities.\nUser: Region: ${region}. News: ${context}`;
+                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Region: ${region}. News: ${context}`;
                     const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
                     const text = aiRes?.trim();
                     if (text) {
@@ -222,7 +222,7 @@ router.get('/:code', async (c) => {
                 const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
                 if (!headlines) return "Monitoring situation.";
                 try {
-                    const prompt = `System: SitRep Officer for ${country.name}. 1-sentence current status.\nUser: ${headlines}`;
+                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
                     const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.5 });
                     return aiResponse?.trim();
                 } catch { return "Status Normal."; }
@@ -380,7 +380,7 @@ router.get('/:code/relationships', async (c) => {
 
             // AI: Extract Partners
             try {
-                const prompt = `System: Extract diplomatic/trade partners for ${data.name} from the news. Return JSON array: [{ "partner": "China", "type": "Trade", "context": "Infrastructure deal" }]\nUser: ${context}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });
                 const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];

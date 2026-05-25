@@ -182,7 +182,7 @@ router.post('/verify-email', async (c) => {
     const htmlEmail = `
     <!DOCTYPE html>
     <html lang="en">
-    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your Best of Africa access code</title></head>
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your BOA-Story access code</title></head>
     <body style="margin: 0; padding: 0; background-color: #0a0f1e; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #0a0f1e; padding: 40px 20px;">
         <tr>
@@ -190,10 +190,10 @@ router.post('/verify-email', async (c) => {
             <table width="560" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 560px; width: 100%; background-color: #111827; border: 1px solid rgba(201,168,76,0.25); border-radius: 12px; overflow: hidden;">
               <tr>
                 <td style="padding: 40px 48px; text-align: center;">
-                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #C9A84C;">Best of Africa</p>
+                  <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #C9A84C;">BOA-Story</p>
                   <h1 style="margin: 0 0 24px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; color: #ffffff;">Your Access Code</h1>
                   <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.65);">
-                    Enter this code on the Best of Africa member access page.<br>
+                    Enter this code on the BOA-Story member access page.<br>
                     It expires in <strong style="color: #ffffff;">10 minutes</strong>.
                   </p>
                   <div style="display: inline-block; background-color: #0a0f1e; border: 1px solid rgba(201,168,76,0.3); border-radius: 8px; padding: 20px 40px; margin-bottom: 32px;">
@@ -207,7 +207,7 @@ router.post('/verify-email', async (c) => {
               </tr>
               <tr>
                 <td style="padding: 16px 48px; border-top: 1px solid rgba(255,255,255,0.06); text-align: center;">
-                  <p style="margin: 0; font-size: 11px; color: rgba(255,255,255,0.2);">© ${new Date().getFullYear()} Best of Africa · <a href="https://bestofafrica.com" style="color: rgba(201,168,76,0.5); text-decoration: none;">bestofafrica.com</a></p>
+                  <p style="margin: 0; font-size: 11px; color: rgba(255,255,255,0.2);">© ${new Date().getFullYear()} BOA-Story</p>
                 </td>
               </tr>
             </table>

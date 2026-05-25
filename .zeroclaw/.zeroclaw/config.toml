@@ -1,13 +1,4 @@
-default_provider = "openrouter"
-default_model = "anthropic/claude-sonnet-4.6"
-default_temperature = 0.7
-provider_timeout_secs = 120
-model_routes = []
-embedding_routes = []
-
-[model_providers]
-
-[extra_headers]
+schema_version = 2
 
 [observability]
 backend = "none"
@@ -58,13 +49,11 @@ max_cost_per_day_cents = 500
 require_approval_for_medium_risk = true
 block_high_risk_commands = true
 shell_env_passthrough = []
-auto_approve = [
-    "file_read",
-    "memory_recall",
-]
+auto_approve = ["file_read", "memory_recall", "web_search_tool", "web_fetch", "calculator", "glob_search", "content_search", "image_info", "weather", "browser", "browser_open"]
 always_ask = []
 allowed_roots = []
 non_cli_excluded_tools = []
+shell_timeout_secs = 60
 
 [security.sandbox]
 backend = "auto"
@@ -96,6 +85,7 @@ gated_actions = [
 ]
 gated_domains = []
 gated_domain_categories = []
+challenge_max_attempts = 3
 
 [security.estop]
 enabled = false
@@ -111,6 +101,12 @@ token_validation = "local"
 role_mapping = []
 require_mfa = false
 session_timeout_secs = 3600
+
+[security.webauthn]
+enabled = false
+rp_id = "localhost"
+rp_name = "ZeroClaw"
+rp_origin = "http://localhost:42617"
 
 [backup]
 enabled = true
@@ -142,21 +138,6 @@ supported_clouds = [
 iac_tools = ["terraform"]
 cost_threshold_monthly_usd = 100.0
 well_architected_frameworks = ["aws-waf"]
-
-[conversational_ai]
-enabled = false
-default_language = "en"
-supported_languages = [
-    "en",
-    "de",
-    "fr",
-    "it",
-]
-auto_detect_language = true
-escalation_confidence_threshold = 0.3
-max_conversation_turns = 50
-conversation_timeout_secs = 1800
-analytics_enabled = false
 
 [security_ops]
 enabled = false
@@ -204,10 +185,56 @@ parallel_tools = false
 tool_dispatcher = "auto"
 tool_call_dedup_exempt = []
 tool_filter_groups = []
+context_aware_tools = false
+keep_tool_context_turns = 2
+max_system_prompt_chars = 0
+max_tool_result_chars = 50000
+
+[agent.context_compression]
+enabled = true
+identifier_policy = "strict"
+max_passes = 3
+protect_first_n = 3
+protect_last_n = 4
+source_max_chars = 50000
+summary_max_chars = 4000
+threshold_ratio = 0.5
+timeout_secs = 60
+tool_result_retrim_chars = 2000
+tool_result_trim_exempt = []
+
+[agent.eval]
+enabled = false
+max_retries = 1
+min_quality_score = 0.5
+
+[agent.history_pruning]
+collapse_tool_results = true
+enabled = false
+keep_recent = 4
+max_tokens = 8192
+
+[agent.thinking]
+default_level = "medium"
+
+[agent.tool_receipts]
+enabled = false
+inject_system_prompt = true
+show_in_response = false
 
 [skills]
 open_skills_enabled = false
 prompt_injection_mode = "full"
+allow_scripts = false
+
+[skills.skill_creation]
+enabled = false
+max_skills = 500
+similarity_threshold = 0.85
+
+[skills.skill_improvement]
+cooldown_secs = 3600
+enabled = true
 
 [query_classification]
 enabled = false
@@ -222,19 +249,14 @@ min_interval_minutes = 5
 max_interval_minutes = 120
 deadman_timeout_minutes = 0
 max_run_history = 100
+load_session_context = false
+task_timeout_secs = 600
 
 [cron]
 enabled = true
 max_run_history = 50
-
-[channels_config]
-cli = true
-message_timeout_secs = 300
-ack_reactions = true
-show_tool_calls = true
-session_persistence = true
-session_backend = "sqlite"
-session_ttl_hours = 0
+catch_up_on_startup = true
+jobs = []
 
 [memory]
 backend = "sqlite"
@@ -258,9 +280,29 @@ response_cache_hot_entries = 256
 snapshot_enabled = false
 snapshot_on_hygiene = false
 auto_hydrate = true
+audit_enabled = false
+audit_retention_days = 30
+conflict_threshold = 0.85
+default_namespace = "default"
+fts_early_return_score = 0.85
+rerank_enabled = false
+rerank_threshold = 5
+retrieval_stages = ["cache", "fts", "vector"]
+search_mode = "hybrid"
 
 [memory.qdrant]
 collection = "zeroclaw_memories"
+
+[memory.policy]
+max_entries_per_category = 0
+max_entries_per_namespace = 0
+read_only_namespaces = []
+
+[memory.policy.retention_days_by_category]
+
+[memory.postgres]
+vector_dimensions = 1536
+vector_enabled = false
 
 [storage.provider.config]
 provider = ""
@@ -275,13 +317,22 @@ port = 42617
 host = "127.0.0.1"
 require_pairing = true
 allow_public_bind = false
-paired_tokens = []
+paired_tokens = ["enc2:f646cb1124348a4c15b2e40d4ffb224809e5efa5a214445754825ba4d908ccf7a65e60c83e111d45b68ad25538c57c2857513af2e423472b46764640a599ecb1d8061873c1a68261f729dea1cda16701fead7eb54e58acc186356883"]
 pair_rate_limit_per_minute = 10
 webhook_rate_limit_per_minute = 60
 trust_forwarded_headers = false
 rate_limit_max_keys = 10000
 idempotency_ttl_secs = 300
 idempotency_max_keys = 10000
+session_persistence = true
+session_ttl_hours = 0
+
+[gateway.pairing_dashboard]
+code_length = 8
+code_ttl_secs = 3600
+lockout_secs = 300
+max_failed_attempts = 5
+max_pending_codes = 3
 
 [composio]
 enabled = false
@@ -335,6 +386,13 @@ allowed_domains = ["*"]
 blocked_domains = []
 max_response_size = 500000
 timeout_secs = 30
+allowed_private_hosts = []
+
+[web_fetch.firecrawl]
+api_key_env = "FIRECRAWL_API_KEY"
+api_url = "https://api.firecrawl.dev/v1"
+enabled = false
+mode = "scrape"
 
 [web_search]
 enabled = false
@@ -402,6 +460,10 @@ output = 15.0
 input = 15.0
 output = 75.0
 
+[cost.enforcement]
+mode = "warn"
+reserve_percent = 10
+
 [peripherals]
 enabled = false
 boards = []
@@ -434,6 +496,8 @@ enabled = false
 api_url = "https://api.groq.com/openai/v1/audio/transcriptions"
 model = "whisper-large-v3-turbo"
 max_duration_secs = 120
+default_provider = "groq"
+transcribe_non_ptt_audio = false
 
 [tts]
 enabled = false
@@ -478,3 +542,184 @@ require_https = true
 allowed_peers = []
 mutual_tls = false
 connection_pool_size = 4
+
+[channels]
+ack_reactions = true
+cli = true
+debounce_ms = 0
+message_timeout_secs = 300
+session_backend = "sqlite"
+session_persistence = true
+session_ttl_hours = 0
+show_tool_calls = true
+
+[claude_code]
+allowed_tools = ["Read", "Edit", "Bash", "Write"]
+enabled = false
+env_passthrough = []
+max_output_bytes = 2097152
+timeout_secs = 600
+
+[claude_code_runner]
+enabled = false
+session_ttl = 3600
+tmux_prefix = "zc-claude-"
+
+[codex_cli]
+enabled = false
+env_passthrough = []
+max_output_bytes = 2097152
+timeout_secs = 600
+
+[delegate]
+agentic_timeout_secs = 300
+timeout_secs = 120
+
+[escalation]
+alert_channels = []
+
+[gemini_cli]
+enabled = false
+env_passthrough = []
+max_output_bytes = 2097152
+timeout_secs = 600
+
+[google_workspace]
+allowed_operations = []
+allowed_services = []
+audit_log = false
+enabled = false
+rate_limit_per_minute = 60
+timeout_secs = 30
+
+[image_gen]
+api_key_env = "FAL_API_KEY"
+default_model = "fal-ai/flux/schnell"
+enabled = false
+
+[jira]
+allowed_actions = ["get_ticket"]
+api_token = ""
+base_url = ""
+enabled = false
+timeout_secs = 30
+
+[knowledge]
+auto_capture = false
+cross_workspace_search = false
+db_path = 'C:\Users\corte\.zeroclaw\knowledge.db'
+enabled = false
+max_nodes = 100000
+suggest_on_query = true
+
+[link_enricher]
+enabled = false
+max_links = 3
+timeout_secs = 10
+
+[linkedin]
+api_version = "202602"
+enabled = false
+
+[linkedin.content]
+github_repos = []
+github_users = []
+instructions = ""
+persona = ""
+rss_feeds = []
+topics = []
+
+[linkedin.image]
+card_accent_color = "#0A66C2"
+enabled = false
+fallback_card = true
+providers = ["stability", "imagen", "dalle", "flux"]
+temp_dir = "linkedin/images"
+
+[linkedin.image.dalle]
+api_key_env = "OPENAI_API_KEY"
+model = "dall-e-3"
+size = "1024x1024"
+
+[linkedin.image.flux]
+api_key_env = "FAL_API_KEY"
+model = "fal-ai/flux/schnell"
+
+[linkedin.image.imagen]
+api_key_env = "GOOGLE_VERTEX_API_KEY"
+project_id_env = "GOOGLE_CLOUD_PROJECT"
+region = "us-central1"
+
+[linkedin.image.stability]
+api_key_env = "STABILITY_API_KEY"
+model = "stable-diffusion-xl-1024-v1-0"
+
+[media_pipeline]
+describe_images = true
+enabled = false
+summarize_video = true
+transcribe_audio = true
+
+[onboard_state]
+completed_sections = []
+
+[opencode_cli]
+enabled = false
+env_passthrough = []
+max_output_bytes = 2097152
+timeout_secs = 600
+
+[pacing]
+loop_detection_enabled = true
+loop_detection_max_repeats = 3
+loop_detection_window_size = 20
+loop_ignore_tools = []
+
+[pipeline]
+allowed_tools = []
+enabled = false
+max_steps = 20
+
+[plugins]
+auto_discover = false
+enabled = false
+max_plugins = 50
+plugins_dir = 'C:\Users\corte\.zeroclaw\plugins'
+
+[plugins.security]
+signature_mode = "disabled"
+trusted_publisher_keys = []
+
+[providers]
+fallback = "openrouter"
+
+[providers.models]
+
+[providers.models.openrouter]
+model = "anthropic/claude-sonnet-4.6"
+temperature = 0.7
+timeout_secs = 120
+
+[shell_tool]
+timeout_secs = 60
+
+[sop]
+approval_timeout_secs = 300
+default_execution_mode = "supervised"
+max_concurrent_total = 4
+max_finished_runs = 100
+
+[text_browser]
+enabled = false
+timeout_secs = 30
+
+[trust]
+correction_penalty = 0.05
+decay_half_life_days = 30.0
+initial_score = 0.8
+regression_threshold = 0.5
+success_boost = 0.01
+
+[verifiable_intent]
+enabled = false
+strictness = "strict"

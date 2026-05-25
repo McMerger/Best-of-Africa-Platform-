@@ -167,11 +167,11 @@ class StoreAuditResultTool(Tool):
                 "variants": {
                     "type": "object",
                     "properties": {
-                        "variant_tourist": {"type": "string"},
-                        "variant_investor_graham": {"type": "string"},
-                        "variant_policy": {"type": "string"}
+                        "variant_narrative": {"type": "string"},
+                        "variant_social": {"type": "string"},
+                        "variant_deep_dive": {"type": "string"}
                     },
-                    "required": ["variant_tourist", "variant_investor_graham", "variant_policy"]
+                    "required": ["variant_narrative", "variant_social", "variant_deep_dive"]
                 },
                 "confidence_score": {
                     "type": "number",

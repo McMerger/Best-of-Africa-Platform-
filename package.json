@@ -1,7 +1,7 @@
 {
-    "name": "best-of-africa",
+    "name": "boa-story",
     "version": "1.0.0",
-    "description": "Pan-African narrative diplomacy and market intelligence platform - autonomous AI backend for strengthening Africa's global image",
+    "description": "BOA-Story - A digital home for real, thoughtful stories about African lives, cities, and ideas.",
     "type": "module",
     "scripts": {
         "dev": "concurrently -n \"backend,frontend\" -c \"cyan,magenta\" \"npm run dev:backend\" \"npm run dev:frontend\"",

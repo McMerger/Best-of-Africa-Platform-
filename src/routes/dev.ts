@@ -85,6 +85,17 @@ router.post('/seed-and-trigger', devAuthGuard, async (c) => {
     });
 });
 
+// Dev endpoint to trigger stale task generation
+router.post('/force-stale', devAuthGuard, async (c) => {
+    try {
+        const { processStaleArticleTasks } = await import('../workers/generator');
+        await processStaleArticleTasks(c.env);
+        return c.json({ success: true, message: 'Processed stale tasks.' });
+    } catch (e: any) {
+        return c.json({ success: false, error: e.message, stack: e.stack });
+    }
+});
+
 // Dev endpoint to BACKFILL vector embeddings for search
 router.post('/backfill-vectors', devAuthGuard, async (c) => {
     const { indexArticle } = await import('../lib/vectorize');

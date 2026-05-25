@@ -15,11 +15,11 @@ export const SEO: React.FC<SEOProps> = ({
     image,
     type = 'website',
     publishedTime,
-    author = 'Best of Africa'
+    author = 'Mailles Cortes | BOA-Story'
 }) => {
     useEffect(() => {
         // Update Title
-        document.title = `${title} | Best of Africa`;
+        document.title = `${title} | BOA-Story`;
 
         // Helper to update meta tags
         const updateMeta = (name: string, content: string, attribute = 'name') => {
@@ -36,13 +36,14 @@ export const SEO: React.FC<SEOProps> = ({
         // Standard Meta
         updateMeta('description', description || '');
         updateMeta('theme-color', '#1a1a1a'); // Dark theme color
+        updateMeta('keywords', 'Social, Writing, Education, Community, Africa, Stories, Narrative');
 
         // Open Graph / Facebook
         updateMeta('og:type', type, 'property');
         updateMeta('og:title', title, 'property');
         updateMeta('og:description', description || '', 'property');
         updateMeta('og:image', image || '', 'property');
-        updateMeta('og:site_name', 'Best of Africa', 'property');
+        updateMeta('og:site_name', 'BOA-Story', 'property');
 
         // Twitter
         updateMeta('twitter:card', 'summary_large_image');

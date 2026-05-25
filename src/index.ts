@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// BEST OF AFRICA - MAIN APPLICATION
+// BOA-Story - MAIN APPLICATION
 // Hono API on Cloudflare Workers
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -99,7 +99,7 @@ app.use('*', async (c, next) => {
 // ───────────────────────────────────────────────────────────────────────────────
 app.get('/', (c) => {
     return c.json({
-        name: 'Best of Africa API',
+        name: 'BOA-Story API',
         version: c.env.API_VERSION,
         status: 'healthy',
         environment: c.env.ENVIRONMENT,

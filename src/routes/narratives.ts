@@ -109,7 +109,7 @@ router.get('/country/:code', async (c) => {
             const context = (articles.results as any[]).map(a => `- ${a.title} (Tone: ${a.tone})`).join('\n');
 
             try {
-                const prompt = `System: You are a Strategic Communications Director.\nSynthesize these headlines into a single, powerful "Narrative Arc" paragraph (3 sentences max).\nExplain the cohesive story forming around ${countryData.name}.\nUser: ${context}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.7 });
                 return aiResponse?.trim() || "Narrative synthesis unavailable.";
             } catch (e) {

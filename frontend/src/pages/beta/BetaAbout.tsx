@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { BetaNav, BetaFooter } from '../../components/beta';
 import { SEO } from '../../components/SEO';
@@ -12,14 +11,14 @@ export const BetaAbout = () => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814]">
+    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary">
       <SEO 
-        title="About | Best of Africa" 
-        description="We are building an investment-grade platform mapping Africa's rapidly growing venture, tech, and cultural markets."
+        title="About | BOA-Story" 
+        description="A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."
       />
       <BetaNav />
       {/* 1. HERO */}
-      <section className="bg-[#1C1814] pt-32 pb-24 px-6 border-b border-[#1C1814]/10">
+      <section className="bg-primary pt-32 pb-24 px-6 border-b border-primary/10">
         <div className="max-w-4xl mx-auto text-center text-white">
           <h1 className="font-serif text-[48px] md:text-[72px] leading-tight mb-8">
             We're building Africa's story.<br />Properly.
@@ -29,7 +28,7 @@ export const BetaAbout = () => {
 
       {/* 1b. Live platform stats strip — proof, not aspiration */}
       {stats && (
-        <section className="border-b border-[#1C1814]/8 bg-[#EDE8DF]">
+        <section className="border-b border-primary/8 bg-secondary">
           <div className="max-w-4xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { value: stats.total_articles.toLocaleString(), label: 'Stories Published' },
@@ -38,8 +37,8 @@ export const BetaAbout = () => {
               { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: 'Total Reads' },
             ].map(({ value, label }) => (
               <div key={label}>
-                <p className="font-serif text-[2.25rem] font-bold text-[#C9A84C] leading-none mb-1">{value}</p>
-                <p className="text-xs text-[#1C1814]/40 uppercase tracking-widest font-medium">{label}</p>
+                <p className="font-serif text-[2.25rem] font-bold text-accent leading-none mb-1">{value}</p>
+                <p className="text-xs text-primary/40 uppercase tracking-widest font-medium">{label}</p>
               </div>
             ))}
           </div>
@@ -48,102 +47,66 @@ export const BetaAbout = () => {
 
       <main className="max-w-4xl mx-auto px-6">
         
-        {/* 2. MISSION (Verbatim) */}
-        <section className="py-24 border-b border-[#1C1814]/8">
-          <div className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[24px] prose-p:md:text-[32px] prose-p:leading-relaxed prose-p:text-[#1C1814]/90">
+        {/* 2. THE FOUNDER & MISSION */}
+        <section className="py-24 border-b border-primary/8">
+          <div className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[24px] prose-p:md:text-[32px] prose-p:leading-relaxed prose-p:text-primary/90">
+            <p className="mb-12">
+              I'm a student and independent writer trying to close the gap between the Africa you see in headlines and the Africa I hear about from friends, founders, and family. Here I'm building BOA-Story, a small, self-funded project to surface grounded stories about African cities, creators, and everyday opportunity.
+            </p>
             <p>
-              We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving, the cities changing — deserves a platform built for it. Your support at this quiet, early stage is what turns <span className="text-[#C9A84C] italic">someone should build this</span> into <span className="text-[#C9A84C] italic">we're actually building it</span>.
+              We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving, the cities changing — deserves a platform built for it. Your support at this quiet, early stage is what turns <span className="text-accent italic">someone should build this</span> into <span className="text-accent italic">we're actually building it</span>.
             </p>
           </div>
         </section>
 
         {/* 3. WHAT WE'RE BUILDING */}
-        <section className="py-24 border-b border-[#1C1814]/8">
-          <h2 className="font-serif text-[32px] md:text-[40px] mb-12 text-center md:text-left">What we're building</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl border border-[#1C1814]/8 hover:border-[#C9A84C]/50 hover:shadow-[0_8px_40px_rgba(28,24,20,0.08)] transition-all">
+        <section className="py-24 border-b border-primary/8">
+          <h2 className="font-serif text-[32px] md:text-[40px] mb-12 text-center md:text-left">What this actually is</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            <div className="bg-white p-8 rounded-xl border border-primary/8 hover:border-accent/50 hover:shadow-sm transition-all">
               <span className="text-3xl block mb-6 drop-shadow-sm">✍️</span>
-              <h3 className="font-serif text-2xl mb-3 text-[#1C1814]">Narrative Stories</h3>
-              <p className="text-[#1C1814]/70 text-sm leading-relaxed">
-                Deep-dive journalism rooted in lived experience. We prioritize rigorous reporting that captures the dynamic reality of African innovators, creators, and operators.
+              <h3 className="font-serif text-2xl mb-3 text-primary">Real Stories</h3>
+              <p className="text-primary/70 text-sm leading-relaxed">
+                A living digital platform built to surface real, grounded stories about African lives, cities, creators, and everyday opportunity.
               </p>
             </div>
-            <div className="bg-white p-8 rounded-xl border border-[#1C1814]/8 hover:border-[#C9A84C]/50 hover:shadow-[0_8px_40px_rgba(28,24,20,0.08)] transition-all">
-              <span className="text-3xl block mb-6 drop-shadow-sm">📊</span>
-              <h3 className="font-serif text-2xl mb-3 text-[#1C1814]">Market Intelligence</h3>
-              <p className="text-[#1C1814]/70 text-sm leading-relaxed">
-                Premium, actionable data mapping the continent's venture capital, real estate, and industrial sectors. Built for investors who demand ground-truth precision.
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-xl border border-[#1C1814]/8 hover:border-[#C9A84C]/50 hover:shadow-[0_8px_40px_rgba(28,24,20,0.08)] transition-all">
-              <span className="text-3xl block mb-6 drop-shadow-sm">🌍</span>
-              <h3 className="font-serif text-2xl mb-3 text-[#1C1814]">54 Country Hubs</h3>
-              <p className="text-[#1C1814]/70 text-sm leading-relaxed">
-                Dedicated vertical portals for every African nation. Exploring macro policy, creative economies, and vital statistics with localized expertise.
+            <div className="bg-white p-8 rounded-xl border border-primary/8 hover:border-accent/50 hover:shadow-sm transition-all">
+              <span className="text-3xl block mb-6 drop-shadow-sm">🚫</span>
+              <h3 className="font-serif text-2xl mb-3 text-primary">Narrative Correction</h3>
+              <p className="text-primary/70 text-sm leading-relaxed">
+                Explicitly positioned against the dominant media framing of Africa as a place of crisis, charity, and disaster. Not a news outlet, not a charity, and not a personal blog.
               </p>
             </div>
           </div>
         </section>
 
         {/* 4. WHY NOW */}
-        <section className="py-24 border-b border-[#1C1814]/8">
-          <h2 className="font-serif text-[32px] md:text-[40px] mb-8 text-center md:text-left">Why now?</h2>
-          <div className="prose max-w-3xl prose-p:text-lg prose-p:leading-loose text-[#1C1814]/80">
+        <section className="py-24 border-b border-primary/8">
+          <h2 className="font-serif text-[32px] md:text-[40px] mb-8 text-center md:text-left">Why Ko-fi?</h2>
+          <div className="prose max-w-3xl prose-p:text-lg prose-p:leading-loose text-primary/80">
             <p className="mb-6">
-              The framing of the African continent is undergoing a profound structural correction. The era of the pity narrative—of aid sectors defining the boundaries of African potential—is over. Global capital recognizes that the world's youngest populations, fastest-growing metropolitan economies, and most aggressive technological leapfrogging are happening here.
+              The platform is currently in prototype and pre-launch stage. I chose Ko-fi because this is an independent, community-backed project.
             </p>
             <p>
-              Yet, the media and data infrastructure required to accurately map this growth remains fragmented and largely authored from the outside. We are building Best of Africa to bridge this gap. This is an investment-grade platform built from the ground up to document the continent not as a monolith to be saved, but as the world’s most dynamic emerging market engine.
+              This isn't backed by venture capital or a media conglomerate. The Ko-fi page is the primary mechanism for converting early believers into financial backers who make the full launch possible.
             </p>
-          </div>
-        </section>
-
-        {/* 5. TRANSPARENCY */}
-        <section className="py-24 border-b border-[#1C1814]/8 text-center">
-          <h2 className="font-serif text-[32px] md:text-[40px] mb-16">Where support goes</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-3xl mx-auto">
-            <div className="bg-white p-6 rounded-xl border border-[#1C1814]/8 flex gap-5 items-start">
-              <span className="text-3xl mt-1 opacity-90">🌐</span>
-              <div>
-                <h4 className="font-medium text-lg mb-1 text-[#1C1814]">Domain & Hosting</h4>
-                <p className="text-[#1C1814]/60 text-sm leading-relaxed">Keeping the platform live, fast, and globally accessible.</p>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl border border-[#1C1814]/8 flex gap-5 items-start">
-              <span className="text-3xl mt-1 opacity-90">🛠️</span>
-              <div>
-                <h4 className="font-medium text-lg mb-1 text-[#1C1814]">Dev & Design Tools</h4>
-                <p className="text-[#1C1814]/60 text-sm leading-relaxed">Architecting a premium product experience at scale.</p>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl border border-[#1C1814]/8 flex gap-5 items-start">
-              <span className="text-3xl mt-1 opacity-90">✍️</span>
-              <div>
-                <h4 className="font-medium text-lg mb-1 text-[#1C1814]">Research Time</h4>
-                <p className="text-[#1C1814]/60 text-sm leading-relaxed">The quiet, intensive work required to uncover real stories.</p>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-xl border border-[#1C1814]/8 flex gap-5 items-start">
-              <span className="text-3xl mt-1 opacity-90">⚙️</span>
-              <div>
-                <h4 className="font-medium text-lg mb-1 text-[#1C1814]">Data & Infrastructure</h4>
-                <p className="text-[#1C1814]/60 text-sm leading-relaxed">The backend computing power that analyzes and distills our intelligence engine.</p>
-              </div>
-            </div>
           </div>
         </section>
 
         {/* 6. CTA */}
         <section className="py-32 text-center relative z-10">
-          <h2 className="font-serif text-[36px] md:text-[56px] leading-tight mb-12 text-[#1C1814]">
-            Join the founding story.
+          <span className="text-4xl mb-6 block">☕</span>
+          <h2 className="font-serif text-[36px] md:text-[56px] leading-tight mb-12 text-primary">
+            Help me launch BOA-Story.
           </h2>
-          <Link 
-            to="/membership"
-            className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-medium font-sans px-10 py-5 rounded-lg shadow-[0_20px_40px_rgba(201,168,76,0.15)] hover:brightness-110 transition-transform hover:-translate-y-1 text-lg"
+          <a 
+            href="https://ko-fi.com/maillescortes"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-accent text-card font-medium font-sans px-10 py-5 rounded-lg shadow-sm hover:brightness-110 transition-transform hover:-translate-y-1 text-lg"
           >
-            Choose your Membership Tier
-          </Link>
+            Buy me a coffee on Ko-fi
+          </a>
         </section>
 
       </main>

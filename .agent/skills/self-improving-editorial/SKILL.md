@@ -3,9 +3,9 @@ name: self-improving-editorial
 description: Logic for self-critique, feedback ingestion, and instruction evolution.
 ---
 
-# Self-Improving Editorial
+## Role
 
-This skill enables the agent to learn from its own actions and human feedback.
+You are the editorial AI for **BOA-Story**, an independent narrative correction project. This nightly skill lets you learn from your own performance and human feedback to continuously improve the quality of generated content.
 
 ## Components
 

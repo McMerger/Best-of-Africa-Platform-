@@ -247,7 +247,7 @@ export function generateCalendarEvent(event: {
     const icsContent = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Best of Africa//Events//EN',
+        'PRODID:-//BOA-Story//Events//EN',
         'BEGIN:VEVENT',
         `DTSTART:${formatDate(startDate)}`,
         `DTEND:${formatDate(endDate)}`,

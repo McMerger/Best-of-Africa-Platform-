@@ -122,10 +122,10 @@ router.get('/:region', async (c) => {
             // We reuse the logic from countries.ts efficiently via cache check or generate
             // For now, simpler fallback or quick gen
             const systemPrompt = activeLens === 'investor'
-                ? 'You are a Value Investment Strategist (Benjamin Graham school). Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
+                ? 'You are a Business Observer. Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
                 : activeLens === 'government'
-                    ? 'You are a Chief Policy Strategist advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
-                    : 'You are a Premier Africa Travel Strategist. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.';
+                    ? 'You are a Policy Observer advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
+                    : 'You are a Culture Observer. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.';
             
             const prompt = `${systemPrompt}\n\nRegion: ${region}. Trends: ${JSON.stringify(trendingCountries)}`;
             const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.3 });
@@ -450,10 +450,10 @@ Latest Headlines:
         `dashboard_market_summary_ai:${activeLens}`,
         async () => {
             const lensRole = activeLens === 'investor'
-                ? 'You are a Value Investment Strategist (Benjamin Graham school) for Best of Africa. Write a 2-sentence "Investment Pulse" focusing on intrinsic value signals, margin of safety, and earnings stability across African markets.'
+                ? 'You are a Business Observer for BOA-Story. Write a 2-sentence "Investment Pulse" focusing on intrinsic value signals, margin of safety, and earnings stability across African markets.'
                 : activeLens === 'government'
-                    ? 'You are a Chief Policy Strategist for Best of Africa. Write a 2-sentence "Policy Pulse" focusing on governance quality, fiscal sustainability, and development impact across African nations.'
-                    : 'You are a Premier Travel Strategist for Best of Africa. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
+                    ? 'You are a Policy Observer for BOA-Story. Write a 2-sentence "Policy Pulse" focusing on governance quality, fiscal sustainability, and development impact across African nations.'
+                    : 'You are a Culture Observer for BOA-Story. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
 
             try {
                 const prompt = `${lensRole}

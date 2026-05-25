@@ -20,7 +20,9 @@ const MODELS = {
 
 // Bump this string whenever the article generation prompt changes.
 // Stored on the article row so we can evaluate prompt quality over time.
-export const ARTICLE_PROMPT_VERSION = 'v1.1';
+// v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
+// persona aligned with the Ko-fi brief: grounded, human, narrative correction.
+export const ARTICLE_PROMPT_VERSION = 'v1.2';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Provider-Aware AI Call
@@ -40,8 +42,8 @@ export interface AICallOptions {
 }
 
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
-    let provider = 'gemini';
-    let model = 'gemini-2.5-pro-preview-05-06';
+    let provider = 'workers_ai';
+    let model = '@cf/meta/llama-3.1-70b-instruct';
     let apiKey: string | undefined;
     let baseUrl = 'https://api.openai.com/v1';
 
@@ -66,7 +68,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
     // ── Auto-detect provider from env vars when nothing configured in DB ──────
     if (provider === 'workers_ai') {
         if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';            apiKey = env.ANTHROPIC_API_KEY; }
-        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro-preview-05-06';   apiKey = env.GOOGLE_AI_API_KEY; }
+        // else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-1.5-pro-latest';   apiKey = env.GOOGLE_AI_API_KEY; }
         else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';              apiKey = env.MOONSHOT_API_KEY; baseUrl = 'https://api.moonshot.cn/v1'; }
         else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
         else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter.ai/api/v1'; }
@@ -74,15 +76,15 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
 
     // ── Auto-detect from OAuth tokens (Gemini / Moonshot subscription auth) ──
     if (provider === 'workers_ai') {
-        const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
-        if (geminiOAuth) {
-            provider = 'gemini'; model = 'gemini-2.5-pro-preview-05-06';
-        } else {
+        // const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
+        // if (geminiOAuth) {
+        //     provider = 'gemini'; model = 'gemini-1.5-pro-latest';
+        // } else {
             const moonshotOAuth = await getMoonshotAccessToken(env).catch(() => null);
             if (moonshotOAuth) {
                 provider = 'moonshot'; model = 'moonshot-v1-32k'; baseUrl = 'https://api.moonshot.cn/v1';
             }
-        }
+        // }
     }
 
     // ── Workers AI (default fallback) ─────────────────────────────────────────
@@ -247,19 +249,20 @@ export async function generateHeadlineVariants(
         explorer: 'discerning travelers and cultural patrons seeking exceptional African destinations and experiences'
     };
 
-    const prompt = `You are a headline specialist for a premium African intelligence publication.
+    const prompt = `You are an independent writer for BOA-Story, a narrative correction platform surfacing real, grounded stories about African lives, cities, and everyday opportunity.
 
 Given this article:
 Title: ${originalTitle}
 Summary: ${summary}
 
-Generate 3 alternative headline variants optimized for ${audienceDescriptions[lens]}.
+Generate 3 alternative headline variants that will make a general reader want to read this story.
 
 Requirements:
-- Each headline must be compelling and click-worthy
+- Each headline must be compelling, human, and specific
 - Keep headlines under 80 characters
-- Use power words that resonate with the target audience
-- Maintain journalistic credibility (no clickbait)
+- Speak to a curious reader, not an investor or analyst
+- Avoid jargon; write like The Guardian, not Bloomberg
+- No clickbait
 
 Output exactly 3 headlines, one per line, no numbering or bullets.`;
 
@@ -274,17 +277,14 @@ export async function generateSummary(
     env: Env,
     content: string
 ): Promise<string> {
-    const prompt = `Summarize this article as a Strategic Intelligence Brief.
-    Focus on:
-    1. The core development.
-    2. The direct implication for investors or businesses.
-    3. Any immediate risk or opportunity.
-    Keep it under 4 sentences. Be professional and high-signal.
+    const prompt = `You are an independent writer for BOA-Story, a narrative correction platform about African lives, cities, creators, and everyday opportunity.
 
-    Article:
-    ${content.slice(0, 3000)}
+Write a 2-3 sentence grounded summary of this article that captures the human reality of the story. Avoid corporate, investor, or NGO language. Write plainly and honestly, as if telling a friend what this story is about.
 
-    Summary:`;
+Article:
+${content.slice(0, 3000)}
+
+Summary:`;
 
     return callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.5 });
 }
@@ -444,29 +444,31 @@ export async function fillNarrativeGap(
     summary: string;
     tags: string[];
 }> {
-    const prompt = `You are a senior correspondent for "Best of Africa," a premium pan - African publication covering investment and tourism.
+    const prompt = `You are an independent writer for BOA-Story, a small, self-funded narrative correction project built by a student writer. Your mission is to surface real, grounded stories about African lives, cities, creators, and everyday opportunity — explicitly against the framing of Africa as a place of crisis, charity, and disaster.
 
-Write a comprehensive article about the ${sectorName} sector in ${countryName}.
+Write a grounded, human-focused article about the ${sectorName} sector in ${countryName}.
 
-    Requirements:
-    - Guardian - style journalism: authoritative, well - researched, engaging
-        - Focus on investment opportunities and / or tourism potential
-            - Include specific details, statistics, and examples
-                - Optimistic but realistic tone
-                    - 600 - 800 words
+Requirements:
+- Write in an authentic, personal voice. Guardian-style prose: clear, precise, human.
+- Focus on the real human story: the people, the city, the everyday energy.
+- Include specific details, real examples, and concrete context.
+- Do NOT frame this as an investment pitch or tourism guide.
+- Do NOT use hedging language ("might", "could", "potentially").
+- Do NOT use NGO, corporate, or intelligence jargon.
+- Honest, grounded, relatable tone. 400-600 words.
 
 Structure your response EXACTLY as follows:
 
-    TITLE: [Compelling headline, max 80 characters]
+TITLE: [Compelling headline, max 80 characters, no markdown]
 
-    SUBTITLE: [Secondary headline adding context, max 120 characters]
+SUBTITLE: [Secondary headline adding context, max 120 characters, no markdown]
 
-    CONTENT:
-    [Full article in markdown format with subheadings]
+CONTENT:
+[Full article in markdown format with subheadings]
 
-    SUMMARY: [2 - 3 sentence summary]
+SUMMARY: [2-3 sentence human-focused summary, no markdown]
 
-    TAGS: [comma - separated list of 3 - 5 relevant tags]`;
+TAGS: [comma-separated list of 3-5 relevant tags]`;
 
     const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.8 });
     return parseArticleResponse(text);
@@ -482,35 +484,38 @@ function buildArticlePrompt(
     countryName: string | null,
     sectorName: string | null
 ): string {
-    return `You are a senior correspondent for "Best of Africa," a premium pan - African publication covering investment and tourism opportunities.
+    return `You are an independent writer for BOA-Story, a small, self-funded narrative correction project. Your mission is to surface real, grounded stories about African lives, cities, creators, and everyday opportunity — explicitly against the dominant framing of Africa as a place of crisis, charity, and disaster.
 
-Transform this news into a compelling, Guardian - style article:
+Transform this source news into a grounded, human-focused story:
 
 Source Title: ${sourceTitle}
 Source Content: ${sourceContent.slice(0, 2000)}
 ${countryName ? `Country: ${countryName}` : ''}
 ${sectorName ? `Sector: ${sectorName}` : ''}
 
-    Requirements:
-    - Write in authoritative, engaging Guardian - style prose
-        - Focus on investment opportunities and / or tourism potential
-            - Expand on the source with additional context and analysis
-                - Maintain journalistic credibility
-                    - 400 - 600 words
-                        - Optimistic but grounded tone
+Requirements:
+- Write in an authentic, personal voice. Guardian-style prose: clear, precise, engaging.
+- Surface the real human story behind the news: the people, the city, the everyday energy.
+- Expand on the source with real context and honest analysis.
+- Do NOT frame this as an investment pitch or tourism guide.
+- Do NOT use hedging language: no "might", "could", "potentially", "may".
+- Do NOT use corporate, NGO, or financial intelligence jargon.
+- Honest, grounded tone. 400-600 words.
+
+CRITICAL FORMATTING RULE: Do NOT use markdown bolding (**), italics, or quotes in the TITLE, SUBTITLE, SUMMARY, or TAGS fields. Plain text only for those fields.
 
 Structure your response EXACTLY as follows:
 
-    TITLE: [Compelling headline, max 80 characters]
+TITLE: [Compelling headline, max 80 characters]
 
-    SUBTITLE: [Secondary headline adding context, max 120 characters]
+SUBTITLE: [Secondary headline adding context, max 120 characters]
 
-    CONTENT:
-    [Full article in markdown format with subheadings]
+CONTENT:
+[Full article in markdown format with subheadings]
 
-    SUMMARY: [2 - 3 sentence summary]
+SUMMARY: [2-3 sentence grounded human-focused summary]
 
-    TAGS: [comma - separated list of 3 - 5 relevant tags]`;
+TAGS: [comma-separated list of 3-5 relevant tags]`;
 }
 
 function parseArticleResponse(text: string): {
@@ -560,7 +565,7 @@ CRITICAL OUTPUT RULES:
 
 const LENS_PERSONAS: Record<IntelligenceLens, string> = {
     investor: `
-You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school of investing.
+You are a Business Observer trained in the Benjamin Graham school of investing.
 You serve a family office with $500M AUM focused exclusively on African markets.
 You reject speculation. You demand evidence. Every recommendation must satisfy Graham's criteria.
 
@@ -594,7 +599,7 @@ OUTPUT REQUIREMENTS:
 `,
 
     government: `
-You are a CHIEF POLICY STRATEGIST advising African heads of state and multilateral institutions (AU, AfDB, UNDP).
+You are a Policy Observer advising African heads of state and multilateral institutions (AU, AfDB, UNDP).
 Your analysis shapes sovereign decisions affecting 1.4 billion people. Precision is non-negotiable.
 
 GOVERNANCE & POLICY ANALYTICAL FRAMEWORK:
@@ -615,7 +620,7 @@ OUTPUT REQUIREMENTS:
 `,
 
     explorer: `
-You are a PREMIER AFRICA TRAVEL STRATEGIST for ultra-high-net-worth individuals and discerning global travelers.
+You are a Culture Observer for ultra-high-net-worth individuals and discerning global travelers.
 Your clients include executives, diplomats, and cultural patrons who demand exceptional, safe, and authentic experiences.
 You combine Condé Nast Traveler editorial instinct with Foreign Affairs-level security awareness.
 
@@ -686,7 +691,7 @@ Produce your analysis now. Be definitive. No hedging.`;
 // Structured Output Templates (Force specific analytical structures)
 const FORMAT_TEMPLATES: Record<string, string> = {
     'long-form': `
-You are producing a COMPREHENSIVE INTELLIGENCE REPORT.
+You are producing a COMPREHENSIVE STORY.
 
 OUTPUT STRUCTURE (Follow exactly):
 ## Executive Summary
@@ -716,7 +721,7 @@ RULES:
 `,
 
     'summary': `
-You are producing an EXECUTIVE BRIEFING for a C-suite audience.
+You are producing an DEEP-DIVE for backers.
 
 OUTPUT STRUCTURE (Exactly 4 paragraphs):
 **PARAGRAPH 1 - THE VERDICT**: What is the single most important takeaway? State it as fact.
@@ -832,7 +837,7 @@ export async function generateMarketIntelligence(
                 ? `the ${sectorName} sector across Africa`
                 : 'pan-African market trends';
 
-    const prompt = `You are a senior analyst at "Best of Africa Intelligence," producing premium market reports.
+    const prompt = `You are a senior analyst at "BOA-Story Intelligence," producing grounded stories.
 
 Generate a ${reportType.replace('_', ' ')} report on ${focus}.
 
@@ -929,7 +934,7 @@ export async function synthesizeUnifiedBriefing(
         ? `Market: ${context.countryName || 'Pan-Africa'}, Sector: ${context.sectorName || 'Cross-Sector'}, GDP: ${context.gdp || 'N/A'}`
         : 'Pan-African context';
 
-    const systemPrompt = `You are the CHIEF INTELLIGENCE OFFICER at Best of Africa Intelligence.
+    const systemPrompt = `You are the LEAD EDITOR at BOA-Story Intelligence.
 You produce unified 3-lens briefings for premium subscribers.
 
 ${ASSERTIVE_RULES}

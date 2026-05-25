@@ -96,7 +96,7 @@ function StatusDot({ health }: { health: string }) {
 function TaskBadge({ status }: { status: AgentTask['status'] }) {
   const cfg = {
     pending:    { label: 'Queued',    cls: 'bg-white/10 text-white/50' },
-    processing: { label: 'Running',   cls: 'bg-[#C9A84C]/20 text-[#C9A84C]' },
+    processing: { label: 'Running',   cls: 'bg-accent/20 text-accent' },
     completed:  { label: 'Done',      cls: 'bg-green-500/20 text-green-400' },
     failed:     { label: 'Failed',    cls: 'bg-red-500/20 text-red-400' },
   }[status];
@@ -153,8 +153,8 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0E0C0A]/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-[#1A1714] border border-[#C9A84C]/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-card border border-accent/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
         <h3 className="font-serif text-2xl text-white mb-1">Configure Publishing Tools</h3>
         <p className="text-white/50 text-sm mb-6">Connect your editorial publishing system</p>
 
@@ -164,7 +164,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
             <select
               value={provider}
               onChange={e => { setProvider(e.target.value); setModel(''); }}
-              className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
+              className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
             >
               {PROVIDER_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -180,7 +180,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={`sk-... or your ${PROVIDER_LABELS[provider]?.name} key`}
-                className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors placeholder:text-white/20 font-mono text-sm"
+                className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors placeholder:text-white/20 font-mono text-sm"
               />
             </div>
           )}
@@ -190,7 +190,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="w-full bg-[#0E0C0A] border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-[#C9A84C] transition-colors"
+              className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
             >
               <option value="">Default for provider</option>
               {selectedOpt?.models.map(m => (
@@ -204,7 +204,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
               type="checkbox"
               checked={isDefault}
               onChange={e => setIsDefault(e.target.checked)}
-              className="w-4 h-4 accent-[#C9A84C]"
+              className="w-4 h-4 accent-accent"
             />
             <span className="text-sm text-white/70">Set as default agent provider</span>
           </label>
@@ -219,7 +219,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
           <button
             onClick={save}
             disabled={loading}
-            className="flex-1 bg-[#C9A84C] text-[#0E0C0A] font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
+            className="flex-1 bg-accent text-card font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
           >
             {loading ? 'Saving…' : 'Connect Provider'}
           </button>
@@ -345,8 +345,8 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   // not the full "booting" screen which can persist for up to 30s.
   if (!inView || (isStatusLoading && !live)) {
     return (
-      <div ref={panelRef} className="bg-[#0E0C0A] border border-white/10 rounded-2xl overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#1A1714]">
+      <div ref={panelRef} className="bg-card border border-white/10 rounded-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-card">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
             <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
@@ -356,9 +356,9 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
             Editorial OS v1.0.0
           </div>
         </div>
-        <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-[#0E0C0A] font-mono">
-          <div className="w-8 h-8 border-2 border-[#C9A84C]/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
-          <span className="text-[#C9A84C] text-sm tracking-widest animate-pulse">
+        <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-card font-mono">
+          <div className="w-8 h-8 border-2 border-accent/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
+          <span className="text-accent text-sm tracking-widest animate-pulse">
             {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING EDITORIAL STATUS...'}
           </span>
         </div>
@@ -368,11 +368,11 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
   return (
     <>
-      <div ref={panelRef} className="bg-[#0E0C0A] border border-white/10 rounded-2xl overflow-hidden">
+      <div ref={panelRef} className="bg-card border border-white/10 rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <Activity size={18} className="text-[#C9A84C]" />
+            <Activity size={18} className="text-accent" />
             <span className="font-semibold text-white text-sm tracking-wide">Editorial System</span>
           </div>
           <div className="flex items-center gap-2">
@@ -387,7 +387,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-white/5">
           {[
             { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-white/50' },
-            { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-[#C9A84C]' },
+            { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-accent' },
             { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-green-400' },
             { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-red-400' },
             { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-red-400' : 'text-white/20' },
@@ -410,7 +410,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
           {adminKey && (
             <button
               onClick={() => setShowProviderModal(true)}
-              className="flex items-center gap-1 text-[10px] text-[#C9A84C] font-semibold uppercase tracking-wider hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1 text-[10px] text-accent font-semibold uppercase tracking-wider hover:opacity-80 transition-opacity"
             >
               <Plus size={12} /> Add
             </button>
@@ -423,7 +423,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
             <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Latest Published</p>
             <a
               href={`/stories/${live.latest_article.slug}`}
-              className="text-sm text-white/80 hover:text-[#C9A84C] transition-colors line-clamp-1"
+              className="text-sm text-white/80 hover:text-accent transition-colors line-clamp-1"
             >
               {live.latest_article.title}
             </a>
@@ -479,7 +479,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{meta?.logo}</span>
                       <span className="text-xs text-white/70">{p.label}</span>
-                      {p.is_default ? <span className="text-[9px] bg-[#C9A84C]/20 text-[#C9A84C] px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Default</span> : null}
+                      {p.is_default ? <span className="text-[9px] bg-accent/20 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Default</span> : null}
                       {p.last_test_status && (
                         <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${p.last_test_status === 'ok' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                           {p.last_test_status}
@@ -487,7 +487,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => testProvider(p.id)} className="text-white/30 hover:text-[#C9A84C] transition-colors" title="Test connection">
+                      <button onClick={() => testProvider(p.id)} className="text-white/30 hover:text-accent transition-colors" title="Test connection">
                         <TestTube size={12} />
                       </button>
                       <button onClick={() => removeProvider(p.id)} className="text-white/30 hover:text-red-400 transition-colors" title="Remove">

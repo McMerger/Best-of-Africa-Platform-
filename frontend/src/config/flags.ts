@@ -1,10 +1,10 @@
 // frontend/src/config/flags.ts
 
-export const APP_MODE = import.meta.env.VITE_APP_MODE || 'beta';
+export const APP_MODE = 'beta';
 
-export const isBeta = APP_MODE === 'beta';
-export const isHybrid = APP_MODE === 'hybrid';
-export const isFull = APP_MODE === 'full';
+export const isBeta = true;
+export const isHybrid = false;
+export const isFull = false;
 
 export const APP_FLAGS = {
   mode: APP_MODE,
@@ -14,20 +14,20 @@ export const APP_FLAGS = {
 };
 
 export const FEATURES = {
-  // Beta features
-  BETA_LANDING: isBeta || isHybrid || isFull,
-  BETA_MEMBERSHIP: isBeta || isHybrid || isFull,
-  BETA_ARTICLES: isBeta || isHybrid || isFull,
+  // Beta features (The authentic platform)
+  BETA_LANDING: true,
+  BETA_MEMBERSHIP: true,
+  BETA_ARTICLES: true,
   
   // Always true
   ADMIN: true,
   
-  // Full platform features (true in full or hybrid)
-  COUNTRY_HUBS: isFull || isHybrid,
-  INTELLIGENCE: isFull || isHybrid,
-  MARKET_INTEL: isFull || isHybrid,
-  EVENTS: isFull || isHybrid,
-  TRAVEL: isFull || isHybrid,
-  LIBRARY: isFull || isHybrid,
-  REPORTS: isFull || isHybrid,
+  // Corporate platform features - Disabled permanently to align with brief
+  COUNTRY_HUBS: false,
+  INTELLIGENCE: false,
+  MARKET_INTEL: false,
+  EVENTS: false,
+  TRAVEL: false,
+  LIBRARY: false,
+  REPORTS: false,
 };

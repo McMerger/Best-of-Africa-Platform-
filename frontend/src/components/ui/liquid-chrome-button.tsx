@@ -39,7 +39,7 @@ export const LiquidChromeButton: React.FC<LiquidChromeButtonProps> = ({ classNam
 
             {/* Main button */}
             <button
-                className="relative z-10 w-full h-full flex items-center justify-center bg-secondary text-secondary-foreground rounded-full font-bold uppercase tracking-widest text-sm transition-all duration-300 group-hover:bg-secondary/90 shadow-lg group-hover:shadow-xl group-hover:shadow-[#D4AF37]/10"
+                className="relative z-10 w-full h-full flex items-center justify-center bg-secondary text-secondary-foreground rounded-full font-bold uppercase tracking-widest text-sm transition-all duration-300 group-hover:bg-secondary/90 shadow-lg group-hover:shadow-xl group-hover:shadow-accent/10"
                 {...props}
             >
                 {text || children}

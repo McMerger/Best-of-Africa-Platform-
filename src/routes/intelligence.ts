@@ -208,7 +208,7 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
           if (!headlines) return "Insufficient data for deep analysis.";
 
           try {
-            const prompt = `System: You are a Senior Africa Intelligence Analyst. Write a concise "Deep Dive Analysis" for the ${(sector as Record<string, any>).name} sector in Africa. Analyze through three lenses simultaneously: (1) Value Investment outlook (Graham-style: P/E potential, earnings stability, margin of safety), (2) Policy Impact (governance quality, trade integration, regulatory trajectory), (3) Explorer/Tourism relevance (hospitality infrastructure, cultural appeal, access logistics). Be definitive. No hedging.\nUser: Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.`;
+            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.`;
             const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
             return aiResponse?.trim();
           } catch (e) {
@@ -422,7 +422,7 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     }).join('\n---\n');
 
     // 4. Generate Response with Gemini
-    const systemPrompt = `You are the AI Market Consultant for "Best of Africa", a strategic intelligence platform. 
+    const systemPrompt = `You are the AI Market Consultant for "BOA-Story", a strategic storytelling platform. 
     Current Date: ${new Date().toLocaleDateString()}.
     Use the provided Real-Time Context to answer the user's question about African markets. 
     If the context is relevant, cite it. If not, rely on your general knowledge but mention you are missing specific real-time data on that niche.
@@ -543,7 +543,7 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
   try {
     const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
 
-    const prompt = `System: You are a Strategic Advisor. Provide 3 specific strategic recommendations for investors in this country based on recent news. Return array of strings.\nUser: Country: ${countryName}. News: ${topStories}`;
+    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Country: ${countryName}. News: ${topStories}`;
     const text = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.5 });
 
     // Parse response (simple heuristic)

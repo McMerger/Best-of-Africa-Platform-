@@ -105,7 +105,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
 
   if (status === 'checking') {
     return (
-      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-4 rounded-full bg-[#1A1714] border border-white/5 opacity-50">
+      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-4 rounded-full bg-card border border-white/5 opacity-50">
         <Volume2 size={16} className="text-white/20" />
         <span className="text-xs text-white/30 font-medium">Checking audio availability...</span>
       </div>
@@ -116,25 +116,25 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
     return (
       <button 
         onClick={generateAndPlay}
-        className="group w-full max-w-sm h-12 flex items-center justify-between px-5 rounded-full bg-[#1A1714] border border-white/10 hover:border-[#C9A84C]/40 transition-colors"
+        className="group w-full max-w-sm h-12 flex items-center justify-between px-5 rounded-full bg-card border border-white/10 hover:border-accent/40 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[#C9A84C]/10 group-hover:text-[#C9A84C] transition-colors">
+          <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent/10 group-hover:text-accent transition-colors">
             <Volume2 size={12} />
           </div>
           <span className="text-[13px] font-medium text-white/70 group-hover:text-white transition-colors">Listen to article</span>
         </div>
-        <span className="text-[10px] uppercase tracking-wider text-white/30 group-hover:text-[#C9A84C] transition-colors font-bold">Generate Audio</span>
+        <span className="text-[10px] uppercase tracking-wider text-white/30 group-hover:text-accent transition-colors font-bold">Generate Audio</span>
       </button>
     );
   }
 
   if (status === 'generating') {
     return (
-      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-5 rounded-full bg-[#1A1714] border border-[#C9A84C]/30 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[#C9A84C]/5 animate-pulse" />
-        <Loader size={14} className="text-[#C9A84C] animate-spin relative z-10" />
-        <span className="text-[13px] font-medium text-[#C9A84C] relative z-10">Preparing audio...</span>
+      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-5 rounded-full bg-card border border-accent/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-accent/5 animate-pulse" />
+        <Loader size={14} className="text-accent animate-spin relative z-10" />
+        <span className="text-[13px] font-medium text-accent relative z-10">Preparing audio...</span>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="w-full max-w-md bg-[#1A1714] border border-[#C9A84C]/20 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="w-full max-w-md bg-card border border-accent/20 rounded-2xl p-4 flex flex-col gap-3">
       {audioData && (
         <audio 
           ref={audioRef} 
@@ -159,7 +159,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
       <div className="flex items-center gap-4">
         <button 
           onClick={togglePlay}
-          className="w-10 h-10 rounded-full bg-[#C9A84C] text-[#0E0C0A] flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-[#C9A84C]/20"
+          className="w-10 h-10 rounded-full bg-accent text-card flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
@@ -173,7 +173,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
           
           <div className="relative h-1.5 w-full bg-white/10 rounded-full group">
             <div 
-              className="absolute top-0 left-0 h-full bg-[#C9A84C] rounded-full transition-[width] duration-100" 
+              className="absolute top-0 left-0 h-full bg-accent rounded-full transition-[width] duration-100" 
               style={{ width: `${progressPercent}%` }}
             />
             {/* Native range input overlay for seeking */}
@@ -188,7 +188,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
             />
             {/* Custom thumb that appears on hover */}
             <div 
-              className="absolute top-1/2 -mt-1.5 w-3 h-3 bg-white rounded-full shadow border-2 border-[#C9A84C] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              className="absolute top-1/2 -mt-1.5 w-3 h-3 bg-white rounded-full shadow border-2 border-accent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
               style={{ left: `calc(${progressPercent}% - 6px)` }}
             />
           </div>
@@ -197,7 +197,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
       
       {audioData?.url.includes('best-of-africa-media.r2.dev/audio/tts') && (
         <div className="flex items-center gap-2 mt-1 px-1">
-          <AlertCircle size={10} className="text-[#C9A84C]/50" />
+          <AlertCircle size={10} className="text-accent/50" />
           <span className="text-[10px] text-white/30 italic">TTS mode — ElevenLabs integration pending.</span>
         </div>
       )}

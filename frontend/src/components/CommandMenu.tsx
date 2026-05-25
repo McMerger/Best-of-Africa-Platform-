@@ -96,7 +96,7 @@ export const CommandMenu = () => {
                     <MagnifyingGlassIcon className="mr-2 h-5 w-5 shrink-0 opacity-50" />
                     <Input
                         className="flex h-12 w-full rouned-md bg-transparent py-3 text-lg outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 shadow-none text-foreground"
-                        placeholder="Search Intelligence... (Countries, Sectors, Reports)"
+                        placeholder="Search stories, countries, topics…"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -116,7 +116,7 @@ export const CommandMenu = () => {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                                 </span>
-                                Live Intelligence Signals
+                                Latest Updates
                             </div>
                             <div
                                 onClick={() => { setOpen(false); navigate('/analyst'); }}
@@ -127,13 +127,13 @@ export const CommandMenu = () => {
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-bold">Open Analyst Console</div>
-                                    <div className="text-xs opacity-50">Strategic Intelligence</div>
+                                    <div className="text-xs opacity-50">Story Updates</div>
                                 </div>
                                 <ArrowRightIcon className="ml-auto h-4 w-4 opacity-50" />
                             </div>
                             <div className="grid gap-2 mt-4">
                                 {[
-                                    { label: "New market intelligence available", type: "OPPORTUNITY", time: "Just now" },
+                                    { label: "New stories published", type: "UPDATE", time: "Just now" },
                                     { label: "Regional analysis updated", type: "EVENT", time: "Recently" },
                                     { label: "Strategic briefing ready", type: "RISK", time: "Today" },
                                 ].map((signal, i) => (
@@ -176,7 +176,7 @@ export const CommandMenu = () => {
                             </div>
                             <div className="flex-1">
                                 <div className="font-bold">{item.text}</div>
-                                {item.type === 'country' && <div className="text-xs opacity-50">Country Intelligence</div>}
+                                {item.type === 'country' && <div className="text-xs opacity-50">Country Stories</div>}
                                 {item.type === 'sector' && <div className="text-xs opacity-50">Market Sector</div>}
                             </div>
                             {index === selectedIndex && (

@@ -76,7 +76,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                 {/* Gold indicator for top regions */}
                                 {isTop3 && (
                                     <div
-                                        className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-[#D4AF37] shadow-sm shadow-[#D4AF37]/50 ${!prefersReducedMotion ? 'animate-pulse' : ''}`}
+                                        className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full bg-accent shadow-sm shadow-accent/50 ${!prefersReducedMotion ? 'animate-pulse' : ''}`}
                                     />
                                 )}
 
@@ -94,7 +94,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                 </div>
 
                                 {/* Region label */}
-                                <span className={`text-[9px] font-black uppercase tracking-[0.15em] font-serif transition-colors duration-300 ${isActive ? 'text-[#D4AF37]' : 'text-primary'}`}>
+                                <span className={`text-[9px] font-black uppercase tracking-[0.15em] font-serif transition-colors duration-300 ${isActive ? 'text-accent' : 'text-primary'}`}>
                                     {region.id}
                                 </span>
 
@@ -126,7 +126,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Standard Activity</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#D4AF37] shadow-sm shadow-[#D4AF37]/50"></div>
+                    <div className="w-3 h-3 rounded-full bg-accent shadow-sm shadow-accent/50"></div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">High Volume Interest</span>
                 </div>
             </div>

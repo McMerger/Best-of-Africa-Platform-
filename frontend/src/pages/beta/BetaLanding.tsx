@@ -406,7 +406,7 @@ export const BetaLanding = () => {
               <div>
                 <ul className="space-y-3">
                   <li>
-                    <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light transition-colors font-medium">Support on Ko-fi</a>
+                    <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light transition-colors font-medium">Support BOA, Launch Your Story</a>
                   </li>
                 </ul>
               </div>

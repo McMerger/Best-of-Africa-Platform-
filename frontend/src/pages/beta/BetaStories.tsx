@@ -22,18 +22,18 @@ const stripMarkdown = (text: string): string => {
 };
 
 const StoryCardSkeleton = () => (
-  <div className="bg-white rounded-xl border border-[#1C1814]/8 h-[380px] animate-pulse">
+  <div className="bg-white rounded-xl border border-primary/8 h-[380px] animate-pulse">
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <div className="w-8 h-8 bg-[#1C1814]/8 rounded-full" />
-        <div className="w-20 h-4 bg-[#1C1814]/8 rounded" />
+        <div className="w-8 h-8 bg-primary/8 rounded-full" />
+        <div className="w-20 h-4 bg-primary/8 rounded" />
       </div>
-      <div className="h-6 bg-[#1C1814]/8 rounded mb-2 w-full" />
-      <div className="h-6 bg-[#1C1814]/8 rounded mb-4 w-3/4" />
+      <div className="h-6 bg-primary/8 rounded mb-2 w-full" />
+      <div className="h-6 bg-primary/8 rounded mb-4 w-3/4" />
       <div className="space-y-2">
-        <div className="h-4 bg-[#1C1814]/5 rounded w-full" />
-        <div className="h-4 bg-[#1C1814]/5 rounded w-5/6" />
-        <div className="h-4 bg-[#1C1814]/5 rounded w-4/6" />
+        <div className="h-4 bg-primary/5 rounded w-full" />
+        <div className="h-4 bg-primary/5 rounded w-5/6" />
+        <div className="h-4 bg-primary/5 rounded w-4/6" />
       </div>
     </div>
   </div>
@@ -130,10 +130,10 @@ export const BetaStories = () => {
   const showLoading = isSearchMode ? (isSearching || isCountrySearching) : isLoading;
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] pb-32">
+    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
       <SEO 
-        title="Stories | Best of Africa" 
-        description="Deep-dive journalism and market intelligence covering business, tech, and policy across the continent."
+        title="Stories | BOA-Story" 
+        description="Real, grounded stories about African lives, cities, creators, and everyday opportunity."
       />
       <BetaNav />
       <div className="max-w-7xl mx-auto px-6 py-24">
@@ -142,34 +142,34 @@ export const BetaStories = () => {
           <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
             Stories from the Continent
           </h1>
-          <p className="text-xl text-[#1C1814]/75">
-            Real reporting. Real opportunities.
+          <p className="text-xl text-primary/75">
+            Real stories. Honest reporting.
           </p>
         </header>
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && (
-          <div className="mb-6 px-4 py-2.5 rounded-lg bg-[#1C1814]/5 border border-[#1C1814]/10 flex items-center gap-2 text-sm text-[#1C1814]/50">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C9A84C]/60 shrink-0" />
+          <div className="mb-6 px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
             Live content is currently unavailable. Please check back shortly.
           </div>
         )}
 
         {/* Search Bar */}
         <div className="relative mb-8">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/40 pointer-events-none" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/40 pointer-events-none" />
           <input
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
             aria-label="Search stories"
-            className="w-full md:max-w-lg bg-white border border-[#1C1814]/8 rounded-lg pl-10 pr-10 py-3 text-sm text-[#1C1814] placeholder:text-[#1C1814]/40 focus:outline-none focus:border-[#C9A84C]/60 focus:ring-1 focus:ring-[#C9A84C]/30 transition-colors"
+            className="w-full md:max-w-lg bg-white border border-primary/8 rounded-lg pl-10 pr-10 py-3 text-sm text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
           />
           {searchInput && (
             <button
               onClick={() => { setSearchInput(''); setDebouncedQuery(''); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-[#1C1814]/40 hover:text-[#1C1814] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
             >
               <X size={14} />
             </button>
@@ -178,11 +178,11 @@ export const BetaStories = () => {
 
         {/* Editorial Summary Card */}
         {isSearchMode && searchData?.ai_answer && (
-          <div className="mb-8 bg-[#C9A84C]/8 border border-[#C9A84C]/25 rounded-xl p-5 flex gap-3">
-            <Sparkles size={16} className="text-[#C9A84C] shrink-0 mt-0.5" />
+          <div className="mb-8 bg-accent/8 border border-accent/25 rounded-xl p-5 flex gap-3">
+            <Sparkles size={16} className="text-accent shrink-0 mt-0.5" />
             <div>
-              <span className="text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase block mb-1">Editorial Summary</span>
-              <p className="text-sm text-[#1C1814]/80 leading-relaxed">{searchData.ai_answer}</p>
+              <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">Editorial Summary</span>
+              <p className="text-sm text-primary/80 leading-relaxed">{searchData.ai_answer}</p>
             </div>
           </div>
         )}
@@ -196,8 +196,8 @@ export const BetaStories = () => {
                 onClick={() => { setActiveFilter(sector); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                   activeFilter === sector
-                    ? 'bg-[#C9A84C] text-[#0E0C0A] border-[#C9A84C]'
-                    : 'border-[#1C1814]/10 text-[#1C1814]/65 hover:border-[#1C1814]/30 hover:text-[#1C1814]'
+                    ? 'bg-accent text-card border-accent'
+                    : 'border-primary/10 text-primary/65 hover:border-primary/30 hover:text-primary'
                 }`}
               >
                 {sector}
@@ -208,7 +208,7 @@ export const BetaStories = () => {
 
         {/* Search result count */}
         {isSearchMode && !isSearching && (
-          <p className="text-sm text-[#1C1814]/40 mb-6">
+          <p className="text-sm text-primary/40 mb-6">
             {searchArticles.length > 0
               ? `${searchArticles.length} result${searchArticles.length !== 1 ? 's' : ''} for "${debouncedQuery}"`
               : `No results found for "${debouncedQuery}"`}
@@ -232,31 +232,31 @@ export const BetaStories = () => {
                     >
                       <Link
                         to="/membership"
-                        className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-[#C9A84C]/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors block"
+                        className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-accent/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors block"
                       >
-                      <div className="p-6 pb-2 border-b border-[#1C1814]/8 relative z-10 bg-white" aria-hidden="true">
+                      <div className="p-6 pb-2 border-b border-primary/8 relative z-10 bg-white" aria-hidden="true">
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-2xl">{article.country_flag}</span>
-                          <span className="text-xs font-semibold tracking-wider text-[#1C1814]/50 uppercase">{article.sector_name}</span>
+                          <span className="text-xs font-semibold tracking-wider text-primary/50 uppercase">{article.sector_name}</span>
                         </div>
-                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-[#1C1814] blur-[4px] select-none opacity-60">
-                          Premium Intelligence Briefing: Exclusive Market Analysis
+                        <h3 className="font-serif text-[22px] leading-snug mb-3 text-primary blur-[4px] select-none opacity-60">
+                          This story is waiting for you.
                         </h3>
-                        <p className="text-[#1C1814]/65 text-sm leading-relaxed line-clamp-3 blur-[4px] select-none opacity-60">
-                          Unlock this deep-dive to access proprietary market analysis, sector performance metrics, and on-the-ground reporting from our intelligence desk.
+                        <p className="text-primary/65 text-sm leading-relaxed line-clamp-3 blur-[4px] select-none opacity-60">
+                          A real, grounded account from across the continent — the kind of story you won't find in a headline.
                         </p>
-                        <div className="mt-4 text-xs font-medium text-[#1C1814]/40 border-t border-[#1C1814]/8 pt-4 blur-[4px] select-none opacity-60">
+                        <div className="mt-4 text-xs font-medium text-primary/40 border-t border-primary/8 pt-4 blur-[4px] select-none opacity-60">
                           5 min read
                         </div>
                       </div>
-                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-[#1C1814]/8">
-                        <div className="absolute inset-0 backdrop-blur-[5px] bg-[#1C1814]/65 transition-opacity duration-300" />
+                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-primary/8">
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-primary/65 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
-                          <div className="bg-[#1C1814] p-4 rounded-full border border-[#C9A84C]/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-[#C9A84C]/10 transition-all duration-300">
-                            <Lock className="w-6 h-6 text-[#C9A84C]" />
+                          <div className="bg-primary p-4 rounded-full border border-accent/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-accent/10 transition-all duration-300">
+                            <Lock className="w-6 h-6 text-accent" />
                           </div>
                           <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
-                          <span className="text-xs text-[#C9A84C] uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
+                          <span className="text-xs text-accent uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
                         </div>
                       </div>
                       </Link>
@@ -274,7 +274,7 @@ export const BetaStories = () => {
                   >
                     <Link
                       to={`/stories/${article.slug}`}
-                      className="group relative bg-white rounded-xl overflow-hidden border border-[#1C1814]/8 flex flex-col transition-colors duration-300 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] block h-full"
+                      className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] block h-full"
                     >
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
@@ -294,25 +294,25 @@ export const BetaStories = () => {
                     <div className="p-6 pb-2 flex-grow relative z-10 bg-white">
                       <div className="flex justify-between items-center mb-3">
                         <span className="text-xl">{article.hero_image_url ? '' : ''}{article.country_flag}</span>
-                        <span className="text-xs font-semibold tracking-wider text-[#C9A84C] uppercase">{article.sector_name}</span>
+                        <span className="text-xs font-semibold tracking-wider text-accent uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-[#1C1814] group-hover:text-[#C9A84C] transition-colors">
+                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-primary group-hover:text-accent transition-colors">
                         {stripMarkdown(article.title)}
                       </h3>
-                      <p className="text-[#1C1814]/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
+                      <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
                     </div>
                     <div className="p-6 pt-0 bg-white">
-                      <div className="text-xs font-medium text-[#1C1814]/50 border-t border-[#1C1814]/8 pt-4 flex justify-between items-center">
+                      <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read
                           {article.published_at && (
                             <>
-                              <span className="text-[#1C1814]/20">·</span>
+                              <span className="text-primary/20">·</span>
                               <span>{new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                             </>
                           )}
                         </span>
-                        <span className="text-[#C9A84C] group-hover:translate-x-1 transition-transform">Read story →</span>
+                        <span className="text-accent group-hover:translate-x-1 transition-transform">Read story →</span>
                       </div>
                     </div>
                   </Link>
@@ -328,11 +328,11 @@ export const BetaStories = () => {
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={isPlaceholderData}
-              className="px-6 py-2 rounded-full border border-[#C9A84C]/30 text-[#C9A84C] text-sm font-medium hover:bg-[#C9A84C]/10 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 rounded-full border border-accent/30 text-accent text-sm font-medium hover:bg-accent/10 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isPlaceholderData ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#C9A84C]/40 border-t-[#C9A84C] rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
                   Loading...
                 </>
               ) : 'Load More'}
@@ -344,14 +344,14 @@ export const BetaStories = () => {
           <div className="text-center py-16">
             {isSearchMode ? (
               <>
-                <p className="text-[#1C1814]/50 mb-4">That story isn't published yet.</p>
-                <p className="text-[#1C1814]/30 text-sm mb-6">Try a country name, city, or sector:</p>
+                <p className="text-primary/50 mb-4">That story isn't published yet.</p>
+                <p className="text-primary/30 text-sm mb-6">Try a country name, city, or sector:</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {['Lagos', 'Kigali', 'Nairobi', 'Technology', 'Energy', 'Ghana'].map(s => (
                     <button
                       key={s}
                       onClick={() => setSearchInput(s)}
-                      className="px-3 py-1 rounded-full text-xs border border-[#1C1814]/10 text-[#1C1814]/50 hover:border-[#C9A84C]/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:text-[#C9A84C] transition-colors"
+                      className="px-3 py-1 rounded-full text-xs border border-primary/10 text-primary/50 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:text-accent transition-colors"
                     >
                       {s}
                     </button>
@@ -359,7 +359,7 @@ export const BetaStories = () => {
                 </div>
               </>
             ) : (
-              <p className="text-[#1C1814]/50">No stories in this category yet.</p>
+              <p className="text-primary/50">No stories in this category yet.</p>
             )}
           </div>
         )}
@@ -367,9 +367,9 @@ export const BetaStories = () => {
         <div className="text-center">
           <Link
             to="/membership"
-            className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-medium font-sans px-8 py-4 rounded-lg shadow-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+            className="inline-block bg-accent text-card font-medium font-sans px-8 py-4 rounded-lg shadow-sm hover:brightness-110 transition-transform hover:-translate-y-0.5"
           >
-            Unlock All Stories — Become a Founding Member
+            Unlock all stories on Ko-fi
           </Link>
         </div>
 

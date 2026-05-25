@@ -3,29 +3,81 @@
 @tailwind utilities;
 
 :root {
-  --charcoal: #1C1814;         /* Dark sections — hero, footer, membership */
-  --charcoal-surface: #EDE8DF; /* Alternating section bg */
-  --charcoal-deep: #0B0907;    /* Hero radial/deepest overlay */
-  --parchment: #F5F0E8;        /* Page background */
-  --parchment-deep: #EDE8DF;   /* Section alt background */
-  --navy: #1C1814;             /* Alias */
-  --navy-surface: #EDE8DF;     /* Alias */
-  --navy-card: rgba(28,24,20,0.03);
-  --gold: #C9A84C;
-  --gold-light: #E8C96A;
-  --gold-muted: rgba(201,168,76,0.12);
-  --text-primary: #1C1814;
-  --text-secondary: rgba(28,24,20,0.65);
-  --text-muted: rgba(28,24,20,0.4);
-  --border-subtle: rgba(28,24,20,0.08);
-  --border-gold: rgba(201,168,76,0.3);
-  --shadow-card: 0 2px 16px rgba(28,24,20,0.08);
-  --shadow-gold: 0 8px 40px rgba(201,168,76,0.2);
+  --primary: 210 73% 15%; /* #0A2540 Stripe Classic Navy */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  
+  --background: 0 0% 100%; /* #FFFFFF */
+  --foreground: 210 73% 15%; /* Navy Text */
+  
+  --card: 212 100% 7%; /* #001226 Deep Navy for components */
+  --card-foreground: 0 0% 100%; /* White text on card */
+  
+  --accent: 46 65% 52%; /* #D4AF37 Elegant Champagne Gold */
+  --accent-foreground: 210 73% 15%; /* Navy */
+  
+  --accent-light: 46 80% 85%; /* Very light gold for highlights */
+  
+  --secondary: 210 40% 96%; /* #F0F4F8 Soft Off-White/Blue surface */
+  --secondary-foreground: 210 73% 15%; /* Navy */
+
+  --muted: 210 20% 90%; 
+  --muted-foreground: 210 30% 45%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 73% 15%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 210 20% 90%;
+  --input: 210 20% 90%;
+  --ring: 46 65% 52%;
+
+  --radius: 0.5rem;
+  --density-gap: 2rem;
+  --density-padding: 2rem;
+  --density-text-base: 1rem;
+}
+
+/* 
+  Beta Theme (Parchment, Dark Navy, Champagne Gold) 
+  Applied to the wrapper of all beta pages to ensure the main app remains isolated.
+*/
+.theme-beta {
+  --background: 37 33% 94%; /* #F5F0E8 Parchment Base */
+  --foreground: 30 17% 9%;  /* #1C1814 Deep Espresso / Dark text */
+  
+  --primary: 30 17% 9%;     /* #1C1814 Dark for strong sections */
+  --primary-foreground: 37 33% 94%; /* #F5F0E8 Parchment text on dark */
+  
+  --card: 0 0% 100%;        /* #FFFFFF Clean white for elevated cards */
+  --card-foreground: 30 17% 9%; 
+  
+  --accent: 44 53% 54%;     /* #C9A84C Champagne Gold */
+  --accent-foreground: 0 0% 100%; /* White text on gold buttons */
+  
+  --accent-light: 44 53% 90%; 
+  
+  --secondary: 37 30% 89%;  /* #EDE6D8 Slightly darker parchment for surfaces */
+  --secondary-foreground: 30 17% 9%; 
+
+  --muted: 37 20% 85%; 
+  --muted-foreground: 30 10% 45%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 30 17% 9%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 37 20% 85%;     /* Subtle warm border */
+  --input: 37 20% 85%;
+  --ring: 44 53% 54%;
 }
 
 body {
-  background-color: #F5F0E8;
-  color: #1C1814;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -33,95 +85,45 @@ body {
 
 @layer base {
   :root {
-    /* Davos White Theme (Light Mode) */
-    /* Pure White Background for "Premium White" Aesthetic */
-    --background: 0 0% 100%;
-    /* Midnight Navy Text #020C17 */
-    --foreground: 215 85% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 215 85% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 85% 10%;
-
-    /* Primary: Darker Navy Blue (Updated) */
-    --primary: 222 47% 31%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Secondary: Premium Metallic Gold */
-    --secondary: 45 90% 55%;
-    --secondary-foreground: 215 85% 10%;
-
-    --muted: 215 30% 96%;
-    --muted-foreground: 215 30% 45%;
-
-    --accent: 200 80% 95%;
-    --accent-foreground: 215 85% 10%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 20% 90%;
-    --input: 215 20% 90%;
-    /* Ring: Gold for Premium Focus States */
-    --ring: 45 90% 55%;
-
-    --radius: 0.5rem;
-
-    /* Density Tokens (Default: Comfortable) */
-    --density-gap: 2rem;
-    /* gap-8 */
-    --density-padding: 2rem;
-    /* p-8 */
-    --density-text-base: 1rem;
-    /* text-base */
+    /* Keep root clean, mapping directly above */
   }
 
   /* Compact Mode Overrides */
   body[data-density='compact'] {
     --density-gap: 1rem;
-    /* gap-4 */
     --density-padding: 1rem;
-    /* p-4 */
     --density-text-base: 0.875rem;
-    /* text-sm */
   }
 
   .dark {
-    /* Davos Night Theme (Dark Mode) */
-    /* Deep Midnight Navy #051828 */
-    --background: 215 80% 9%;
+    /* Night Theme (Dark Mode) */
+    --background: 210 100% 5%;
     --foreground: 210 20% 98%;
 
-    --card: 215 80% 11%;
+    --card: 210 100% 8%;
     --card-foreground: 210 20% 98%;
 
-    --popover: 215 80% 11%;
+    --popover: 210 100% 8%;
     --popover-foreground: 210 20% 98%;
 
-    /* Primary: Lighter Electric Blue */
-    --primary: 224 80% 60%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 46 65% 52%;
+    --primary-foreground: 210 100% 12%;
 
-    /* Secondary: Rich Gold */
-    --secondary: 45 90% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 210 50% 20%;
+    --secondary-foreground: 210 20% 98%;
 
-    --muted: 215 50% 15%;
-    --muted-foreground: 215 30% 70%;
+    --accent: 46 65% 52%;
+    --accent-foreground: 210 100% 12%;
 
-    --accent: 215 50% 15%;
-    --accent-foreground: 210 20% 90%;
+    --muted: 210 50% 15%;
+    --muted-foreground: 210 30% 70%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 215 50% 20%;
-    --input: 215 50% 20%;
-    --ring: 45 90% 55%;
+    --border: 210 50% 20%;
+    --input: 210 50% 20%;
+    --ring: 46 65% 52%;
   }
 }
+
 
 @layer base {
   * {

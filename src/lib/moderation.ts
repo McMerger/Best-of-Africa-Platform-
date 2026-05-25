@@ -25,7 +25,7 @@ export async function checkContentIntegrity(
 
     // 1. AI-Powered Fact-Checking & Bias Analysis
     const moderationPrompt = `
-        As an Senior Editorial Auditor for "Best of Africa Intelligence", analyze the following AI-generated article.
+        As an Senior Editorial Auditor for "BOA-Story Intelligence", analyze the following AI-generated article.
         
         ARTICLE TITLE: ${title}
         CONTENT: ${content.slice(0, 3000)}

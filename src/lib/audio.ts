@@ -77,7 +77,7 @@ function createNarrationScript(title: string, content: string): string {
         .trim();
 
     // Add intro
-    const intro = `This is a Best of Africa intelligence briefing. ${title}. `;
+    const intro = `This is a BOA-Story deep-dive. ${title}. `;
 
     return intro + script;
 }
@@ -120,7 +120,7 @@ export async function generateBriefAudio(
                 .map((a, i) => `${i + 1}. ${a.title}`)
                 .join('. ');
 
-            const transcript = `Good morning. This is your ${country?.name || countryCode} market briefing for ${date}. Today's top stories: ${headlines}. That's your briefing. Visit Best of Africa for full coverage.`;
+            const transcript = `Good morning. This is your ${country?.name || countryCode} market briefing for ${date}. Today's top stories: ${headlines}. That's your briefing. Visit BOA-Story for full coverage.`;
 
             // Generate audio
             const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {

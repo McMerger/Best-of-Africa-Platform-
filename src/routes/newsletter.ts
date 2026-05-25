@@ -63,25 +63,25 @@ router.post('/subscribe', async (c) => {
          VALUES (?, ?, ?, 1, ?)`
     ).bind(id, email.toLowerCase(), frequency, new Date().toISOString()).run();
 
-    const unsubscribeUrl = `https://api.bestofafrica.com/api/v1/newsletter/unsubscribe?token=${id}`;
+    const unsubscribeUrl = `https://api.boastory.com/api/v1/newsletter/unsubscribe?token=${id}`;
 
     // Send Welcome Email
     const htmlEmail = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0A0F1E; padding: 40px 20px; color: #ffffff;">
         <div style="max-width: 560px; margin: 0 auto; background-color: #111827; border: 1px solid rgba(201,168,76,0.3); padding: 40px; text-align: center; border-radius: 12px;">
-            <h1 style="font-family: Georgia, serif; font-size: 24px; margin: 0 0 20px 0; color: #C9A84C;">Welcome to the Inner Circle.</h1>
+            <h1 style="font-family: Georgia, serif; font-size: 24px; margin: 0 0 20px 0; color: #C9A84C;">Welcome to BOA-Story.</h1>
             <p style="font-size: 16px; color: rgba(255,255,255,0.8); margin: 0 0 20px 0; line-height: 1.6;">
-                You are officially on the Best of Africa intelligence roster. You'll now receive our premium curation of investment signals, luxury tourism movements, and cultural narratives directly to your inbox.
+                You are officially on the list. You'll now receive our real, grounded stories about African lives, cities, and everyday opportunity directly to your inbox.
             </p>
             <p style="font-size: 14px; color: rgba(255,255,255,0.6); margin: 0 0 30px 0;">
-                Our AI-driven editorial desk monitors the continent continuously so you never miss a paradigm shift.
+                No charity ads. No disaster headlines. Just the continent without the filter.
             </p>
-            <a href="https://bestofafrica.com/stories" style="display: inline-block; background-color: #C9A84C; color: #0A0F1E; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+            <a href="https://boastory.com/stories" style="display: inline-block; background-color: #C9A84C; color: #0A0F1E; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px;">
                 Explore Latest Stories
             </a>
             <div style="margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                 <p style="font-size: 11px; color: rgba(255,255,255,0.3); margin: 0;">
-                    You are receiving this because you opted into the Best of Africa digest.
+                    You are receiving this because you opted into the BOA-Story digest.
                     <a href="${unsubscribeUrl}" style="color: #C9A84C; text-decoration: underline;">Unsubscribe</a>
                 </p>
             </div>
@@ -94,7 +94,7 @@ router.post('/subscribe', async (c) => {
             return sendEmail({
                 to: email.toLowerCase(),
                 toName: 'Subscriber',
-                subject: 'Welcome to the Best of Africa Digest',
+                subject: 'Welcome to the BOA-Story Dispatch',
                 html: htmlEmail,
             }).catch(err => console.error('[Newsletter Welcome Email Error]', err));
         })
@@ -151,7 +151,7 @@ router.get('/unsubscribe', async (c) => {
     ).bind(new Date().toISOString(), token).run();
 
     // Redirect to a friendly confirmation page
-    return c.redirect('https://bestofafrica.com/newsletter/unsubscribed', 302);
+    return c.redirect('https://boastory.com/newsletter/unsubscribed', 302);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

@@ -215,7 +215,7 @@ export async function sendDigestEmail(
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    from: 'Best of Africa <digest@bestofafrica.com>',
+                    from: 'BOA-Story <digest@bestofafrica.com>',
                     to: [to],
                     subject,
                     html,
@@ -298,7 +298,7 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 24px; text-align: center;">
-            <h1 style="color: #d4af37; margin: 0; font-size: 24px;">Best of Africa</h1>
+            <h1 style="color: #d4af37; margin: 0; font-size: 24px;">BOA-Story</h1>
             <p style="color: #fff; margin: 8px 0 0 0; opacity: 0.8;">${type === 'daily' ? 'Daily' : 'Weekly'} Intelligence Digest</p>
         </div>
         
@@ -316,7 +316,7 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
         </div>
         
         <div style="background: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #666;">
-            <a href="https://bestofafrica.com" style="color: #0d6efd;">Visit Best of Africa</a> |
+            <a href="https://bestofafrica.com" style="color: #0d6efd;">Visit BOA-Story</a> |
             <a href="https://bestofafrica.com/unsubscribe" style="color: #0d6efd;">Unsubscribe</a>
         </div>
     </div>
@@ -347,7 +347,7 @@ function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiS
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 24px; text-align: center;">
-            <h1 style="color: #d4af37; margin: 0;">Best of Africa Weekly</h1>
+            <h1 style="color: #d4af37; margin: 0;">BOA-Story Weekly</h1>
         </div>
         
         ${aiSummary ? `
@@ -367,7 +367,7 @@ function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiS
 }
 
 function generateDigestText(articles: DigestArticle[], aiSummary: string, type: string): string {
-    const header = `BEST OF AFRICA ${type.toUpperCase()} DIGEST\n${'='.repeat(40)}\n\n`;
+    const header = `BOA-STORY ${type.toUpperCase()} DIGEST\n${'='.repeat(40)}\n\n`;
     const summary = aiSummary ? `EXECUTIVE SUMMARY:\n${aiSummary}\n\n` : '';
     const articleList = articles.map((a, i) =>
         `${i + 1}. ${a.title}\n   ${a.country_name || 'Africa'} | ${a.sector_name || 'General'}\n   ${a.summary?.slice(0, 100) || ''}...\n`

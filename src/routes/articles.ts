@@ -196,7 +196,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
             if (!headlines) return "Monitor global markets for emerging trends.";
 
             try {
-                const prompt = `System: You are a Global Editor. Write a 1-sentence "World View" synthesizing these top stories.\nUser: ${headlines}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
                 return aiResponse?.trim();
             } catch (e) {
@@ -346,7 +346,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
             if (!headlines) return "No sufficient data for trend analysis.";
 
             try {
-                const prompt = `System: You are a Sector Specialist. Synthesize a 2-sentence "Sector Trend Pulse" based on these headlines.\nUser: ${headlines}`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.6 });
                 return aiResponse?.trim();
             } catch (e) {
@@ -449,7 +449,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
              `;
 
             try {
-                const aiPrompt = `System: You are a Senior Market Analyst. Provide high-signal executive briefs.\nUser: ${prompt}`;
+                const aiPrompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${prompt}`;
                 const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 300, temperature: 0.2 });
                 const match = (rawResponse || '').match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : null;

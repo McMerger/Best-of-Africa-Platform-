@@ -17,7 +17,7 @@ export async function sendEmail({
     subject,
     html,
     fromEmail = 'members@bestofafrica.com',
-    fromName = 'Best of Africa',
+    fromName = 'BOA-Story',
 }: EmailParams): Promise<boolean> {
     try {
         const payload = {
@@ -93,7 +93,7 @@ export async function sendRegistrationConfirmation({
             </table>` : ''}
             <p style="margin-top: 40px; font-size: 12px; color: rgba(255,255,255,0.3);">
                 Questions? Reply to this email.<br>
-                © ${new Date().getFullYear()} Best of Africa
+                © ${new Date().getFullYear()} BOA-Story
             </p>
         </div>
     </div>`;
@@ -115,20 +115,20 @@ export async function sendWelcomeEmail(email: string, name: string, tier: string
     const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, \`Segoe UI\`, Roboto, Helvetica, Arial, sans-serif; background-color: #0A0F1E; padding: 40px 20px; color: #ffffff;">
         <div style="max-w-2xl mx-auto flex flex-col items-center bg-[#111827] border border-[rgba(201,168,76,0.3)] border-radius: 12px; padding: 40px; text-align: center; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-            <h1 style="font-family: Georgia, serif; font-size: 28px; margin-bottom: 20px;">Welcome to Best of <span style="color: #C9A84C;">Africa</span></h1>
+            <h1 style="font-family: Georgia, serif; font-size: 28px; margin-bottom: 20px;">Welcome to <span style="color: #C9A84C;">BOA-Story</span></h1>
             <p style="font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 30px;">
                 Hi ${name},<br><br>
-                Thank you for becoming a <strong>${tierDisplay}</strong>. Your support ensures that deep-dive journalism and premium market intelligence covering the continent continues to thrive.
+                Thank you for becoming a <strong>${tierDisplay}</strong>. Your support as an early believer helps us surface real, grounded stories about African lives and cities, free from disaster headlines.
             </p>
             <p style="font-size: 16px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 40px;">
                 Your account is provisioned and ready. Access your dashboard below:
             </p>
-            <a href="https://bestofafrica.com/member-access" style="display: inline-block; background-color: #C9A84C; color: #0A0F1E; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 8px;">
+            <a href="https://boastory.com/member-access" style="display: inline-block; background-color: #C9A84C; color: #0A0F1E; text-decoration: none; font-weight: 600; padding: 14px 28px; border-radius: 8px;">
                 Access Dashboard
             </a>
             <p style="margin-top: 40px; font-size: 12px; color: rgba(255,255,255,0.3);">
                 If you have any issues, reply directly to this email.<br>
-                © ${new Date().getFullYear()} Best of Africa
+                © ${new Date().getFullYear()} BOA-Story
             </p>
         </div>
     </div>
@@ -137,7 +137,7 @@ export async function sendWelcomeEmail(email: string, name: string, tier: string
     return sendEmail({
         to: email,
         toName: name,
-        subject: 'Your Access to Best of Africa',
+        subject: 'Your Access to BOA-Story',
         html,
     });
 }

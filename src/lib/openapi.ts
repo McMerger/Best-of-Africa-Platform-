@@ -1,16 +1,16 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPENAPI SPECIFICATION
-// Auto-generated API documentation for Best of Africa Platform
+// Auto-generated API documentation for BOA-Story Platform
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const openApiSpec = {
     openapi: '3.1.0',
     info: {
-        title: 'Best of Africa API',
+        title: 'BOA-Story API',
         version: '1.0.0',
         description: 'Strategic intelligence and media platform for African markets. Provides access to articles, country profiles, sector analysis, and AI-powered insights.',
         contact: {
-            name: 'Best of Africa Support',
+            name: 'BOA-Story Support',
             email: 'api@bestofafrica.com',
             url: 'https://bestofafrica.com',
         },
@@ -294,7 +294,7 @@ export function getSwaggerUI(): Response {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Best of Africa API Documentation</title>
+    <title>BOA-Story API Documentation</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">

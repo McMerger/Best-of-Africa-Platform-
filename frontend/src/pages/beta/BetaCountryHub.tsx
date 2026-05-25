@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BETA COUNTRY HUB
-// Per-country intelligence dossier for Founding Members.
+// Per-country story hub for Founding Members.
 // Route: /countries/:code
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -42,10 +42,10 @@ const previewScores = (code: string): number[] => {
 const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; delay?: number }) => (
   <div>
     <div className="flex justify-between items-center mb-2">
-      <span className="text-sm text-[#1C1814]/60">{label}</span>
-      <span className="text-sm font-bold text-[#C9A84C]">{value}<span className="text-[#1C1814]/30 font-normal">/100</span></span>
+      <span className="text-sm text-primary/60">{label}</span>
+      <span className="text-sm font-bold text-accent">{value}<span className="text-primary/30 font-normal">/100</span></span>
     </div>
-    <div className="h-1.5 bg-[#1C1814]/8 rounded-full overflow-hidden">
+    <div className="h-1.5 bg-primary/8 rounded-full overflow-hidden">
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
@@ -59,10 +59,10 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 const ArticleCard = ({ article }: { article: ArticleListItem }) => (
   <Link
     to={`/stories/${article.slug}`}
-    className="group block bg-white rounded-xl border border-[#1C1814]/8 overflow-hidden hover:border-[#C9A84C]/40 hover:shadow-[0_6px_24px_rgba(201,168,76,0.1)] transition-all duration-300 hover:-translate-y-0.5"
+    className="group block bg-white rounded-xl border border-primary/8 overflow-hidden hover:border-accent/40 hover:shadow-[0_6px_24px_rgba(201,168,76,0.1)] transition-all duration-300 hover:-translate-y-0.5"
   >
     {(article.ai_image_url || article.hero_image_url) && (
-      <div className="aspect-[16/9] overflow-hidden bg-[#1C1814]/5">
+      <div className="aspect-[16/9] overflow-hidden bg-primary/5">
         <img
           src={article.ai_image_url || article.hero_image_url}
           alt={article.title}
@@ -73,28 +73,28 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
     )}
     <div className="p-4">
       {article.sector_name && (
-        <span className="text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] mb-2 block">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-2 block">
           {article.sector_name}
         </span>
       )}
-      <h3 className="font-serif text-[15px] font-semibold text-[#1C1814] leading-snug group-hover:text-[#C9A84C] transition-colors line-clamp-2">
+      <h3 className="font-serif text-[15px] font-semibold text-primary leading-snug group-hover:text-accent transition-colors line-clamp-2">
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[13px] text-[#1C1814]/50 mt-2 line-clamp-2 leading-relaxed">{article.summary}</p>
+        <p className="text-[13px] text-primary/50 mt-2 line-clamp-2 leading-relaxed">{article.summary}</p>
       )}
-      <p className="text-[11px] text-[#1C1814]/30 mt-3">{article.reading_time_minutes} min read</p>
+      <p className="text-[11px] text-primary/30 mt-3">{article.reading_time_minutes} min read</p>
     </div>
   </Link>
 );
 
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl border border-[#1C1814]/8 overflow-hidden animate-pulse">
-    <div className="aspect-[16/9] bg-[#1C1814]/5" />
+  <div className="bg-white rounded-xl border border-primary/8 overflow-hidden animate-pulse">
+    <div className="aspect-[16/9] bg-primary/5" />
     <div className="p-4 space-y-2">
-      <div className="h-3 bg-[#1C1814]/5 rounded w-1/4" />
-      <div className="h-4 bg-[#1C1814]/8 rounded w-3/4" />
-      <div className="h-3 bg-[#1C1814]/5 rounded w-full" />
+      <div className="h-3 bg-primary/5 rounded w-1/4" />
+      <div className="h-4 bg-primary/8 rounded w-3/4" />
+      <div className="h-3 bg-primary/5 rounded w-full" />
     </div>
   </div>
 );
@@ -147,13 +147,13 @@ export const BetaCountryHub = () => {
 
   if (!isLoading && !country && countryQuery.isFetched) {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <BetaNav />
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
-          <Globe size={48} className="text-[#1C1814]/20 mb-6" />
-          <h1 className="font-serif text-3xl text-[#1C1814] mb-3">Country not found</h1>
-          <p className="text-[#1C1814]/50 mb-8">We couldn't find intelligence data for "{upperCode}".</p>
-          <Link to="/countries" className="text-[#C9A84C] font-semibold hover:opacity-80 transition-opacity flex items-center gap-2">
+          <Globe size={48} className="text-primary/20 mb-6" />
+          <h1 className="font-serif text-3xl text-primary mb-3">Country not found</h1>
+          <p className="text-primary/50 mb-8">We couldn't find coverage data for "{upperCode}".</p>
+          <Link to="/countries" className="text-accent font-semibold hover:opacity-80 transition-opacity flex items-center gap-2">
             <ArrowLeft size={14} /> Back to all countries
           </Link>
         </div>
@@ -170,15 +170,15 @@ export const BetaCountryHub = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans pb-24">
+    <div className="min-h-screen bg-background text-primary font-sans pb-24">
       <SEO
-        title={`${countryName} Intelligence Hub | Best of Africa`}
-        description={`Market intelligence, investment outlook, and curated stories for ${countryName}. Best of Africa founding member dossier.`}
+        title={`${countryName} | BOA-Story`}
+        description={`Curated stories and independent insights for ${countryName}.`}
       />
       <BetaNav />
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="bg-[#1C1814] text-white pt-24 pb-16 px-6">
+      <div className="bg-primary text-white pt-24 pb-16 px-6">
         <div className="max-w-5xl mx-auto">
           <Link
             to="/countries"
@@ -203,7 +203,7 @@ export const BetaCountryHub = () => {
               ) : (
                 <>
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-[#C9A84C] bg-[#C9A84C]/10 border border-[#C9A84C]/20 px-3 py-1 rounded-full">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
@@ -236,58 +236,58 @@ export const BetaCountryHub = () => {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-12">
 
-        {/* ── Intelligence Scores (members only) ────────────────────────────── */}
-        <section>
-          <div className="flex items-center gap-3 mb-6">
-            <BarChart2 size={18} className="text-[#C9A84C]" />
-            <h2 className="font-serif text-2xl text-[#1C1814]">Intelligence Scores</h2>
+        {/* ── Sentiment Scores (members only) ────────────────────────────── */}
+        <section className="bg-white rounded-2xl border border-primary/8 p-8 md:p-10">
+          <div className="flex items-center gap-3 mb-8">
+            <BarChart2 size={18} className="text-accent" />
+            <h2 className="font-serif text-2xl text-primary">Sentiment Scores</h2>
           </div>
 
           {!isMember ? (
-            <div className="relative bg-white rounded-2xl border border-[#1C1814]/8 p-8 overflow-hidden">
+            <div className="relative bg-white rounded-2xl border border-primary/8 p-8 overflow-hidden">
               {/* blurred placeholder preview — scores are NOT real data */}
               <div className="space-y-5 blur-sm pointer-events-none select-none" aria-hidden="true">
                 {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
                   <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
                 ))}
               </div>
-              <div className="absolute inset-0 bg-[#F5F0E8]/70 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl">
-                <Lock size={24} className="text-[#C9A84C] mb-3" />
-                <p className="font-semibold text-[#1C1814] mb-1">Founding Members Only</p>
-                <p className="text-sm text-[#1C1814]/50 mb-5 text-center max-w-xs">
-                  Full intelligence scores, outlook data, and sector signals.
-                </p>
+              <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl">
+                <Lock size={24} className="text-accent mb-3" />
+                  <p className="font-serif text-xl font-semibold text-primary mb-2">Backer-Only Data</p>
+                  <p className="text-sm text-primary/50 mb-6 max-w-sm">
+                    Full sentiment scores, perception gaps, and sector signals.
+                  </p>
                 <a
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#C9A84C] text-[#0E0C0A] font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+                  className="bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
                 >
                   Become a Founding Member
                 </a>
               </div>
             </div>
           ) : outlookQuery.isLoading ? (
-            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-8 space-y-5 animate-pulse">
+            <div className="bg-white rounded-2xl border border-primary/8 p-8 space-y-5 animate-pulse">
               {[1, 2, 3, 4].map(i => (
                 <div key={i}>
                   <div className="flex justify-between mb-2">
-                    <div className="h-3 bg-[#1C1814]/8 rounded w-32" />
-                    <div className="h-3 bg-[#1C1814]/8 rounded w-12" />
+                    <div className="h-3 bg-primary/8 rounded w-32" />
+                    <div className="h-3 bg-primary/8 rounded w-12" />
                   </div>
-                  <div className="h-1.5 bg-[#1C1814]/5 rounded-full" />
+                  <div className="h-1.5 bg-primary/5 rounded-full" />
                 </div>
               ))}
             </div>
           ) : outlook ? (
-            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-8 space-y-5">
+            <div className="bg-white rounded-2xl border border-primary/8 p-8 space-y-5">
               <ScoreBar label="Investment Readiness" value={outlook.investment_readiness} delay={0} />
               <ScoreBar label="Narrative Strength" value={outlook.narrative_strength} delay={0.1} />
               <ScoreBar label="Media Presence" value={outlook.media_presence} delay={0.2} />
               <ScoreBar label="Engagement Level" value={outlook.engagement_level} delay={0.3} />
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-8 text-center text-[#1C1814]/40 text-sm">
+            <div className="bg-white rounded-2xl border border-primary/8 p-8 text-center text-primary/40 text-sm">
               Outlook data unavailable for this country.
             </div>
           )}
@@ -297,8 +297,8 @@ export const BetaCountryHub = () => {
         {isMember && (sectorOpportunities.length > 0 || sectorCoverage.length > 0) && (
           <section>
             <div className="flex items-center gap-3 mb-6">
-              <TrendingUp size={18} className="text-[#C9A84C]" />
-              <h2 className="font-serif text-2xl text-[#1C1814]">Sector Activity</h2>
+              <TrendingUp size={18} className="text-accent" />
+              <h2 className="font-serif text-2xl text-primary">Sector Activity</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               {(sectorOpportunities.length > 0 ? sectorOpportunities : sectorCoverage.map(s => ({
@@ -309,16 +309,16 @@ export const BetaCountryHub = () => {
               }))).map(sector => (
                 <div
                   key={sector.id}
-                  className="bg-white rounded-xl border border-[#1C1814]/8 p-5 hover:border-[#C9A84C]/30 transition-colors"
+                  className="bg-white rounded-xl border border-primary/8 p-5 hover:border-accent/30 transition-colors"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-[#1C1814] text-[15px]">{sector.name}</span>
-                    <span className="text-[11px] text-[#C9A84C] font-bold bg-[#C9A84C]/8 border border-[#C9A84C]/15 px-2 py-0.5 rounded-full">
+                    <span className="font-semibold text-primary text-[15px]">{sector.name}</span>
+                    <span className="text-[11px] text-accent font-bold bg-accent/8 border border-accent/15 px-2 py-0.5 rounded-full">
                       {sector.articles} {sector.articles === 1 ? 'story' : 'stories'}
                     </span>
                   </div>
                   {sector.avg_engagement > 0 && (
-                    <p className="text-xs text-[#1C1814]/40">
+                    <p className="text-xs text-primary/40">
                       Avg. engagement: {sector.avg_engagement.toFixed(1)}
                     </p>
                   )}
@@ -332,16 +332,16 @@ export const BetaCountryHub = () => {
         {isMember && narratives.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-6">
-              <Globe size={18} className="text-[#C9A84C]" />
-              <h2 className="font-serif text-2xl text-[#1C1814]">Editorial Narratives</h2>
+              <Globe size={18} className="text-accent" />
+              <h2 className="font-serif text-2xl text-primary">Editorial Narratives</h2>
             </div>
             <div className="space-y-4">
               {narratives.slice(0, 4).map(n => (
-                <div key={n.id} className="bg-white rounded-xl border border-[#1C1814]/8 p-5">
+                <div key={n.id} className="bg-white rounded-xl border border-primary/8 p-5">
                   <div className="flex items-start justify-between gap-4 mb-3">
-                    <h3 className="font-serif text-[16px] font-semibold text-[#1C1814] leading-snug">{n.narrative_theme}</h3>
+                    <h3 className="font-serif text-[16px] font-semibold text-primary leading-snug">{n.narrative_theme}</h3>
                     <span className={`shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border ${
-                      n.priority <= 2 ? 'text-[#C9A84C] bg-[#C9A84C]/8 border-[#C9A84C]/20' : 'text-[#1C1814]/40 bg-[#1C1814]/5 border-[#1C1814]/8'
+                      n.priority <= 2 ? 'text-accent bg-accent/8 border-accent/20' : 'text-primary/40 bg-primary/5 border-primary/8'
                     }`}>
                       {n.tone}
                     </span>
@@ -349,8 +349,8 @@ export const BetaCountryHub = () => {
                   {n.key_messages.length > 0 && (
                     <ul className="space-y-1.5">
                       {n.key_messages.slice(0, 3).map((msg, i) => (
-                        <li key={i} className="text-[13px] text-[#1C1814]/60 flex items-start gap-2">
-                          <span className="text-[#C9A84C] shrink-0 mt-0.5">→</span>
+                        <li key={i} className="text-[13px] text-primary/60 flex items-start gap-2">
+                          <span className="text-accent shrink-0 mt-0.5">→</span>
                           {msg}
                         </li>
                       ))}
@@ -365,11 +365,11 @@ export const BetaCountryHub = () => {
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <section>
-            <div className="bg-[#1C1814] rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute top-4 right-4 text-[10px] font-bold tracking-widest text-[#C9A84C] uppercase bg-[#C9A84C]/10 border border-[#C9A84C]/20 px-3 py-1 rounded-full">
+            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-4 right-4 text-[10px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
                 Situation Report
               </div>
-              <div className="w-8 h-px bg-[#C9A84C]/40 mb-5" />
+              <div className="w-8 h-px bg-accent/40 mb-5" />
               <p className="text-white/80 leading-relaxed text-[15px] max-w-2xl">{country.ai_situation_report}</p>
             </div>
           </section>
@@ -379,26 +379,26 @@ export const BetaCountryHub = () => {
         {(country?.business_portal_url || country?.visa_portal_url || country?.tourism_portal_url) && (
           <section>
             <div className="flex items-center gap-3 mb-6">
-              <ExternalLink size={18} className="text-[#C9A84C]" />
-              <h2 className="font-serif text-2xl text-[#1C1814]">Official Resources</h2>
+              <ExternalLink size={18} className="text-accent" />
+              <h2 className="font-serif text-2xl text-primary">Official Resources</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               {country.business_portal_url && (
                 <a href={country.business_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-[#1C1814]/10 hover:border-[#C9A84C]/40 px-4 py-2.5 rounded-xl text-sm font-medium text-[#1C1814] transition-colors">
-                  <ExternalLink size={13} className="text-[#C9A84C]" /> Business Portal
+                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  <ExternalLink size={13} className="text-accent" /> Business Portal
                 </a>
               )}
               {country.visa_portal_url && (
                 <a href={country.visa_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-[#1C1814]/10 hover:border-[#C9A84C]/40 px-4 py-2.5 rounded-xl text-sm font-medium text-[#1C1814] transition-colors">
-                  <ExternalLink size={13} className="text-[#C9A84C]" /> Visa Portal
+                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  <ExternalLink size={13} className="text-accent" /> Visa Portal
                 </a>
               )}
               {country.tourism_portal_url && (
                 <a href={country.tourism_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-[#1C1814]/10 hover:border-[#C9A84C]/40 px-4 py-2.5 rounded-xl text-sm font-medium text-[#1C1814] transition-colors">
-                  <ExternalLink size={13} className="text-[#C9A84C]" /> Tourism Portal
+                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  <ExternalLink size={13} className="text-accent" /> Tourism Portal
                 </a>
               )}
             </div>
@@ -409,13 +409,13 @@ export const BetaCountryHub = () => {
         <section>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <FileText size={18} className="text-[#C9A84C]" />
-              <h2 className="font-serif text-2xl text-[#1C1814]">Stories from {countryName}</h2>
+              <FileText size={18} className="text-accent" />
+              <h2 className="font-serif text-2xl text-primary">Stories from {countryName}</h2>
             </div>
             {articles.length > 0 && (
               <Link
                 to={`/stories?country=${upperCode}`}
-                className="text-sm text-[#C9A84C] font-semibold hover:opacity-70 transition-opacity"
+                className="text-sm text-accent font-semibold hover:opacity-70 transition-opacity"
               >
                 View all →
               </Link>
@@ -435,9 +435,9 @@ export const BetaCountryHub = () => {
                     <div className="blur-sm pointer-events-none">
                       <ArticleCard article={article} />
                     </div>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F5F0E8]/80 backdrop-blur-[1px] rounded-xl">
-                      <Lock size={18} className="text-[#C9A84C] mb-2" />
-                      <p className="text-[12px] font-semibold text-[#1C1814] text-center px-4">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-[1px] rounded-xl">
+                      <Lock size={18} className="text-accent mb-2" />
+                      <p className="text-[12px] font-semibold text-primary text-center px-4">
                         Founding Members Only
                       </p>
                     </div>
@@ -448,10 +448,10 @@ export const BetaCountryHub = () => {
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[#1C1814]/8 p-12 text-center">
-              <Globe size={36} className="text-[#1C1814]/20 mx-auto mb-4" />
-              <p className="text-[#1C1814]/50">No stories published for {countryName} yet.</p>
-              <p className="text-[#1C1814]/30 text-sm mt-1">Our editorial team is monitoring this market continuously.</p>
+            <div className="bg-white rounded-2xl border border-primary/8 p-12 text-center">
+              <Globe size={36} className="text-primary/20 mx-auto mb-4" />
+              <p className="text-primary/50">No stories published for {countryName} yet.</p>
+              <p className="text-primary/30 text-sm mt-1">Our editorial team is monitoring this market continuously.</p>
             </div>
           )}
         </section>
@@ -459,14 +459,14 @@ export const BetaCountryHub = () => {
         {/* ── Member CTA (non-members) ───────────────────────────────────────── */}
         {!isMember && (
           <section className="text-center py-8">
-            <p className="text-[#1C1814]/40 text-sm mb-5">
-              Unlock the full {countryName} dossier — scores, narratives, sector intelligence, and more.
+            <p className="text-primary/40 text-sm mb-5">
+              Unlock the full {countryName} hub — scores, narratives, sector trends, and more.
             </p>
             <a
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-[#C9A84C] text-[#0E0C0A] font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+              className="inline-block bg-accent text-card font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
               Become a Founding Member
             </a>

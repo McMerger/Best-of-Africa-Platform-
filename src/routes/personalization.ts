@@ -367,7 +367,7 @@ router.get('/feed/ai-curated', async (c) => {
              `;
 
             try {
-                const aiPrompt = `System: You are a Personal Intelligence Officer. Curate a briefing.\nUser: ${prompt}`;
+                const aiPrompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${prompt}`;
                 const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 500, temperature: 0.2 });
                 const jsonMatch = (rawText || '[]').match(/\[.*\]/s);
                 const selections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];

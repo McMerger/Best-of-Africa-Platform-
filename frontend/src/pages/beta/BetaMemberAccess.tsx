@@ -139,11 +139,11 @@ export const BetaMemberAccess = () => {
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] flex flex-col">
-        <SEO title="Member Access | Best of Africa" />
+      <div className="min-h-screen bg-background text-primary flex flex-col">
+        <SEO title="Member Access | BOA-Story" />
         <BetaNav />
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-[#C9A84C]/40 border-t-[#C9A84C] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -152,8 +152,8 @@ export const BetaMemberAccess = () => {
   // ── Expired state ──────────────────────────────────────────────────────────
   if (phase === 'expired') {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans flex flex-col">
-        <SEO title="Access Expired | Best of Africa" />
+      <div className="min-h-screen bg-background text-primary font-sans flex flex-col">
+        <SEO title="Access Expired | BOA-Story" />
         <BetaNav />
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
           <div className="max-w-md mx-auto w-full text-center">
@@ -161,12 +161,12 @@ export const BetaMemberAccess = () => {
               <RefreshCw className="w-8 h-8 text-amber-400" />
             </div>
             <h1 className="font-serif text-3xl mb-3">Your access has expired</h1>
-            <p className="text-[#1C1814]/60 mb-8">
+            <p className="text-primary/60 mb-8">
               Your 30-day access token has expired. Re-enter your member email to get a fresh one, or renew your membership on Ko-fi.
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
+              className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
             >
               Re-enter member email
             </button>
@@ -174,7 +174,7 @@ export const BetaMemberAccess = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#1C1814]/40 hover:text-[#1C1814] transition-colors"
+              className="text-sm text-primary/40 hover:text-primary transition-colors"
             >
               Renew on Ko-fi →
             </a>
@@ -186,10 +186,10 @@ export const BetaMemberAccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#1C1814] font-sans selection:bg-[#C9A84C] selection:text-[#1C1814] flex flex-col">
+    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary flex flex-col">
       <SEO 
-        title="Member Access | Best of Africa" 
-        description="Access your Founding Member benefits and premium intelligence."
+        title="Member Access | BOA-Story" 
+        description="Access your Founding Member benefits and premium stories."
       />
       <BetaNav />
 
@@ -209,13 +209,13 @@ export const BetaMemberAccess = () => {
             // ── OTP Form State ─────────────────────────────────────────────────
             <>
               <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 mb-6">
-                  <Lock className="w-8 h-8 text-[#C9A84C]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
+                  <Lock className="w-8 h-8 text-accent" />
                 </div>
                 <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
                   Check your email
                 </h1>
-                <p className="text-[#1C1814]/60 leading-relaxed max-w-sm mx-auto">
+                <p className="text-primary/60 leading-relaxed max-w-sm mx-auto">
                   We sent a 6-digit verification code to <strong>{email}</strong>. Entering it below will authorize this device.
                 </p>
               </div>
@@ -233,7 +233,7 @@ export const BetaMemberAccess = () => {
                     maxLength={6}
                     autoComplete="one-time-code"
                     disabled={isSubmitting}
-                    className="w-full bg-white border border-[#C9A84C]/60 rounded-xl px-4 py-6 text-[#1C1814] placeholder:text-[#1C1814]/40 focus:outline-none focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
+                    className="w-full bg-white border border-accent/60 rounded-xl px-4 py-6 text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
                   />
                 </div>
 
@@ -244,7 +244,7 @@ export const BetaMemberAccess = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || otp.length < 6}
-                  className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Verify Code
                 </button>
@@ -258,14 +258,14 @@ export const BetaMemberAccess = () => {
                   type="button"
                   onClick={handleResend}
                   disabled={isSubmitting || resendCooldown > 0}
-                  className="text-sm text-[#C9A84C]/70 hover:text-[#C9A84C] transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="text-sm text-accent/70 hover:text-accent transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setPhase('form'); setOtp(''); setErrorMsg(''); }}
-                  className="text-xs text-[#1C1814]/30 hover:text-[#1C1814]/60 underline transition-colors"
+                  className="text-xs text-primary/30 hover:text-primary/60 underline transition-colors"
                 >
                   Use a different email
                 </button>
@@ -275,20 +275,20 @@ export const BetaMemberAccess = () => {
             // ── Email form state ───────────────────────────────────────────────
             <>
               <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#C9A84C]/10 border border-[#C9A84C]/30 mb-6">
-                  <Lock className="w-8 h-8 text-[#C9A84C]" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
+                  <Lock className="w-8 h-8 text-accent" />
                 </div>
                 <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
                   Unlock member access
                 </h1>
-                <p className="text-[#1C1814]/60 leading-relaxed max-w-sm mx-auto">
+                <p className="text-primary/60 leading-relaxed max-w-sm mx-auto">
                   Enter the email you used on Ko-fi to activate your full membership on this device.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4 mb-8">
                 <div className="relative">
-                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1C1814]/30 pointer-events-none" />
+                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
@@ -297,7 +297,7 @@ export const BetaMemberAccess = () => {
                     required
                     name="email"
                     disabled={isSubmitting}
-                    className="w-full bg-white border border-[#1C1814]/10 rounded-xl pl-10 pr-4 py-4 text-[#1C1814] placeholder:text-[#1C1814]/30 focus:outline-none focus:border-[#C9A84C]/50 focus:ring-1 focus:ring-[#C9A84C]/30 transition-all disabled:opacity-50"
+                    className="w-full bg-white border border-primary/10 rounded-xl pl-10 pr-4 py-4 text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50"
                   />
                 </div>
 
@@ -308,27 +308,27 @@ export const BetaMemberAccess = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !email.includes('@')}
-                  className="w-full bg-[#C9A84C] text-[#0E0C0A] font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-[#0E0C0A]/30 border-t-[#0E0C0A] rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-card/30 border-t-[#0E0C0A] rounded-full animate-spin" />
                   ) : (
                     <>Activate membership <ArrowRight size={15} /></>
                   )}
                 </button>
               </form>
 
-              <div className="border-t border-[#1C1814]/8 pt-8 text-center space-y-4">
-                <p className="text-[#1C1814]/40 text-sm">Not a member yet?</p>
+              <div className="border-t border-primary/8 pt-8 text-center space-y-4">
+                <p className="text-primary/40 text-sm">Not a member yet?</p>
                 <a
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-[#C9A84C] font-semibold hover:opacity-80 transition-opacity text-sm"
+                  className="inline-flex items-center gap-2 text-accent font-semibold hover:opacity-80 transition-opacity text-sm"
                 >
                   Become a Founding Member on Ko-fi →
                 </a>
-                <p className="text-[#1C1814]/25 text-xs max-w-xs mx-auto">
+                <p className="text-primary/25 text-xs max-w-xs mx-auto">
                   After supporting on Ko-fi, return here with the same email to unlock access. No password required.
                 </p>
               </div>

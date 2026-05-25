@@ -108,7 +108,7 @@ router.get('/insight', requireAuth, async (c) => {
     const topContext = (topArticles.results as any[]).map(a => `"${a.title}": ${a.views} views`).join(', ');
 
     try {
-        const prompt = `System: You are a Data Journalist. Explain the traffic trend based on the top stories. Be concise.\nUser: Traffic Stats: ${(traffic as Record<string, any>).views} views. Top Stories: ${topContext}`;
+        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Traffic Stats: ${(traffic as Record<string, any>).views} views. Top Stories: ${topContext}`;
         const response = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
         insight = response?.trim() || insight;
     } catch (e) { /* Ignore */ }
@@ -260,7 +260,7 @@ router.get('/content-gaps', requireAuth, async (c) => {
             if (!gapContext) return "Coverage is balanced.";
 
             try {
-                const prompt = `System: You are a Content Strategist. Advise on filling content gaps.\nUser: We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.`;
+                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: We have low coverage in: ${gapContext}. Suggest 3 specific article titles to boost engagement in these regions.`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.7 });
                 return aiResponse?.trim();
             } catch { return "Focus on underserved regions."; }

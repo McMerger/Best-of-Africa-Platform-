@@ -7,7 +7,7 @@ import type { ArticleListItem } from '../types';
 
 // ─── External links ───────────────────────────────────────────────────────────
 
-export const KO_FI_URL = 'https://ko-fi.com/boastory';
+export const KO_FI_URL = 'https://ko-fi.com/maillescortes';
 
 // ─── Country flag emoji map (all 54 African nations) ─────────────────────────
 
@@ -44,96 +44,92 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
   {
     id: 'supporter',
     name: 'Supporter',
-    price: '$3',
+    price: '$5',
     features: [
-      'Unlimited access to stories and collections',
-      'Access to selected newsletters and updates',
-      'Invites to online conversations and AMAs',
+      'Access to all published stories',
+      'Behind-the-scenes creator updates',
+      'My sincere gratitude',
     ],
-    ctaLabel: 'Join as Supporter',
+    ctaLabel: 'Become a Supporter',
   },
   {
     id: 'founding',
     name: 'Founding Member',
-    price: '$8',
+    price: '$15',
     features: [
       'Everything in Supporter',
-      'Full access to the beta platform',
-      'Direct input on future coverage priorities',
+      'Direct input on future story coverage',
+      'Early access to new drafts',
     ],
-    ctaLabel: 'Join as Founding Member',
+    ctaLabel: 'Become a Founding Member',
     recommended: true,
   },
   {
     id: 'partner',
     name: 'Founding Patron',
-    price: '$20',
+    price: '$50',
     features: [
       'Everything in Founding Member',
-      'Monthly executive Africa intelligence briefing',
-      'Direct line to the editorial team',
+      'Monthly 1-on-1 chat about the project',
+      'Name credited on the platform as a core sponsor',
     ],
-    ctaLabel: 'Become a Founding Patron',
+    ctaLabel: 'Become a Patron',
   },
 ];
 
 export const TIER_LABELS: Record<string, { title: string; desc: string; perks: string[] }> = {
-  // DB-stored values (basic / premium / enterprise)
   basic: {
     title: 'Supporter',
-    desc: 'Unlimited access to stories and selected newsletters.',
+    desc: 'Access to stories and creator updates.',
     perks: [
-      'Unlimited access to all published stories',
-      'Selected newsletters and platform updates',
-      'Invites to online conversations and AMAs',
+      'Access to all published stories',
+      'Behind-the-scenes creator updates',
+      'My sincere gratitude',
     ],
   },
   premium: {
     title: 'Founding Member',
-    desc: 'Full access to the beta platform and direct input on future priorities.',
+    desc: 'Direct input on future story coverage.',
     perks: [
       'Everything in Supporter',
-      'Full beta platform access — country hubs and intelligence briefs',
-      'Direct input on future coverage priorities',
-      'Early access to all new features',
+      'Direct input on future story coverage',
+      'Early access to new drafts',
     ],
   },
   enterprise: {
     title: 'Founding Patron',
-    desc: 'Monthly executive briefings and a direct line to the editorial team.',
+    desc: 'Name credited on the platform as a core sponsor.',
     perks: [
       'Everything in Founding Member',
-      'Monthly executive Africa intelligence briefing',
-      'Direct line to the editorial team',
+      'Monthly 1-on-1 chat about the project',
+      'Name credited on the platform as a core sponsor',
     ],
   },
-  // Ko-fi tier name aliases (kept for backward compatibility)
   supporter: {
     title: 'Supporter',
-    desc: 'Unlimited access to stories and selected newsletters.',
+    desc: 'Access to stories and creator updates.',
     perks: [
-      'Unlimited access to all published stories',
-      'Selected newsletters and platform updates',
-      'Invites to online conversations and AMAs',
+      'Access to all published stories',
+      'Behind-the-scenes creator updates',
+      'My sincere gratitude',
     ],
   },
   founding: {
     title: 'Founding Member',
-    desc: 'Full access to the beta platform and direct input on future priorities.',
+    desc: 'Direct input on future story coverage.',
     perks: [
       'Everything in Supporter',
-      'Full beta platform access — country hubs and intelligence briefs',
-      'Direct input on future coverage priorities',
-      'Early access to all new features',
+      'Direct input on future story coverage',
+      'Early access to new drafts',
     ],
   },
   partner: {
     title: 'Founding Patron',
-    desc: 'Monthly executive briefings and a direct line to the editorial team.',
+    desc: 'Name credited on the platform as a core sponsor.',
     perks: [
       'Everything in Founding Member',
-      'Monthly executive Africa intelligence briefing',
-      'Direct line to the editorial team',
+      'Monthly 1-on-1 chat about the project',
+      'Name credited on the platform as a core sponsor',
     ],
   },
 };

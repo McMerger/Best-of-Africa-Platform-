@@ -57,7 +57,7 @@ router.get('/:id', async (c) => {
     // Lazy Generate AI Value Proposition if missing
     if (!eventData.ai_value_proposition) {
         try {
-            const prompt = `System: You are an Event Promoter. Write 3 compelling bullet points on why a business leader should attend this event.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;
+            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;
             const generated = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.7 }).then(res => res?.trim());
 
             if (generated) {

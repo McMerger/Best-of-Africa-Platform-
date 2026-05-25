@@ -61,7 +61,7 @@ export const NavBar: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <Link to="/" className="flex flex-col leading-none group">
                         <span className="text-2xl font-serif font-black tracking-tighter text-foreground transition-colors group-hover:text-primary/90">Best of Africa</span>
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary mt-0.5">Intelligence Platform</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary mt-0.5">Narrative Platform</span>
                     </Link>
                 </div>
 
@@ -234,8 +234,8 @@ export const NavBar: React.FC = () => {
                                                     to="/market-intel"
                                                     className="flex items-center gap-2 select-none rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                                 >
-                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Market Intelligence Overview</div>
-                                                    <span className="text-xs text-muted-foreground">View Sector Performance Matrix &rarr;</span>
+                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Coverage by Topic</div>
+                                                    <span className="text-xs text-muted-foreground">Browse all topics &rarr;</span>
                                                 </Link>
                                             </NavigationMenuLink>
                                         </li>
@@ -255,7 +255,7 @@ export const NavBar: React.FC = () => {
                                                     to="/countries"
                                                     className="flex items-center gap-2 select-none rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                                                 >
-                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Regional Intelligence Map</div>
+                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Countries Coverage Map</div>
                                                     <span className="text-xs text-muted-foreground">Browse all 54 African markers &rarr;</span>
                                                 </Link>
                                             </NavigationMenuLink>
@@ -322,7 +322,7 @@ export const NavBar: React.FC = () => {
 
                             {/* INTELLIGENCE & SERVICES MENU */}
                             <NavigationMenuItem>
-                                <NavigationMenuTrigger>Intelligence & Services</NavigationMenuTrigger>
+                                <NavigationMenuTrigger>Stories & Resources</NavigationMenuTrigger>
                                 <NavigationMenuContent>
                                     <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
                                         <li className="row-span-4">

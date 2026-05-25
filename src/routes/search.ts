@@ -141,7 +141,7 @@ router.get('/', async (c) => {
             if (searchResults.length > 0) {
                 const context = searchResults.slice(0, 3).map(r => `Title: ${r.article.title}\nSummary: ${r.article.summary}`).join('\n---\n');
                 try {
-                    const prompt = `System: You are an Intelligent Search Assistant. Synthesize the provided context to answer the user query directly in 2 sentences.\nUser: Query: ${q}\n\nContext:\n${context}`;
+                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Query: ${q}\n\nContext:\n${context}`;
                     const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
                     aiAnswer = ansRes?.trim();
                 } catch (e) { /* Ignore */ }
@@ -236,7 +236,7 @@ router.get('/', async (c) => {
                             return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 400)}`; // Increased context limit
                         }).join('\n\n');
 
-                        const prompt = `System: You are a concise market intelligence analyst. Provide a 2-sentence synthesis of information. Be direct and factual.\nUser: Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`;
+                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`;
                         const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
                         return aiResponse || null;
                     } catch (aiError) {
@@ -423,7 +423,7 @@ router.get('/semantic', async (c) => {
                             return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 500)}`; // Increased context
                         }).join('\n\n');
 
-                        const prompt = `System: You are a concise African market intelligence analyst for Best of Africa.\nSynthesize the provided article excerpts into a 3-4 sentence executive brief.\nFocus on investment implications, strategic opportunities, and key market dynamics.\nBe direct, factual, and avoid generic statements.\nUser: User Query: "${q}"\n\nRelevant Intelligence Briefs:\n${contextChunks}\n\nProvide a synthesis:`;
+                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: User Query: "${q}"\n\nRelevant Intelligence Briefs:\n${contextChunks}\n\nProvide a synthesis:`;
                         const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.5 });
                         return aiResponse || null;
                     } catch (aiError) {

@@ -20,7 +20,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
     videoUrl,
     posterUrl,
     title,
-    subtitle = "Strategic Intelligence Briefing"
+    subtitle = "BOA-Story Report"
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
@@ -87,7 +87,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                     className="bg-primary px-4 py-2 border-l-4 border-white"
                 >
                     <div className="text-white font-serif font-black text-lg tracking-tighter leading-none">Best of Africa</div>
-                    <div className="text-white/80 text-[10px] uppercase font-bold tracking-widest mt-1">Intelligence Network</div>
+                    <div className="text-white/80 text-[10px] uppercase font-bold tracking-widest mt-1">BOA-Story</div>
                 </motion.div>
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}

@@ -87,7 +87,7 @@ export const BetaNav = () => {
           {/* Right side CTA / Mobile Toggle */}
           <div className="flex items-center gap-4">
             <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="hidden md:block">
-              <GoldButton variant="primary" size="small">Support on Ko-fi</GoldButton>
+              <GoldButton variant="primary" size="small">Support BOA, Launch Your Story</GoldButton>
             </a>
             
             <button 
@@ -131,7 +131,7 @@ export const BetaNav = () => {
               ))}
               <div className="pt-10 mt-6 border-t border-primary/10">
                 <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="block w-full">
-                  <GoldButton variant="primary" className="w-full">Support on Ko-fi</GoldButton>
+                  <GoldButton variant="primary" className="w-full">Support BOA, Launch Your Story</GoldButton>
                 </a>
               </div>
             </nav>
