@@ -105,11 +105,7 @@ export const BetaLanding = () => {
     // Optional: Add scroll listeners if needed in future
   }, []);
 
-  const { data: stats } = useQuery({
-    queryKey: ['platform-stats'],
-    queryFn: api.getPlatformStats,
-    staleTime: 10 * 60 * 1000,
-  });
+
 
   const { data: featuredData } = useQuery({
     queryKey: ['featured-articles'],
