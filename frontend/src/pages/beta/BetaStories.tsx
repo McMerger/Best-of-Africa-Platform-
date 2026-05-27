@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Lock, Search, X, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { BetaNav } from '../../components/beta';
+import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
@@ -68,8 +68,7 @@ export const BetaStories = () => {
     },
     staleTime: 5 * 60 * 1000,
     // M2 FIX: Keep previous data visible while next page is fetching — no more loading flash
-    placeholderData: keepPreviousData,
-  });
+    placeholderData: keepPreviousData });
 
   // Track all loaded articles across pages
   const [allArticles, setAllArticles] = useState<ArticleListItem[]>([]);
@@ -93,16 +92,14 @@ export const BetaStories = () => {
     queryKey: ['beta-search', debouncedQuery],
     queryFn: () => api.search(debouncedQuery),
     enabled: isSearchMode && !isCountryCode,
-    staleTime: 2 * 60 * 1000,
-  });
+    staleTime: 2 * 60 * 1000 });
 
   // Country-code direct lookup: query the articles endpoint by country_code
   const { data: countryCodeData, isFetching: isCountrySearching } = useQuery({
     queryKey: ['beta-country-search', debouncedQuery],
     queryFn: () => api.getArticles({ country: debouncedQuery, limit: '12' }),
     enabled: isSearchMode && isCountryCode,
-    staleTime: 2 * 60 * 1000,
-  });
+    staleTime: 2 * 60 * 1000 });
 
   // M1 FIX: Explicit parentheses to make operator precedence unambiguous
   const usingFallback = isError || (allArticles.length === 0 && !isLoading);
@@ -116,8 +113,7 @@ export const BetaStories = () => {
     ? (countryCodeData?.data || [])
     : (searchData?.results || []).map((r: SearchResult) => ({
         ...r.article,
-        id: r.article.id || r.article.slug,
-      }));
+        id: r.article.id || r.article.slug }));
 
   // Collect unique sector names for filter tabs
   const sectors = ['All', ...Array.from(new Set(articles.map(a => a.sector_name).filter(Boolean)))];
@@ -135,7 +131,7 @@ export const BetaStories = () => {
         title="Stories | BOA-Story" 
         description="Real, grounded stories about African lives, cities, creators, and everyday opportunity."
       />
-      <BetaNav />
+      
       <div className="max-w-7xl mx-auto px-6 py-24">
 
         <header className="mb-10 text-center md:text-left">

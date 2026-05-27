@@ -9,7 +9,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
 import { ArrowLeft, Lock, Globe, FileText, TrendingUp, BarChart2, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BetaNav, BetaFooter } from '../../components/beta';
+import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
@@ -112,28 +112,23 @@ export const BetaCountryHub = () => {
         queryKey: ['country', upperCode],
         queryFn: () => api.getCountry(upperCode),
         staleTime: 24 * 60 * 60 * 1000,
-        enabled: !!upperCode,
-      },
+        enabled: !!upperCode },
       {
         queryKey: ['country-outlook', upperCode],
         queryFn: () => api.getCountryOutlook(upperCode),
         staleTime: 60 * 60 * 1000,
-        enabled: !!upperCode && isMember,
-      },
+        enabled: !!upperCode && isMember },
       {
         queryKey: ['country-narrative', upperCode],
         queryFn: () => api.getCountryNarrative(upperCode),
         staleTime: 60 * 60 * 1000,
-        enabled: !!upperCode && isMember,
-      },
+        enabled: !!upperCode && isMember },
       {
         queryKey: ['country-articles', upperCode],
         queryFn: () => api.getArticles({ country: upperCode, limit: '9' }),
         staleTime: 5 * 60 * 1000,
-        enabled: !!upperCode,
-      },
-    ],
-  });
+        enabled: !!upperCode },
+    ] });
 
   const country = countryQuery.data?.country;
   const stats = countryQuery.data?.stats;
@@ -148,7 +143,7 @@ export const BetaCountryHub = () => {
   if (!isLoading && !country && countryQuery.isFetched) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <BetaNav />
+        
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
           <Globe size={48} className="text-primary/20 mb-6" />
           <h1 className="font-serif text-3xl text-primary mb-3">Country not found</h1>
@@ -157,7 +152,7 @@ export const BetaCountryHub = () => {
             <ArrowLeft size={14} /> Back to all countries
           </Link>
         </div>
-        <BetaFooter />
+        
       </div>
     );
   }
@@ -175,7 +170,7 @@ export const BetaCountryHub = () => {
         title={`${countryName} | BOA-Story`}
         description={`Curated stories and independent insights for ${countryName}.`}
       />
-      <BetaNav />
+      
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
       <div className="bg-primary text-white pt-24 pb-16 px-6">
@@ -305,8 +300,7 @@ export const BetaCountryHub = () => {
                 id: s.id,
                 name: s.name,
                 articles: s.article_count,
-                avg_engagement: 0,
-              }))).map(sector => (
+                avg_engagement: 0 }))).map(sector => (
                 <div
                   key={sector.id}
                   className="bg-white rounded-xl border border-primary/8 p-5 hover:border-accent/30 transition-colors"
@@ -475,7 +469,7 @@ export const BetaCountryHub = () => {
 
       </div>
 
-      <BetaFooter />
+      
     </div>
   );
 };

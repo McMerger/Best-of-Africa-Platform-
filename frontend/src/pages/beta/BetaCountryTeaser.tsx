@@ -3,7 +3,7 @@ import { Search, Globe, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { BetaNav } from '../../components/beta';
+import { } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import type { Country } from '../../types';
@@ -26,8 +26,7 @@ type Region = typeof REGIONS[number];
 
 // ─── Compact Card (for full grid) ────────────────────────────────────────────
 const CountryCard = ({
-  country,
-}: {
+  country }: {
   country: Partial<Country>;
 }) => {
   const tag = Array.isArray(country.investment_highlights) && country.investment_highlights.length > 0
@@ -87,8 +86,7 @@ export const BetaCountryTeaser = () => {
   const { data, isLoading } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
     queryFn: api.getCountries,
-    staleTime: 24 * 60 * 60 * 1000,
-  });
+    staleTime: 24 * 60 * 60 * 1000 });
 
 
 
@@ -128,7 +126,7 @@ export const BetaCountryTeaser = () => {
 
   return (
     <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
-      <BetaNav />
+      
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
 

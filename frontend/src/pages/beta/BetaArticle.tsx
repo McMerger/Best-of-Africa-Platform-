@@ -4,7 +4,7 @@ import { ArrowLeft, Twitter, Linkedin, Link2, Check } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { BetaNav, BetaAudioPlayer } from '../../components/beta';
+import { BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 
 import { useMember } from '../../context/MemberContext';
@@ -178,8 +178,7 @@ function ArticleMarkdown({ content }: { content: string }) {
         code: ({ children }) => (
           <code className="bg-primary/5 text-accent text-sm px-1.5 py-0.5 rounded font-mono">{children}</code>
         ),
-        hr: () => <hr className="my-10 border-primary/10" />,
-      }}
+        hr: () => <hr className="my-10 border-primary/10" /> }}
     >
       {content}
     </ReactMarkdown>
@@ -195,14 +194,12 @@ export const BetaArticle = () => {
     queryKey: ['article', slug],
     queryFn: () => api.getArticle(slug!),
     enabled: !!slug,
-    retry: 1,
-  });
+    retry: 1 });
 
   const { data: featuredData } = useQuery({
     queryKey: ['featured-articles'],
     queryFn: api.getFeaturedArticles,
-    staleTime: 5 * 60 * 1000,
-  });
+    staleTime: 5 * 60 * 1000 });
 
   // Dedicated related-articles query: same country or sector, excluding current
   // Must be called unconditionally before any early returns (Rules of Hooks)
@@ -212,11 +209,9 @@ export const BetaArticle = () => {
     queryKey: ['related-articles', articleCountryCode, articleSectorId],
     queryFn: () => api.getArticles({
       country: articleCountryCode,
-      limit: '6',
-    }),
+      limit: '6' }),
     enabled: !!articleCountryCode,
-    staleTime: 10 * 60 * 1000,
-  });
+    staleTime: 10 * 60 * 1000 });
 
   if (isLoading) return <ArticleSkeleton />;
 
@@ -224,7 +219,7 @@ export const BetaArticle = () => {
   if (isError || !data?.article) {
     return (
       <div className="min-h-screen bg-background text-primary font-sans">
-        <BetaNav />
+        
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
           <span className="text-6xl mb-6">📰</span>
           <h2 className="font-serif text-3xl mb-3">Story not found</h2>
@@ -286,7 +281,7 @@ export const BetaArticle = () => {
         aria-hidden="true"
       />
 
-      <BetaNav />
+      
 
       {/* Back breadcrumb */}
       <div className="max-w-3xl mx-auto px-6 pt-6">

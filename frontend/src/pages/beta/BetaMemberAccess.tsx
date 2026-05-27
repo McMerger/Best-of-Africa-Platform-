@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mail, ArrowRight, Lock, RefreshCw } from 'lucide-react';
-import { BetaNav, BetaFooter, BetaDashboard } from '../../components/beta';
+import { BetaDashboard } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
@@ -43,8 +43,7 @@ export const BetaMemberAccess = () => {
         '/members/verify-email',
         {
           method: 'POST',
-          body: JSON.stringify({ email: email.toLowerCase().trim() }),
-        }
+          body: JSON.stringify({ email: email.toLowerCase().trim() }) }
       );
 
       if (res.ok && res.status === 'pending_otp') {
@@ -76,8 +75,7 @@ export const BetaMemberAccess = () => {
         '/members/verify-otp',
         {
           method: 'POST',
-          body: JSON.stringify({ email: email.toLowerCase().trim(), otp: otp.trim() }),
-        }
+          body: JSON.stringify({ email: email.toLowerCase().trim(), otp: otp.trim() }) }
       );
 
       setIsSubmitting(false);
@@ -117,8 +115,7 @@ export const BetaMemberAccess = () => {
     try {
       await request<{ ok: boolean }>('/members/verify-email', {
         method: 'POST',
-        body: JSON.stringify({ email: email.toLowerCase().trim() }),
-      });
+        body: JSON.stringify({ email: email.toLowerCase().trim() }) });
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 3000);
       // Start 30-second cooldown
@@ -141,7 +138,7 @@ export const BetaMemberAccess = () => {
     return (
       <div className="min-h-screen bg-background text-primary flex flex-col">
         <SEO title="Member Access | BOA-Story" />
-        <BetaNav />
+        
         <div className="flex-1 flex items-center justify-center">
           <div className="w-6 h-6 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
         </div>
@@ -154,7 +151,7 @@ export const BetaMemberAccess = () => {
     return (
       <div className="min-h-screen bg-background text-primary font-sans flex flex-col">
         <SEO title="Access Expired | BOA-Story" />
-        <BetaNav />
+        
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
           <div className="max-w-md mx-auto w-full text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 mb-6">
@@ -180,7 +177,7 @@ export const BetaMemberAccess = () => {
             </a>
           </div>
         </div>
-        <BetaFooter />
+        
       </div>
     );
   }
@@ -191,7 +188,7 @@ export const BetaMemberAccess = () => {
         title="Member Access | BOA-Story" 
         description="Access your Founding Member benefits and premium stories."
       />
-      <BetaNav />
+      
 
       <div className="flex-1 flex flex-col justify-center py-20 px-6">
         <div className="max-w-md mx-auto w-full">
@@ -338,7 +335,7 @@ export const BetaMemberAccess = () => {
         </div>
       </div>
 
-      <BetaFooter />
+      
     </div>
   );
 };

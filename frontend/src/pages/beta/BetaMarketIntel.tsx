@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Lock, ArrowRight, BookOpen, MapPin, Coffee, PenLine, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BetaNav, BetaFooter } from '../../components/beta';
+import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
@@ -21,20 +21,17 @@ const EDITORIAL_UPDATES = [
     date: 'May 2025',
     tag: 'Research Log',
     title: 'East Africa is where I\'m spending most of my time right now.',
-    body: 'The Nairobi tech scene, Kigali\'s urban transformation, and Ethiopia\'s coffee economy. Three very different stories that all push back against the same tired headlines.',
-  },
+    body: 'The Nairobi tech scene, Kigali\'s urban transformation, and Ethiopia\'s coffee economy. Three very different stories that all push back against the same tired headlines.' },
   {
     date: 'April 2025',
     tag: 'Platform Update',
     title: 'The article pipeline is running. 54 countries. All of them.',
-    body: 'We\'re not picking winners. We\'re covering the continent — including the places that never make the news. That\'s the whole point.',
-  },
+    body: 'We\'re not picking winners. We\'re covering the continent — including the places that never make the news. That\'s the whole point.' },
   {
     date: 'March 2025',
     tag: 'Founder Note',
     title: 'What 38% of an $800 goal actually buys.',
-    body: 'Domain, hosting, and enough coffee to keep reading. This is what self-funded looks like. Every coffee on Ko-fi goes directly into keeping this project alive.',
-  },
+    body: 'Domain, hosting, and enough coffee to keep reading. This is what self-funded looks like. Every coffee on Ko-fi goes directly into keeping this project alive.' },
 ];
 
 // ─── Coverage breakdown using real article data ───────────────────────────────
@@ -44,8 +41,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
     queryKey: ['featured-articles'],
     queryFn: api.getFeaturedArticles,
     staleTime: 10 * 60 * 1000,
-    enabled: isMember,
-  });
+    enabled: isMember });
 
   const articles = data?.data ?? [];
 
@@ -152,8 +148,7 @@ export const BetaMarketIntel = () => {
   const { data: stats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
-    staleTime: 10 * 60 * 1000,
-  });
+    staleTime: 10 * 60 * 1000 });
 
   return (
     <div className="min-h-screen bg-background text-primary font-sans pb-24">
@@ -161,7 +156,7 @@ export const BetaMarketIntel = () => {
         title="Supporter Feed | BOA-Story"
         description="A behind-the-scenes look at what we're building — for Ko-fi backers."
       />
-      <BetaNav />
+      
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="bg-primary text-white pt-28 pb-16 px-6">
@@ -289,7 +284,7 @@ export const BetaMarketIntel = () => {
 
       </div>
 
-      <BetaFooter />
+      
     </div>
   );
 };

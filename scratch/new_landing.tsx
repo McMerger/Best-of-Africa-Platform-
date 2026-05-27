@@ -1,12 +1,16 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { ArrowRight, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
-import { GoldButton,
+import {
+  BetaNav,
+  GoldButton,
   AnimatedHeadline,
   SectionLabel,
   CardReveal,
+  GoldDivider,
+  StatCounter,
   MembershipTiersGrid
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
@@ -22,7 +26,7 @@ const stripMarkdown = (text: string): string => {
   return t.trim();
 };
 
-const SUBHEADLINES = ['Cities.', 'Creators.', 'Culture.', 'Everyday.', 'Stories.'];
+const SUBHEADLINES = ['Business.', 'Culture.', 'Capital.', 'Strategy.', 'Stories.'];
 
 function RotatingSubheadline() {
   const [index, setIndex] = useState(0);
@@ -52,13 +56,16 @@ function RotatingSubheadline() {
 const FAQ_ITEMS = [
   {
     q: 'Is this finished?',
-    a: 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.' },
+    a: 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.',
+  },
   {
     q: 'Can I cancel?',
-    a: "Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods." },
+    a: "Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods.",
+  },
   {
     q: 'Why now?',
-    a: "Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic." },
+    a: "Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.",
+  },
 ];
 
 function FAQItem({ q, a }: { q: string; a: string }) {
@@ -94,18 +101,26 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export const BetaLanding = () => {
+  const [heroScrolled, setHeroScrolled] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    // Optional: Add scroll listeners if needed in future
+    const onScroll = () => setHeroScrolled(window.scrollY > 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-
+  const { data: stats } = useQuery({
+    queryKey: ['platform-stats'],
+    queryFn: api.getPlatformStats,
+    staleTime: 10 * 60 * 1000,
+  });
 
   const { data: featuredData } = useQuery({
     queryKey: ['featured-articles'],
     queryFn: api.getFeaturedArticles,
-    staleTime: 5 * 60 * 1000 });
+    staleTime: 5 * 60 * 1000,
+  });
 
   const previewArticles: ArticleListItem[] = featuredData?.data?.slice(0, 3) || FALLBACK_ARTICLES.slice(0, 3);
 
@@ -115,7 +130,7 @@ export const BetaLanding = () => {
         title="BOA-Story" 
         description="A digital home for real, thoughtful stories about African lives, cities, and ideas."
       />
-      
+      <BetaNav />
 
       {/* 1. HERO SECTION */}
       <section className="relative min-h-[90vh] flex items-center justify-center pt-20 pb-32 overflow-hidden border-b border-white/5 bg-primary text-primary-foreground">
@@ -175,28 +190,16 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 2. KO-FI FUNDING STATUS */}
+      {/* 2. PROOF BAR */}
       <section className="bg-secondary py-16 border-b border-primary/8 relative z-20">
-        <div className="container mx-auto px-6 max-w-3xl text-center">
-          <div className="bg-white rounded-2xl p-8 border border-primary/10 shadow-sm flex flex-col items-center">
-            <h3 className="font-sans text-xs font-bold uppercase tracking-widest text-primary/40 mb-6">Launch Funding Progress</h3>
-            
-            <div className="w-full max-w-md mb-4 text-primary font-serif">
-              <p className="text-lg">Page Status: Active — <strong className="text-accent">38% of $800 goal funded</strong>, <strong>62 coffees received</strong></p>
-              <div className="w-full bg-primary/5 rounded-full h-3 overflow-hidden border border-primary/10 mt-4">
-                <div 
-                  className="bg-accent h-full rounded-full transition-all duration-1000 ease-out relative"
-                  style={{ width: '38%' }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                </div>
-              </div>
-            </div>
-            
-            <p className="mt-6 text-sm text-primary/50 max-w-lg leading-relaxed">
-              BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.
+        <div className="container mx-auto px-6 max-w-6xl text-center">
+          {stats ? (
+            <p className="text-xl font-serif text-primary/80">
+              Supported by early believers from <span className="text-accent font-bold">{stats.total_countries || 54}</span> countries across <span className="text-accent font-bold">{stats.regions || 5}</span> regions.
             </p>
-          </div>
+          ) : (
+            <div className="animate-pulse h-6 w-64 bg-primary/8 rounded mx-auto" />
+          )}
         </div>
       </section>
 
@@ -275,42 +278,18 @@ export const BetaLanding = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-secondary p-8 rounded-2xl border border-primary/10">
-             {/* Story Feed Mockup */}
-             <div className="aspect-video bg-white rounded-xl mb-6 overflow-hidden border border-primary/8 p-4 flex flex-col gap-3">
-               {[
-                 { flag: '🇳🇬', headline: 'Lagos builds what others import', tag: 'Technology' },
-                 { flag: '🇷🇼', headline: 'Kigali by design, not by accident', tag: 'Cities' },
-                 { flag: '🇸🇳', headline: 'The music coming out of Dakar right now', tag: 'Culture' },
-               ].map(({ flag, headline, tag }) => (
-                 <div key={headline} className="flex items-center gap-3 bg-primary/3 rounded-lg px-3 py-2.5 border border-primary/5">
-                   <span className="text-xl">{flag}</span>
-                   <span className="text-xs font-serif text-primary/80 flex-1 leading-snug">{headline}</span>
-                   <span className="text-[10px] text-accent font-bold uppercase tracking-wider shrink-0">{tag}</span>
-                 </div>
-               ))}
+             <div className="aspect-video bg-primary/5 rounded-lg mb-6 overflow-hidden">
+                <img src="/absolute/path/to/media__1779645167015.png" alt="Platform Dashboard" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
              </div>
-             <h3 className="font-serif text-2xl mb-2 text-primary">The Story Feed</h3>
-             <p className="text-primary/60 text-sm">All 54 countries. Real stories, real context — organised by place, not by what's trending in the news cycle.</p>
+             <h3 className="font-serif text-2xl mb-2 text-primary">Intelligence Dashboard</h3>
+             <p className="text-primary/60 text-sm">A premium data display, tracking narrative sentiment and strategic opportunities.</p>
           </div>
           <div className="bg-secondary p-8 rounded-2xl border border-primary/10">
-             {/* Article Reader Mockup */}
-             <div className="aspect-video bg-white rounded-xl mb-6 overflow-hidden border border-primary/8 p-6 flex flex-col">
-               <div className="text-[10px] font-bold uppercase tracking-widest text-accent mb-3">Kenya · Technology</div>
-               <div className="font-serif text-base font-semibold text-primary leading-snug mb-2">
-                 The quiet infrastructure bet<br />paying off in Nairobi
-               </div>
-               <div className="space-y-1.5 mt-2 flex-1">
-                 {[100, 90, 95, 75, 85].map((w, i) => (
-                   <div key={i} className={`h-2 bg-primary/8 rounded-full`} style={{ width: `${w}%` }} />
-                 ))}
-               </div>
-               <div className="mt-auto pt-3 border-t border-primary/8 flex justify-between items-center">
-                 <span className="text-[10px] text-primary/30">5 min read</span>
-                 <span className="text-[10px] text-accent font-semibold">Read story →</span>
-               </div>
+             <div className="aspect-video bg-primary/5 rounded-lg mb-6 overflow-hidden">
+                <img src="/absolute/path/to/media__1779645317145.png" alt="Article Interface" className="w-full h-full object-cover opacity-80 mix-blend-multiply" />
              </div>
              <h3 className="font-serif text-2xl mb-2 text-primary">Guardian-style Editorial</h3>
-             <p className="text-primary/60 text-sm">A clean, distraction-free reading experience for long-form narrative reporting built around the story, not the algorithm.</p>
+             <p className="text-primary/60 text-sm">A clean, distraction-free reading experience for long-form narrative reporting.</p>
           </div>
         </div>
       </section>
@@ -393,14 +372,14 @@ export const BetaLanding = () => {
             <div className="flex gap-12 text-sm">
               <div>
                 <ul className="space-y-3">
-                  <li><Link to="/posts" className="text-white/40 hover:text-white transition-colors">Stories</Link></li>
+                  <li><Link to="/stories" className="text-white/40 hover:text-white transition-colors">Stories</Link></li>
                   <li><Link to="/about" className="text-white/40 hover:text-white transition-colors">About</Link></li>
                 </ul>
               </div>
               <div>
                 <ul className="space-y-3">
                   <li>
-                    <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light transition-colors font-medium">Support BOA, Launch Your Story</a>
+                    <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light transition-colors font-medium">Support on Ko-fi</a>
                   </li>
                 </ul>
               </div>

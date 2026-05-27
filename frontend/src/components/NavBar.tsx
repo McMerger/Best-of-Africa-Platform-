@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Coffee } from 'lucide-react';
+import { KO_FI_URL } from '../constants/beta';
 
 import {
     MagnifyingGlassIcon,
@@ -61,7 +63,7 @@ export const NavBar: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <Link to="/" className="flex flex-col leading-none group">
                         <span className="text-2xl font-serif font-black tracking-tighter text-foreground transition-colors group-hover:text-primary/90">Best of Africa</span>
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary mt-0.5">Narrative Platform</span>
+                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mt-0.5">BOA-Story · Intelligence Platform</span>
                     </Link>
                 </div>
 
@@ -111,6 +113,15 @@ export const NavBar: React.FC = () => {
                         <Button variant="default" size="sm" asChild className="ml-2">
                             <Link to="/login">Sign In</Link>
                         </Button>
+                        <a
+                            href={KO_FI_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hidden lg:flex ml-2 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-bold text-white shadow hover:bg-accent/90 transition-all hover:scale-105"
+                        >
+                            <Coffee className="h-3.5 w-3.5" />
+                            Support BOA
+                        </a>
                     </div>
 
                     {/* Mobile Menu */}
@@ -131,7 +142,35 @@ export const NavBar: React.FC = () => {
                                 </div>
                             </SheetHeader>
                             <div className="grid gap-6 py-2 overflow-y-auto max-h-[calc(100vh-8rem)] pr-2">
-                                {/* Section 1: Main Intelligence */}
+                                {/* Section 1: BOA-Story Narrative */}
+                                <div>
+                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-accent tracking-widest flex items-center gap-2">
+                                        BOA-Story <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        {[
+                                            { href: '/posts', label: 'Posts' },
+                                            { href: '/countries', label: 'Countries' },
+                                            { href: '/gallery', label: 'Gallery' },
+                                            { href: '/membership', label: 'Membership' },
+                                            { href: '/supporter-feed', label: 'Supporter Feed' },
+                                            { href: '/about', label: 'About' },
+                                        ].map((link) => (
+                                            <Link
+                                                key={link.href}
+                                                to={link.href}
+                                                className={cn(
+                                                    "block py-3 px-4 -mx-2 rounded-3xl text-lg transition-all hover:bg-accent/10",
+                                                    location.pathname === link.href ? "bg-accent/15 text-accent font-bold" : "text-muted-foreground hover:text-foreground font-medium"
+                                                )}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section 2: Main Intelligence */}
                                 <div>
                                     <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Intelligence</div>
                                     <div className="space-y-1">
@@ -320,6 +359,87 @@ export const NavBar: React.FC = () => {
                                 </NavigationMenuContent>
                             </NavigationMenuItem>
 
+                            {/* BOA-STORY NARRATIVE MENU */}
+                            <NavigationMenuItem>
+                                <NavigationMenuTrigger>BOA-Story</NavigationMenuTrigger>
+                                <NavigationMenuContent>
+                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[520px] lg:grid-cols-2">
+                                        <li className="col-span-2 border-b pb-3 mb-1">
+                                            <NavigationMenuLink asChild>
+                                                <Link
+                                                    to="/posts"
+                                                    className="flex items-center gap-3 select-none rounded-2xl p-3 no-underline outline-none transition-colors hover:bg-accent/10"
+                                                >
+                                                    <div>
+                                                        <div className="text-sm font-bold text-accent uppercase tracking-widest">BOA-Story</div>
+                                                        <p className="text-xs text-muted-foreground mt-0.5">Real stories about African lives, cities & creators — beyond the headlines.</p>
+                                                    </div>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/posts" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">Posts</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">Browse all published stories.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/countries" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">Countries</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">Explore coverage by country.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/gallery" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">Gallery</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">Visual stories & photography.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/supporter-feed" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">Supporter Feed</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">Behind-the-scenes for backers.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/membership" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">Membership</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">Join as a founding member.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li>
+                                            <NavigationMenuLink asChild>
+                                                <Link to="/about" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
+                                                    <div className="text-sm font-medium leading-none">About</div>
+                                                    <p className="text-xs leading-snug text-muted-foreground">The story behind the platform.</p>
+                                                </Link>
+                                            </NavigationMenuLink>
+                                        </li>
+                                        <li className="col-span-2 pt-2 border-t border-border/50">
+                                            <a
+                                                href={KO_FI_URL}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 w-full select-none rounded-2xl p-3 no-underline outline-none transition-colors bg-accent/10 hover:bg-accent/20 text-accent font-bold text-sm"
+                                            >
+                                                <Coffee className="h-4 w-4" />
+                                                Support BOA, Launch Your Story →
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </NavigationMenuContent>
+                            </NavigationMenuItem>
+
                             {/* INTELLIGENCE & SERVICES MENU */}
                             <NavigationMenuItem>
                                 <NavigationMenuTrigger>Stories & Resources</NavigationMenuTrigger>
@@ -379,7 +499,7 @@ export const NavBar: React.FC = () => {
                                             </NavigationMenuLink>
                                         </li>
                                         <li className="mt-2 pt-2 border-t border-border/50">
-                                            <div className="h-[22px]" /> {/* Spacer to align with Premium Services header */}
+                                            <div className="h-[22px]" />
                                             <NavigationMenuLink asChild>
                                                 <Link to="/request-consultation" className="group block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
                                                     <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Concierge</div>

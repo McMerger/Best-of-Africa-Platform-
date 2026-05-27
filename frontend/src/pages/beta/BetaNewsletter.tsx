@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { BetaNav, BetaFooter } from '../../components/beta';
+import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
 
@@ -18,8 +18,7 @@ export const BetaNewsletter = () => {
   const { data: statsData } = useQuery<{ subscribers: number }>({
     queryKey: ['newsletter-stats'],
     queryFn: () => request<{ subscribers: number }>('/newsletter/stats'),
-    staleTime: 5 * 60 * 1000,
-  });
+    staleTime: 5 * 60 * 1000 });
   const subscriberCount = statsData?.subscribers ?? null;
 
   // Auto-focus the email field on mount
@@ -35,8 +34,7 @@ export const BetaNewsletter = () => {
     try {
       await request<{ success: boolean; message: string }>('/newsletter/subscribe', {
         method: 'POST',
-        body: JSON.stringify({ email, frequency: 'weekly' }),
-      });
+        body: JSON.stringify({ email, frequency: 'weekly' }) });
       setStatus('success');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
@@ -52,7 +50,7 @@ export const BetaNewsletter = () => {
     return (
       <div className="min-h-screen bg-background text-primary flex flex-col selection:bg-accent selection:text-card">
         <SEO title="Subscribed | BOA-Story" />
-        <BetaNav />
+        
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
           <div className="max-w-md mx-auto w-full text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
@@ -70,7 +68,7 @@ export const BetaNewsletter = () => {
             </Link>
           </div>
         </div>
-        <BetaFooter />
+        
       </div>
     );
   }
@@ -81,7 +79,7 @@ export const BetaNewsletter = () => {
         title="Newsletter | BOA-Story" 
         description="Weekly dispatches on African business, culture, and emerging stories — no noise, no filter."
       />
-      <BetaNav />
+      
 
       <div className="flex-1 flex flex-col justify-center py-20 px-6">
         <div className="max-w-md mx-auto w-full flex flex-col items-center text-center">
@@ -153,7 +151,7 @@ export const BetaNewsletter = () => {
         </div>
       </div>
 
-      <BetaFooter />
+      
     </div>
   );
 };

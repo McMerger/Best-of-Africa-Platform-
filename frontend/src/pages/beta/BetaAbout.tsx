@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { BetaNav, BetaFooter } from '../../components/beta';
+import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 
@@ -7,8 +7,7 @@ export const BetaAbout = () => {
   const { data: stats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
-    staleTime: 10 * 60 * 1000,
-  });
+    staleTime: 10 * 60 * 1000 });
 
   return (
     <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary">
@@ -16,7 +15,7 @@ export const BetaAbout = () => {
         title="About | BOA-Story" 
         description="A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."
       />
-      <BetaNav />
+      
       {/* 1. HERO */}
       <section className="bg-primary pt-32 pb-24 px-6 border-b border-primary/10">
         <div className="max-w-4xl mx-auto text-center text-white">
@@ -111,7 +110,7 @@ export const BetaAbout = () => {
 
       </main>
 
-      <BetaFooter />
+      
     </div>
   );
 };

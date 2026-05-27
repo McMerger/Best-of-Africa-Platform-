@@ -39,41 +39,7 @@
   --density-text-base: 1rem;
 }
 
-/* 
-  Beta Theme (Parchment, Dark Navy, Champagne Gold) 
-  Applied to the wrapper of all beta pages to ensure the main app remains isolated.
-*/
-.theme-beta {
-  --background: 37 33% 94%; /* #F5F0E8 Parchment Base */
-  --foreground: 30 17% 9%;  /* #1C1814 Deep Espresso / Dark text */
-  
-  --primary: 30 17% 9%;     /* #1C1814 Dark for strong sections */
-  --primary-foreground: 37 33% 94%; /* #F5F0E8 Parchment text on dark */
-  
-  --card: 0 0% 100%;        /* #FFFFFF Clean white for elevated cards */
-  --card-foreground: 30 17% 9%; 
-  
-  --accent: 44 53% 54%;     /* #C9A84C Champagne Gold */
-  --accent-foreground: 0 0% 100%; /* White text on gold buttons */
-  
-  --accent-light: 44 53% 90%; 
-  
-  --secondary: 37 30% 89%;  /* #EDE6D8 Slightly darker parchment for surfaces */
-  --secondary-foreground: 30 17% 9%; 
-
-  --muted: 37 20% 85%; 
-  --muted-foreground: 30 10% 45%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 30 17% 9%;
-
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 100%;
-
-  --border: 37 20% 85%;     /* Subtle warm border */
-  --input: 37 20% 85%;
-  --ring: 44 53% 54%;
-}
+/* ── Unified palette: Navy + Champagne Gold governs all pages ── */
 
 body {
   background-color: hsl(var(--background));

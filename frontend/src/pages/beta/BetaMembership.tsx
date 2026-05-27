@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BetaNav, BetaFooter, MembershipTiersGrid } from '../../components/beta';
+import { MembershipTiersGrid } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { KO_FI_URL } from '../../constants/beta';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -8,16 +8,13 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 const FAQ_ITEMS = [
   {
     q: 'Is this finished?',
-    a: 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.',
-  },
+    a: 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.' },
   {
     q: 'Can I cancel?',
-    a: "Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods.",
-  },
+    a: "Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods." },
   {
     q: 'Why now?',
-    a: "Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.",
-  },
+    a: "Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic." },
 ];
 
 function FAQItem({ q, a }: { q: string; a: string }) {
@@ -61,7 +58,7 @@ export const BetaMembership = () => {
         title="Membership | BOA-Story" 
         description="Become a Founding Member to support this independent narrative project."
       />
-      <BetaNav />
+      
 
       {/* Tiers */}
       <section className="py-24 px-6 max-w-6xl mx-auto">
@@ -120,7 +117,7 @@ export const BetaMembership = () => {
       </div>
     </section>
 
-      <BetaFooter />
+      
     </div>
   );
 };
