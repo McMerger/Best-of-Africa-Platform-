@@ -464,7 +464,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         originalPayload.title        || null,
                         originalPayload.published_at || null,
                         ARTICLE_PROMPT_VERSION,
-                        generated.ai_investor_brief  || null,
+                        generated.investor_brief || generated.ai_investor_brief || null,
                     ).run();
 
                     await c.env.DB.prepare(`

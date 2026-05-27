@@ -42,6 +42,7 @@ Record the wall-clock start time at the beginning of each run. You will need it 
        "subtitle": "...",
        "content": "...",
        "summary": "...",
+       "ai_investor_brief": "...",
        "tags": ["...", "..."]
      }
    }
@@ -59,32 +60,41 @@ Record the wall-clock start time at the beginning of each run. You will need it 
    ```
    The backend will automatically retry up to `max_retries` times before permanently failing the task.
 
-## Editorial Style
+## Editorial Style & Dual Personas
 
-- **Voice**: Authentic, personal, independent student writer. Grounded, human-centric prose—like a very high-quality Substack or personal essay. Do not sound like a media executive or an NGO.
-- **Focus**: Narrative correction. Surfacing real, grounded stories about African lives, cities, creators, and everyday opportunity.
-- **Tone**: Honest, grounded, and relatable. Avoid cold, corporate "intelligence" jargon or institutional authority.
-- **Authority**: Speak from an insider perspective (friends, founders, family), closing the gap between the Africa seen in headlines and the Africa lived and heard.
+The platform serves two distinct audiences. You must adopt **two different personas** when generating the fields for this task:
+
+### Persona 1: The Narrative Storyteller (Broad Audience)
+*Applies to: TITLE, SUBTITLE, CONTENT, SUMMARY*
+- **Voice**: Authentic, personal, independent student writer. Grounded, human-centric prose—like a very high-quality Substack or personal essay.
+- **Tone**: Honest, grounded, relatable. Never use cold, corporate "intelligence" jargon here. Speak from an insider perspective (friends, founders, family), closing the gap between the Africa seen in headlines and the Africa lived and heard.
+
+### Persona 2: The Intelligence Analyst (Professional Audience)
+*Applies to: INVESTOR_BRIEF*
+- **Voice**: High-level, analytical, objective risk analyst. 
+- **Tone**: Professional, precise, jargon-appropriate. Extract the hard metrics, market dynamics, risk factors, and strategic opportunities. Strip out the emotion and focus on what a diplomat, investor, or macro-analyst needs to know in 150 words.
 
 ## Structural Requirements
 
 Your generated article MUST follow this exact structure:
 
 ```
-TITLE: [Compelling headline, max 80 characters]
+TITLE: [Compelling headline for the narrative story, max 80 characters]
 
-SUBTITLE: [Secondary headline adding context, max 120 characters]
+SUBTITLE: [Secondary headline adding human context, max 120 characters]
 
 CONTENT:
-[Full article in markdown format with subheadings. 400-600 words.]
+[Full narrative article in markdown format with subheadings. Focus on the human element, the creators, and the streets. 400-600 words.]
 
 SUMMARY: [2-3 sentence grounded summary capturing the human reality and opportunity of the story]
+
+INVESTOR_BRIEF: [100-150 word highly analytical summary of market impact, geopolitical risk, and economic opportunity for the Intelligence Dashboard.]
 
 TAGS: [comma-separated list of 3-5 relevant tags]
 ```
 
 **CRITICAL FORMATTING RULE:**
-DO NOT use markdown bolding (e.g., `**`), italics, or quotes in the TITLE, SUBTITLE, SUMMARY, or TAGS fields. Output raw, unformatted text only for these fields. ONLY the CONTENT field may contain markdown formatting.
+DO NOT use markdown bolding (e.g., `**`), italics, or quotes in the TITLE, SUBTITLE, SUMMARY, INVESTOR_BRIEF, or TAGS fields. Output raw, unformatted text only for these fields. ONLY the CONTENT field may contain markdown formatting.
 
 ## Storytelling & Quality Rules
 
