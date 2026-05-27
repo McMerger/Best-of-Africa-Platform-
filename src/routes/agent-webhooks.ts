@@ -10,6 +10,12 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Strip leading/trailing markdown asterisks, whitespace, and quotes from a string field. */
+const sanitizeField = (s: string | undefined): string => {
+    if (!s) return '';
+    return s.replace(/^[*\s"']+/, '').replace(/[*\s"']+$/, '').trim();
+};
+
 /** Write a telemetry row to agent_metrics after each agent run. */
 async function writeAgentMetric(
     db: Env['DB'],
@@ -423,8 +429,13 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                 const generated = payload.result;
 
                 if (itemId && generated.title && generated.content) {
+                    // Sanitize text fields: strip markdown asterisks, stray quotes, leading/trailing whitespace
+                    const cleanTitle    = sanitizeField(generated.title);
+                    const cleanSubtitle = sanitizeField(generated.subtitle);
+                    const cleanSummary  = sanitizeField(generated.summary);
+
                     const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
-                    const baseSlug = generated.title
+                    const baseSlug = cleanTitle
                         .toLowerCase()
                         .replace(/[^a-z0-9]+/g, '-')
                         .replace(/^-|-$/g, '')
@@ -437,13 +448,14 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             id, slug, title, subtitle, content, summary,
                             country_code, sector_id, tags,
                             reading_time_minutes, source_url, source_title, source_published_at,
-                            generation_prompt_version,
+                            generation_prompt_version, ai_investor_brief,
+                            engagement_score,
                             status, published_at, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'published', datetime('now'), datetime('now'))
                     `).bind(
                         articleId, slug,
-                        generated.title, generated.subtitle || null,
-                        generated.content, generated.summary || null,
+                        cleanTitle, cleanSubtitle || null,
+                        generated.content, cleanSummary || null,
                         originalPayload.country_code || null,
                         originalPayload.sector_id    || null,
                         generated.tags ? JSON.stringify(generated.tags) : '[]',
@@ -452,6 +464,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         originalPayload.title        || null,
                         originalPayload.published_at || null,
                         ARTICLE_PROMPT_VERSION,
+                        generated.ai_investor_brief  || null,
                     ).run();
 
                     await c.env.DB.prepare(`
@@ -482,7 +495,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             const imageKey = `articles/${articleId}/hero.png`;
                             const imageUrl = await uploadImage(c.env, imageKey, imageBuffer, 'image/png');
                             await c.env.DB.prepare(
-                                'UPDATE articles SET ai_image_url = ? WHERE id = ?'
+                                'UPDATE articles SET hero_image_url = ? WHERE id = ?'
                             ).bind(imageUrl, articleId).run();
                         } else {
                             console.warn(`[enrichment] Image generation returned null for article ${articleId}`);
