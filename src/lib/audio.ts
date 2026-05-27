@@ -16,38 +16,65 @@ export async function generateAudioNarration(
     content: string
 ): Promise<{ audioUrl: string; durationSeconds: number } | null> {
     try {
-        // Create narration text
         const narrationText = createNarrationScript(title, content);
+        const audioKey = `audio/${articleId}.mp3`;
+        const wordCount = narrationText.split(/\s+/).length;
+        const durationSeconds = Math.ceil((wordCount / 150) * 60);
+        let audioBuffer: ArrayBuffer | Uint8Array | null = null;
 
-        // Use Workers AI TTS model
-        const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
-            text: narrationText.slice(0, 5000), // Limit to avoid timeout
-        });
+        // 1. Try ElevenLabs Premium Voice
+        if (env.ELEVENLABS_API_KEY) {
+            const voiceId = env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+            const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'audio/mpeg',
+                    'Content-Type': 'application/json',
+                    'xi-api-key': env.ELEVENLABS_API_KEY
+                },
+                body: JSON.stringify({
+                    text: narrationText.slice(0, 4000),
+                    model_id: "eleven_monolingual_v1",
+                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
+                })
+            });
 
-        if (!response || !response.audio) {
-            console.error('TTS response missing audio');
-            return null;
+            if (elevenRes.ok) {
+                audioBuffer = await elevenRes.arrayBuffer();
+            } else {
+                console.warn('[TTS] ElevenLabs failed, falling back to Workers AI:', await elevenRes.text());
+            }
+        }
+
+        // 2. Fallback to Workers AI TTS
+        if (!audioBuffer) {
+            const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
+                text: narrationText.slice(0, 5000), // Limit to avoid timeout
+            });
+
+            if (!response || !response.audio) {
+                console.error('TTS response missing audio');
+                return null;
+            }
+            audioBuffer = response.audio;
         }
 
         // Store audio in R2 bucket
-        const audioKey = `audio/${articleId}.wav`;
-        await env.MEDIA.put(audioKey, response.audio, {
-            httpMetadata: { contentType: 'audio/wav' },
+        await env.MEDIA.put(audioKey, audioBuffer, {
+            httpMetadata: { contentType: 'audio/mpeg' },
         });
 
-        // Estimate duration (rough: ~150 words per minute)
-        const wordCount = narrationText.split(/\s+/).length;
-        const durationSeconds = Math.ceil((wordCount / 150) * 60);
+        const finalAudioUrl = `https://best-of-africa-media.r2.dev/${audioKey}`;
 
         // Store reference in DB
         await env.DB.prepare(`
             UPDATE articles 
             SET audio_url = ?, audio_duration_seconds = ?
             WHERE id = ?
-        `).bind(`/assets/${audioKey}`, durationSeconds, articleId).run();
+        `).bind(finalAudioUrl, durationSeconds, articleId).run();
 
         return {
-            audioUrl: `/assets/${audioKey}`,
+            audioUrl: finalAudioUrl,
             durationSeconds,
         };
 

@@ -5,6 +5,7 @@ import { validate } from '../lib';
 import { generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { autoTranslateArticle } from '../lib/translate';
+import { generateAudioNarration } from '../lib/audio';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -502,6 +503,13 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         }
                     } catch (imageError) {
                         console.error(`[enrichment] Hero image failed for article ${articleId}:`, imageError);
+                    }
+
+                    try {
+                        const script = `${generated.title}. ${generated.summary}`;
+                        await generateAudioNarration(c.env, articleId, generated.title, script);
+                    } catch (audioError) {
+                        console.error(`[enrichment] Audio generation failed for article ${articleId}:`, audioError);
                     }
                 }
             } catch (e) {

@@ -10,6 +10,7 @@ import { trackEvent } from '../lib/analytics';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, UuidParamSchema } from '../lib';
 import { callConfiguredAI } from '../lib/ai';
+import { generateAudioNarration } from '../lib/audio';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Helper: decode and validate a Bearer JWT without killing the request
@@ -538,67 +539,17 @@ router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
     // Generate Real TTS 
     const script = `${article.title}. ${article.summary}`;
 
-    try {
-        const audioId = `audio-${article.id}`;
-        
-        let audioUrl = `https://best-of-africa-media.r2.dev/audio/${audioId}.mp3`;
-        let durationSeconds = Math.max(30, Math.ceil((script.split(/\s+/).length / 150) * 60));
-        let message = 'Audio generation queued. Available shortly.';
+    const result = await generateAudioNarration(c.env, article.id, article.title, script);
 
-        if (c.env.ELEVENLABS_API_KEY) {
-            // Voice ID falls back to Rachel (21m00Tcm4TlvDq8ikWAM) if env var not set.
-            // Override via ELEVENLABS_VOICE_ID in wrangler.toml / Workers secrets.
-            const voiceId = c.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
-
-            const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'audio/mpeg',
-                    'Content-Type': 'application/json',
-                    'xi-api-key': c.env.ELEVENLABS_API_KEY
-                },
-                body: JSON.stringify({
-                    text: script,
-                    model_id: "eleven_monolingual_v1",
-                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-                })
-            });
-
-            if (!elevenRes.ok) {
-                const errText = await elevenRes.text();
-                throw new Error(`ElevenLabs Error: ${elevenRes.status} ${errText}`);
-            }
-
-            const audioBuffer = await elevenRes.arrayBuffer();
-            
-            // Persist the synthesized binary straight to the R2 edge CDN
-            await c.env.MEDIA.put(`audio/${audioId}.mp3`, audioBuffer, {
-                httpMetadata: { contentType: 'audio/mpeg' }
-            });
-
-            message = 'Audio successfully synthesized.';
-        } else {
-            console.warn('[TTS] ELEVENLABS_API_KEY not found. Faking generation.');
-            message = 'TTS pipeline in standby - missing ElevenLabs key.';
-        }
-
-        // Update article with audio metadata
-        await c.env.DB.prepare(`
-            UPDATE articles 
-            SET audio_url = ?, audio_duration_seconds = ?
-            WHERE id = ?
-        `).bind(audioUrl, durationSeconds, article.id).run();
-
+    if (result) {
         return c.json({
             success: true,
-            audio_url: audioUrl,
-            duration_seconds: durationSeconds,
-            message: message,
-            note: c.env.ELEVENLABS_API_KEY ? 'Powered by ElevenLabs' : 'Text-to-speech service not configured'
+            audio_url: result.audioUrl,
+            duration_seconds: result.durationSeconds,
+            message: 'Audio successfully synthesized.',
+            note: c.env.ELEVENLABS_API_KEY ? 'Powered by ElevenLabs' : 'Powered by Cloudflare Workers AI'
         });
-
-    } catch (err) {
-        console.error('TTS Generation failed:', err);
+    } else {
         return c.json({
             success: false,
             error: 'tts_failed',
