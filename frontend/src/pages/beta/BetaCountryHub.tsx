@@ -142,7 +142,7 @@ export const BetaCountryHub = () => {
 
   if (!isLoading && !country && countryQuery.isFetched) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="flex flex-col">
         
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
           <Globe size={48} className="text-primary/20 mb-6" />
@@ -165,7 +165,7 @@ export const BetaCountryHub = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans pb-24">
+    <div className="pb-24">
       <SEO
         title={`${countryName} | BOA-Story`}
         description={`Curated stories and independent insights for ${countryName}.`}
@@ -173,7 +173,7 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="bg-primary text-white pt-24 pb-16 px-6">
+      <div className="bg-primary text-white pt-8 pb-16 px-6">
         <div className="max-w-5xl mx-auto">
           <Link
             to="/countries"

@@ -108,7 +108,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 }
 
 const ArticleSkeleton = () => (
-  <div className="min-h-screen bg-background text-primary font-sans">
+  <div className="bg-background text-primary font-sans">
     <div className="w-full h-[300px] md:h-[400px] bg-white animate-pulse" />
     <div className="max-w-3xl mx-auto px-6 py-12">
       <div className="h-4 bg-primary/10 rounded w-32 mb-6 animate-pulse" />
@@ -218,7 +218,7 @@ export const BetaArticle = () => {
   // Show a proper error page instead of silently redirecting
   if (isError || !data?.article) {
     return (
-      <div className="min-h-screen bg-background text-primary font-sans">
+      <div className="bg-background text-primary font-sans">
         
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
           <span className="text-6xl mb-6">📰</span>
@@ -265,7 +265,7 @@ export const BetaArticle = () => {
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <div id="article-root" className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary">
+    <div id="article-root" className="bg-background text-primary font-sans selection:bg-accent selection:text-primary">
       <SEO 
         title={article.meta_title || article.title}
         description={article.meta_description || article.summary || ''}
@@ -276,7 +276,7 @@ export const BetaArticle = () => {
       />
       {/* Reading progress bar — fixed gold line at the very top */}
       <div
-        className="fixed top-0 left-0 z-[100] h-[2px] bg-accent transition-[width] duration-100 ease-linear pointer-events-none"
+        className="fixed top-0 left-0 z-[45] h-[2px] bg-accent transition-[width] duration-100 ease-linear pointer-events-none"
         style={{ width: `${readingProgress}%` }}
         aria-hidden="true"
       />
@@ -335,7 +335,7 @@ export const BetaArticle = () => {
           )}
 
           {/* Byline row */}
-          <div className="flex items-center justify-between text-sm font-medium text-primary/60 border-y border-white/5 py-4 gap-4">
+          <div className="flex items-center justify-between text-sm font-medium text-primary/60 border-y border-primary/10 py-4 gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-wrap">
               <span className="uppercase tracking-wider text-xs whitespace-nowrap">By {authorName}</span>
               <span className="text-primary/20">·</span>

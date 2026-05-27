@@ -151,7 +151,7 @@ export const BetaMarketIntel = () => {
     staleTime: 10 * 60 * 1000 });
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans pb-24">
+    <div className="pb-24">
       <SEO
         title="Supporter Feed | BOA-Story"
         description="A behind-the-scenes look at what we're building — for Ko-fi backers."
@@ -159,7 +159,7 @@ export const BetaMarketIntel = () => {
       
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="bg-primary text-white pt-28 pb-16 px-6">
+      <div className="bg-primary text-white pt-8 pb-16 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Heart size={12} />

@@ -136,7 +136,7 @@ export const BetaMemberAccess = () => {
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
-      <div className="min-h-screen bg-background text-primary flex flex-col">
+      <div className="flex flex-col">
         <SEO title="Member Access | BOA-Story" />
         
         <div className="flex-1 flex items-center justify-center">
@@ -149,7 +149,7 @@ export const BetaMemberAccess = () => {
   // ── Expired state ──────────────────────────────────────────────────────────
   if (phase === 'expired') {
     return (
-      <div className="min-h-screen bg-background text-primary font-sans flex flex-col">
+      <div className="flex flex-col">
         <SEO title="Access Expired | BOA-Story" />
         
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
@@ -183,7 +183,7 @@ export const BetaMemberAccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary flex flex-col">
+    <div className="selection:bg-accent selection:text-primary flex flex-col">
       <SEO 
         title="Member Access | BOA-Story" 
         description="Access your Founding Member benefits and premium stories."

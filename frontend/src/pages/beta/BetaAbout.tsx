@@ -10,14 +10,14 @@ export const BetaAbout = () => {
     staleTime: 10 * 60 * 1000 });
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary">
+    <div className="selection:bg-accent selection:text-primary">
       <SEO 
         title="About | BOA-Story" 
         description="A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."
       />
       
       {/* 1. HERO */}
-      <section className="bg-primary pt-32 pb-24 px-6 border-b border-primary/10">
+      <section className="bg-primary pt-8 pb-24 px-6 border-b border-primary/10">
         <div className="max-w-4xl mx-auto text-center text-white">
           <h1 className="font-serif text-[48px] md:text-[72px] leading-tight mb-8">
             We're building Africa's story.<br />Properly.

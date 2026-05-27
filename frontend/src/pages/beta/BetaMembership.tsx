@@ -53,7 +53,7 @@ export const BetaMembership = () => {
   const [isAnnual, setIsAnnual] = useState(true);
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary">
+    <div className="selection:bg-accent selection:text-primary">
       <SEO 
         title="Membership | BOA-Story" 
         description="Become a Founding Member to support this independent narrative project."

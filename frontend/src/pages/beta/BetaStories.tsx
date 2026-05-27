@@ -126,7 +126,7 @@ export const BetaStories = () => {
   const showLoading = isSearchMode ? (isSearching || isCountrySearching) : isLoading;
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
+    <div className="selection:bg-accent selection:text-primary">
       <SEO 
         title="Stories | BOA-Story" 
         description="Real, grounded stories about African lives, cities, creators, and everyday opportunity."

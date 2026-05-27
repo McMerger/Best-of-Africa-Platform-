@@ -125,7 +125,7 @@ export const BetaCountryTeaser = () => {
 
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
+    <div className="selection:bg-accent selection:text-primary">
       
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">

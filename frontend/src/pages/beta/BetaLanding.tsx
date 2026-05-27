@@ -1,5 +1,4 @@
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
@@ -110,7 +109,7 @@ export const BetaLanding = () => {
   const previewArticles: ArticleListItem[] = featuredData?.data?.slice(0, 3) || FALLBACK_ARTICLES.slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary overflow-x-hidden">
+    <div className="selection:bg-accent selection:text-primary overflow-x-hidden">
       <SEO 
         title="BOA-Story" 
         description="A digital home for real, thoughtful stories about African lives, cities, and ideas."
@@ -118,7 +117,7 @@ export const BetaLanding = () => {
       
 
       {/* 1. HERO SECTION */}
-      <section className="relative min-h-[90vh] flex items-center justify-center pt-20 pb-32 overflow-hidden border-b border-white/5 bg-primary text-primary-foreground">
+      <section className="relative min-h-[80vh] flex items-center justify-center pt-8 pb-24 overflow-hidden border-b border-white/5 bg-primary text-primary-foreground">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
@@ -380,37 +379,6 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* Footer — stays dark for brand anchor */}
-      <footer className="py-16 bg-primary border-t border-white/5 text-primary-foreground">
-        <div className="container mx-auto px-6 max-w-6xl">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-10 mb-12">
-            <div className="max-w-xs">
-              <span className="font-serif text-xl font-bold">BOA-<span className="text-accent">Story</span></span>
-              <p className="text-white/40 text-sm mt-3 leading-relaxed">
-                A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.
-              </p>
-            </div>
-            <div className="flex gap-12 text-sm">
-              <div>
-                <ul className="space-y-3">
-                  <li><Link to="/posts" className="text-white/40 hover:text-white transition-colors">Stories</Link></li>
-                  <li><Link to="/about" className="text-white/40 hover:text-white transition-colors">About</Link></li>
-                </ul>
-              </div>
-              <div>
-                <ul className="space-y-3">
-                  <li>
-                    <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent-light transition-colors font-medium">Support BOA, Launch Your Story</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-white/25">
-            <span>© {new Date().getFullYear()} BOA-Story. All rights reserved.</span>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

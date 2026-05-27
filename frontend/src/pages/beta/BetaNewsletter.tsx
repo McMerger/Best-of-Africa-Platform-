@@ -48,7 +48,7 @@ export const BetaNewsletter = () => {
   // ── Success State ──────────────────────────────────────────────────────────
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-background text-primary flex flex-col selection:bg-accent selection:text-card">
+      <div className="flex flex-col selection:bg-accent selection:text-card">
         <SEO title="Subscribed | BOA-Story" />
         
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
@@ -74,7 +74,7 @@ export const BetaNewsletter = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background text-primary flex flex-col selection:bg-accent selection:text-card">
+    <div className="flex flex-col selection:bg-accent selection:text-card">
       <SEO 
         title="Newsletter | BOA-Story" 
         description="Weekly dispatches on African business, culture, and emerging stories — no noise, no filter."

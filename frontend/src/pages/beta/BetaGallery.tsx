@@ -37,7 +37,7 @@ const GALLERY_IMAGES = [
 
 export const BetaGallery = () => {
   return (
-    <div className="min-h-screen bg-background text-primary font-sans selection:bg-accent selection:text-primary pb-32">
+    <div className="selection:bg-accent selection:text-primary">
       <SEO 
         title="Gallery | BOA-Story" 
         description="A visual journal of African cities, creators, and everyday opportunity."
