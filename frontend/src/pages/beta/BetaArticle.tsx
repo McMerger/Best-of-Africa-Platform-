@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
@@ -130,13 +131,13 @@ function ArticleMarkdown({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         h2: ({ children }) => (
-          <h2 className="font-serif text-[1.75rem] text-primary mt-10 mb-4 leading-snug">{children}</h2>
+          <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] text-white mt-16 mb-8 leading-[1.1] tracking-tight">{children}</h2>
         ),
         h3: ({ children }) => (
-          <h3 className="font-serif text-[1.375rem] text-primary mt-8 mb-3 leading-snug">{children}</h3>
+          <h3 className="font-serif text-[1.75rem] md:text-[2.25rem] text-white/90 mt-12 mb-6 leading-snug">{children}</h3>
         ),
         p: ({ children }) => (
-          <p className="text-primary/80 text-[17px] leading-[1.85] mb-6 font-sans">{children}</p>
+          <p className="text-white/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">{children}</p>
         ),
         strong: ({ children }) => (
           <strong className="text-accent font-semibold">{children}</strong>
@@ -164,19 +165,19 @@ function ArticleMarkdown({ content }: { content: string }) {
             );
           }
           return (
-            <li className="text-primary/80 text-[16px] leading-relaxed flex gap-3">
+            <li className="text-white/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3">
               <span className="text-accent mt-1 shrink-0">→</span>
               <span>{children}</span>
             </li>
           );
         },
         blockquote: ({ children }) => (
-          <blockquote className="my-6 border-l-4 border-accent pl-6 text-primary/60 font-serif italic text-lg leading-relaxed">
+          <blockquote className="my-10 border-l-[3px] border-accent pl-8 py-2 text-white/60 font-serif italic text-[1.5rem] leading-[1.6]">
             {children}
           </blockquote>
         ),
         code: ({ children }) => (
-          <code className="bg-primary/5 text-accent text-sm px-1.5 py-0.5 rounded font-mono">{children}</code>
+          <code className="bg-white/5 text-accent text-sm px-2 py-1 rounded font-mono">{children}</code>
         ),
         hr: () => <hr className="my-10 border-primary/10" /> }}
     >
@@ -318,40 +319,56 @@ export const BetaArticle = () => {
 
       {/* Hero */}
       {article.hero_image_url ? (
-        <div className="w-full h-[300px] md:h-[400px] relative mt-4">
-          <img
+        <div className="w-full h-[300px] md:h-[400px] relative mt-4 overflow-hidden">
+          <motion.img
+            initial={{ scale: 1.05 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
             src={article.hero_image_url}
             alt={article.title}
-            loading="lazy"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0E0C0A] via-[#0E0C0A]/30 to-transparent" />
-          <div className="absolute bottom-6 left-6 md:left-12">
+          <div className="absolute bottom-6 left-6 md:left-12 z-10">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>
         </div>
       ) : (
-        <div className="w-full h-[220px] md:h-[300px] bg-gradient-to-br from-[#C9A84C]/15 via-[#001F3F]/5 to-[#0E0C0A]/10 border-b border-primary/10 relative mt-4">
-          <div className="absolute bottom-6 left-6 md:left-12">
+        <div className="w-full h-[220px] md:h-[300px] relative mt-4 overflow-hidden">
+          <motion.img
+            initial={{ scale: 1.05 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            src={`/images/fallback_${categoryLabel?.toLowerCase().includes('tech') ? 'tech' : categoryLabel?.toLowerCase().includes('culture') ? 'culture' : 'business'}.png`}
+            alt={article.title}
+            className="w-full h-full object-cover opacity-60"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0E0C0A]/90 via-[#0E0C0A]/60 to-transparent mix-blend-multiply" />
+          <div className="absolute bottom-6 left-6 md:left-12 z-10">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>
         </div>
       )}
 
-      <main className="max-w-3xl mx-auto px-6 py-12 md:py-16">
-        <header className="mb-12">
+      <motion.main 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
+        className="max-w-4xl mx-auto px-6 py-12 md:py-24"
+      >
+        <header className="mb-16">
           {(categoryLabel || countryLabel) && (
-            <span className="text-accent text-[11px] font-bold tracking-widest uppercase mb-4 block">
+            <span className="text-accent text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
             </span>
           )}
-          <h1 className="font-serif text-[36px] md:text-[48px] leading-tight mb-6">
+          <h1 className="font-serif text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.95] tracking-tighter mb-8">
             {article.title}
           </h1>
 
           {/* Lede / standfirst — rendered from article.summary */}
           {article.summary && (
-            <p className="font-serif text-[1.25rem] md:text-[1.375rem] leading-relaxed text-accent/80 italic mb-6 border-l-4 border-accent/30 pl-5">
+            <p className="font-serif text-[1.5rem] md:text-[2rem] leading-[1.4] text-white/70 italic mb-10 border-l-2 border-accent pl-6 py-2">
               {article.summary}
             </p>
           )}
@@ -468,7 +485,7 @@ export const BetaArticle = () => {
             </div>
           )}
         </article>
-      </main>
+      </motion.main>
 
       {/* More Stories */}
       <aside className="bg-secondary border-t border-primary/8 py-24 px-6 relative z-20">

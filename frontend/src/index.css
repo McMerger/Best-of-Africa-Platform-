@@ -3,34 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --primary: 210 73% 15%; /* #0A2540 Stripe Classic Navy */
-  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --primary: 0 0% 4%; /* Deep Obsidian / Onyx Black */
+  --primary-foreground: 0 0% 100%; /* Crisp White */
   
-  --background: 0 0% 100%; /* #FFFFFF */
-  --foreground: 210 73% 15%; /* Navy Text */
+  --background: 0 0% 4%; /* #0A0A0A */
+  --foreground: 0 0% 100%; /* White Text */
   
-  --card: 212 100% 7%; /* #001226 Deep Navy for components */
-  --card-foreground: 0 0% 100%; /* White text on card */
+  --card: 0 0% 7%; /* Slightly elevated obsidian */
+  --card-foreground: 0 0% 100%; 
   
   --accent: 46 65% 52%; /* #D4AF37 Elegant Champagne Gold */
-  --accent-foreground: 210 73% 15%; /* Navy */
+  --accent-foreground: 0 0% 4%; 
   
   --accent-light: 46 80% 85%; /* Very light gold for highlights */
   
-  --secondary: 210 40% 96%; /* #F0F4F8 Soft Off-White/Blue surface */
-  --secondary-foreground: 210 73% 15%; /* Navy */
+  --secondary: 0 0% 10%; /* Very dark grey for contrasting sections */
+  --secondary-foreground: 0 0% 100%; 
 
-  --muted: 210 20% 90%; 
-  --muted-foreground: 210 30% 45%;
+  --muted: 0 0% 15%; 
+  --muted-foreground: 0 0% 65%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 73% 15%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 0 0% 100%;
 
   --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 98%;
 
-  --border: 210 20% 90%;
-  --input: 210 20% 90%;
+  --border: 0 0% 15%; /* Dark borders */
+  --input: 0 0% 15%;
   --ring: 46 65% 52%;
 
   --radius: 0.5rem;
@@ -131,11 +131,11 @@ body {
      but explicit specificity here ensures it survives dark-mode cascades. */
   .font-serif, [class*="font-serif"] {
     font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em; /* Tighter tracking for high-end editorial feel */
   }
 
   .uppercase {
-    letter-spacing: 0.06em;
+    letter-spacing: 0.12em; /* Wider tracking for uppercase labels */
   }
 
 
@@ -236,5 +236,22 @@ body {
     background: linear-gradient(90deg, #C9A84C, #E8C96A);
     z-index: 9999;
     transition: width 0.1s linear;
+  }
+
+  /* ── Premium UI Overhaul Utilities ───────────────────────────────────────── */
+  .glass-panel {
+    @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+  
+  .glass-panel-light {
+    @apply bg-white/70 backdrop-blur-xl border border-primary/10 shadow-2xl;
+  }
+
+  .gradient-overlay-dark {
+    @apply absolute inset-0 bg-gradient-to-t from-primary/95 via-primary/60 to-primary/20 pointer-events-none;
+  }
+
+  .gradient-overlay-accent {
+    @apply absolute inset-0 bg-gradient-to-t from-accent/90 via-accent/30 to-transparent pointer-events-none mix-blend-multiply;
   }
 }

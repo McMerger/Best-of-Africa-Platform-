@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
@@ -94,6 +94,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export const BetaLanding = () => {
   const prefersReducedMotion = useReducedMotion();
+  const { scrollY } = useScroll();
 
   useEffect(() => {
     // Optional: Add scroll listeners if needed in future
@@ -117,35 +118,27 @@ export const BetaLanding = () => {
       
 
       {/* 1. HERO SECTION */}
-      <section className="relative min-h-[80vh] flex items-center justify-center pt-8 pb-24 overflow-hidden border-b border-white/5 bg-primary text-primary-foreground">
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={prefersReducedMotion ? { opacity: 0.15, scale: 1 } : { opacity: 0.15, scale: 1, x: [0, 30, 0], y: [0, -20, 0] }}
-            transition={{ duration: prefersReducedMotion ? 1 : 8, repeat: prefersReducedMotion ? 0 : Infinity, ease: "easeInOut" }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent rounded-full blur-[120px]"
+      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-white/10 bg-primary text-primary-foreground">
+        {/* Parallax Background */}
+        <motion.div 
+          className="absolute inset-0 z-0"
+          style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
+        >
+          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-dark z-20" />
+          <img 
+            src="/images/v2_hero_kigali.png" 
+            alt="Modern African Metropolis" 
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
           />
-        </div>
-
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
-          <motion.svg
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 0.04, scale: 1 }}
-            transition={{ duration: 4, ease: "easeOut" }}
-            viewBox="0 0 400 500"
-            className="w-[420px] h-[520px] fill-accent"
-            aria-hidden="true"
-          >
-            <path d="M200 20 C160 20 130 40 110 70 C90 100 85 130 80 160 C75 190 60 210 50 240 C40 270 38 300 45 330 C52 360 70 385 90 405 C110 425 135 440 160 450 C175 455 185 460 200 462 C215 460 225 455 240 450 C265 440 290 425 310 405 C330 385 348 360 355 330 C362 300 360 270 350 240 C340 210 325 190 320 160 C315 130 310 100 290 70 C270 40 240 20 200 20Z" />
-          </motion.svg>
-        </div>
+        </motion.div>
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
           <SectionLabel text="Early Access" />
           
           <AnimatedHeadline 
             text="Africa without the filter." 
-            className="font-serif text-[clamp(3.5rem,8vw,6rem)] leading-[1.05] tracking-tight mb-6"
+            className="font-serif text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
           />
 
           <RotatingSubheadline />
@@ -206,33 +199,55 @@ export const BetaLanding = () => {
           <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] leading-tight text-primary mb-4">Stories from the ground</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {previewArticles.length > 0 ? (
             previewArticles.map((article, index) => {
               const delays = [0, 0.2, 0.4];
+              const isFeatured = index === 0;
               return (
-                <CardReveal key={article.slug} delay={delays[index]}>
-                  <div className="group block bg-white rounded-xl border border-primary/8 overflow-hidden h-full relative">
-                    <div className="p-8 h-full flex flex-col justify-between blur-[2px] opacity-60 pointer-events-none transition-all duration-300">
+                <motion.div 
+                  key={article.slug}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, delay: delays[index], ease: "easeOut" }}
+                  className={isFeatured ? "md:col-span-2" : ""}
+                >
+                  <motion.div whileHover={{ scale: 1.01, y: -5 }} className={`group block bg-card rounded-3xl border border-white/10 overflow-hidden relative shadow-2xl ${isFeatured ? 'h-[500px] md:h-[600px]' : 'h-[450px]'}`}>
+                    {/* Background Image */}
+                    <div className="absolute inset-0 z-0">
+                      <img 
+                        src={article.hero_image_url || `/images/v2_editorial_${index + 1}.png`}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-50"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/90 to-card/40" />
+                    </div>
+
+                    <div className="p-8 h-full flex flex-col justify-between relative z-10 transition-all duration-300">
                       <div>
                         <div className="flex justify-between items-center mb-6">
                           <div>
                             <span className="text-4xl">{article.country_flag || '🌍'}</span>
                             {article.country_name && (
-                              <p className="text-[10px] text-primary/40 font-medium mt-1">{article.country_name}</p>
+                              <p className="text-[10px] text-white/60 font-medium mt-1">{article.country_name}</p>
                             )}
                           </div>
-                          <span className="text-xs font-semibold tracking-wider text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20">{article.sector_name}</span>
+                          <span className="text-xs font-semibold tracking-wider text-accent uppercase bg-accent/10 px-3 py-1 rounded-full border border-accent/20 backdrop-blur-md">{article.sector_name}</span>
                         </div>
-                        <h3 className="font-serif text-[1.75rem] leading-snug mb-4 text-primary">{stripMarkdown(article.title)}</h3>
-                        <p className="text-primary/60 text-[0.9375rem] leading-relaxed line-clamp-3">{stripMarkdown(article.summary)}</p>
+                        <h3 className={`font-serif leading-[1.1] mb-4 text-white group-hover:text-accent transition-colors ${isFeatured ? 'text-[2.5rem] md:text-[3.5rem]' : 'text-[2rem]'}`}>
+                          {stripMarkdown(article.title)}
+                        </h3>
+                        <p className={`text-white/70 leading-relaxed line-clamp-3 ${isFeatured ? 'text-lg max-w-2xl' : 'text-base'}`}>
+                          {stripMarkdown(article.summary)}
+                        </p>
                       </div>
                     </div>
                     {/* OVERLAY */}
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center">
-                      <div className="bg-primary text-white p-6 rounded-2xl shadow-xl w-full max-w-sm border border-white/10 flex flex-col items-center">
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-card/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="glass-panel p-6 rounded-2xl w-full max-w-sm flex flex-col items-center transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                         <Lock className="text-accent mb-4" size={32} />
-                        <h4 className="font-serif text-xl mb-2">Founding Members Only</h4>
+                        <h4 className="font-serif text-xl mb-2 text-white">Founding Members Only</h4>
                         <p className="text-sm text-white/60 mb-6">Support the project on Ko-fi to unlock the full narrative feed.</p>
                         <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer">
                           <GoldButton variant="primary" className="w-full text-sm py-3 px-6 shadow-md">
@@ -241,8 +256,8 @@ export const BetaLanding = () => {
                         </a>
                       </div>
                     </div>
-                  </div>
-                </CardReveal>
+                  </motion.div>
+                </motion.div>
               );
             })
           ) : (
@@ -315,15 +330,29 @@ export const BetaLanding = () => {
       </section>
 
       {/* 6. MISSION BLOCK */}
-      <section className="py-32 px-6 bg-primary text-white text-center">
-        <div className="container mx-auto max-w-4xl">
-          <CardReveal>
-            <span className="text-6xl mb-8 block opacity-80">🌍</span>
-            <h2 className="font-serif text-[2.5rem] md:text-[4rem] leading-tight mb-8">We're building Africa's story. Properly.</h2>
-            <p className="text-white/70 text-xl font-serif italic mx-auto leading-relaxed mb-12">
+      <section className="py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <motion.img 
+            style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
+            src="/images/v2_real_background.png" 
+            alt="Real African Street Night" 
+            className="w-full h-[120%] object-cover opacity-50 absolute top-[-10%]" 
+          />
+          <div className="gradient-overlay-dark z-10" />
+        </div>
+        <div className="container mx-auto max-w-4xl relative z-20">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1 }}
+          >
+            <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
+            <h2 className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">We're building Africa's story. Properly.</h2>
+            <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
               The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.
             </p>
-          </CardReveal>
+          </motion.div>
         </div>
       </section>
 

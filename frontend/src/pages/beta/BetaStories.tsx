@@ -304,20 +304,37 @@ export const BetaStories = () => {
           </p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20"
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.1 }
+            }
+          }}
+        >
           {showLoading
             ? Array.from({ length: 6 }).map((_, i) => <StoryCardSkeleton key={i} />)
             : displayArticles.map((article, index) => {
                 // Free after first 4; lock remaining for non-members
                 const isLocked = !isMember && !isSearchMode && index >= 4;
 
+                // Asymmetrical Bento Layout Logic
+                // Every 5th item (0, 5, 10) takes up 2 columns.
+                const colSpanClass = (index % 5 === 0) ? "md:col-span-2 lg:col-span-2" : "col-span-1";
+
                 if (isLocked) {
                   return (
                     <motion.div
                       key={`locked-${article.slug}`}
-                      whileHover={{ y: -4, scale: 1.02 }}
+                      className={colSpanClass}
+                      variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0 } }}
+                      whileHover={{ y: -4, scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
                     >
                       <Link
                         to="/membership"
@@ -356,36 +373,43 @@ export const BetaStories = () => {
                 return (
                   <motion.div
                     key={article.slug}
-                    whileHover={{ y: -4, scale: 1.02 }}
+                    className={`${colSpanClass} h-full`}
+                    variants={{ hidden: { opacity: 0, y: 40 }, show: { opacity: 1, y: 0 } }}
+                    whileHover={{ y: -4, scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={{ duration: 0.2 }}
-                    className="h-full"
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                   >
                     <Link
                       to={`/posts/${article.slug}`}
-                      className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] block h-full"
+                      className="group relative bg-card rounded-2xl overflow-hidden border border-white/10 flex flex-col transition-all duration-500 hover:border-white/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] block h-full"
                     >
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
-                      <div className="h-44 overflow-hidden shrink-0">
+                      <div className={`overflow-hidden shrink-0 ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
                         <img
                           src={article.hero_image_url}
                           alt={stripMarkdown(article.title)}
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>
                     ) : (
-                      <div className="h-44 bg-gradient-to-br from-[#C9A84C]/10 to-[#0E0C0A] shrink-0 flex items-center justify-center">
-                        <span className="text-5xl opacity-60">{article.country_flag || '🌍'}</span>
+                      <div className={`overflow-hidden shrink-0 relative ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
+                        <img
+                          src={`/images/v2_editorial_${(index % 2) + 1}.png`}
+                          alt={stripMarkdown(article.title)}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
                       </div>
                     )}
-                    <div className="p-6 pb-2 flex-grow relative z-10 bg-white">
-                      <div className="flex justify-between items-center mb-3">
-                        <span className="text-xl">{article.hero_image_url ? '' : ''}{article.country_flag}</span>
-                        <span className="text-xs font-semibold tracking-wider text-accent uppercase">{article.sector_name}</span>
+                    <div className="p-8 pb-4 flex-grow relative z-10 bg-card">
+                      <div className="flex justify-between items-center mb-4">
+                        <span className="text-2xl">{article.country_flag}</span>
+                        <span className="text-xs font-semibold tracking-widest text-accent uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className="font-serif text-[21px] leading-snug mb-3 text-primary group-hover:text-accent transition-colors">
+                      <h3 className={`font-serif leading-[1.1] mb-4 text-white group-hover:text-accent transition-colors ${index % 5 === 0 ? 'text-[2rem] md:text-[2.5rem]' : 'text-[1.5rem] md:text-[1.75rem]'}`}>
                         {stripMarkdown(article.title)}
                       </h3>
                       
@@ -442,7 +466,7 @@ export const BetaStories = () => {
                 );
               })
           }
-        </div>
+        </motion.div>
 
         {/* Load More Button (Only outside search mode, if activeFilter is all, and there is more data) */}
         {!showLoading && !isSearchMode && activeFilter === 'All' && (data as any)?.pagination && (data as any).pagination.page < (data as any).pagination.total_pages && (
