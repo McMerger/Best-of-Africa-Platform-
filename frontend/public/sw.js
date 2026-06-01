@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boa-cache-v2';
+const CACHE_NAME = 'boa-cache-v3';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -26,6 +26,11 @@ self.addEventListener('fetch', (event) => {
                 return caches.match(event.request);
             })
         );
+        return;
+    }
+
+    // Do not cache API requests
+    if (event.request.url.includes('/api/')) {
         return;
     }
 
