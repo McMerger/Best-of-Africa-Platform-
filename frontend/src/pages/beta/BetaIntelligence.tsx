@@ -55,8 +55,8 @@ export const BetaIntelligence = () => {
           <div className="absolute inset-0 bg-primary/70 mix-blend-multiply z-10" />
           <div className="gradient-overlay-dark z-20" />
           <img 
-            src="/images/v2_intel_bg.png" 
-            alt="Data Infrastructure" 
+            src="/images/v2_intel_concrete_1780358106973.png" 
+            alt="Futuristic African Trading Floor" 
             className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
           />
         </motion.div>
