@@ -1,6 +1,5 @@
 import { useAudio } from '../../context/AudioContext';
-import { Play, Pause, SkipForward, SkipBack, X, Volume2, ListMusic } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Play, Pause, SkipForward, X, Volume2, ListMusic } from 'lucide-react';
 
 import { useState } from 'react';
 
