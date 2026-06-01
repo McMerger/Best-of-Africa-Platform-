@@ -8,7 +8,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
 import { ArrowLeft, Lock, Globe, FileText, TrendingUp, BarChart2, ExternalLink } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
@@ -59,42 +59,41 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 const ArticleCard = ({ article }: { article: ArticleListItem }) => (
   <Link
     to={`/posts/${article.slug}`}
-    className="group block bg-white rounded-xl border border-primary/8 overflow-hidden hover:border-accent/40 hover:shadow-[0_6px_24px_rgba(201,168,76,0.1)] transition-all duration-300 hover:-translate-y-0.5"
+    className="group block bg-card rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
-    {(article.ai_image_url || article.hero_image_url) && (
-      <div className="aspect-[16/9] overflow-hidden bg-primary/5">
-        <img
-          src={article.ai_image_url || article.hero_image_url}
-          alt={article.title}
-          loading="lazy"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        />
-      </div>
-    )}
-    <div className="p-4">
+    <div className="aspect-[16/9] overflow-hidden bg-primary/20 relative">
+      <img
+        src={article.hero_image_url || `/images/v2_editorial_${Math.floor(Math.random() * 2) + 1}.png`}
+        alt={article.title}
+        loading="lazy"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
+    </div>
+    <div className="p-6">
       {article.sector_name && (
-        <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-2 block">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-3 block">
           {article.sector_name}
         </span>
       )}
-      <h3 className="font-serif text-[15px] font-semibold text-primary leading-snug group-hover:text-accent transition-colors line-clamp-2">
+      <h3 className="font-serif text-[18px] font-semibold text-white leading-snug group-hover:text-accent transition-colors line-clamp-2">
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[13px] text-primary/50 mt-2 line-clamp-2 leading-relaxed">{article.summary}</p>
+        <p className="text-[14px] text-white/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
       )}
-      <p className="text-[11px] text-primary/30 mt-3">{article.reading_time_minutes} min read</p>
+      <p className="text-[11px] text-white/30 mt-4">{article.reading_time_minutes} min read</p>
     </div>
   </Link>
 );
 
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl border border-primary/8 overflow-hidden animate-pulse">
-    <div className="aspect-[16/9] bg-primary/5" />
-    <div className="p-4 space-y-2">
-      <div className="h-3 bg-primary/5 rounded w-1/4" />
-      <div className="h-4 bg-primary/8 rounded w-3/4" />
-      <div className="h-3 bg-primary/5 rounded w-full" />
+  <div className="bg-card rounded-2xl border border-white/10 overflow-hidden animate-pulse">
+    <div className="aspect-[16/9] bg-white/5" />
+    <div className="p-6 space-y-3">
+      <div className="h-3 bg-white/5 rounded w-1/4" />
+      <div className="h-5 bg-white/10 rounded w-3/4" />
+      <div className="h-3 bg-white/5 rounded w-full" />
     </div>
   </div>
 );
@@ -164,8 +163,10 @@ export const BetaCountryHub = () => {
     ? country!.investment_highlights
     : [];
 
+  const { scrollY } = useScroll();
+
   return (
-    <div className="pb-24">
+    <div className="pb-24 bg-primary text-primary-foreground">
       <SEO
         title={`${countryName} | BOA-Story`}
         description={`Curated stories and independent insights for ${countryName}.`}
@@ -173,200 +174,222 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="bg-primary text-white pt-8 pb-16 px-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-white/10">
+        <motion.div 
+          className="absolute inset-0 z-0"
+          style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
+        >
+          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-dark z-20" />
+          <img 
+            src="/images/v2_country_hero.png" 
+            alt="Country Landscape" 
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          />
+        </motion.div>
+
+        <div className="max-w-5xl mx-auto w-full relative z-30">
           <Link
             to="/countries"
-            className="inline-flex items-center gap-2 text-white/40 hover:text-white/80 text-sm transition-colors mb-8 group"
+            className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
           >
-            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             All 54 Countries
           </Link>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-8">
             {isLoading ? (
-              <div className="w-20 h-20 bg-white/10 rounded-2xl animate-pulse" />
+              <div className="w-24 h-24 bg-white/10 rounded-3xl animate-pulse" />
             ) : (
-              <span className="text-7xl drop-shadow-lg">{flagEmoji}</span>
+              <span className="text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
             )}
-            <div className="flex-1">
+            <div className="flex-1 pb-2">
               {isLoading ? (
-                <div className="space-y-3">
-                  <div className="h-8 bg-white/10 rounded w-48 animate-pulse" />
-                  <div className="h-4 bg-white/10 rounded w-32 animate-pulse" />
+                <div className="space-y-4">
+                  <div className="h-12 bg-white/10 rounded w-64 animate-pulse" />
+                  <div className="h-6 bg-white/10 rounded w-48 animate-pulse" />
                 </div>
               ) : (
-                <>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full backdrop-blur-md">
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-white/30 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md">
                         {stats.article_count} {stats.article_count === 1 ? 'story' : 'stories'}
                       </span>
                     )}
                   </div>
-                  <h1 className="font-serif text-[44px] md:text-[56px] leading-tight mb-3">{countryName}</h1>
+                  <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-white/50 max-w-2xl leading-relaxed text-[15px]">{country.description}</p>
+                    <p className="text-white/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
                   )}
-                </>
+                </motion.div>
               )}
             </div>
           </div>
 
           {/* Investment Highlights */}
           {investmentHighlights.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-8">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 1 }}
+              className="flex flex-wrap gap-2 mt-12"
+            >
               {investmentHighlights.map(h => (
-                <span key={h} className="text-[12px] text-white/60 bg-white/8 border border-white/10 px-3 py-1 rounded-full">
+                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-white/80 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
                   {h}
                 </span>
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-16">
 
         {/* ── Sentiment Scores (members only) ────────────────────────────── */}
-        <section className="bg-white rounded-2xl border border-primary/8 p-8 md:p-10">
-          <div className="flex items-center gap-3 mb-8">
-            <BarChart2 size={18} className="text-accent" />
-            <h2 className="font-serif text-2xl text-primary">Sentiment Scores</h2>
+        <motion.section 
+          initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
+          className="bg-card rounded-3xl border border-white/10 p-8 md:p-12 shadow-2xl relative overflow-hidden"
+        >
+          <div className="flex items-center gap-4 mb-10">
+            <BarChart2 size={24} className="text-accent" />
+            <h2 className="font-serif text-[2rem] text-white leading-none">Sentiment Scores</h2>
           </div>
 
           {!isMember ? (
-            <div className="relative bg-white rounded-2xl border border-primary/8 p-8 overflow-hidden">
-              {/* blurred placeholder preview — scores are NOT real data */}
-              <div className="space-y-5 blur-sm pointer-events-none select-none" aria-hidden="true">
+            <div className="relative bg-card rounded-2xl border border-white/5 p-8 overflow-hidden">
+              {/* blurred placeholder preview */}
+              <div className="space-y-6 blur-md pointer-events-none select-none opacity-40" aria-hidden="true">
                 {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
                   <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
                 ))}
               </div>
-              <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-2xl">
-                <Lock size={24} className="text-accent mb-3" />
-                  <p className="font-serif text-xl font-semibold text-primary mb-2">Backer-Only Data</p>
-                  <p className="text-sm text-primary/50 mb-6 max-w-sm">
+              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
+                <Lock size={32} className="text-accent mb-4" />
+                  <p className="font-serif text-3xl font-semibold text-white mb-2">Backer-Only Data</p>
+                  <p className="text-lg text-white/50 mb-8 max-w-sm text-center">
                     Full sentiment scores, perception gaps, and sector signals.
                   </p>
                 <a
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+                  className="bg-accent text-card font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(212,175,55,0.3)]"
                 >
                   Become a Founding Member
                 </a>
               </div>
             </div>
           ) : outlookQuery.isLoading ? (
-            <div className="bg-white rounded-2xl border border-primary/8 p-8 space-y-5 animate-pulse">
+            <div className="space-y-6 animate-pulse">
               {[1, 2, 3, 4].map(i => (
                 <div key={i}>
                   <div className="flex justify-between mb-2">
-                    <div className="h-3 bg-primary/8 rounded w-32" />
-                    <div className="h-3 bg-primary/8 rounded w-12" />
+                    <div className="h-4 bg-white/10 rounded w-40" />
+                    <div className="h-4 bg-white/10 rounded w-12" />
                   </div>
-                  <div className="h-1.5 bg-primary/5 rounded-full" />
+                  <div className="h-2 bg-white/5 rounded-full" />
                 </div>
               ))}
             </div>
           ) : outlook ? (
-            <div className="bg-white rounded-2xl border border-primary/8 p-8 space-y-5">
+            <div className="space-y-6">
               <ScoreBar label="Investment Readiness" value={outlook.investment_readiness} delay={0} />
               <ScoreBar label="Narrative Strength" value={outlook.narrative_strength} delay={0.1} />
               <ScoreBar label="Media Presence" value={outlook.media_presence} delay={0.2} />
               <ScoreBar label="Engagement Level" value={outlook.engagement_level} delay={0.3} />
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-primary/8 p-8 text-center text-primary/40 text-sm">
+            <div className="text-center text-white/40 text-lg">
               Outlook data unavailable for this country.
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* ── Sector Opportunities (members only) ───────────────────────────── */}
         {isMember && (sectorOpportunities.length > 0 || sectorCoverage.length > 0) && (
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <TrendingUp size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Sector Activity</h2>
+          <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+            <div className="flex items-center gap-4 mb-10">
+              <TrendingUp size={24} className="text-accent" />
+              <h2 className="font-serif text-[2rem] text-white">Sector Activity</h2>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid sm:grid-cols-2 gap-6">
               {(sectorOpportunities.length > 0 ? sectorOpportunities : sectorCoverage.map(s => ({
                 id: s.id,
                 name: s.name,
                 articles: s.article_count,
-                avg_engagement: 0 }))).map(sector => (
-                <div
+                avg_engagement: 0 }))).map((sector, i) => (
+                <motion.div
                   key={sector.id}
-                  className="bg-white rounded-xl border border-primary/8 p-5 hover:border-accent/30 transition-colors"
+                  initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1, duration: 0.5 }} viewport={{ once: true }}
+                  className="bg-card rounded-2xl border border-white/10 p-6 hover:border-accent/40 transition-colors shadow-xl"
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-primary text-[15px]">{sector.name}</span>
-                    <span className="text-[11px] text-accent font-bold bg-accent/8 border border-accent/15 px-2 py-0.5 rounded-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-serif text-white text-[1.25rem]">{sector.name}</span>
+                    <span className="text-[11px] text-accent font-bold tracking-widest bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase">
                       {sector.articles} {sector.articles === 1 ? 'story' : 'stories'}
                     </span>
                   </div>
                   {sector.avg_engagement > 0 && (
-                    <p className="text-xs text-primary/40">
+                    <p className="text-sm text-white/40">
                       Avg. engagement: {sector.avg_engagement.toFixed(1)}
                     </p>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* ── Key Narratives (members only) ─────────────────────────────────── */}
         {isMember && narratives.length > 0 && (
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <Globe size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Key Narratives</h2>
+          <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+            <div className="flex items-center gap-4 mb-10">
+              <Globe size={24} className="text-accent" />
+              <h2 className="font-serif text-[2rem] text-white">Key Narratives</h2>
             </div>
-            <div className="space-y-4">
-              {narratives.slice(0, 4).map(n => (
-                <div key={n.id} className="bg-white rounded-xl border border-primary/8 p-5">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <h3 className="font-serif text-[16px] font-semibold text-primary leading-snug">{n.narrative_theme}</h3>
-                    <span className={`shrink-0 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full border ${
-                      n.priority <= 2 ? 'text-accent bg-accent/8 border-accent/20' : 'text-primary/40 bg-primary/5 border-primary/8'
+            <div className="space-y-6">
+              {narratives.slice(0, 4).map((n, i) => (
+                <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} viewport={{ once: true }} className="bg-card rounded-2xl border border-white/10 p-8 shadow-xl">
+                  <div className="flex items-start justify-between gap-4 mb-6">
+                    <h3 className="font-serif text-[1.75rem] text-white leading-snug">{n.narrative_theme}</h3>
+                    <span className={`shrink-0 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${
+                      n.priority <= 2 ? 'text-accent bg-accent/10 border-accent/30' : 'text-white/50 bg-white/5 border-white/10'
                     }`}>
                       {n.tone}
                     </span>
                   </div>
                   {n.key_messages.length > 0 && (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-3">
                       {n.key_messages.slice(0, 3).map((msg, i) => (
-                        <li key={i} className="text-[13px] text-primary/60 flex items-start gap-2">
-                          <span className="text-accent shrink-0 mt-0.5">→</span>
+                        <li key={i} className="text-[1.125rem] text-white/70 flex items-start gap-4 font-light">
+                          <span className="text-accent shrink-0 mt-1">→</span>
                           {msg}
                         </li>
                       ))}
                     </ul>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
-          <section>
-            <div className="bg-primary rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute top-4 right-4 text-[10px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-3 py-1 rounded-full">
+          <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+            <div className="bg-card rounded-3xl p-12 text-white relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                 <Globe size={120} />
+              </div>
+              <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
                 Situation Report
               </div>
-              <div className="w-8 h-px bg-accent/40 mb-5" />
-              <p className="text-white/80 leading-relaxed text-[15px] max-w-2xl">{country.ai_situation_report}</p>
+              <p className="text-white/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* ── Portal Links ───────────────────────────────────────────────────── */}
@@ -406,16 +429,16 @@ export const BetaCountryHub = () => {
         )}
 
         {/* ── Stories from this country ──────────────────────────────────────── */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <FileText size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Stories from {countryName}</h2>
+        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+          <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center gap-4">
+              <FileText size={24} className="text-accent" />
+              <h2 className="font-serif text-[2rem] text-white">Stories from {countryName}</h2>
             </div>
             {articles.length > 0 && (
               <Link
                 to={`/posts?country=${upperCode}`}
-                className="text-sm text-accent font-semibold hover:opacity-70 transition-opacity"
+                className="text-[13px] text-accent font-bold uppercase tracking-widest hover:text-white transition-colors"
               >
                 View all →
               </Link>
@@ -423,38 +446,40 @@ export const BetaCountryHub = () => {
           </div>
 
           {articlesQuery.isLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
             </div>
           ) : articles.length > 0 ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map((article, i) => {
                 const isLocked = !isMember && i >= 2;
                 return isLocked ? (
-                  <div key={article.id} className="relative rounded-xl overflow-hidden">
-                    <div className="blur-sm pointer-events-none">
+                  <div key={article.id} className="relative rounded-2xl overflow-hidden border border-white/5">
+                    <div className="blur-md pointer-events-none opacity-40">
                       <ArticleCard article={article} />
                     </div>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-[1px] rounded-xl">
-                      <Lock size={18} className="text-accent mb-2" />
-                      <p className="text-[12px] font-semibold text-primary text-center px-4">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 rounded-2xl z-10">
+                      <Lock size={24} className="text-accent mb-3" />
+                      <p className="text-sm font-bold uppercase tracking-widest text-white text-center px-4">
                         Founding Members Only
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <ArticleCard key={article.id} article={article} />
+                  <motion.div key={article.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}>
+                    <ArticleCard article={article} />
+                  </motion.div>
                 );
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-primary/8 p-12 text-center">
-              <Globe size={36} className="text-primary/20 mx-auto mb-4" />
-              <p className="text-primary/50">No stories published for {countryName} yet.</p>
-              <p className="text-primary/30 text-sm mt-1">We are monitoring this market continuously.</p>
+            <div className="bg-card rounded-3xl border border-white/10 p-16 text-center shadow-xl">
+              <Globe size={48} className="text-white/20 mx-auto mb-6" />
+              <p className="text-white/60 font-serif text-[1.5rem]">No stories published for {countryName} yet.</p>
+              <p className="text-white/30 text-lg mt-2">We are monitoring this market continuously.</p>
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* ── Member CTA (non-members) ───────────────────────────────────────── */}
         {!isMember && (
