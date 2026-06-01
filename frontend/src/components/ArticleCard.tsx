@@ -3,12 +3,28 @@ import { Link } from 'react-router-dom';
 import type { ArticleListItem } from '../types';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAudio } from '../context/AudioContext';
+import { ListMusic, Bookmark } from 'lucide-react';
+import { toast } from "sonner";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../services/api';
 
 export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolean }> = ({ article, featured }) => {
+    const { addToQueue } = useAudio();
+    const queryClient = useQueryClient();
+    
+    const toggleBookmark = useMutation({
+        mutationFn: () => api.addBookmark(article.id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+            toast.success("Saved to Library");
+        }
+    });
+
     const [imgError, setImgError] = useState(false);
     const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/^📰\s*/g, '').trim();
     return (
-        <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/50 bg-card/50 backdrop-blur-sm">
+        <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/50 bg-background/50 backdrop-blur-sm">
             <div className="hidden md:block w-1.5 bg-primary/10 shrink-0 group-hover:bg-primary transition-colors duration-300" />
 
             {/* Thumbnail Image */}
@@ -50,7 +66,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                 </p>
 
                 <div className="mt-auto flex items-center justify-between border-t border-border/50 pt-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                         {/* Visual Sentiment Bar (Dynamic) */}
                         <div className="flex items-center gap-1.5" title={`Engagement Score: ${article.engagement_score || 0}/100`}>
                             <div className="flex gap-0.5">
@@ -64,8 +80,45 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                                     />
                                 ))}
                             </div>
-                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Signal Strength</span>
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">Signal</span>
                         </div>
+                        
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!article.audio_url) {
+                                    toast.error("Audio not available", { description: "Narration is still generating for this article." });
+                                    return;
+                                }
+                                addToQueue({
+                                    title: article.title,
+                                    subtitle: article.sector_name || article.country_name,
+                                    audioUrl: article.audio_url,
+                                    imageUrl: article.hero_image_url,
+                                    slug: article.slug
+                                });
+                                toast.success("Added to Queue");
+                            }}
+                            className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                            title="Add to Audio Queue"
+                        >
+                            <ListMusic size={14} />
+                            <span className="text-[10px] font-bold uppercase">Queue</span>
+                        </button>
+
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleBookmark.mutate();
+                            }}
+                            className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                            title="Save for Later"
+                        >
+                            <Bookmark size={14} />
+                            <span className="text-[10px] font-bold uppercase">Save</span>
+                        </button>
                     </div>
                     <div className="text-[10px] font-medium text-muted-foreground">
                         {article.reading_time_minutes || 5} min read

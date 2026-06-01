@@ -122,7 +122,7 @@ export async function autoPostArticle(
         ai_social_post?: string; // Added field
     }
 ): Promise<void> {
-    // 1. Try to use Pre-Calculated AI Post (from Ingestion Engine)
+    // 1. Try to use Pre-Calculated Post (from Ingestion Engine)
     let tweet = article.ai_social_post;
 
     // 2. Fallback: Generate if missing

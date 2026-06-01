@@ -264,7 +264,7 @@ export async function getSocialSignals(
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Ingest Social Content for AI Processing
+// Ingest Social Content for Processing
 // ───────────────────────────────────────────────────────────────────────────────
 export async function ingestSocialContent(env: Env): Promise<number> {
     console.log('Ingesting social content...');
@@ -283,7 +283,7 @@ export async function ingestSocialContent(env: Env): Promise<number> {
 
         if (existing) continue;
 
-        // Insert as ingested item for AI processing
+        // Insert as ingested item for processing
         await env.DB.prepare(`
             INSERT INTO ingested_items (
                 id, source_id, external_id, title, content, url, published_at, status

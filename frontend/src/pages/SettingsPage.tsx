@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Layout } from '../components/Layout';
-import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, IdCardIcon, EnvelopeClosedIcon, LightningBoltIcon } from '@radix-ui/react-icons';
+import React, { useState, useEffect } from 'react';
+import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, IdCardIcon, EnvelopeClosedIcon, LightningBoltIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +7,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
+
+const AVAILABLE_COUNTRIES = [
+    "Nigeria", "South Africa", "Egypt", "Kenya", "Ghana", "Rwanda", "Morocco", "Ethiopia"
+];
+
+const AVAILABLE_SECTORS = [
+    "finance", "technology", "agriculture", "energy", "infrastructure", "tourism"
+];
 
 export const SettingsPage: React.FC = () => {
+    const { logout } = useAuth();
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('boa_client_info');
         if (saved) {
@@ -20,7 +31,6 @@ export const SettingsPage: React.FC = () => {
                     email: parsed.email || 'guest@example.com',
                     role: parsed.organization || 'Viewer',
                     tier: parsed.tier || 'Basic',
-                    notifications: { email: true, push: false, reports: true }
                 };
             } catch (e) { console.error('Failed to parse user info', e); }
         }
@@ -29,24 +39,90 @@ export const SettingsPage: React.FC = () => {
             email: 'guest@example.com',
             role: 'Viewer',
             tier: 'Basic',
-            notifications: { email: true, push: false, reports: true }
         };
     });
 
-    const [isEditing, setIsEditing] = useState(false);
+    const [preferences, setPreferences] = useState<{
+        countries_of_interest: string[];
+        sectors_of_interest: string[];
+    }>({
+        countries_of_interest: [],
+        sectors_of_interest: []
+    });
 
-    const toggleNotification = (key: keyof typeof user.notifications) => {
-        setUser(prev => ({
-            ...prev,
-            notifications: {
-                ...prev.notifications,
-                [key]: !prev.notifications[key]
+    const [notifications, setNotifications] = useState({ email: true, push: false, reports: true });
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        const fetchPrefs = async () => {
+            try {
+                const res = await (api as any).getPreferences();
+                if (res?.data) {
+                    setPreferences({
+                        countries_of_interest: res.data.countries_of_interest || [],
+                        sectors_of_interest: res.data.sectors_of_interest || [],
+                    });
+                    if (res.data.notification_preferences) {
+                        setNotifications(res.data.notification_preferences);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load preferences", e);
             }
+        };
+        fetchPrefs();
+    }, []);
+
+    const toggleNotification = (key: keyof typeof notifications) => {
+        setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const toggleArrayItem = (key: 'countries_of_interest' | 'sectors_of_interest', value: string) => {
+        if (!isEditing) return;
+        setPreferences(prev => ({
+            ...prev,
+            [key]: prev[key].includes(value)
+                ? prev[key].filter(i => i !== value)
+                : [...prev[key], value]
         }));
     };
 
+    const handleSave = async () => {
+        if (!isEditing) {
+            setIsEditing(true);
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            await (api as any).savePreferences({
+                countries_of_interest: preferences.countries_of_interest,
+                sectors_of_interest: preferences.sectors_of_interest,
+                notification_preferences: notifications
+            });
+            
+            // Update local storage profile name/role
+            const saved = localStorage.getItem('boa_client_info');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.name = user.name;
+                parsed.organization = user.role;
+                localStorage.setItem('boa_client_info', JSON.stringify(parsed));
+            }
+            
+            toast.success("Settings saved successfully.");
+            setIsEditing(false);
+        } catch (e) {
+            toast.error("Failed to save settings.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
-        <Layout>
+        <>
             <div className="container py-20 max-w-4xl">
                 <header className="mb-12 border-b border-border pb-8">
                     <h1 className="mb-2 text-4xl font-serif font-black tracking-tight text-foreground">Control Center</h1>
@@ -54,6 +130,17 @@ export const SettingsPage: React.FC = () => {
                 </header>
 
                 <div className="grid gap-10">
+                    <div className="flex justify-end -mb-4">
+                        <Button
+                            variant={isEditing ? "default" : "outline"}
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="px-8 font-bold"
+                        >
+                            {isSaving && <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />}
+                            {isEditing ? 'Save Changes' : 'Edit Profile'}
+                        </Button>
+                    </div>
 
                     {/* PROFILE SETTINGS */}
                     <Card className="border-border shadow-sm">
@@ -68,13 +155,6 @@ export const SettingsPage: React.FC = () => {
                                         <CardDescription>Personal information and professional credentials.</CardDescription>
                                     </div>
                                 </div>
-                                <Button
-                                    variant={isEditing ? "default" : "outline"}
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    className={isEditing ? "" : ""}
-                                >
-                                    {isEditing ? 'Save Changes' : 'Edit Profile'}
-                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -94,12 +174,12 @@ export const SettingsPage: React.FC = () => {
                                     <Input
                                         id="email"
                                         value={user.email}
-                                        readOnly={!isEditing}
+                                        readOnly={true}
                                         className="bg-muted text-muted-foreground"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="role">Professional Role</Label>
+                                    <Label htmlFor="role">Professional Role / Organization</Label>
                                     <Input
                                         id="role"
                                         value={user.role}
@@ -131,19 +211,57 @@ export const SettingsPage: React.FC = () => {
                                 <div>
                                     <CardTitle className="text-lg font-bold text-foreground">Intelligence Parameters</CardTitle>
                                     <CardDescription>
-                                        Customize how our Intelligence Engine processes and delivers your insights.
+                                        Customize how our Intelligence Engine curates your daily briefing.
                                     </CardDescription>
                                 </div>
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid gap-6 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label>Intelligence Focus</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        Prioritize specific vectors in your daily briefing.
-                                    </p>
-                                    {/* Add actual controls here later */}
+                            <div className="space-y-8">
+                                <div className="space-y-4">
+                                    <Label>Tracked Countries</Label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {AVAILABLE_COUNTRIES.map(country => {
+                                            const isActive = preferences.countries_of_interest.includes(country);
+                                            return (
+                                                <Badge
+                                                    key={country}
+                                                    variant={isActive ? "default" : "outline"}
+                                                    className={cn(
+                                                        "px-3 py-1 cursor-pointer transition-colors",
+                                                        !isEditing && "opacity-70 cursor-not-allowed",
+                                                        isActive ? "bg-primary text-white" : "hover:bg-primary/5"
+                                                    )}
+                                                    onClick={() => toggleArrayItem('countries_of_interest', country)}
+                                                >
+                                                    {country}
+                                                </Badge>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <Label>Tracked Sectors</Label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {AVAILABLE_SECTORS.map(sector => {
+                                            const isActive = preferences.sectors_of_interest.includes(sector);
+                                            return (
+                                                <Badge
+                                                    key={sector}
+                                                    variant={isActive ? "default" : "outline"}
+                                                    className={cn(
+                                                        "px-3 py-1 cursor-pointer transition-colors capitalize",
+                                                        !isEditing && "opacity-70 cursor-not-allowed",
+                                                        isActive ? "bg-accent text-primary" : "hover:bg-accent/10 hover:text-accent"
+                                                    )}
+                                                    onClick={() => toggleArrayItem('sectors_of_interest', sector)}
+                                                >
+                                                    {sector}
+                                                </Badge>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
                         </CardContent>
@@ -168,7 +286,7 @@ export const SettingsPage: React.FC = () => {
                                 { key: 'push', label: 'Real-time Alerts', desc: 'Immediate notification for high-volatility events.', icon: LightningBoltIcon },
                                 { key: 'reports', label: 'New Reports', desc: 'When new premium reports are published.', icon: IdCardIcon },
                             ].map((item) => (
-                                <div key={item.key} className="flex items-center justify-between rounded-3xl border border-border p-4 hover:bg-muted/50 transition-colors">
+                                <div key={item.key} className="flex items-center justify-between rounded-3xl border border-border p-4 transition-colors">
                                     <div className="flex items-center gap-4">
                                         <div className="rounded-full bg-card p-2 shadow-sm border border-border">
                                             <item.icon className="h-4 w-4 text-muted-foreground" />
@@ -179,8 +297,9 @@ export const SettingsPage: React.FC = () => {
                                         </div>
                                     </div>
                                     <Switch
-                                        checked={user.notifications[item.key as keyof typeof user.notifications]}
-                                        onCheckedChange={() => toggleNotification(item.key as keyof typeof user.notifications)}
+                                        checked={notifications[item.key as keyof typeof notifications]}
+                                        onCheckedChange={() => toggleNotification(item.key as keyof typeof notifications)}
+                                        disabled={!isEditing}
                                     />
                                 </div>
                             ))}
@@ -197,10 +316,10 @@ export const SettingsPage: React.FC = () => {
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <Button variant="outline" className="w-full justify-start border-border">
+                                <Button variant="outline" className="w-full justify-start border-border" disabled>
                                     Change Password
                                 </Button>
-                                <Button variant="outline" className="w-full justify-start border-border">
+                                <Button variant="outline" className="w-full justify-start border-border" disabled>
                                     Two-Factor Authentication
                                 </Button>
                             </CardContent>
@@ -215,7 +334,7 @@ export const SettingsPage: React.FC = () => {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <p className="text-sm text-destructive">Securely sign out of your account on all devices.</p>
-                                <Button variant="destructive" className="w-full">
+                                <Button variant="destructive" className="w-full" onClick={logout}>
                                     Sign Out
                                 </Button>
                             </CardContent>
@@ -223,7 +342,6 @@ export const SettingsPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </>
     );
 };
-

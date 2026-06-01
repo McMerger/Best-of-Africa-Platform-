@@ -57,7 +57,7 @@ const PROVIDER_LABELS: Record<string, { name: string; color: string; logo: strin
 
 const TASK_TYPE_LABELS: Record<string, string> = {
   generate_article:      'Article Generation',
-  audit_article:         'Editorial Audit',
+  audit_article:         'System Audit',
   evolve_instructions:   'Self-Improvement',
   instruction_update:    'Rule Update',
 };
@@ -97,8 +97,8 @@ function TaskBadge({ status }: { status: AgentTask['status'] }) {
   const cfg = {
     pending:    { label: 'Queued',    cls: 'bg-white/10 text-white/50' },
     processing: { label: 'Running',   cls: 'bg-accent/20 text-accent' },
-    completed:  { label: 'Done',      cls: 'bg-green-500/20 text-green-400' },
-    failed:     { label: 'Failed',    cls: 'bg-red-500/20 text-red-400' },
+    completed:  { label: 'Done',      cls: 'bg-accent/20 text-accent' },
+    failed:     { label: 'Failed',    cls: 'bg-destructive/20 text-destructive' },
   }[status];
   return (
     <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${cfg.cls}`}>
@@ -156,7 +156,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/80 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card border border-accent/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
         <h3 className="font-serif text-2xl text-white mb-1">Configure Publishing Tools</h3>
-        <p className="text-white/50 text-sm mb-6">Connect your editorial publishing system</p>
+        <p className="text-white/50 text-sm mb-6">Connect your core publishing system</p>
 
         <div className="space-y-4">
           <div>
@@ -206,11 +206,11 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
               onChange={e => setIsDefault(e.target.checked)}
               className="w-4 h-4 accent-accent"
             />
-            <span className="text-sm text-white/70">Set as default agent provider</span>
+            <span className="text-sm text-white/70">Set as default system provider</span>
           </label>
         </div>
 
-        {error && <p className="text-red-400 text-sm mt-4">{error}</p>}
+        {error && <p className="text-destructive text-sm mt-4">{error}</p>}
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="flex-1 border border-white/20 text-white/70 py-3 rounded-lg hover:bg-white/5 transition-colors">
@@ -348,18 +348,18 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
       <div ref={panelRef} className="bg-card border border-white/10 rounded-2xl overflow-hidden">
         <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-card">
           <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50" />
-            <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50" />
+            <div className="w-3 h-3 rounded-full bg-destructive/20 border border-destructive/50" />
+            <div className="w-3 h-3 rounded-full bg-muted-foreground/20 border border-muted-foreground/50" />
+            <div className="w-3 h-3 rounded-full bg-accent/20 border border-accent/50" />
           </div>
           <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
-            Editorial OS v1.0.0
+            Core OS v1.0.0
           </div>
         </div>
         <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-card font-mono">
           <div className="w-8 h-8 border-2 border-accent/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
           <span className="text-accent text-sm tracking-widest animate-pulse">
-            {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING EDITORIAL STATUS...'}
+            {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING SYSTEM STATUS...'}
           </span>
         </div>
       </div>
@@ -373,7 +373,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
           <div className="flex items-center gap-3">
             <Activity size={18} className="text-accent" />
-            <span className="font-semibold text-white text-sm tracking-wide">Editorial System</span>
+            <span className="font-semibold text-white text-sm tracking-wide">Core System</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusDot health={health} />
@@ -388,9 +388,9 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
           {[
             { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-white/50' },
             { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-accent' },
-            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-green-400' },
-            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-red-400' },
-            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-red-400' : 'text-white/20' },
+            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-accent' },
+            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-destructive' },
+            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-white/20' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex flex-col items-center justify-center py-4 px-2 gap-1">
               <Icon size={14} className={color} />
@@ -481,7 +481,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                       <span className="text-xs text-white/70">{p.label}</span>
                       {p.is_default ? <span className="text-[9px] bg-accent/20 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Default</span> : null}
                       {p.last_test_status && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${p.last_test_status === 'ok' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${p.last_test_status === 'ok' ? 'bg-accent/20 text-accent' : 'bg-destructive/20 text-destructive'}`}>
                           {p.last_test_status}
                         </span>
                       )}
@@ -490,7 +490,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                       <button onClick={() => testProvider(p.id)} className="text-white/30 hover:text-accent transition-colors" title="Test connection">
                         <TestTube size={12} />
                       </button>
-                      <button onClick={() => removeProvider(p.id)} className="text-white/30 hover:text-red-400 transition-colors" title="Remove">
+                      <button onClick={() => removeProvider(p.id)} className="text-white/30 hover:text-destructive transition-colors" title="Remove">
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -521,9 +521,9 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                     <tr key={row.agent_name} className="border-t border-white/5">
                       <td className="py-1.5 pr-4 text-white/70 font-medium">{row.agent_name}</td>
                       <td className="py-1.5 pr-3 text-white/50 text-right">{row.runs}</td>
-                      <td className="py-1.5 pr-3 text-green-400 text-right">{row.tasks_done}</td>
+                      <td className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
                       <td className="py-1.5 pr-3 text-right">
-                        <span className={row.tasks_failed > 0 ? 'text-red-400' : 'text-white/20'}>{row.tasks_failed}</span>
+                        <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-white/20'}>{row.tasks_failed}</span>
                       </td>
                       <td className="py-1.5 text-white/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
                     </tr>

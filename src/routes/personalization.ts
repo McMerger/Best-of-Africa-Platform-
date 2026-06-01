@@ -199,7 +199,7 @@ router.get('/recommended', async (c) => {
             LEFT JOIN countries c ON a.country_code = c.code
             LEFT JOIN sectors s ON a.sector_id = s.id
             WHERE a.status = 'published'
-            ORDER BY a.engagement_score DESC
+            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT ?
         `).bind(limit).all();
 
@@ -226,7 +226,7 @@ router.get('/recommended', async (c) => {
             LEFT JOIN countries c ON a.country_code = c.code
             LEFT JOIN sectors s ON a.sector_id = s.id
             WHERE a.status = 'published'
-            ORDER BY a.engagement_score DESC
+            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT ?
         `).bind(limit).all();
 
@@ -274,7 +274,7 @@ router.get('/recommended', async (c) => {
         query += 'ELSE 2 END, ';
     }
 
-    query += 'a.engagement_score DESC LIMIT ?';
+    query += '(a.engagement_score * 1.0 / ((julianday(\'now\') - julianday(a.published_at)) + 1)) DESC LIMIT ?';
 
     const params = [...articlesRead, ...countries, ...sectors, limit];
     const recommended = await c.env.DB.prepare(query).bind(...params).all();
@@ -304,7 +304,7 @@ router.get('/recommended', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /personalization/feed/ai-curated - AI-curated briefing (The "Why it matters")
+// GET /personalization/feed/-curated - -curated briefing (The "Why it matters")
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/feed/ai-curated', async (c) => {
     const sessionId = c.req.header('X-Session-ID');
@@ -340,7 +340,7 @@ router.get('/feed/ai-curated', async (c) => {
                     a.country_code IN (${countries.length ? countries.map(() => '?').join(',') : "''"})
                     OR a.sector_id IN (${sectors.length ? sectors.map(() => '?').join(',') : "''"})
                 )
-                ORDER BY a.engagement_score DESC
+                ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
                 LIMIT 15
              `).bind(...countries, ...sectors).all();
 
@@ -349,7 +349,7 @@ router.get('/feed/ai-curated', async (c) => {
                 return { curated: [], message: "Not enough matching content for AI curation yet." };
             }
 
-            // 2. AI Curation Logic
+            // 2. Curation Logic
             const context = (candidates.results as any[]).map((a, i) =>
                 `[${i}] ID:${a.id} | Title: ${a.title} | Context: ${a.country}, ${a.sector}`
             ).join('\n');

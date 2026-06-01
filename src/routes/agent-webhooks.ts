@@ -52,7 +52,7 @@ async function writeAgentMetric(
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/status — public summary of agent health and recent activity
+// GET //status — public summary of health and recent activity
 // (no auth required — safe to display in beta frontend)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/status', async (c) => {
@@ -104,7 +104,7 @@ router.get('/status', async (c) => {
               AND expires_at < datetime('now')
         `).first<{ count: number }>(),
 
-        // Agent metrics: last 7 days rollup per skill
+        // metrics: last 7 days rollup per skill
         c.env.DB.prepare(`
             SELECT agent_name,
                    COUNT(*) as runs,
@@ -152,7 +152,7 @@ router.get('/status', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/stream — Server-Sent Events stream for real-time agent updates
+// GET //stream — Server-Sent Events stream for real-time updates
 // Sends a snapshot every 15 seconds; client reconnects automatically.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/stream', async (c) => {
@@ -224,7 +224,7 @@ router.use('/tasks/*', async (c, next) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/tasks/pending — Fetch and atomically lock the highest-priority task
+// GET //tasks/pending — Fetch and atomically lock the highest-priority task
 //
 // Uses migration 0027 columns:
 //   - priority ASC (1=urgent, 5=normal, 10=low)
@@ -298,7 +298,7 @@ router.get('/tasks/pending', async (c) => {
     `).bind(agentVersion, pendingTask.id).run();
 
     if (updateResult.meta.changes === 0) {
-        // Race: another agent grabbed it between SELECT and UPDATE
+        // Race: another grabbed it between SELECT and UPDATE
         return c.json({ data: null, message: 'Task already claimed, try again' });
     }
 
@@ -322,7 +322,7 @@ router.get('/tasks/pending', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/tasks/complete — Submit a completed or failed task
+// POST //tasks/complete — Submit a completed or failed task
 //
 // Uses migration 0027 columns:
 //   - retry_count: incremented on failure
@@ -544,7 +544,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/metrics — ZeroClaw can POST a batch metric record directly
+// POST //metrics — ZeroClaw can POST a batch metric record directly
 // (alternative to per-task reporting via /tasks/complete)
 // ───────────────────────────────────────────────────────────────────────────────
 const MetricSchema = z.object({
@@ -573,7 +573,7 @@ router.post('/metrics', validate('json', MetricSchema), async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/metrics — Admin view of agent execution history
+// GET //metrics — Admin view of execution history
 // ───────────────────────────────────────────────────────────────────────────────
 router.use('/metrics*', async (c, next) => {
     const authHeader = c.req.header('Authorization');
@@ -600,7 +600,7 @@ router.get('/metrics', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DELETE /agent/tasks/archive — Admin: manually purge old terminal tasks
+// DELETE //tasks/archive — Admin: manually purge old terminal tasks
 // Accepts ?completed_days=N (default 30) and ?failed_days=N (default 7)
 // ───────────────────────────────────────────────────────────────────────────────
 router.delete('/tasks/archive', async (c) => {

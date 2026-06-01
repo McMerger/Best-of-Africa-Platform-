@@ -140,7 +140,7 @@ export const BetaMemberAccess = () => {
         <SEO title="Member Access | BOA-Story" />
         
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-accent/40 border-t-accent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -154,8 +154,8 @@ export const BetaMemberAccess = () => {
         
         <div className="flex-1 flex flex-col justify-center py-20 px-6">
           <div className="max-w-md mx-auto w-full text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 mb-6">
-              <RefreshCw className="w-8 h-8 text-amber-400" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
+              <RefreshCw className="w-8 h-8 text-accent" />
             </div>
             <h1 className="font-serif text-3xl mb-3">Your access has expired</h1>
             <p className="text-primary/60 mb-8">
@@ -163,7 +163,7 @@ export const BetaMemberAccess = () => {
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
+              className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
             >
               Re-enter member email
             </button>
@@ -235,13 +235,13 @@ export const BetaMemberAccess = () => {
                 </div>
 
                 {errorMsg && (
-                  <p className="text-red-400 text-sm text-center" role="alert">{errorMsg}</p>
+                  <p className="text-destructive text-sm text-center" role="alert">{errorMsg}</p>
                 )}
 
                 <button
                   type="submit"
                   disabled={isSubmitting || otp.length < 6}
-                  className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   Verify Code
                 </button>
@@ -249,7 +249,7 @@ export const BetaMemberAccess = () => {
 
               <div className="text-center mt-6 flex flex-col gap-3">
                 {resendSuccess && (
-                  <p className="text-sm text-emerald-400 font-medium" role="status">New code sent — check your inbox.</p>
+                  <p className="text-sm text-accent font-medium" role="status">New code sent — check your inbox.</p>
                 )}
                 <button
                   type="button"
@@ -299,16 +299,16 @@ export const BetaMemberAccess = () => {
                 </div>
 
                 {phase === 'error' && (
-                  <p className="text-red-400 text-sm" role="alert">{errorMsg}</p>
+                  <p className="text-destructive text-sm" role="alert">{errorMsg}</p>
                 )}
 
                 <button
                   type="submit"
                   disabled={isSubmitting || !email.includes('@')}
-                  className="w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-card/30 border-t-[#0E0C0A] rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-card/30 border-t-primary rounded-full animate-spin" />
                   ) : (
                     <>Activate membership <ArrowRight size={15} /></>
                   )}

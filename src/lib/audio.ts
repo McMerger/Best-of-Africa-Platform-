@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUDIO SERVICE
-// Text-to-Speech narration for articles using Workers AI
+// Text-to-Speech narration for articles using Workers 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
@@ -46,7 +46,7 @@ export async function generateAudioNarration(
             }
         }
 
-        // 2. Fallback to Workers AI TTS
+        // 2. Fallback to Workers TTS
         if (!audioBuffer) {
             const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
                 text: narrationText.slice(0, 5000), // Limit to avoid timeout
@@ -129,7 +129,7 @@ export async function generateBriefAudio(
                 WHERE country_code = ? 
                   AND status = 'published'
                   AND date(published_at) = ?
-                ORDER BY engagement_score DESC
+                ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
                 LIMIT 5
             `).bind(countryCode, date).all();
 

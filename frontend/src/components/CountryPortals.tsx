@@ -22,7 +22,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Visa / Ivisa Section */}
                 {country.visa_portal_url && (
-                    <Card className="border-border hover:border-primary/50 transition-colors bg-card/50 overflow-hidden group">
+                    <Card className="border-border hover:border-primary/50 transition-colors bg-background/50 overflow-hidden group">
                         <CardContent className="p-6">
                             <div className="flex flex-col h-full justify-between gap-4">
                                 <div className="space-y-2">
@@ -45,7 +45,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
 
                 {/* Business Registration */}
                 {country.business_portal_url && (
-                    <Card className="border-border hover:border-primary/50 transition-colors bg-card/50 overflow-hidden group">
+                    <Card className="border-border hover:border-primary/50 transition-colors bg-background/50 overflow-hidden group">
                         <CardContent className="p-6">
                             <div className="flex flex-col h-full justify-between gap-4">
                                 <div className="space-y-2">
@@ -68,7 +68,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
 
                 {/* Tourism Portal */}
                 {country.tourism_portal_url && (
-                    <Card className="border-border hover:border-primary/50 transition-colors bg-card/50 overflow-hidden group">
+                    <Card className="border-border hover:border-primary/50 transition-colors bg-background/50 overflow-hidden group">
                         <CardContent className="p-6">
                             <div className="flex flex-col h-full justify-between gap-4">
                                 <div className="space-y-2">

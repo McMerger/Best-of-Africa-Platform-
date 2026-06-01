@@ -70,7 +70,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded">Save ${(baseRate - vipRate)}/night</div>
+                                    <div className="text-xs font-bold text-accent bg-accent/10 px-2 py-1 rounded">Save ${(baseRate - vipRate)}/night</div>
                                 </div>
                             </div>
 

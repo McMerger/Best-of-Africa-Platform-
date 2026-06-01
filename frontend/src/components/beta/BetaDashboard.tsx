@@ -38,14 +38,14 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
         {/* Welcome Section */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-serif text-[32px] mb-1 text-white">Welcome back, {memberData.name}</h1>
-            <p className="text-white/50 text-sm flex items-center gap-2">
+            <h1 className="font-serif text-[32px] mb-1 text-primary">Welcome back, {memberData.name}</h1>
+            <p className="text-primary/50 text-sm flex items-center gap-2">
               <CheckCircle size={14} className="text-accent" /> Active Membership
             </p>
           </div>
           <button 
             onClick={onLogout}
-            className="p-3 bg-white/5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-3 bg-primary/5 rounded-full text-primary/40 hover:text-primary hover:bg-primary/10 transition-colors"
             title="Sign out"
           >
             <LogOut size={16} />
@@ -60,17 +60,17 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
           
           <div className="relative z-10">
             <span className="text-xs font-bold tracking-widest text-accent uppercase block mb-2">Current Tier</span>
-            <h2 className="font-serif text-[28px] text-white flex items-center gap-3">
+            <h2 className="font-serif text-[28px] text-primary flex items-center gap-3">
               {tierIcon} {tierInfo.title}
             </h2>
-            <p className="text-white/60 mt-2 text-sm max-w-md leading-relaxed">
+            <p className="text-primary/60 mt-2 text-sm max-w-md leading-relaxed">
               {tierInfo.desc}
             </p>
             {renewalMsg && (
               <p className={`mt-3 text-xs font-medium flex items-center gap-1.5 ${
                 (memberData.expires_in_days ?? 99) <= 7
-                  ? 'text-amber-400'
-                  : 'text-white/30'
+                  ? 'text-destructive'
+                  : 'text-primary/40'
               }`}>
                 <Clock size={11} />
                 {renewalMsg}
@@ -81,34 +81,34 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
 
         {/* Access Links */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Link to="/stories" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+          <Link to="/posts" className="group bg-card border border-primary/10 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
             <BookOpen size={16} className="text-accent" />
-            <h3 className="font-medium text-white group-hover:text-accent transition-colors">All Stories</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Full narrative reports and deep dives.</p>
+            <h3 className="font-medium text-primary group-hover:text-accent transition-colors">All Stories</h3>
+            <p className="text-xs text-primary/50 leading-relaxed">Full narrative reports and deep dives.</p>
           </Link>
-          <Link to="/countries" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+          <Link to="/countries" className="group bg-card border border-primary/10 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
             <Globe size={16} className="text-accent" />
-            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Country Hubs</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Stories from across the 54 nations.</p>
+            <h3 className="font-medium text-primary group-hover:text-accent transition-colors">Country Hubs</h3>
+            <p className="text-xs text-primary/50 leading-relaxed">Stories from across the 54 nations.</p>
           </Link>
-          <Link to="/intel" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+          <Link to="/intel" className="group bg-card border border-primary/10 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
             <BarChart2 size={16} className="text-accent" />
-            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Supporter Feed</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Behind-the-scenes data and updates.</p>
+            <h3 className="font-medium text-primary group-hover:text-accent transition-colors">Supporter Feed</h3>
+            <p className="text-xs text-primary/50 leading-relaxed">Behind-the-scenes data and updates.</p>
           </Link>
-          <Link to="/newsletter" className="group bg-card border border-white/20 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
+          <Link to="/newsletter" className="group bg-card border border-primary/10 p-5 rounded-xl hover:border-accent/40 transition-colors flex flex-col gap-2">
             <Mail size={16} className="text-accent" />
-            <h3 className="font-medium text-white group-hover:text-accent transition-colors">Dispatch</h3>
-            <p className="text-xs text-white/50 leading-relaxed">Weekly stories sent to your inbox.</p>
+            <h3 className="font-medium text-primary group-hover:text-accent transition-colors">Dispatch</h3>
+            <p className="text-xs text-primary/50 leading-relaxed">Weekly stories sent to your inbox.</p>
           </Link>
         </div>
 
         {/* What's included at this tier */}
-        <div className="bg-card rounded-xl border border-white/20 p-5 mb-8">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-4">Included in your membership</p>
+        <div className="bg-card rounded-xl border border-primary/10 p-5 mb-8">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary/40 mb-4">Included in your membership</p>
           <ul className="space-y-2">
             {tierInfo.perks.map((perk) => (
-              <li key={perk} className="flex items-center gap-2 text-sm text-white/70">
+              <li key={perk} className="flex items-center gap-2 text-sm text-primary/70">
                 <CheckCircle size={13} className="text-accent shrink-0" />
                 {perk}
               </li>
@@ -117,15 +117,15 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
         </div>
 
         {/* Support Nudge */}
-        <div className="text-center border-t border-white/20 pt-8">
-          <p className="text-xs text-white/40 mb-3 flex items-center justify-center gap-1">
+        <div className="text-center border-t border-primary/10 pt-8">
+          <p className="text-xs text-primary/40 mb-3 flex items-center justify-center gap-1">
             <Clock size={12} /> Access renews automatically via Ko-fi
           </p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/30 text-xs hover:text-white transition-colors underline"
+            className="text-primary/50 text-xs hover:text-primary transition-colors underline"
           >
             Manage subscription on Ko-fi
           </a>

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // DIGEST WORKER
-// Generates and sends AI-powered email digests
+// Generates and sends -powered email digests
 // Daily executive briefings and weekly sector roundups
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -62,7 +62,7 @@ export async function generateDailyDigest(
         query += ` AND a.sector_id IN (${sectorPlaceholders})`;
     }
 
-    query += ` ORDER BY a.engagement_score DESC LIMIT 10`;
+    query += ` ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC LIMIT 10`;
 
     const bindings: string[] = [];
     if (subscription.regions) bindings.push(...subscription.regions);
@@ -79,7 +79,7 @@ export async function generateDailyDigest(
         };
     }
 
-    // Generate AI summary of the day's news
+    // Generate summary of the day's news
     let aiSummary = '';
     try {
         const briefContext = articleList.slice(0, 5).map((a, i) =>
@@ -139,7 +139,7 @@ export async function generateWeeklyDigest(
         LEFT JOIN sectors s ON a.sector_id = s.id
         WHERE a.status = 'published'
           AND a.published_at > datetime('now', '-7 days')
-        ORDER BY a.engagement_score DESC
+        ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
         LIMIT 20
     `).all<DigestArticle>();
 
@@ -153,7 +153,7 @@ export async function generateWeeklyDigest(
         bySector[sector].push(article);
     }
 
-    // Generate AI weekly summary
+    // Generate weekly summary
     let aiSummary = '';
     try {
         const sectorSummaries = Object.entries(bySector).map(([sector, arts]) =>

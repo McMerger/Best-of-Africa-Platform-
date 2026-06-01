@@ -312,7 +312,7 @@ export function requestLogger(): MiddlewareHandler {
 // ───────────────────────────────────────────────────────────────────────────────
 
 export const logger = {
-    // AI Operations
+    // Operations
     aiRequest: (env: Env, model: string, promptLength: number, durationMs: number, success: boolean) => {
         const log = getGlobalLogger(env);
         const event = success ? 'ai_request_success' : 'ai_request_failed';

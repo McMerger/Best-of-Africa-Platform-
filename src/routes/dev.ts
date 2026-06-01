@@ -36,7 +36,7 @@ router.post('/trigger-optimization', devAuthGuard, async (c) => {
     return c.json({ success: true, message: 'Optimization complete - market_metrics and narrative_strategies populated' });
 });
 
-// Dev endpoint to REQUEUE all pending items for AI processing
+// Dev endpoint to REQUEUE all pending items for processing
 router.post('/requeue-pending', devAuthGuard, async (c) => {
     const pending = await c.env.DB.prepare(`
         SELECT id, source_id FROM ingested_items WHERE status = 'pending'

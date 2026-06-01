@@ -9,7 +9,9 @@ import { Layout } from './components/Layout';
 // ── BOA-Story pages ───────────────────────────────────────────────────────────
 const BetaLanding     = React.lazy(() => import('./pages/beta/BetaLanding').then(m => ({ default: m.BetaLanding })));
 const BetaMembership  = React.lazy(() => import('./pages/beta/BetaMembership').then(m => ({ default: m.BetaMembership })));
+const BetaIntelligence = React.lazy(() => import('./pages/beta/BetaIntelligence').then(m => ({ default: m.BetaIntelligence })));
 const BetaStories     = React.lazy(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
+const BetaLibrary     = React.lazy(() => import('./pages/beta/BetaLibrary').then(m => ({ default: m.BetaLibrary })));
 const BetaArticle     = React.lazy(() => import('./pages/beta/BetaArticle').then(m => ({ default: m.BetaArticle })));
 const BetaCountryTeaser = React.lazy(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
 const BetaCountryHub  = React.lazy(() => import('./pages/beta/BetaCountryHub').then(m => ({ default: m.BetaCountryHub })));
@@ -18,9 +20,18 @@ const BetaGallery     = React.lazy(() => import('./pages/beta/BetaGallery').then
 const BetaAbout       = React.lazy(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
 const BetaNewsletter  = React.lazy(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
 const BetaMemberAccess = React.lazy(() => import('./pages/beta/BetaMemberAccess').then(m => ({ default: m.BetaMemberAccess })));
+const BetaEvents      = React.lazy(() => import('./pages/beta/BetaEvents').then(m => ({ default: m.BetaEvents })));
+const BetaConcierge   = React.lazy(() => import('./pages/beta/BetaConcierge').then(m => ({ default: m.BetaConcierge })));
+const BetaTravel      = React.lazy(() => import('./pages/beta/BetaTravel').then(m => ({ default: m.BetaTravel })));
+const BetaSearch      = React.lazy(() => import('./pages/beta/BetaSearch').then(m => ({ default: m.BetaSearch })));
+const BetaFeed        = React.lazy(() => import('./pages/beta/BetaFeed').then(m => ({ default: m.BetaFeed })));
+const BetaContinentalOverview = React.lazy(() => import('./pages/beta/BetaContinentalOverview').then(m => ({ default: m.BetaContinentalOverview })));
+const BetaSponsorDashboard = React.lazy(() => import('./pages/beta/BetaSponsorDashboard').then(m => ({ default: m.BetaSponsorDashboard })));
+const BetaNarrativeToolkit = React.lazy(() => import('./pages/beta/BetaNarrativeToolkit').then(m => ({ default: m.BetaNarrativeToolkit })));
 
 // ── Utility / Account pages ───────────────────────────────────────────────────
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const PremiumSectorTrends = React.lazy(() => import('./pages/beta/PremiumSectorTrends').then(m => ({ default: m.PremiumSectorTrends })));
 const LoginPage    = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const AdminPage    = React.lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
 const PrivacyPage  = React.lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
@@ -33,8 +44,11 @@ import { LensProvider } from './context/LensContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AuthProvider } from './context/AuthContext';
 import { MemberProvider } from './context/MemberContext';
+import { AudioProvider } from './context/AudioContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { BetaGlobalPlayer } from './components/beta/BetaGlobalPlayer';
+import { BetaChatWidget } from './components/beta/BetaChatWidget';
 
 const queryClient = new QueryClient();
 
@@ -66,6 +80,21 @@ const AnimatedRoutes = () => {
           {/* ── Countries (shared between both sections) ──────────────── */}
           <Route path="/countries"       element={<PageTransition><BetaCountryTeaser /></PageTransition>} />
           <Route path="/countries/:code" element={<PageTransition><BetaCountryHub /></PageTransition>} />
+          <Route path="/countries/:code/narratives" element={<PageTransition><BetaNarrativeToolkit /></PageTransition>} />
+          <Route path="/intelligence"    element={<PageTransition><BetaIntelligence /></PageTransition>} />
+          <Route path="/intel" element={<PageTransition><BetaMarketIntel /></PageTransition>} />
+          <Route path="/sectors/:id/trends" element={<PageTransition><PremiumSectorTrends /></PageTransition>} />
+          <Route path="/dashboards/overview" element={<PageTransition><BetaContinentalOverview /></PageTransition>} />
+          <Route path="/dashboards"      element={<Navigate to="/dashboards/overview" replace />} />
+          <Route path="/library"         element={<PageTransition><BetaLibrary /></PageTransition>} />
+          <Route path="/sponsor/dashboard" element={<PageTransition><BetaSponsorDashboard /></PageTransition>} />
+
+          {/* ── Corporate Services ──────────────────────────────────────── */}
+          <Route path="/events"                 element={<PageTransition><BetaEvents /></PageTransition>} />
+          <Route path="/request-consultation"   element={<PageTransition><BetaConcierge /></PageTransition>} />
+          <Route path="/travel"                 element={<PageTransition><BetaTravel /></PageTransition>} />
+          <Route path="/search"                 element={<PageTransition><BetaSearch /></PageTransition>} />
+          <Route path="/feed"                   element={<PageTransition><BetaFeed /></PageTransition>} />
 
           {/* ── Utility pages ─────────────────────────────────────────── */}
           <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
@@ -92,15 +121,19 @@ function App() {
             <LanguageProvider>
               <LensProvider>
                 <MissionProvider>
-                  <Router>
-                    <ErrorBoundary>
-                      <Suspense fallback={<PageLoader />}>
-                        <AnimatedRoutes />
-                      </Suspense>
-                    </ErrorBoundary>
-                    <Toaster />
-                    <CommandMenu />
-                  </Router>
+                  <AudioProvider>
+                    <Router>
+                      <ErrorBoundary>
+                        <Suspense fallback={<PageLoader />}>
+                          <AnimatedRoutes />
+                        </Suspense>
+                      </ErrorBoundary>
+                      <BetaGlobalPlayer />
+                      <BetaChatWidget />
+                      <Toaster />
+                      <CommandMenu />
+                    </Router>
+                  </AudioProvider>
                 </MissionProvider>
               </LensProvider>
             </LanguageProvider>

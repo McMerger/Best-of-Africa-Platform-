@@ -33,6 +33,16 @@ export const SEO: React.FC<SEOProps> = ({
             element.setAttribute('content', content);
         };
 
+        // Add RSS alternate link if not already present
+        if (!document.querySelector('link[rel="alternate"][type="application/rss+xml"]')) {
+            const rssLink = document.createElement('link');
+            rssLink.setAttribute('rel', 'alternate');
+            rssLink.setAttribute('type', 'application/rss+xml');
+            rssLink.setAttribute('title', 'BOA-Story — Africa Intelligence RSS Feed');
+            rssLink.setAttribute('href', '/rss.xml');
+            document.head.appendChild(rssLink);
+        }
+
         // Standard Meta
         updateMeta('description', description || '');
         updateMeta('theme-color', '#1a1a1a'); // Dark theme color

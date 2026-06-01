@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Link } from 'react-router-dom';
-import { Layout } from '../components/Layout';
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 
@@ -9,7 +8,7 @@ export const NotFoundPage: React.FC = () => {
     const { data: config } = useSystemConfig();
 
     return (
-        <Layout>
+        <>
             <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
                 <div className="mb-6 rounded-full bg-destructive/10 p-6">
                     <ExclamationTriangleIcon className="h-16 w-16 text-destructive" />
@@ -25,6 +24,6 @@ export const NotFoundPage: React.FC = () => {
                     <Link to="/">Return Home</Link>
                 </Button>
             </div>
-        </Layout>
+        </>
     );
 };

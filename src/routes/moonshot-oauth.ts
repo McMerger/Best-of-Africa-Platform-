@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOONSHOT OAUTH ROUTES
-// Admin endpoints for setting up and managing Moonshot AI subscription OAuth.
+// Admin endpoints for setting up and managing Moonshot subscription OAuth.
 //
 // Setup flow (one time):
-//   1. GET  /agent/moonshot/oauth/authorize  → redirects to Kimi authorization page
-//   2. User approves → Moonshot redirects to /agent/moonshot/oauth/callback
+//   1. GET  //moonshot/oauth/authorize  → redirects to Kimi authorization page
+//   2. User approves → Moonshot redirects to //moonshot/oauth/callback
 //   3. Tokens stored in KV — agents use subscription from this point forward
 //
 // The callback route is intentionally public (no admin key) because the
@@ -35,7 +35,7 @@ router.use('/*', async (c, next) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/moonshot/oauth/authorize
+// GET //moonshot/oauth/authorize
 // Redirects to Moonshot's authorization page.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/authorize', async (c) => {
@@ -59,7 +59,7 @@ router.get('/authorize', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/moonshot/oauth/callback
+// GET //moonshot/oauth/callback
 // Moonshot redirects here after the user approves access.
 // Exchanges the authorization code for tokens and stores them in KV.
 // ───────────────────────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ router.get('/callback', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/moonshot/oauth/status
+// GET //moonshot/oauth/status
 // Shows token health without exposing any secrets.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/status', async (c) => {
@@ -128,7 +128,7 @@ router.get('/status', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/moonshot/oauth/bootstrap
+// POST //moonshot/oauth/bootstrap
 //
 // Subscription workaround: inject a token extracted directly from the Kimi
 // browser session, bypassing the OAuth authorization-code flow entirely.
@@ -194,7 +194,7 @@ router.post('/bootstrap', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/moonshot/oauth/probe
+// POST //moonshot/oauth/probe
 //
 // Validates a raw token by making a cheap live call to Moonshot's API
 // before committing it to KV. Use this to confirm the token works.
@@ -224,8 +224,8 @@ router.post('/probe', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DELETE /agent/moonshot/oauth/tokens
-// Clears all stored tokens — forces re-authorization on next agent run.
+// DELETE //moonshot/oauth/tokens
+// Clears all stored tokens — forces re-authorization on next run.
 // ───────────────────────────────────────────────────────────────────────────────
 router.delete('/tokens', async (c) => {
     await Promise.all([

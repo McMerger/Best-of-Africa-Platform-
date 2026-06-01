@@ -81,7 +81,7 @@ router.get('/live/:metric', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /analytics/insight - AI "Morning Report" (Why are numbers moving?)
+// GET /analytics/insight - "Morning Report" (Why are numbers moving?)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/insight', requireAuth, async (c) => {
     // 1. Get Traffic Overview (Last 24h)
@@ -103,7 +103,7 @@ router.get('/insight', requireAuth, async (c) => {
         `).all()
     ]);
 
-    // 2. Generate AI Explanation
+    // 2. Generate Explanation
     let insight = "Traffic is stable.";
     const topContext = (topArticles.results as any[]).map(a => `"${a.title}": ${a.views} views`).join(', ');
 
@@ -251,7 +251,7 @@ router.get('/content-gaps', requireAuth, async (c) => {
         coverage: coverageStats,
     });
 
-    // AI Strategic Content Advice
+    // Strategic Content Advice
     const advice = await getCached(
         c.env,
         CACHE_KEYS.analyticsContentStrategy,

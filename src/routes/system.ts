@@ -198,7 +198,7 @@ router.get('/health/deep', async (c) => {
         });
     }
 
-    // Check AI Service (Circuit Breaker status)
+    // Check Service (Circuit Breaker status)
     const aiStart = Date.now();
     try {
         const { getCircuitBreakerStatus } = await import('../lib/circuit-breaker');

@@ -46,4 +46,15 @@ router.delete('/:id', async (c) => {
     return c.json({ success: true });
 });
 
+router.delete('/article/:article_id', async (c) => {
+    const sessionId = c.req.header('X-Session-ID');
+    const articleId = c.req.param('article_id');
+
+    await c.env.DB.prepare(`
+        DELETE FROM bookmarks WHERE article_id = ? AND session_id = ?
+    `).bind(articleId, sessionId).run();
+
+    return c.json({ success: true });
+});
+
 export { router as bookmarksRouter };

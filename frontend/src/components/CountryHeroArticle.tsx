@@ -50,7 +50,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                     <h2 className="text-3xl md:text-5xl font-black text-white leading-[1.1] mb-4 tracking-tight group-hover:text-primary transition-colors drop-shadow-xl font-serif">
                         {cleanText(article.title)}
                     </h2>
-                    <p className="text-lg text-gray-200 max-w-2xl line-clamp-3 leading-relaxed mb-6 border-l-2 border-primary/50 pl-4 bg-background/10 backdrop-blur-sm p-4 rounded-r-xl">
+                    <p className="text-lg text-white/80 max-w-2xl line-clamp-3 leading-relaxed mb-6 border-l-2 border-primary/50 pl-4 bg-background/10 backdrop-blur-sm p-4 rounded-r-xl">
                         {cleanText(article.summary)}
                     </p>
                     <div className="flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">

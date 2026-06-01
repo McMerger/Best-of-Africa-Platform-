@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// AI SERVICE LIBRARY
-// Workers AI integration for content generation
+// SERVICE LIBRARY
+// Workers integration for content generation
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
@@ -25,14 +25,14 @@ const MODELS = {
 export const ARTICLE_PROMPT_VERSION = 'v1.2';
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Provider-Aware AI Call
+// Provider-Aware Call
 //
 // Reads the active provider from KV (zeroclaw:provider_config, set by
-// agent-providers.ts) and routes the request to the correct API.
-// Falls back to Workers AI when no external provider is configured.
+// -providers.ts) and routes the request to the correct API.
+// Falls back to Workers when no external provider is configured.
 //
 // Only used for creative/quality-critical generation (articles, lenses,
-// headlines). Fast deterministic calls (classify, embed) stay on Workers AI.
+// headlines). Fast deterministic calls (classify, embed) stay on Workers .
 // ───────────────────────────────────────────────────────────────────────────────
 export interface AICallOptions {
     prompt?: string;
@@ -47,7 +47,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
     let apiKey: string | undefined;
     let baseUrl = 'https://api.openai.com/v1';
 
-    // Read provider config from KV (5-min TTL, written by agent-providers.ts)
+    // Read provider config from KV (5-min TTL, written by -providers.ts)
     try {
         const configRaw = await env.CACHE.get('zeroclaw:provider_config');
         if (configRaw) {
@@ -62,7 +62,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
             }
         }
     } catch {
-        // KV unavailable — fall through to auto-detect / Workers AI
+        // KV unavailable — fall through to auto-detect / Workers 
     }
 
     // ── Auto-detect provider from env vars when nothing configured in DB ──────
@@ -71,7 +71,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
         // else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-1.5-pro-latest';   apiKey = env.GOOGLE_AI_API_KEY; }
         else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';              apiKey = env.MOONSHOT_API_KEY; baseUrl = 'https://api.moonshot.cn/v1'; }
         else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
-        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter.ai/api/v1'; }
+        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter./api/v1'; }
     }
 
     // ── Auto-detect from OAuth tokens (Gemini / Moonshot subscription auth) ──
@@ -87,7 +87,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
         // }
     }
 
-    // ── Workers AI (default fallback) ─────────────────────────────────────────
+    // ── Workers (default fallback) ─────────────────────────────────────────
     if (provider === 'workers_ai') {
         const response = await withCircuitBreaker(
             env,
@@ -102,7 +102,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
         return ((response as Record<string, any>).response || '').trim();
     }
 
-    // ── Moonshot AI (Kimi) — OAuth token → DB key → bootstrap → env var ─────
+    // ── Moonshot (Kimi) — OAuth token → DB key → bootstrap → env var ─────
     if (provider === 'moonshot') {
         const oauthToken    = await getMoonshotAccessToken(env).catch(() => null);
         const bootstrapKey  = !oauthToken ? await getProviderToken(env, 'moonshot') : null;
@@ -386,7 +386,7 @@ If no specific country, reply "NONE".`;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Analyze Sentiment (True AI)
+// Analyze Sentiment (True )
 // ───────────────────────────────────────────────────────────────────────────────
 export async function analyzeSentiment(
     env: Env,
@@ -1052,7 +1052,7 @@ export async function generateArticleImage(
         );
 
         // Response is the binary image data (PNG) or stream
-        // Workers AI usually returns a Response object with body stream, or direct arrayBuffer depending on implementation.
+        // Workers usually returns a Response object with body stream, or direct arrayBuffer depending on implementation.
         // For @cf/stabilityai/stable-diffusion-xl-base-1.0 it returns binary.
         return response as ArrayBuffer;
     } catch (error) {

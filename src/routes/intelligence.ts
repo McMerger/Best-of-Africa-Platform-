@@ -24,7 +24,7 @@ router.use('/sector/*', rateLimit);
 router.use('/campaigns/*', requireApiKey);
 router.use('/campaigns/*', rateLimit);
 
-// Rate-limit AI-heavy public endpoints to prevent quota exhaustion
+// Rate-limit -heavy public endpoints to prevent quota exhaustion
 router.use('/reframe', rateLimit);
 router.use('/reformat', rateLimit);
 router.use('/synthesize-unified', rateLimit);
@@ -186,7 +186,7 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
           FROM articles a
           JOIN countries c ON a.country_code = c.code
           WHERE a.sector_id = ? AND a.status = 'published'
-          ORDER BY a.engagement_score DESC
+          ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
           LIMIT 10
         `).bind(sectorId).all(),
 
@@ -394,7 +394,7 @@ router.get('/audience/reach', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /intel/ai-chat - RAG-powered AI Consultant
+// POST /intel/-chat - RAG-powered Consultant
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
   const { message } = (c.req as any).valid('json');
@@ -537,7 +537,7 @@ router.post('/reformat', validate('json', AiReformatSchema), async (c) => {
 
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Helper: AI Strategic Recommendations
+// Helper: Strategic Recommendations
 // ───────────────────────────────────────────────────────────────────────────────
 async function generateAIRecommendations(env: Env, countryName: string, articles: any[]): Promise<string[]> {
   try {

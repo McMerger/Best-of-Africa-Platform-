@@ -16,7 +16,7 @@ export interface Env {
     // Storage
     MEDIA: R2Bucket;
 
-    // AI & Vectors
+    // & Vectors
     AI: Ai;
     VECTORS: VectorizeIndex;
 
@@ -37,7 +37,7 @@ export interface Env {
     NEWS_API_KEY: string;
     ADMIN_API_KEY: string;
 
-    // Optional AI Provider keys (set via `wrangler secret put`)
+    // Optional Provider keys (set via `wrangler secret put`)
     // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)
     OPENAI_API_KEY?: string;
     ANTHROPIC_API_KEY?: string;

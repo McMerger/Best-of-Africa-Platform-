@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROVIDER TOKEN MANAGER
-// KV-based storage for bootstrapped AI provider API keys / tokens.
+// KV-based storage for bootstrapped provider API keys / tokens.
 // Enables runtime key injection without redeploying wrangler secrets.
 // ═══════════════════════════════════════════════════════════════════════════════
 

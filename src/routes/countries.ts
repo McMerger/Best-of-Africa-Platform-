@@ -43,7 +43,7 @@ router.get('/', async (c) => {
             }
         }
 
-        // AI Refinement: Add Regional Insights (RAG)
+        // Refinement: Add Regional Insights (RAG)
         // We do this concurrently for all regions to be fast
         const regions = Object.keys(grouped);
         const insights: Record<string, string> = {};
@@ -275,7 +275,7 @@ router.get('/:code/dashboard', async (c) => {
       SELECT id, slug, title, view_count, engagement_score
       FROM articles
       WHERE country_code = ? AND status = 'published'
-      ORDER BY engagement_score DESC
+      ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
       LIMIT 5
     `).bind(code).all(),
 
@@ -364,7 +364,7 @@ router.get('/:code/relationships', async (c) => {
     const data = country as Record<string, any>;
     const diplomacyScore = data.diplomacy_score || 0.5;
 
-    // Relationships: Removed mocked logic. In future, use real AI analysis.
+    // Relationships: Removed mocked logic. In future, use real analysis.
     const relationships = await getCached(
         c.env,
         CACHE_KEYS.countryRelationships(code),
@@ -378,7 +378,7 @@ router.get('/:code/relationships', async (c) => {
             const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
             if (!context) return [];
 
-            // AI: Extract Partners
+            // : Extract Partners
             try {
                 const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });

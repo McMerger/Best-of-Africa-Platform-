@@ -13,7 +13,7 @@ import { callConfiguredAI } from '../lib/ai';
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /search - Full-text and semantic search with AI Answer
+// GET /search - Full-text and semantic search with Answer
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/', async (c) => {
     const { q, type = 'hybrid', limit = '10' } = c.req.query();
@@ -22,7 +22,7 @@ router.get('/', async (c) => {
         return c.json({ error: 'bad_request', message: 'Query must be at least 2 characters' }, 400);
     }
 
-    // Rate limit: 30 searches/min per IP to protect AI embedding quota
+    // Rate limit: 30 searches/min per IP to protect embedding quota
     const ip = c.req.header('CF-Connecting-IP') || 'unknown';
     const rl = await checkRateLimit(c.env, `search:${ip}`, 'free');
     Object.entries(rateLimitHeaders(rl)).forEach(([k, v]) => c.header(k, v));
@@ -38,7 +38,7 @@ router.get('/', async (c) => {
     );
 
     if (type === 'semantic' || type === 'hybrid') {
-        // Generate embedding for query using Workers AI
+        // Generate embedding for query using Workers 
         const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
             text: q,
         });
@@ -76,18 +76,18 @@ router.get('/', async (c) => {
             const articleIds = Array.from(bestMatches.keys());
 
             if (articleIds.length === 0) {
-                // Generate AI Answer (The "Refined Delivery")
+                // Generate Answer (The "Refined Delivery")
                 let aiAnswer = null;
                 // Note: searchResults is not defined here if articleIds.length === 0.
-                // This block will only return an empty result set and no AI answer.
-                // If an AI answer is desired for no results, the logic needs to be adjusted.
+                // This block will only return an empty result set and no answer.
+                // If an answer is desired for no results, the logic needs to be adjusted.
                 // For now, it will only be generated if there are actual search results.
                 // The original instruction implies `searchResults` would be available,
                 // but it's only created after this `if` block.
                 // To faithfully apply the instruction, I'm placing it as requested,
                 // but noting the potential logical issue.
                 // If `searchResults` is intended to be available here, it needs to be moved up.
-                // Assuming the intent is to return an empty result set with no AI answer if no articles are found.
+                // Assuming the intent is to return an empty result set with no answer if no articles are found.
                 return c.json({
                     results: [],
                     ai_answer: aiAnswer, // Direct Answer to Query
@@ -136,7 +136,7 @@ router.get('/', async (c) => {
                 };
             }).sort((a, b) => b.score - a.score);
 
-            // Generate AI Answer (The "Refined Delivery")
+            // Generate Answer (The "Refined Delivery")
             let aiAnswer = null;
             if (searchResults.length > 0) {
                 const context = searchResults.slice(0, 3).map(r => `Title: ${r.article.title}\nSummary: ${r.article.summary}`).join('\n---\n');
@@ -216,13 +216,13 @@ router.get('/', async (c) => {
         }
 
         // ═══════════════════════════════════════════════════════════════════════════
-        // RAG: Generate AI summary from top results using Workers AI (CACHED)
+        // RAG: Generate summary from top results using Workers (CACHED)
         // ═══════════════════════════════════════════════════════════════════════════
         const topResults = merged.slice(0, 5);
         let aiSummary: string | null = null;
 
         if (topResults.length > 0) {
-            // Cache AI summaries for 10 minutes to avoid repeated expensive calls
+            // Cache summaries for 10 minutes to avoid repeated expensive calls
             aiSummary = await getCached(
                 c.env,
                 CACHE_KEYS.searchAiSummary(q),
@@ -344,7 +344,7 @@ router.get('/semantic', async (c) => {
     );
 
     try {
-        // 1. Generate Embedding for User Query (bge-base-en-v1.5 on Workers AI)
+        // 1. Generate Embedding for User Query (bge-base-en-v1.5 on Workers )
         const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
             text: q,
         });
@@ -494,7 +494,7 @@ router.get('/similar/:id', async (c) => {
           a.country_code = (SELECT country_code FROM articles WHERE id = ?)
           OR a.sector_id = (SELECT sector_id FROM articles WHERE id = ?)
         )
-      ORDER BY a.engagement_score DESC
+      ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
       LIMIT ?
     `).bind(articleId, articleId, articleId, limitNum).all();
 

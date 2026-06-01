@@ -34,7 +34,7 @@ export const PartnerPromo: React.FC<PartnerPromoProps> = ({
             whileHover={{ y: -5 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
             className={cn(
-                "group relative overflow-hidden rounded-3xl border border-primary/20 bg-card/40 backdrop-blur-md shadow-lg",
+                "group relative overflow-hidden rounded-3xl border border-primary/20 bg-muted/40 backdrop-blur-md shadow-lg",
                 variant === 'horizontal' ? "flex flex-col md:flex-row" : "flex flex-col",
                 className
             )}
@@ -93,3 +93,4 @@ export const PartnerPromo: React.FC<PartnerPromoProps> = ({
         </motion.div>
     );
 };
+

@@ -7,7 +7,7 @@ import { callConfiguredAI } from '../../lib/ai';
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 
-// GET /market-intel/performance - AI-Powered Sector Performance (for MarketIntelPage)
+// GET /market-intel/performance - -Powered Sector Performance (for MarketIntelPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/performance', async (c) => {
     // Parse lens (defaults to investor)
@@ -37,11 +37,11 @@ router.get('/performance', async (c) => {
         metricMap.set(m.sector_id, m);
     });
 
-    // 3. Generate AI-powered performance metrics per sector (RAG-enhanced)
+    // 3. Generate -powered performance metrics per sector (RAG-enhanced)
     const performance = await Promise.all((sectors.results || []).map(async (s: any) => {
         const metric = metricMap.get(s.id);
 
-        // --- RAG-Enhanced AI Sector Analysis (cached 6h per sector) ---
+        // --- RAG-Enhanced Sector Analysis (cached 6h per sector) ---
         const aiResult = await getCached(
             c.env,
             `perf:rag:${s.id}:${activeLens}:v3`,
@@ -89,7 +89,7 @@ router.get('/performance', async (c) => {
                     ? Math.sqrt(scores.reduce((sum, sc) => sum + Math.pow(sc - avgEng, 2), 0) / scores.length)
                     : 0;
 
-                // 4. Build rich context for AI
+                // 4. Build rich context for 
                 const articleContext = articles.map((a, i) =>
                     `${i + 1}. "${a.title}" — ${(a.summary || '').slice(0, 150)} [Engagement: ${a.engagement_score || 'N/A'}]`
                 ).join('\n');
@@ -126,10 +126,10 @@ router.get('/performance', async (c) => {
                     return { score: null, volatility: null, insight: null };
                 }
             },
-            { ttl: 3600 * 6 } // Cache AI results for 6 hours
+            { ttl: 3600 * 6 } // Cache results for 6 hours
         );
 
-        // --- Blend AI score with data-grounded score (70% AI, 30% data) ---
+        // --- Blend score with data-grounded score (70% , 30% data) ---
         let dataScore = 50;
         if (metric?.growth_rate) {
             dataScore = Math.min(98, Math.max(40, 40 + (metric.growth_rate * 5)));
@@ -144,7 +144,7 @@ router.get('/performance', async (c) => {
             finalScore = dataScore;
         }
 
-        // --- Volatility: prefer AI, fallback to data ---
+        // --- Volatility: prefer , fallback to data ---
         let volatility = aiResult.volatility || 'Med';
         if (!aiResult.volatility) {
             if (metric?.regulatory_outlook) {
@@ -226,7 +226,7 @@ router.get('/sentiment-divergence', async (c) => {
                         `).all();
 
     const divergence = await Promise.all((countries.results || []).map(async (c: any) => {
-        // AI Reality Check (RAG)
+        // Reality Check (RAG)
         const reality = await getCached(
             c.env,
             CACHE_KEYS.marketSentiment(c.code),
@@ -272,7 +272,7 @@ router.get('/sentiment-divergence', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /market-intel/metrics - Update market metrics (Agent use only)
+// POST /market-intel/metrics - Update market metrics (use only)
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/metrics', requireApiKey, async (c) => {
     // Check for ADMIN key specifically to ensure only authorized agents update data
@@ -359,7 +359,7 @@ router.get('/sector/:id/analytics', async (c) => {
             : 'LOW';
 
     // Supply chain status based on article count and engagement
-    // AI Supply Chain Analysis
+    // Supply Chain Analysis
     const supplyChain = await getCached(
         c.env,
         CACHE_KEYS.sectorSupplyChain(sectorId),
@@ -494,8 +494,8 @@ router.get('/opportunities', async (c) => {
                         s.name as sector_name,
                         COUNT(a.id) as article_count,
                         AVG(a.engagement_score) as avg_score,
-                        (SELECT title FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_title,
-                    (SELECT summary FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY a2.engagement_score DESC LIMIT 1) as top_summary
+                        (SELECT title FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY (a2.engagement_score * 1.0 / ((julianday('now') - julianday(a2.published_at)) + 1)) DESC LIMIT 1) as top_title,
+                    (SELECT summary FROM articles a2 WHERE a2.country_code = a.country_code AND a2.sector_id = a.sector_id ORDER BY (a2.engagement_score * 1.0 / ((julianday('now') - julianday(a2.published_at)) + 1)) DESC LIMIT 1) as top_summary
         FROM articles a
         JOIN countries c ON a.country_code = c.code
         JOIN sectors s ON a.sector_id = s.id

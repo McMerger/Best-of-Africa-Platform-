@@ -157,7 +157,7 @@ export async function onArticlePublished(
         sectorName = sector?.name || null;
     }
 
-    // Generate AI Push Message
+    // Generate Push Message
     // Optimize for lock screen: < 120 chars, urgent, actionable
     let pushMessage = (article as Record<string, any>).ai_push_message || article.title;
 

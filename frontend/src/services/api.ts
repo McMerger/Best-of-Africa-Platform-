@@ -48,6 +48,67 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
     return response.json();
 }
 
+export interface Campaign {
+    id: string;
+    sponsor_id: string;
+    name: string;
+    description?: string;
+    target_countries?: string[];
+    target_sectors?: string[];
+    target_audience?: string;
+    budget_usd?: number;
+    start_date?: string;
+    end_date?: string;
+    status: 'draft' | 'active' | 'paused' | 'completed';
+    impressions: number;
+    clicks: number;
+    roi_score?: number;
+    reach_score?: number;
+    credibility_impact?: number;
+    created_at: string;
+}
+
+export interface CampaignAnalytics {
+    campaign_id: string;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+    budget_spent: number;
+    roi_percentage: number;
+    roi_score: number;
+    reach_score: number;
+    credibility_impact: number;
+    status: string;
+    start_date: string;
+    end_date: string;
+}
+
+export interface NarrativeStrategy {
+    id: string;
+    country_code: string;
+    sector_id?: string;
+    narrative_theme: string;
+    key_messages: string[];
+    target_audience: string;
+    priority: number;
+    tone: string;
+    status: string;
+    effectiveness_score?: number;
+    created_at: string;
+    updated_at?: string;
+}
+
+export interface NarrativeIndex {
+    country_code: string;
+    narrative_index: number;
+    diplomacy_score: number;
+    image_strength: number;
+    active_narratives: number;
+    aligned_articles: number;
+    assessment: string;
+    updated_at: string;
+}
+
 export const api = {
     // Articles
     getArticles: (params: Record<string, string> = {}) => {
@@ -158,7 +219,7 @@ export const api = {
         engagement_trends: { date: string; views: number }[];
     }>('/intel/audience'),
 
-    // Analyst Lens (Real-time AI Rewriting)
+    // Analyst Lens (Real-time Editorial Rewriting)
     reframeArticle: (articleId: string, targetAudience: 'investor' | 'government' | 'explorer') =>
         request<{ content: string; audience: string }>('/intel/reframe', {
             method: 'POST',
@@ -215,6 +276,14 @@ export const api = {
         };
     }>(`/market-intel/sector/${id}/trends`),
 
+    // System & Personalization
+    getCuratedFeed: () => request<{ data: (ArticleListItem & { ai_curation?: { relevance_note: string } })[]; personalized: boolean; ai_feed_summary?: string }>('/personalization/feed/ai-curated'),
+    getFounderLog: () => request<any[]>('/market-intel/founder-log'),
+    askAnalyst: (message: string) => request<{ response: string; sources: string[] }>('/intel/ai-chat', {
+        method: 'POST',
+        body: JSON.stringify({ message })
+    }),
+
     // Personalization
     getRecommendations: () => request<{ data: ArticleListItem[]; based_on?: { countries: string[]; sectors: string[] } }>('/personalization/recommended'),
     getPreferences: () => request<{
@@ -222,15 +291,26 @@ export const api = {
         sectors_of_interest: string[];
         language_preference: string;
         format_preference: string;
+        notification_preferences: { email: boolean; push: boolean; reports: boolean; };
     }>('/personalization/preferences'),
     savePreferences: (prefs: {
         countries_of_interest: string[];
         sectors_of_interest: string[];
-        language_preference: string;
-        format_preference: string;
+        language_preference?: string;
+        format_preference?: string;
+        notification_preferences?: { email: boolean; push: boolean; reports: boolean; };
     }) => request('/personalization/preferences', {
         method: 'POST',
         body: JSON.stringify(prefs),
+    }),
+
+    verifyEmail: (email: string) => request<{ success: boolean; message: string }>('/members/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    }),
+    verifyOtp: (email: string, code: string) => request<{ token: string; user: any; isNewUser: boolean }>('/members/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, code })
     }),
 
     // Analytics
@@ -284,12 +364,40 @@ export const api = {
     }>(`/market-intel/sector/${sectorId}/velocity`),
 
     getPlatformImpact: () => request<{
-        total_fdi_usd: number;
-        countries_covered: number;
-        sectors_covered: number;
-        total_reports: number;
-        updated_at: string;
+        total_subscribers: number;
+        total_investments_tracked: number;
+        sentiment_index: number;
+        policy_shifts_tracked: number;
     }>('/dashboards/stats/platform-impact'),
+
+    // Campaigns & Sponsorships
+    getCampaigns: (status?: string) => request<{ data: Campaign[] }>(`/campaigns${status ? `?status=${status}` : ''}`),
+    getCampaign: (id: string) => request<{ data: Campaign & { articles: any[]; stats: any } }>(`/campaigns/${id}`),
+    createCampaign: (data: Partial<Campaign>) => request<{ id: string }>('/campaigns', {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    updateCampaign: (id: string, data: Partial<Campaign>) => request<{ success: boolean }>(`/campaigns/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data)
+    }),
+    launchCampaign: (id: string) => request<{ success: boolean }>(`/campaigns/${id}/launch`, { method: 'POST' }),
+    pauseCampaign: (id: string) => request<{ success: boolean }>(`/campaigns/${id}/pause`, { method: 'POST' }),
+    getCampaignAnalytics: (id: string) => request<{ data: CampaignAnalytics }>(`/campaigns/${id}/analytics`),
+
+    // Narratives
+    getNarrativeStrategies: (params: Record<string, string> = {}) => {
+        const searchParams = new URLSearchParams(params);
+        return request<{ data: NarrativeStrategy[] }>(`/narratives?${searchParams}`);
+    },
+    getCountryNarratives: (code: string) => request<{
+        country: Country & { narrative_arc: string };
+        active_strategies: NarrativeStrategy[];
+        aligned_articles: ArticleListItem[];
+        sector_coverage: any[];
+        ai_gap_analysis: string;
+    }>(`/narratives/country/${code}`),
+    getNarrativeIndex: (code: string) => request<NarrativeIndex>(`/narratives/country/${code}/index`),
 
     // 3D Visualization Data Feed ("The Brain")
     getIntelligence: () => request<{
@@ -318,5 +426,39 @@ export const api = {
     }),
     triggerAgentEvolution: () => request('/self-improve/evolve', {
         headers: { 'Authorization': `Bearer ${getAdminToken()}` }
+    }),
+    
+    getAdminSources: () => request<{ data: any[] }>('/admin/sources'),
+    createAdminSource: (data: any) => request<{ id: string }>('/admin/sources', { method: 'POST', body: JSON.stringify(data) }),
+    deleteAdminSource: (id: string) => request<{ success: boolean }>(`/admin/sources/${id}`, { method: 'DELETE' }),
+    
+    getAdminClients: () => request<{ data: any[] }>('/admin/clients'),
+    createAdminClient: (data: any) => request<{ id: string; api_key: string }>('/admin/clients', { method: 'POST', body: JSON.stringify(data) }),
+    
+    getIntelligenceRecommendations: () => request<{ recommendations: string[] }>('/admin/intelligence/recommendations'),
+
+    // Personalization & Bookmarks
+    getBookmarks: () => request<{ data: any[] }>('/bookmarks'),
+    addBookmark: (articleId: string) => request<{ success: boolean; id: string }>('/bookmarks', {
+        method: 'POST',
+        body: JSON.stringify({ article_id: articleId })
+    }),
+    removeBookmark: (bookmarkId: string) => request<{ success: boolean }>(`/bookmarks/${bookmarkId}`, {
+        method: 'DELETE'
+    }),
+    removeBookmarkByArticleId: (articleId: string) => request<{ success: boolean }>(`/bookmarks/article/${articleId}`, {
+        method: 'DELETE'
+    }),
+
+    // Corporate Services & Summits
+    getCorporateEvents: () => request<{ data: any[] }>('/services/events'),
+    getEvent: (id: string) => request<{ event: any }>(`/services/events/${id}`),
+    registerForEvent: (id: string, data: any) => request<{ success: boolean; registration_id: string }>(`/services/events/${id}/register`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }),
+    submitBookingRequest: (data: any) => request<{ success: boolean; booking_id: string }>('/services/booking', {
+        method: 'POST',
+        body: JSON.stringify(data)
     }),
 };

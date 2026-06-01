@@ -61,8 +61,8 @@ export const BetaNewsletter = () => {
               Expect your first dispatch on Sunday. In the meantime, dive into our latest stories.
             </p>
             <Link
-              to="/stories"
-              className="inline-block w-full bg-accent text-card font-semibold py-4 rounded-xl hover:brightness-110 transition-all shadow-lg"
+              to="/posts"
+              className="inline-block w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all shadow-lg"
             >
               Read latest stories
             </Link>
@@ -104,22 +104,22 @@ export const BetaNewsletter = () => {
               required
               disabled={status === 'loading'}
               autoComplete="email"
-              className="w-full bg-white border border-primary/15 text-primary rounded-lg px-6 py-4 focus:outline-none focus:border-accent transition-colors placeholder:text-primary/50 font-sans disabled:opacity-50"
+              className="w-full bg-background border border-primary/15 rounded-xl pl-12 pr-4 py-4 text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all shadow-sm"
             />
             {status === 'error' && (
-              <p className="text-red-400 text-sm -mt-2" role="alert">{errorMessage}</p>
+              <p className="text-destructive text-sm -mt-2" role="alert">{errorMessage}</p>
             )}
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full bg-accent text-card font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full bg-accent text-accent-foreground font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {status === 'loading' ? 'Subscribing…' : 'Get the weekly dispatch'}
             </button>
           </form>
 
           {/* Benefits */}
-          <div className="w-full bg-white rounded-xl border border-primary/8 p-8 text-left mb-8 shadow-sm">
+          <div className="bg-white rounded-xl border border-primary/8 p-8 md:p-10 mb-12 shadow-sm">
             <ul className="space-y-4">
               {[
                 'Weekly dispatch from across the continent',

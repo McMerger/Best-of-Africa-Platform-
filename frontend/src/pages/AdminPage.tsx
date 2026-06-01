@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import { Layout } from '../components/Layout';
 import { 
     LockClosedIcon, 
     ExclamationTriangleIcon, 
@@ -23,6 +22,10 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { cn } from '@/lib/utils';
 import { ArticleFeedbackDialog } from '../components/admin/ArticleFeedbackDialog';
+import { AgentStatusPanel } from '../components/beta/AgentStatusPanel';
+import { AdminIntelligenceTab } from '../components/admin/AdminIntelligenceTab';
+import { AdminSourcesTab } from '../components/admin/AdminSourcesTab';
+import { AdminClientsTab } from '../components/admin/AdminClientsTab';
 import type { ArticleListItem } from '../types';
 
 export const AdminPage: React.FC = () => {
@@ -113,8 +116,8 @@ export const AdminPage: React.FC = () => {
 
     if (status === 'success') {
         return (
-            <Layout>
-                <div className="container py-20 min-h-screen">
+            <>
+                <div className="container pt-0 pb-20 min-h-screen">
                     <div className="mb-12 border-l-4 border-primary pl-6">
                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary mb-2">
                             <LockClosedIcon className="h-4 w-4" /> Restricted Access
@@ -124,15 +127,27 @@ export const AdminPage: React.FC = () => {
                     </div>
 
                     <Tabs defaultValue="moderation" className="space-y-8">
-                        <TabsList className="bg-muted/50 p-1 rounded-2xl border border-border">
+                        <TabsList className="bg-muted/50 p-1 rounded-2xl border border-border overflow-x-auto justify-start flex">
                             <TabsTrigger value="moderation" className="rounded-xl px-6 py-2 flex gap-2">
                                 <CheckCircledIcon className="h-4 w-4" /> Content Moderation
                             </TabsTrigger>
-                            <TabsTrigger value="audit" className="rounded-xl px-6 py-2 flex gap-2 text-amber-600">
+                            <TabsTrigger value="audit" className="rounded-xl px-6 py-2 flex gap-2 text-accent">
                                 <MagnifyingGlassIcon className="h-4 w-4" /> Proactive Audit
                             </TabsTrigger>
-                            <TabsTrigger value="evolution" className="rounded-xl px-6 py-2 flex gap-2 text-blue-600">
+                            <TabsTrigger value="evolution" className="rounded-xl px-6 py-2 flex gap-2 text-primary">
                                 <MagicWandIcon className="h-4 w-4" /> Editorial Rules
+                            </TabsTrigger>
+                            <TabsTrigger value="intelligence" className="rounded-xl px-6 py-2 flex gap-2 text-muted-foreground hover:text-foreground">
+                                <ActivityLogIcon className="h-4 w-4" /> Intelligence
+                            </TabsTrigger>
+                            <TabsTrigger value="sources" className="rounded-xl px-6 py-2 flex gap-2 text-muted-foreground hover:text-foreground">
+                                <ArchiveIcon className="h-4 w-4" /> Sources
+                            </TabsTrigger>
+                            <TabsTrigger value="clients" className="rounded-xl px-6 py-2 flex gap-2 text-muted-foreground hover:text-foreground">
+                                <LockClosedIcon className="h-4 w-4" /> Clients
+                            </TabsTrigger>
+                            <TabsTrigger value="agents" className="rounded-xl px-6 py-2 flex gap-2 text-muted-foreground hover:text-foreground">
+                                <ActivityLogIcon className="h-4 w-4" /> Systems Monitor
                             </TabsTrigger>
                         </TabsList>
 
@@ -142,7 +157,7 @@ export const AdminPage: React.FC = () => {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <CardTitle className="text-xl font-serif font-bold">Pending Intelligence Reviews</CardTitle>
-                                            <CardDescription>Verify and calibrate generated content.</CardDescription>
+                                            <CardDescription>Verify and calibrate editorial content.</CardDescription>
                                         </div>
                                         <Button variant="outline" size="sm" onClick={fetchArticles} disabled={isFetchLoading}>
                                             <UpdateIcon className={cn("h-4 w-4 mr-2", isFetchLoading && "animate-spin")} />
@@ -175,11 +190,11 @@ export const AdminPage: React.FC = () => {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge className="bg-green-50 text-green-700 border-green-200">Live</Badge>
+                                                        <Badge className="bg-primary/10 text-primary border-primary/20">Live</Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
+                                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => window.open(`/posts/${a.slug}`, '_blank')}>
                                                                 <EyeOpenIcon className="h-4 w-4" />
                                                             </Button>
                                                             <Button 
@@ -208,9 +223,9 @@ export const AdminPage: React.FC = () => {
 
                         <TabsContent value="audit" className="space-y-6">
                             <div className="grid gap-6 md:grid-cols-2">
-                                <Card className="border-border rounded-3xl p-6 bg-amber-50/10 border-amber-200/50">
+                                <Card className="border-border rounded-3xl p-6 bg-accent/5 border-accent/20">
                                     <div className="flex items-center gap-4 mb-4">
-                                        <div className="p-3 bg-amber-100 rounded-2xl text-amber-600">
+                                        <div className="p-3 bg-accent/10 rounded-2xl text-accent">
                                             <MagnifyingGlassIcon className="h-6 w-6" />
                                         </div>
                                         <div>
@@ -218,7 +233,7 @@ export const AdminPage: React.FC = () => {
                                             <p className="text-sm text-muted-foreground">Identifies narrative gaps and stale reporting.</p>
                                         </div>
                                     </div>
-                                    <Button className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold" onClick={triggerAudit}>
+                                    <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" onClick={triggerAudit}>
                                         Execute Deep Audit
                                     </Button>
                                 </Card>
@@ -234,7 +249,7 @@ export const AdminPage: React.FC = () => {
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">System Health</span>
-                                            <Badge variant="outline" className="text-green-600 border-green-200">Nominal</Badge>
+                                            <Badge variant="outline" className="text-primary border-primary/20">Nominal</Badge>
                                         </div>
                                     </div>
                                 </Card>
@@ -242,24 +257,40 @@ export const AdminPage: React.FC = () => {
                         </TabsContent>
 
                         <TabsContent value="evolution" className="space-y-6">
-                            <Alert className="bg-blue-50/50 border-blue-200 rounded-3xl">
-                                <MagicWandIcon className="h-4 w-4 text-blue-600" />
-                                <AlertTitle className="text-blue-900 font-bold">Editorial Rule Updates</AlertTitle>
-                                <AlertDescription className="text-blue-800">
+                            <Alert className="bg-primary/5 border-primary/20 rounded-3xl">
+                                <MagicWandIcon className="h-4 w-4 text-primary" />
+                                <AlertTitle className="text-foreground font-bold">Editorial Rule Updates</AlertTitle>
+                                <AlertDescription className="text-muted-foreground">
                                     This consolidates recent editorial feedback into updated publishing rules.
                                     The process typically takes 30-60 seconds.
                                 </AlertDescription>
                             </Alert>
 
                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                <Card className="border-border rounded-3xl p-6 border-blue-200/30">
+                                <Card className="border-border rounded-3xl p-6 border-primary/20">
                                     <CardTitle className="text-lg font-serif mb-2">Update Rules</CardTitle>
                                     <CardDescription className="mb-6">Consolidate all pending editorial feedback into publishing rules.</CardDescription>
-                                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold" onClick={triggerEvolution}>
+                                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold" onClick={triggerEvolution}>
                                         Update Rules
                                     </Button>
                                 </Card>
                             </div>
+                        </TabsContent>
+
+                        <TabsContent value="intelligence" className="space-y-6">
+                            <AdminIntelligenceTab />
+                        </TabsContent>
+                        
+                        <TabsContent value="sources" className="space-y-6">
+                            <AdminSourcesTab />
+                        </TabsContent>
+                        
+                        <TabsContent value="clients" className="space-y-6">
+                            <AdminClientsTab />
+                        </TabsContent>
+
+                        <TabsContent value="agents" className="space-y-6">
+                            <AgentStatusPanel />
                         </TabsContent>
                     </Tabs>
 
@@ -272,12 +303,12 @@ export const AdminPage: React.FC = () => {
                         actionLabel="Reject & Flag"
                     />
                 </div>
-            </Layout>
+            </>
         );
     }
 
     return (
-        <Layout>
+        <>
             <div className="flex min-h-[70vh] items-center justify-center bg-background relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--muted-foreground)/0.2)_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
 
@@ -318,6 +349,6 @@ export const AdminPage: React.FC = () => {
                     </CardContent>
                 </Card>
             </div>
-        </Layout>
+        </>
     );
 };

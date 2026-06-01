@@ -15,7 +15,7 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 // Apply admin auth to all routes
 router.use('*', requireAdmin);
 
-// Import AI helpers
+// Import helpers
 import { generateSummary, analyzeSentiment, callConfiguredAI } from '../lib/ai';
 
 async function generateTags(env: Env, content: string): Promise<string[]> {
@@ -103,7 +103,7 @@ router.post('/articles', validate('json', CreateArticleSchema.extend({
 })), async (c) => {
     const body = (c.req as any).valid('json');
     const id = crypto.randomUUID();
-    // AI Autopilot: Auto-fill missing fields
+    // : Auto-fill missing fields
     let summary = body.summary;
     let tags = body.tags || [];
 
@@ -201,7 +201,7 @@ router.put('/articles/:id', async (c) => {
 
     updates.push("updated_at = datetime('now')");
 
-    // AI Autopilot for Updates
+    // for Updates
     if (body.content && (body.summary === undefined || body.tags === undefined)) {
         // Only run if content is being updated and fields are missing/requested
         // This logic allows explicit "reset" if user sends empty string, so we check for undefined
@@ -409,7 +409,7 @@ router.post('/clients', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Intelligence & Strategy (AI-Driven)
+// Intelligence & Strategy (-Driven)
 // ───────────────────────────────────────────────────────────────────────────────
 
 router.get('/intelligence/recommendations', async (c) => {
@@ -422,7 +422,7 @@ router.get('/intelligence/recommendations', async (c) => {
             const internalContext = recent.results.map(r => r.title).join('; ');
 
             // 2. Mock: In a real scenario, this queries a "Trending News" vector index.
-            // Since we don't have a separate "News Stream" index yet, we'll prompt the AI to hallucinate 
+            // Since we don't have a separate "News Stream" index yet, we'll prompt the to hallucinate 
             // "Missed Opportunities" based on its knowledge of current African affairs + typical blind spots.
             // Ideally: We search the `articles` table for "Emerging Tech" and see low results.
 
@@ -618,7 +618,7 @@ router.post('/generate-images', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// ZEROCLAW AGENT EDITORIAL ENDPOINTS
+// ZEROCLAW EDITORIAL ENDPOINTS
 // Referenced by .zeroclaw/skills/proactive-editorial.md
 // and .zeroclaw/skills/self-improving-editorial.md
 // ───────────────────────────────────────────────────────────────────────────────

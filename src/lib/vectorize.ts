@@ -25,7 +25,7 @@ export async function indexArticle(
     } = {}
 ): Promise<number> { // Return number of chunks
     // 1. Maintain the "Main" document vector (for related articles/high-level search)
-    // Include AI Refinements in the Search Index so they are discoverable
+    // Include Refinements in the Search Index so they are discoverable
     const aiContext = `
     Investor Brief: ${metadata.ai_investor_brief || ''}
     Key Message: ${metadata.ai_push_message || ''}

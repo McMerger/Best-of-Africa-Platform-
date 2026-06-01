@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Twitter, Linkedin, Link2, Check } from 'lucide-react';
+import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -190,6 +190,10 @@ export const BetaArticle = () => {
   const readingProgress = useReadingProgress('article-root');
   const { isMember } = useMember();
 
+  const [lens, setLens] = useState<'original' | 'investor' | 'government' | 'explorer'>('original');
+  const [isReframing, setIsReframing] = useState(false);
+  const [reframedContent, setReframedContent] = useState<Record<string, string>>({});
+
   const { data, isLoading, isError } = useQuery<ArticleResponse>({
     queryKey: ['article', slug],
     queryFn: () => api.getArticle(slug!),
@@ -227,7 +231,7 @@ export const BetaArticle = () => {
             This story may have moved or been updated. Browse all our coverage below.
           </p>
           <Link
-            to="/stories"
+            to="/posts"
             className="inline-flex items-center gap-2 text-accent font-semibold hover:opacity-80 transition-opacity"
           >
             <ArrowLeft size={16} /> Browse all stories
@@ -249,6 +253,24 @@ export const BetaArticle = () => {
 
   // Content is whatever the API returned — full for members, truncated for guests
   const articleContent = article.content || '';
+
+  const activeContent = lens === 'original' ? articleContent : (reframedContent[lens] || articleContent);
+
+  const handleLensChange = async (newLens: 'original' | 'investor' | 'government' | 'explorer') => {
+    setLens(newLens);
+    if (newLens === 'original' || reframedContent[newLens]) return;
+    
+    setIsReframing(true);
+    try {
+      const res = await (api as any).reframeArticle(slug!, newLens);
+      setReframedContent(prev => ({...prev, [newLens]: res.content}));
+    } catch(e) {
+      console.error(e);
+      setLens('original');
+    } finally {
+      setIsReframing(false);
+    }
+  };
 
   const relatedArticles: ArticleListItem[] = (featuredData?.data || [])
     .filter((a: ArticleListItem) => a.slug !== slug)
@@ -286,7 +308,7 @@ export const BetaArticle = () => {
       {/* Back breadcrumb */}
       <div className="max-w-3xl mx-auto px-6 pt-6">
         <Link
-          to="/stories"
+          to="/posts"
           className="inline-flex items-center gap-1.5 text-sm text-primary/40 hover:text-primary/70 transition-colors group"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -355,14 +377,43 @@ export const BetaArticle = () => {
 
         {/* Audio Player */}
         <div className="mb-10">
-          <BetaAudioPlayer slug={slug!} />
+          <BetaAudioPlayer 
+            slug={slug!} 
+            title={article.title} 
+            subtitle={categoryLabel} 
+            imageUrl={article.hero_image_url} 
+          />
         </div>
 
 
 
         <article className="relative pb-32">
-          {/* Free content — rendered as Markdown */}
-          <ArticleMarkdown content={articleContent} />
+          {/* Lens Switcher for Members */}
+          {isMember && !isPaywalled && articleContent.length > 0 && (
+            <div className="mb-8 flex items-center gap-2 p-1.5 bg-secondary border border-primary/10 rounded-full w-fit">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40 pl-3 pr-2">Read as:</span>
+              {(['original', 'investor', 'government', 'explorer'] as const).map(l => (
+                <button
+                  key={l}
+                  onClick={() => handleLensChange(l)}
+                  disabled={isReframing && lens === l}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 ${
+                    lens === l 
+                      ? 'bg-white text-primary shadow-sm' 
+                      : 'text-primary/50 hover:text-primary hover:bg-white/50'
+                  }`}
+                >
+                  {isReframing && lens === l && <Loader2 size={12} className="animate-spin" />}
+                  {l}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Article content */}
+          <div className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
+            <ArticleMarkdown content={activeContent} />
+          </div>
 
           {/* Paywall */}
           {isPaywalled && (
@@ -424,7 +475,7 @@ export const BetaArticle = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
             <h2 className="font-serif text-[32px] text-primary">More Stories</h2>
-            <Link to="/stories" className="text-accent font-semibold text-sm tracking-wider uppercase hover:text-primary transition-colors">
+            <Link to="/posts" className="text-accent font-semibold text-sm tracking-wider uppercase hover:text-primary transition-colors">
               View All →
             </Link>
           </div>
@@ -433,7 +484,7 @@ export const BetaArticle = () => {
               ? displayRelated.map((a: ArticleListItem) => (
                   <Link
                     key={a.slug}
-                    to={`/stories/${a.slug}`}
+                    to={`/posts/${a.slug}`}
                     className="group bg-background rounded-xl overflow-hidden border border-primary/10 hover:border-accent/40 transition-colors"
                   >
                     <div className="p-6">
@@ -447,7 +498,7 @@ export const BetaArticle = () => {
                   <div className="col-span-1 md:col-span-3 text-center py-12">
                     <p className="text-primary/40 mb-4">Explore the full archive for more stories from the continent.</p>
                     <Link
-                      to="/stories"
+                      to="/posts"
                       className="inline-flex items-center gap-2 text-accent font-semibold text-sm hover:opacity-80 transition-opacity"
                     >
                       Browse all stories →

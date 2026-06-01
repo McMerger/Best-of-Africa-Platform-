@@ -23,7 +23,7 @@ export async function checkContentIntegrity(
 ): Promise<ModerationResult> {
     console.log(`Moderating content: "${title.slice(0, 50)}..."`);
 
-    // 1. AI-Powered Fact-Checking & Bias Analysis
+    // 1. -Powered Fact-Checking & Bias Analysis
     const moderationPrompt = `
         As an Senior Editorial Auditor for "BOA-Story Intelligence", analyze the following AI-generated article.
         

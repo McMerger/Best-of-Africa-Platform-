@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSystemConfig } from "@/hooks/useSystemConfig";
-import { Layout } from '../components/Layout';
 import { EnvelopeClosedIcon, ChatBubbleIcon, PaperPlaneIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { toast } from "sonner"
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ export const ContactPage: React.FC = () => {
     };
 
     return (
-        <Layout>
+        <>
             <div className="container py-20 max-w-4xl">
                 <div className="mb-12 text-center">
                     <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">
@@ -193,6 +192,6 @@ export const ContactPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </>
     );
 };

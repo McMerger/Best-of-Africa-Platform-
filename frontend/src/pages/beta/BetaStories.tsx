@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Search, X, Sparkles } from 'lucide-react';
+import { Lock, Search, X, Sparkles, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { } from '../../components/beta';
@@ -8,6 +8,8 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
+import { useAudio } from '../../context/AudioContext';
+import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
 
 /** Strip Markdown bold markers (**) and surrounding quote wrapping from a string. */
@@ -41,11 +43,13 @@ const StoryCardSkeleton = () => (
 
 export const BetaStories = () => {
   const [activeFilter, setActiveFilter] = useState('All');
+  const [feedMode, setFeedMode] = useState<'latest' | 'foryou'>('latest');
   const [searchInput, setSearchInput] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
   const { isMember } = useMember();
+  const { playTrack } = useAudio();
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -58,13 +62,9 @@ export const BetaStories = () => {
   const isCountryCode = /^[A-Z]{2}$/.test(debouncedQuery);
 
   const { data, isLoading, isError, isPlaceholderData } = useQuery({
-    queryKey: ['featured-articles', page],
+    queryKey: ['all-articles', page, itemsPerPage],
     queryFn: () => {
-      // If we are past page 1, fetch from generic articles endpoint instead of featured
-      if (page > 1) {
-        return api.getArticles({ page: page.toString(), limit: itemsPerPage.toString() });
-      }
-      return api.getFeaturedArticles();
+      return api.getArticles({ page: page.toString(), limit: itemsPerPage.toString() });
     },
     staleTime: 5 * 60 * 1000,
     // M2 FIX: Keep previous data visible while next page is fetching — no more loading flash
@@ -101,6 +101,14 @@ export const BetaStories = () => {
     enabled: isSearchMode && isCountryCode,
     staleTime: 2 * 60 * 1000 });
 
+  // Curated "For You" Feed
+  const { data: curatedData, isLoading: isLoadingCurated, isError: isErrorCurated, error: curatedError } = useQuery({
+    queryKey: ['beta-curated-feed'],
+    queryFn: api.getCuratedFeed,
+    enabled: feedMode === 'foryou' && isMember,
+    retry: false,
+    staleTime: 5 * 60 * 1000 });
+
   // M1 FIX: Explicit parentheses to make operator precedence unambiguous
   const usingFallback = isError || (allArticles.length === 0 && !isLoading);
   const articles: ArticleListItem[] = usingFallback
@@ -122,8 +130,13 @@ export const BetaStories = () => {
     ? articles
     : articles.filter(a => a.sector_name === activeFilter);
 
-  const displayArticles = isSearchMode ? searchArticles : filtered;
-  const showLoading = isSearchMode ? (isSearching || isCountrySearching) : isLoading;
+  const displayArticles = isSearchMode 
+    ? searchArticles 
+    : (feedMode === 'foryou' && curatedData?.data ? curatedData.data : filtered);
+    
+  const showLoading = isSearchMode ? (isSearching || isCountrySearching) : (feedMode === 'foryou' ? isLoadingCurated : isLoading);
+
+  const needsPreferences = feedMode === 'foryou' && isErrorCurated && (curatedError as any)?.message?.includes('preferences');
 
   return (
     <div className="selection:bg-accent selection:text-primary">
@@ -134,20 +147,100 @@ export const BetaStories = () => {
       
       <div className="max-w-7xl mx-auto px-6 py-24">
 
-        <header className="mb-10 text-center md:text-left">
-          <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
-            Stories from the Continent
-          </h1>
-          <p className="text-xl text-primary/75">
-            Real stories. Honest reporting.
-          </p>
+        <header className="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
+              Stories from the Continent
+            </h1>
+            <p className="text-xl text-primary/75">
+              Real stories. Honest reporting.
+            </p>
+          </div>
+          <button 
+            onClick={() => {
+              const audioTracks: PlayableTrack[] = displayArticles
+                .filter(a => a.audio_url)
+                .map(a => ({
+                  title: a.title,
+                  subtitle: a.sector_name,
+                  audioUrl: a.audio_url!,
+                  imageUrl: a.hero_image_url,
+                  durationSeconds: a.audio_duration_seconds,
+                  slug: a.slug
+                }));
+              if (audioTracks.length > 0) {
+                playTrack(audioTracks[0], audioTracks);
+              }
+            }}
+            className="group flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-card hover:border-accent text-accent font-medium transition-all shadow-lg shadow-accent/5"
+          >
+            <div className="w-8 h-8 rounded-full bg-accent text-card group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            </div>
+            <span>Listen to Daily Pulse</span>
+          </button>
         </header>
 
         {/* Notice when live content is unavailable */}
-        {usingFallback && !isLoading && (
+        {usingFallback && !isLoading && feedMode === 'latest' && (
           <div className="mb-6 px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
             <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
             Live content is currently unavailable. Please check back shortly.
+          </div>
+        )}
+
+        {/* Feed Mode Toggle (Visible only to members) */}
+        {isMember && !isSearchMode && (
+          <div className="flex justify-center md:justify-start mb-8">
+            <div className="inline-flex bg-primary/5 rounded-full p-1 border border-primary/10">
+              <button
+                onClick={() => setFeedMode('latest')}
+                className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  feedMode === 'latest' 
+                    ? 'bg-white text-primary shadow-sm border border-primary/10' 
+                    : 'text-primary/50 hover:text-primary'
+                }`}
+              >
+                Latest
+              </button>
+              <button
+                onClick={() => setFeedMode('foryou')}
+                className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  feedMode === 'foryou' 
+                    ? 'bg-accent text-card shadow-sm border border-accent/20' 
+                    : 'text-primary/50 hover:text-accent'
+                }`}
+              >
+                <Sparkles size={14} />
+                For You
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Need Preferences State */}
+        {needsPreferences && (
+          <div className="bg-white rounded-2xl border border-primary/10 p-10 text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-6">
+              <Sparkles className="w-8 h-8 text-accent" />
+            </div>
+            <h2 className="font-serif text-[28px] text-primary mb-3">Your Personalized Feed</h2>
+            <p className="text-primary/60 mb-8 max-w-md mx-auto">
+              Set your country and sector interests to unlock a custom feed curated just for you.
+            </p>
+            <Link 
+              to="/settings"
+              className="inline-block bg-accent text-card font-medium px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+            >
+              Set Preferences
+            </Link>
+          </div>
+        )}
+
+        {/* Feed Summary */}
+        {feedMode === 'foryou' && curatedData?.ai_feed_summary && (
+          <div className="mb-8 p-4 bg-accent/10 border border-accent/20 rounded-xl text-center text-accent/90 text-sm font-medium italic">
+            {curatedData.ai_feed_summary}
           </div>
         )}
 
@@ -177,7 +270,7 @@ export const BetaStories = () => {
           <div className="mb-8 bg-accent/8 border border-accent/25 rounded-xl p-5 flex gap-3">
             <Sparkles size={16} className="text-accent shrink-0 mt-0.5" />
             <div>
-              <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">Editorial Summary</span>
+              <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">Summary</span>
               <p className="text-sm text-primary/80 leading-relaxed">{searchData.ai_answer}</p>
             </div>
           </div>
@@ -269,7 +362,7 @@ export const BetaStories = () => {
                     className="h-full"
                   >
                     <Link
-                      to={`/stories/${article.slug}`}
+                      to={`/posts/${article.slug}`}
                       className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] block h-full"
                     >
                       {/* Hero thumbnail */}
@@ -295,7 +388,18 @@ export const BetaStories = () => {
                       <h3 className="font-serif text-[21px] leading-snug mb-3 text-primary group-hover:text-accent transition-colors">
                         {stripMarkdown(article.title)}
                       </h3>
-                      <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
+                      
+                      {/* Curation Relevance Note */}
+                      {(article as any).ai_curation?.relevance_note ? (
+                        <div className="bg-accent/5 border-l-2 border-accent pl-3 py-1 mb-3">
+                          <p className="text-xs text-accent/90 font-medium italic">
+                            <Sparkles size={10} className="inline mr-1" />
+                            {(article as any).ai_curation.relevance_note}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
+                      )}
                     </div>
                     <div className="p-6 pt-0 bg-white">
                       <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
@@ -308,7 +412,29 @@ export const BetaStories = () => {
                             </>
                           )}
                         </span>
-                        <span className="text-accent group-hover:translate-x-1 transition-transform">Read story →</span>
+                        <div className="flex items-center gap-3">
+                          {article.audio_url && (
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                playTrack({
+                                  title: article.title,
+                                  subtitle: article.sector_name,
+                                  audioUrl: article.audio_url!,
+                                  imageUrl: article.hero_image_url,
+                                  durationSeconds: article.audio_duration_seconds,
+                                  slug: article.slug
+                                });
+                              }}
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-card transition-colors shadow-sm"
+                            >
+                              <Headphones size={12} />
+                              <span className="font-semibold text-[10px] uppercase tracking-wider">Listen</span>
+                            </button>
+                          )}
+                          <span className="text-accent group-hover:translate-x-1 transition-transform">Read →</span>
+                        </div>
                       </div>
                     </div>
                   </Link>

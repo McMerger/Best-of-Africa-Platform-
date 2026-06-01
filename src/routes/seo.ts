@@ -25,7 +25,7 @@ router.get('/sitemap.xml', async (c) => {
     // Static pages
     const staticPages = [
         '',
-        '/stories',
+        '/posts',
         '/countries',
         '/about',
         '/member-access',
@@ -52,7 +52,7 @@ router.get('/sitemap.xml', async (c) => {
     // Articles
     for (const article of articles.results || []) {
         xml += `  <url>\n`;
-        xml += `    <loc>${BASE_URL}/articles/${article.slug}</loc>\n`;
+        xml += `    <loc>${BASE_URL}/posts/${article.slug}</loc>\n`;
         if (article.published_at) {
             xml += `    <lastmod>${new Date(article.published_at).toISOString()}</lastmod>\n`;
         }
@@ -93,7 +93,7 @@ router.get('/rss.xml', async (c) => {
     xml += `    <atom:link href="${BASE_URL}/rss.xml" rel="self" type="application/rss+xml" />\n`;
 
     for (const article of articles.results || []) {
-        const url = `${BASE_URL}/articles/${article.slug}`;
+        const url = `${BASE_URL}/posts/${article.slug}`;
         const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
         
         xml += `    <item>\n`;
@@ -112,6 +112,68 @@ router.get('/rss.xml', async (c) => {
     xml += `</rss>`;
 
     // Heavy caching
+    c.header('Content-Type', 'application/rss+xml');
+    c.header('Cache-Control', 'public, max-age=1800, s-maxage=3600');
+    return c.body(xml);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /podcast.xml (Daily Pulse Podcast Feed)
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/podcast.xml', async (c) => {
+    const articles = await c.env.DB.prepare(`
+        SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.hero_image_url
+        FROM articles a
+        WHERE a.status = 'published' AND a.audio_url IS NOT NULL
+        ORDER BY a.published_at DESC 
+        LIMIT 50
+    `).all<{ title: string; slug: string; summary: string; published_at: string; audio_url: string; audio_duration_seconds: number; hero_image_url: string }>();
+
+    let xml = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
+    xml += `<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
+    xml += `  <channel>\n`;
+    xml += `    <title>Best of Africa: Daily Pulse</title>\n`;
+    xml += `    <link>${BASE_URL}</link>\n`;
+    xml += `    <description>Premium Pan-African Intelligence and Narrative Diplomacy. Grounded stories about African lives, cities, and markets.</description>\n`;
+    xml += `    <language>en-us</language>\n`;
+    xml += `    <atom:link href="${BASE_URL}/podcast.xml" rel="self" type="application/rss+xml" />\n`;
+    xml += `    <itunes:author>BOA-Story</itunes:author>\n`;
+    xml += `    <itunes:image href="${BASE_URL}/og-image.png" />\n`;
+    xml += `    <itunes:category text="News">\n`;
+    xml += `      <itunes:category text="Business News" />\n`;
+    xml += `    </itunes:category>\n`;
+    xml += `    <itunes:explicit>no</itunes:explicit>\n`;
+
+    for (const article of articles.results || []) {
+        const url = `${BASE_URL}/posts/${article.slug}`;
+        const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
+        
+        xml += `    <item>\n`;
+        xml += `      <title><![CDATA[${article.title}]]></title>\n`;
+        xml += `      <link>${url}</link>\n`;
+        xml += `      <guid isPermaLink="true">${url}</guid>\n`;
+        xml += `      <description><![CDATA[${article.summary}]]></description>\n`;
+        xml += `      <pubDate>${pubDate}</pubDate>\n`;
+        
+        if (article.audio_url) {
+            const absoluteAudioUrl = article.audio_url.startsWith('http') ? article.audio_url : `${BASE_URL}${article.audio_url}`;
+            xml += `      <enclosure url="${absoluteAudioUrl}" type="audio/mpeg" length="${(article as any).audio_file_size || 0}" />\n`;
+            if (article.audio_duration_seconds) {
+                xml += `      <itunes:duration>${article.audio_duration_seconds}</itunes:duration>\n`;
+            }
+        }
+        
+        if (article.hero_image_url) {
+            const absoluteImgUrl = article.hero_image_url.startsWith('http') ? article.hero_image_url : `${BASE_URL}${article.hero_image_url}`;
+            xml += `      <itunes:image href="${absoluteImgUrl}" />\n`;
+        }
+
+        xml += `    </item>\n`;
+    }
+
+    xml += `  </channel>\n`;
+    xml += `</rss>`;
+
     c.header('Content-Type', 'application/rss+xml');
     c.header('Cache-Control', 'public, max-age=1800, s-maxage=3600');
     return c.body(xml);

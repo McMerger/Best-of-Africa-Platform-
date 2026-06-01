@@ -62,7 +62,7 @@ export const CommandMenu = () => {
         if (item.type === 'country' && item.code) {
             navigate(`/countries/${item.code}`);
         } else if (item.type === 'sector' && item.id) {
-            navigate(`/market-intel/sectors/${item.id}`);
+            navigate(`/sectors/${item.id}/trends`);
         } else if (item.type === 'article') {
             // Suggest doesn't return slug currently, forcing a search
             navigate(`/search?q=${encodeURIComponent(item.text)}`);
@@ -119,7 +119,7 @@ export const CommandMenu = () => {
                                 Latest Updates
                             </div>
                             <div
-                                onClick={() => { setOpen(false); navigate('/analyst'); }}
+                                onClick={() => { setOpen(false); navigate('/admin'); }}
                                 className="relative flex cursor-default select-none items-center rounded-md px-4 py-3 text-sm outline-none transition-colors text-foreground hover:bg-muted/50"
                             >
                                 <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
@@ -140,9 +140,9 @@ export const CommandMenu = () => {
                                     <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-muted/40 cursor-default transition-all group">
                                         <div className="flex items-center gap-3">
                                             <div className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border",
-                                                signal.type === 'RISK' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                                    signal.type === 'OPPORTUNITY' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                                                        'bg-blue-500/10 text-blue-500 border-blue-500/20')}>
+                                                    signal.type === 'OPPORTUNITY' ? 'bg-accent/10 text-accent border-accent/20' :
+                                                        signal.type === 'RISK' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                        'bg-primary/10 text-primary border-primary/20')}>
                                                 {signal.type}
                                             </div>
                                             <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{signal.label}</span>
@@ -169,7 +169,7 @@ export const CommandMenu = () => {
                                 index === selectedIndex ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
                             )}
                         >
-                            <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-amber-500/50 bg-amber-50 text-amber-900")}>
+                            <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-accent/50 bg-accent/10 text-accent")}>
                                 {item.type === 'country' && <GlobeIcon className="h-4 w-4" />}
                                 {item.type === 'sector' && <GridIcon className="h-4 w-4" />}
                                 {item.type === 'article' && <FileTextIcon className="h-4 w-4" />}

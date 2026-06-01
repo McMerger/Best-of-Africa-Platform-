@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOONSHOT OAUTH TOKEN MANAGER
-// Manages OAuth 2.0 tokens for Moonshot AI (Kimi) subscription access.
+// Manages OAuth 2.0 tokens for Moonshot (Kimi) subscription access.
 // Stores access + refresh tokens in KV, auto-refreshes before expiry.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
 
-// Moonshot AI OAuth endpoints
+// Moonshot OAuth endpoints
 // Override MOONSHOT_TOKEN_URL via env var if Moonshot changes them
 const DEFAULT_TOKEN_URL = 'https://api.moonshot.cn/oauth/token';
 const DEFAULT_AUTH_URL  = 'https://kimi.moonshot.cn/oauth/authorize';

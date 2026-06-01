@@ -97,6 +97,8 @@ export interface ArticleListItem {
     hero_image_url: string;
     ai_image_url?: string;
     ai_video_url?: string;
+    audio_url?: string;
+    audio_duration_seconds?: number;
     reading_time_minutes: number;
     published_at: string;
     engagement_score?: number;

@@ -106,9 +106,9 @@ router.get('/:region', async (c) => {
         ORDER BY count DESC
     `).bind(region).all();
 
-    // AI Regional Insight (RAG)
+    // Regional Insight (RAG)
     let aiInsight = "Region is stable.";
-    // Parse lens for AI context
+    // Parse lens for context
     const lensParam = (c.req.query('lens') || 'investor') as string;
     const activeLens = ['investor', 'government', 'explorer'].includes(lensParam) ? lensParam : 'investor';
 
@@ -197,7 +197,7 @@ router.get('/continental/overview', async (c) => {
             FROM articles a
             JOIN countries c ON a.country_code = c.code
             WHERE a.status = 'published'
-            ORDER BY a.engagement_score DESC
+            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT 5
         `).all(),
     ]);
@@ -257,7 +257,7 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
         SELECT a.id FROM articles a
         JOIN countries c ON a.country_code = c.code
         WHERE c.region = ? AND a.status = 'published'
-        ORDER BY a.engagement_score DESC
+        ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
         LIMIT 6
     `).bind(region).all();
 
@@ -269,7 +269,7 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
         top_sectors: (topSectors.results || []).map((s: any) => s.id),
     };
 
-    // AI Executive Brief (RAG)
+    // Executive Brief (RAG)
     let executiveBrief = "Regional data updating...";
     try {
         const query = `${region} Africa key events economics politics last 24h`;
@@ -361,12 +361,12 @@ router.get('/analytics/summary', async (c) => {
     const sentiment = sentimentData as Record<string, any>;
     const sectors = (sectorTrends.results || []) as any[];
 
-    // --- AI-Driven Stability Index ---
+    // --- -Driven Stability Index ---
     const avgEngagement = stats?.avg_engagement || 50;
     const avgSentiment = sentiment?.avg_sentiment || 50;
     const dataBasedScore = Math.min(1000, Math.round(((avgEngagement + avgSentiment) / 2) * 10));
 
-    // Fetch recent headlines for AI context
+    // Fetch recent headlines for context
     const recentHeadlines = await c.env.DB.prepare(`
         SELECT title FROM articles 
         WHERE status = 'published' 
@@ -431,10 +431,10 @@ Latest Headlines:
         article_count: s.recent_count
     }));
 
-    // Generate market summary (AI-driven)
+    // Generate market summary (-driven)
     const topSector = sectors[0]?.name || 'Technology';
 
-    // Prepare context for AI
+    // Prepare context for 
     const summaryContext = {
         stability: stabilityIndex,
         avg_engagement: Math.round(avgEngagement),

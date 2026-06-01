@@ -84,17 +84,17 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
 
     if (isSuccess) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center bg-green-50/50 rounded-lg border border-green-100 dark:bg-green-950/10 dark:border-green-900/50">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center dark:bg-green-900/30">
-                    <CheckCircledIcon className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="flex flex-col items-center justify-center p-8 space-y-4 text-center bg-accent/10 rounded-lg border border-accent/20">
+                <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
+                    <CheckCircledIcon className="w-6 h-6 text-accent" />
                 </div>
-                <div>
-                    <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">You're Registered!</h3>
-                    <p className="text-sm text-green-800 dark:text-green-200 mt-1">
+                <div className="text-center">
+                    <h3 className="text-lg font-semibold text-foreground">You're Registered!</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
                         Check your email for full details.
                     </p>
                 </div>
-                <div className="w-full p-3 bg-white dark:bg-gray-950 rounded border border-dashed border-green-300 dark:border-green-800">
+                <div className="w-full p-3 bg-white dark:bg-card rounded border border-dashed border-accent/30">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Confirmation Code</p>
                     <code className="text-lg font-mono font-bold text-primary">{confirmationCode}</code>
                 </div>

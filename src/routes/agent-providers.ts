@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
-// AGENT PROVIDERS ROUTER
-// Manage AI provider credentials that power ZeroClaw agents.
-// Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Moonshot AI (Kimi), Cloudflare Workers AI
+// PROVIDERS ROUTER
+// Manage provider credentials that power ZeroClaw agents.
+// Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Moonshot (Kimi), Cloudflare Workers 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
@@ -17,7 +17,7 @@ const PROVIDER_DEFAULTS: Record<ProviderName, { model: string; label: string; ba
     openai:     { model: 'gpt-4o',                         label: 'OpenAI',              base_url: 'https://api.openai.com/v1' },
     anthropic:  { model: 'claude-sonnet-4-6',               label: 'Anthropic',           base_url: 'https://api.anthropic.com' },
     gemini:     { model: 'gemini-2.5-pro',                  label: 'Google Gemini',       base_url: 'https://generativelanguage.googleapis.com/v1beta' },
-    openrouter: { model: 'anthropic/claude-sonnet-4-6',     label: 'OpenRouter',          base_url: 'https://openrouter.ai/api/v1' },
+    openrouter: { model: 'anthropic/claude-sonnet-4-6',     label: 'OpenRouter',          base_url: 'https://openrouter./api/v1' },
     moonshot:   { model: 'moonshot-v1-32k',                 label: 'Moonshot AI (Kimi)',  base_url: 'https://api.moonshot.cn/v1' },
     workers_ai: { model: '@cf/meta/llama-3.1-70b-instruct', label: 'Cloudflare Workers AI' },
 };
@@ -32,7 +32,7 @@ router.use('/*', async (c, next) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/providers — list all configured providers (API key redacted)
+// GET //providers — list all configured providers (API key redacted)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/', async (c) => {
     const rows = await c.env.DB.prepare(`
@@ -46,7 +46,7 @@ router.get('/', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/providers — add or update a provider
+// POST //providers — add or update a provider
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/', async (c) => {
     const body = await c.req.json<{
@@ -92,14 +92,14 @@ router.post('/', async (c) => {
         body.is_default ? 1 : 0
     ).run();
 
-    // Sync to ZeroClaw config KV so the agent picks it up immediately
+    // Sync to ZeroClaw config KV so the picks it up immediately
     await syncProvidersToKV(c.env);
 
     return c.json({ success: true, id, provider: prov }, 201);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// PATCH /agent/providers/:id — update a specific provider
+// PATCH //providers/:id — update a specific provider
 // ───────────────────────────────────────────────────────────────────────────────
 router.patch('/:id', async (c) => {
     const id = c.req.param('id');
@@ -140,7 +140,7 @@ router.patch('/:id', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DELETE /agent/providers/:id — remove a provider
+// DELETE //providers/:id — remove a provider
 // ───────────────────────────────────────────────────────────────────────────────
 router.delete('/:id', async (c) => {
     const id = c.req.param('id');
@@ -150,7 +150,7 @@ router.delete('/:id', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/providers/:id/test — verify an API key works
+// POST //providers/:id/test — verify an API key works
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/:id/test', async (c) => {
     const id = c.req.param('id');
@@ -165,7 +165,7 @@ router.post('/:id/test', async (c) => {
 
     try {
         if (row.provider === 'workers_ai') {
-            // Workers AI is always available — test via binding
+            // Workers is always available — test via binding
             await c.env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
                 messages: [{ role: 'user', content: 'ping' }],
                 max_tokens: 5
@@ -216,7 +216,7 @@ router.post('/:id/test', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/providers/config — get the active zeroclaw-compatible provider config
+// GET //providers/config — get the active zeroclaw-compatible provider config
 // (used by ZeroClaw at startup to pick up credentials dynamically)
 // API keys are redacted from the HTTP response; ZeroClaw reads them directly from KV.
 // ───────────────────────────────────────────────────────────────────────────────
@@ -250,7 +250,7 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
         } else if (row.provider === 'gemini') {
             providers.gemini = { api_key: row.api_key };
         } else if (row.provider === 'openrouter') {
-            providers.openrouter = { api_key: row.api_key, base_url: row.base_url || 'https://openrouter.ai/api/v1' };
+            providers.openrouter = { api_key: row.api_key, base_url: row.base_url || 'https://openrouter./api/v1' };
         } else if (row.provider === 'moonshot') {
             providers.moonshot = { api_key: row.api_key, base_url: row.base_url || 'https://api.moonshot.cn/v1' };
         }
@@ -261,7 +261,7 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
         }
     }
 
-    // Workers AI always available as a fallback
+    // Workers always available as a fallback
     if (!providers.workers_ai) {
         providers.workers_ai = { type: 'workers_ai' };
     }
@@ -296,7 +296,7 @@ async function syncProvidersToKV(env: Env): Promise<void> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/providers/bootstrap/:provider
+// POST //providers/bootstrap/:provider
 // Inject an API key at runtime — stored in KV, no redeployment needed.
 //
 // Body: { "api_key": "sk-...", "expires_in": 86400 }
@@ -322,7 +322,7 @@ router.post('/bootstrap/:provider', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/providers/bootstrap/:provider/status
+// GET //providers/bootstrap/:provider/status
 // Check if a provider has a bootstrapped key.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/bootstrap/:provider/status', async (c) => {
@@ -349,7 +349,7 @@ router.get('/bootstrap/:provider/status', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DELETE /agent/providers/bootstrap/:provider
+// DELETE //providers/bootstrap/:provider
 // Clear bootstrapped key — reverts to DB config or env var.
 // ───────────────────────────────────────────────────────────────────────────────
 router.delete('/bootstrap/:provider', async (c) => {
@@ -363,7 +363,7 @@ router.delete('/bootstrap/:provider', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/providers/bootstrap/:provider/probe
+// POST //providers/bootstrap/:provider/probe
 // Validate a key by making a cheap live call to the provider's API.
 // Body: { "api_key": "sk-..." }
 // ───────────────────────────────────────────────────────────────────────────────

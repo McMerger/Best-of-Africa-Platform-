@@ -32,16 +32,16 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-card text-[10px] font-bold uppercase tracking-widest py-1 px-5 rounded-full shadow-lg whitespace-nowrap">
                 Recommended
               </div>
-              <h3 className="font-serif text-2xl mb-2 mt-2 text-primary">{tier.name}</h3>
+              <h3 className="font-serif text-2xl mb-2 mt-2 text-card-foreground">{tier.name}</h3>
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-accent font-serif text-5xl">{displayPrice}</span>
-                <span className="text-primary/40 text-sm">/{isAnnual ? 'yr' : 'mo'}</span>
+                <span className="text-card-foreground/60 text-sm">/{isAnnual ? 'yr' : 'mo'}</span>
               </div>
               {monthlyRef && (
-                <p className="text-primary/30 text-xs mb-7 line-through">{monthlyRef}/mo billed monthly</p>
+                <p className="text-card-foreground/50 text-xs mb-7 line-through">{monthlyRef}/mo billed monthly</p>
               )}
               {!monthlyRef && <div className="mb-7" />}
-              <ul className="space-y-3 mb-10 flex-1 text-sm text-primary/80">
+              <ul className="space-y-3 mb-10 flex-1 text-sm text-card-foreground/90">
                 {tier.features.map(f => (
                   <li key={f} className="flex items-start gap-3">
                     <span className="text-accent font-bold mt-0.5 shrink-0">✓</span>

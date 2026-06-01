@@ -7,18 +7,14 @@ import {
     MagnifyingGlassIcon,
     GearIcon,
     HamburgerMenuIcon,
-    StarIcon,
-    BookmarkIcon,
     LockClosedIcon
 } from '@radix-ui/react-icons';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { MissionControl } from './MissionControl';
 import { DensityToggle } from './DensityToggle';
-import { LensSwitcher } from './LensSwitcher';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/context/LanguageContext';
+import { NotificationBell } from './NotificationBell';
 
 import {
     Sheet,
@@ -28,526 +24,157 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import {
-    NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    NavigationMenuTrigger,
-    navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
 
 export const NavBar: React.FC = () => {
     const location = useLocation();
     const { t } = useLanguage();
 
-    const navLinks = [
+    const mobileLinks = [
         { href: "/", label: t("nav.home", "Home") },
         { href: "/feed", label: t("nav.feed", "Daily Briefing") },
-        { href: "/market-intel", label: t("nav.sectors", "Sectors") },
+        { href: "/intel", label: t("nav.sectors", "Market Intel") },
         { href: "/countries", label: t("nav.countries", "Countries") },
-        { href: "/dashboards", label: t("nav.dashboards", "Risk Dashboards") },
-        { href: "/market-intel/reports", label: t("nav.reports", "Reports") },
-        { href: "/events", label: t("nav.summits", "Summits") },
+        { href: "/dashboards/overview", label: t("nav.dashboards", "Risk Dashboards") },
+        { href: "/posts", label: t("nav.reports", "Stories & Reports") },
+        { href: "/events", label: t("nav.summits", "Global Summits") },
         { href: "/request-consultation", label: t("nav.concierge", "Concierge") },
-        { href: "/travel", label: t("nav.travel", "Travel") },
-        { href: "/search", label: t("nav.search", "Search") },
-        { href: "/settings", label: t("nav.settings", "Settings") },
+        { href: "/travel", label: t("nav.travel", "Secure Travel") },
+        { href: "/library", label: t("nav.library", "Saved Intel") },
+        { href: "/intelligence", label: t("nav.intelligence", "Intelligence") },
+        { href: "/newsletter", label: t("nav.newsletter", "Newsletter") },
+        { href: "/membership", label: t("nav.membership", "Membership") },
     ];
 
     return (
-        <header className="sticky top-2 md:top-4 z-50 w-full px-2 md:px-4 mb-4">
-            <div className="container flex h-16 items-center justify-between rounded-full border border-border/40 border-t-white/10 bg-background/85 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] pl-6 pr-2">
-                {/* Brand */}
-                <div className="flex items-center gap-4">
-                    <Link to="/" className="flex flex-col leading-none group">
-                        <span className="text-2xl font-serif font-black tracking-tighter text-foreground transition-colors group-hover:text-primary/90">Best of Africa</span>
-                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent mt-0.5">BOA-Story · Intelligence Platform</span>
+        <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+            {/* Pre-header Utilities */}
+            <div className="hidden lg:flex items-center justify-end gap-2 px-6 lg:px-8 py-1.5 bg-muted/30 border-b border-border/40 text-xs">
+                <LanguageSelector />
+                <MissionControl />
+                <DensityToggle />
+            </div>
+
+            <div className="flex h-16 items-center justify-between px-4 lg:px-8 max-w-[1400px] mx-auto">
+                {/* LEFT: Logo */}
+                <div className="flex items-center min-w-0 shrink-0 z-10">
+                    <Link to="/" className="flex items-center group shrink-0">
+                        <span className="text-xl md:text-2xl font-serif font-black tracking-tight text-primary">
+                            BEST OF AFRICA<span className="text-accent">.</span>
+                        </span>
                     </Link>
                 </div>
 
-                {/* Desktop Actions */}
-                <div className="flex items-center gap-2">
-                    <div className="hidden md:flex md:items-center md:gap-1">
-                        <LanguageSelector />
-                        <LensSwitcher />
-                        <DensityToggle />
-                        <MissionControl />
-                        <Button variant="ghost" size="icon" asChild>
+                {/* CENTER: Desktop Nav */}
+                <nav className="hidden xl:flex items-center justify-center gap-6 xl:gap-8 text-[12px] font-bold text-primary/70 uppercase tracking-widest z-0 flex-1 ml-8">
+                    <Link to="/feed" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/feed' && 'text-primary')}>Briefing</Link>
+                    <Link to="/intel" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/intel' && 'text-primary')}>Market Intel</Link>
+                    <Link to="/countries" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname.startsWith('/countries') && 'text-primary')}>Countries</Link>
+                    <Link to="/events" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/events' && 'text-primary')}>Summits</Link>
+                    <Link to="/dashboards/overview" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname.startsWith('/dashboards') && 'text-primary')}>Dashboards</Link>
+                    <Link to="/intelligence" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/intelligence' && 'text-primary')}>Intelligence</Link>
+                </nav>
+
+                {/* RIGHT: Actions + Sign In */}
+                <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
+                    {/* Icon Actions */}
+                    <div className="hidden lg:flex items-center gap-1 mr-2">
+                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
                             <Link to="/search">
-                                <MagnifyingGlassIcon className="h-5 w-5" />
+                                <MagnifyingGlassIcon className="h-[18px] w-[18px]" />
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild>
-                            <Link to="/library">
-                                <BookmarkIcon className="h-5 w-5" />
-                                <span className="sr-only">Saved Intelligence</span>
-                            </Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" asChild>
+                        <NotificationBell />
+                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
                             <Link to="/settings">
-                                <GearIcon className="h-5 w-5" />
+                                <GearIcon className="h-[18px] w-[18px]" />
                                 <span className="sr-only">Settings</span>
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
                             <Link to="/admin">
-                                <LockClosedIcon className="h-5 w-5" />
+                                <LockClosedIcon className="h-[18px] w-[18px]" />
                                 <span className="sr-only">Admin</span>
                             </Link>
                         </Button>
-                        <Button asChild
-                            variant="outline"
-                            size="sm"
-                            className="hidden lg:flex ml-2 gap-2 rounded-full text-primary border-primary/20 font-bold hover:bg-primary hover:text-white transition-all hover:scale-105"
-                        >
-                            <Link to="/analyst">
-                                <StarIcon className="h-4 w-4 mr-1" /> Analyst Console
+                    </div>
+                    
+                    <div className="hidden lg:block w-px h-5 bg-border mx-2" />
+                    
+                    <Button size="sm" asChild className="hidden lg:flex rounded font-bold px-6 h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-none uppercase tracking-wider">
+                        <Link to="/login">Sign In</Link>
+                    </Button>
+
+                    {/* Mobile: compact Sign In + Hamburger */}
+                    <div className="flex lg:hidden items-center gap-2">
+                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground" asChild>
+                            <Link to="/search">
+                                <MagnifyingGlassIcon className="h-5 w-5" />
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="sm" asChild className="ml-2 font-bold text-primary">
-                            <Link to="/membership">Subscribe</Link>
-                        </Button>
-                        <Button variant="default" size="sm" asChild className="ml-2">
+                        <Button size="sm" asChild className="rounded font-bold px-4 h-8 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-none uppercase tracking-wider">
                             <Link to="/login">Sign In</Link>
                         </Button>
-                        <a
-                            href={KO_FI_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hidden lg:flex ml-2 items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-xs font-bold text-white shadow hover:bg-accent/90 transition-all hover:scale-105"
-                        >
-                            <Coffee className="h-3.5 w-3.5" />
-                            Support BOA
-                        </a>
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full ml-1">
+                                    <HamburgerMenuIcon className="h-6 w-6" />
+                                    <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right" className="w-[85vw] max-w-sm bg-primary border-l border-primary/20 p-0 flex flex-col">
+                                <SheetHeader className="p-6 border-b border-white/10 text-left bg-primary/95">
+                                    <SheetTitle className="font-serif font-black text-2xl tracking-tight text-white">
+                                        BEST OF AFRICA<span className="text-accent">.</span>
+                                    </SheetTitle>
+                                    <div className="flex flex-wrap items-center gap-3 mt-4 text-white/70">
+                                        <LanguageSelector />
+                                        <DensityToggle />
+                                    </div>
+                                </SheetHeader>
+                                <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+                                    <div className="grid gap-1 mb-8">
+                                        {mobileLinks.map((link) => (
+                                            <Link
+                                                key={link.href}
+                                                to={link.href}
+                                                className={cn(
+                                                    "block py-3 px-4 rounded text-sm uppercase tracking-widest font-bold transition-all",
+                                                    location.pathname === link.href 
+                                                        ? "bg-white/10 text-white border-l-2 border-accent" 
+                                                        : "text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent"
+                                                )}
+                                            >
+                                                {link.label}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                    <div className="mt-auto pt-6 border-t border-white/10 space-y-3">
+                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-white/70 hover:text-white hover:bg-white/5 rounded">
+                                            <Link to="/settings"><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
+                                        </Button>
+                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-white/70 hover:text-white hover:bg-white/5 rounded">
+                                            <Link to="/admin"><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
+                                        </Button>
+                                        <div className="pt-4 pb-2">
+                                            <MissionControl />
+                                        </div>
+                                        <a
+                                            href={KO_FI_URL}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex w-full items-center justify-center gap-2 rounded bg-accent px-4 py-3.5 text-xs uppercase tracking-widest font-bold text-primary shadow hover:brightness-110 transition-all mt-4"
+                                        >
+                                            <Coffee className="h-4 w-4" />
+                                            Support BOA
+                                        </a>
+                                    </div>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
-
-                    {/* Mobile Menu */}
-                    <Sheet>
-                        <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="md:hidden">
-                                <HamburgerMenuIcon className="h-5 w-5" />
-                                <span className="sr-only">Toggle menu</span>
-                            </Button>
-                        </SheetTrigger>
-                        <SheetContent side="right">
-                            <SheetHeader className="border-b pb-4 mb-4 flex flex-row items-center justify-between">
-                                <SheetTitle className="text-left font-serif font-black text-2xl tracking-tight">Best of Africa</SheetTitle>
-                                <div className="flex items-center gap-2">
-                                    <LanguageSelector />
-                                    <LensSwitcher />
-                                    <DensityToggle />
-                                </div>
-                            </SheetHeader>
-                            <div className="grid gap-6 py-2 overflow-y-auto max-h-[calc(100vh-8rem)] pr-2">
-                                {/* Section 1: BOA-Story Narrative */}
-                                <div>
-                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-accent tracking-widest flex items-center gap-2">
-                                        BOA-Story <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        {[
-                                            { href: '/posts', label: 'Posts' },
-                                            { href: '/countries', label: 'Countries' },
-                                            { href: '/gallery', label: 'Gallery' },
-                                            { href: '/membership', label: 'Membership' },
-                                            { href: '/supporter-feed', label: 'Supporter Feed' },
-                                            { href: '/about', label: 'About' },
-                                        ].map((link) => (
-                                            <Link
-                                                key={link.href}
-                                                to={link.href}
-                                                className={cn(
-                                                    "block py-3 px-4 -mx-2 rounded-3xl text-lg transition-all hover:bg-accent/10",
-                                                    location.pathname === link.href ? "bg-accent/15 text-accent font-bold" : "text-muted-foreground hover:text-foreground font-medium"
-                                                )}
-                                            >
-                                                {link.label}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Section 2: Main Intelligence */}
-                                <div>
-                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Intelligence</div>
-                                    <div className="space-y-1">
-                                        {navLinks.filter(l => !['/request-consultation', '/travel', '/settings', '/search', '/analyst', '/membership', '/library'].includes(l.href)).map((link) => (
-                                            <Link
-                                                key={link.href}
-                                                to={link.href}
-                                                className={cn(
-                                                    "block py-3 px-4 -mx-2 rounded-3xl text-lg transition-all hover:bg-muted",
-                                                    location.pathname === link.href ? "bg-primary/10 text-primary font-bold" : "text-muted-foreground hover:text-foreground font-medium"
-                                                )}
-                                            >
-                                                {link.label}
-                                            </Link>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Section 2: Premium Services */}
-                                <div>
-                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-primary tracking-widest flex items-center gap-2">
-                                        Corporate Services <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Link to="/events" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10 mb-2">
-                                            Global Summits ✨
-                                        </Link>
-                                        <Link to="/request-consultation" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10 mb-2">
-                                            Concierge ✨
-                                        </Link>
-                                        <Link to="/travel" className="block py-3 px-4 -mx-2 rounded-lg text-lg font-serif font-bold text-primary italic bg-primary/5 border border-primary/10">
-                                            Secure Travel ✨
-                                        </Link>
-                                    </div>
-                                </div>
-
-                                {/* Section 3: Workspace */}
-                                <div>
-                                    <div className="mb-2 px-2 text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Workspace</div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Button variant="outline" asChild className="justify-start font-bold text-primary h-auto py-3">
-                                            <Link to="/analyst">
-                                                <StarIcon className="mr-2 h-4 w-4" />
-                                                Analyst
-                                            </Link>
-                                        </Button>
-                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
-                                            <Link to="/library">
-                                                <BookmarkIcon className="mr-2 h-4 w-4" />
-                                                Saved
-                                            </Link>
-                                        </Button>
-                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
-                                            <Link to="/search">
-                                                <MagnifyingGlassIcon className="mr-2 h-4 w-4" />
-                                                Search
-                                            </Link>
-                                        </Button>
-                                        <Button variant="ghost" asChild className="justify-start h-auto py-3 bg-muted/50">
-                                            <Link to="/settings">
-                                                <GearIcon className="mr-2 h-4 w-4" />
-                                                Settings
-                                            </Link>
-                                        </Button>
-                                    </div>
-                                    <div className="mt-4 space-y-2">
-                                        <Button variant="default" className="w-full font-bold shadow-lg" asChild>
-                                            <Link to="/membership">Subscribe Now</Link>
-                                        </Button>
-                                        <Button variant="ghost" className="w-full" asChild>
-                                            <Link to="/login">Sign In</Link>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-                        </SheetContent>
-                    </Sheet>
                 </div>
             </div>
-
-            {/* Desktop Navigation Sub-bar */}
-            <div className="hidden border-t md:block">
-                <div className="container mt-2">
-                    <NavigationMenu className="max-w-full justify-center">
-                        <NavigationMenuList className="bg-muted/30 rounded-full px-2 py-1 border border-border/50 backdrop-blur-sm">
-                            <NavigationMenuItem>
-                                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                                    <Link to="/">Home</Link>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-
-                            {/* BUSINESS SECTORS MEGA MENU */}
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>Business Sectors</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                                        <li className="col-span-2 border-b pb-2 mb-2">
-                                            <NavigationMenuLink asChild>
-                                                <Link
-                                                    to="/market-intel"
-                                                    className="flex items-center gap-2 select-none rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                                                >
-                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Coverage by Topic</div>
-                                                    <span className="text-xs text-muted-foreground">Browse all topics &rarr;</span>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <SectorLinks />
-                                    </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-
-                            {/* COUNTRIES & PORTALS */}
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>Countries & Portals</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                                        <li className="col-span-2 border-b pb-2 mb-2">
-                                            <NavigationMenuLink asChild>
-                                                <Link
-                                                    to="/countries"
-                                                    className="flex items-center gap-2 select-none rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                                                >
-                                                    <div className="text-sm font-bold leading-none text-primary uppercase tracking-widest">Countries Coverage Map</div>
-                                                    <span className="text-xs text-muted-foreground">Browse all 54 African markers &rarr;</span>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/MZ" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 border border-primary/20">
-                                                    <div className="text-sm font-bold leading-none text-primary">Invest in Mozambique 🇲🇿</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Visa, Company Registration & Energy Summits.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/ZA" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">South Africa 🇿🇦</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Mining Indaba & financial markets.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/NG" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">Nigeria 🇳🇬</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Fintech, oil & gas, startup capital.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/KE" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">Kenya 🇰🇪</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Silicon Savannah & M-Pesa ecosystem.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/EG" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">Egypt 🇪🇬</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Suez Economic Zone & gas exports.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/RW" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">Rwanda 🇷🇼</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">Tech hub & Africa CEO Forum host.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries/GH" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent">
-                                                    <div className="text-sm font-bold leading-none">Ghana 🇬🇭</div>
-                                                    <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">AfCFTA HQ & Year of Return.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                    </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-
-                            {/* BOA-STORY NARRATIVE MENU */}
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>BOA-Story</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[520px] lg:grid-cols-2">
-                                        <li className="col-span-2 border-b pb-3 mb-1">
-                                            <NavigationMenuLink asChild>
-                                                <Link
-                                                    to="/posts"
-                                                    className="flex items-center gap-3 select-none rounded-2xl p-3 no-underline outline-none transition-colors hover:bg-accent/10"
-                                                >
-                                                    <div>
-                                                        <div className="text-sm font-bold text-accent uppercase tracking-widest">BOA-Story</div>
-                                                        <p className="text-xs text-muted-foreground mt-0.5">Real stories about African lives, cities & creators — beyond the headlines.</p>
-                                                    </div>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/posts" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">Posts</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">Browse all published stories.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/countries" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">Countries</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">Explore coverage by country.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/gallery" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">Gallery</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">Visual stories & photography.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/supporter-feed" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">Supporter Feed</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">Behind-the-scenes for backers.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/membership" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">Membership</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">Join as a founding member.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/about" className="block select-none space-y-1 rounded-2xl p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted">
-                                                    <div className="text-sm font-medium leading-none">About</div>
-                                                    <p className="text-xs leading-snug text-muted-foreground">The story behind the platform.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li className="col-span-2 pt-2 border-t border-border/50">
-                                            <a
-                                                href={KO_FI_URL}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 w-full select-none rounded-2xl p-3 no-underline outline-none transition-colors bg-accent/10 hover:bg-accent/20 text-accent font-bold text-sm"
-                                            >
-                                                <Coffee className="h-4 w-4" />
-                                                Support BOA, Launch Your Story →
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-
-                            {/* INTELLIGENCE & SERVICES MENU */}
-                            <NavigationMenuItem>
-                                <NavigationMenuTrigger>Stories & Resources</NavigationMenuTrigger>
-                                <NavigationMenuContent>
-                                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                                        <li className="row-span-4">
-                                            <NavigationMenuLink asChild>
-                                                <Link
-                                                    className="flex h-full w-full select-none flex-col justify-end rounded-3xl bg-gradient-to-b from-primary/50 to-primary p-6 no-underline outline-none focus:shadow-md"
-                                                    to="/feed"
-                                                >
-                                                    <div className="mb-4 relative hidden md:block w-full">
-                                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                                                        <Input
-                                                            type="search"
-                                                            placeholder="Search intelligence (e.g. 'Nigeria Energy')..."
-                                                            className="h-10 w-full rounded-full border-border/50 bg-white/10 pl-10 pr-14 text-sm text-white placeholder:text-white/50 focus:bg-white/20 focus:ring-2 focus:ring-primary/40 transition-all"
-                                                        />
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                                            <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 font-mono text-[10px] font-medium text-white/60 sm:flex">
-                                                                <span className="text-xs">⌘</span>K
-                                                            </kbd>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mb-2 mt-4 text-lg font-medium text-white">
-                                                        Daily Briefing
-                                                    </div>
-                                                    <p className="text-sm leading-tight text-white/90">
-                                                        Your personalized intelligence feed. Start here every morning.
-                                                    </p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/market-intel/reports" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                                                    <div className="text-sm font-medium leading-none">Premium Reports</div>
-                                                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Deep-dives and PDF exports.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/dashboards" className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                                                    <div className="text-sm font-medium leading-none">Risk Dashboards</div>
-                                                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Real-time stability scores.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li className="col-span-1 mt-2 pt-2 border-t border-border/50">
-                                            <div className="mb-2 px-2 text-[10px] uppercase font-bold text-primary tracking-widest">Premium Services</div>
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/events" className="group block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
-                                                    <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Global Summits</div>
-                                                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Strategic networking events.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                        <li className="mt-2 pt-2 border-t border-border/50">
-                                            <div className="h-[22px]" />
-                                            <NavigationMenuLink asChild>
-                                                <Link to="/request-consultation" className="group block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-primary/5 focus:bg-accent focus:text-accent-foreground border border-transparent hover:border-primary/20">
-                                                    <div className="text-sm font-bold leading-none text-foreground group-hover:text-primary">Concierge</div>
-                                                    <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">Market entry support.</p>
-                                                </Link>
-                                            </NavigationMenuLink>
-                                        </li>
-                                    </ul>
-                                </NavigationMenuContent>
-                            </NavigationMenuItem>
-
-                        </NavigationMenuList>
-                    </NavigationMenu>
-                </div>
-            </div>
-        </header >
-    );
-};
-
-const SectorLinks = () => {
-    const { data: config } = useSystemConfig();
-
-    const sectors = [
-        { title: "Energy & Mining", href: "/market-intel/sectors/energy", key: "sector_energy_desc", default: "Oil, Gas, Critical Minerals" },
-        { title: "Technology", href: "/market-intel/sectors/technology", key: "sector_technology_desc", default: "Fintech, Mobile Money, Digital Infra" },
-        { title: "Agriculture", href: "/market-intel/sectors/agriculture", key: "sector_agriculture_desc", default: "Agri-processing, Food Security" },
-        { title: "Infrastructure", href: "/market-intel/sectors/infrastructure", key: "sector_infrastructure_desc", default: "Logistics, Ports, Railways" },
-        { title: "Finance", href: "/market-intel/sectors/finance", key: "sector_finance_desc", default: "Capital Markets, FDI Trends" },
-        { title: "Tourism", href: "/market-intel/sectors/tourism", key: "sector_tourism_desc", default: "Luxury Travel, Conservation" },
-    ];
-
-    return (
-        <>
-            {sectors.map((sector) => (
-                <li key={sector.title}>
-                    <NavigationMenuLink asChild>
-                        <Link
-                            to={sector.href}
-                            className="block select-none space-y-1 rounded-3xl p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                        >
-                            <div className="text-sm font-medium leading-none text-primary">{sector.title}</div>
-                            <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                                {config?.[sector.key] || sector.default}
-                            </p>
-                        </Link>
-                    </NavigationMenuLink>
-                </li>
-            ))}
-        </>
+        </header>
     );
 };

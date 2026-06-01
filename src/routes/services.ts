@@ -47,7 +47,7 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         }, 400);
     }
 
-    // Generate Preliminary AI Intelligence Brief (Instant Value)
+    // Generate Preliminary Intelligence Brief (Instant Value)
     let preliminaryNote = null;
     try {
         // Quick RAG-lite
@@ -88,7 +88,7 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         requirements || null,
         budget_range || 'Standard',
         urgency || 'Normal',
-        preliminaryNote // Save the AI Brief
+        preliminaryNote // Save the Brief
     ).run();
 
     return c.json({

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boa-cache-v1';
+const CACHE_NAME = 'boa-cache-v2';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -19,6 +19,17 @@ self.addEventListener('install', (event) => {
 
 // Listen for requests
 self.addEventListener('fetch', (event) => {
+    // Network First strategy for HTML navigation requests
+    if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // Cache First strategy for static assets
     event.respondWith(
         caches.match(event.request)
             .then((response) => {

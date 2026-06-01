@@ -14,25 +14,7 @@ import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { KO_FI_URL } from '../../constants/beta';
 
-// ─── Editorial Update cards — hardcoded, written by the creator ───────────────
-
-const EDITORIAL_UPDATES = [
-  {
-    date: 'May 2025',
-    tag: 'Research Log',
-    title: 'East Africa is where I\'m spending most of my time right now.',
-    body: 'The Nairobi tech scene, Kigali\'s urban transformation, and Ethiopia\'s coffee economy. Three very different stories that all push back against the same tired headlines.' },
-  {
-    date: 'April 2025',
-    tag: 'Platform Update',
-    title: 'The article pipeline is running. 54 countries. All of them.',
-    body: 'We\'re not picking winners. We\'re covering the continent — including the places that never make the news. That\'s the whole point.' },
-  {
-    date: 'March 2025',
-    tag: 'Founder Note',
-    title: 'What 38% of an $800 goal actually buys.',
-    body: 'Domain, hosting, and enough coffee to keep reading. This is what self-funded looks like. Every coffee on Ko-fi goes directly into keeping this project alive.' },
-];
+// Dynamic content fetched via API
 
 // ─── Coverage breakdown using real article data ───────────────────────────────
 
@@ -47,18 +29,23 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
 
   // Tally countries and sectors from real article data
   const countryCounts: Record<string, number> = {};
-  const sectorCounts: Record<string, number> = {};
+  const sectorCounts: Record<string, { id: string; count: number; name: string }> = {};
   articles.forEach((a: any) => {
     if (a.country_name) countryCounts[a.country_name] = (countryCounts[a.country_name] || 0) + 1;
-    if (a.sector_name)  sectorCounts[a.sector_name]  = (sectorCounts[a.sector_name]  || 0) + 1;
+    if (a.sector_name) {
+      if (!sectorCounts[a.sector_name]) {
+        sectorCounts[a.sector_name] = { id: a.sector_id, count: 0, name: a.sector_name };
+      }
+      sectorCounts[a.sector_name].count += 1;
+    }
   });
 
   const topCountries = Object.entries(countryCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6);
 
-  const topSectors = Object.entries(sectorCounts)
-    .sort((a, b) => b[1] - a[1])
+  const topSectors = Object.values(sectorCounts)
+    .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
   if (!isMember) {
@@ -126,11 +113,16 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
           <span className="text-[11px] font-bold uppercase tracking-widest text-primary/40">Topics being covered</span>
         </div>
         <ul className="space-y-3">
-          {topSectors.map(([sector, count]) => (
-            <li key={sector} className="flex items-center justify-between">
-              <span className="text-sm font-medium text-primary capitalize">{sector}</span>
+          {topSectors.map((sector) => (
+            <li key={sector.name} className="flex items-center justify-between">
+              <span className="text-sm font-medium text-primary capitalize flex items-center gap-2">
+                {sector.name}
+                <Link to={`/sectors/${sector.id}/trends`} className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold hover:bg-accent hover:text-card transition-colors">
+                  View Trends
+                </Link>
+              </span>
               <span className="text-[11px] text-primary/40 bg-primary/5 px-2 py-0.5 rounded-full">
-                {count} {count === 1 ? 'story' : 'stories'}
+                {sector.count} {sector.count === 1 ? 'story' : 'stories'}
               </span>
             </li>
           ))}
@@ -149,6 +141,11 @@ export const BetaMarketIntel = () => {
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
     staleTime: 10 * 60 * 1000 });
+
+  const { data: founderLog, isLoading: isLogLoading } = useQuery({
+    queryKey: ['founder-log'],
+    queryFn: api.getFounderLog,
+    staleTime: 5 * 60 * 1000 });
 
   return (
     <div className="pb-24">
@@ -203,24 +200,37 @@ export const BetaMarketIntel = () => {
           </div>
 
           <div className="space-y-4">
-            {EDITORIAL_UPDATES.map((update, i) => (
-              <motion.div
-                key={update.title}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-xl border border-primary/8 p-6 hover:border-accent/30 transition-colors"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-2.5 py-1 rounded-full">
-                    {update.tag}
-                  </span>
-                  <span className="text-[11px] text-primary/30">{update.date}</span>
-                </div>
-                <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{update.title}</h3>
-                <p className="text-sm text-primary/60 leading-relaxed">{update.body}</p>
-              </motion.div>
-            ))}
+            {isLogLoading ? (
+              <div className="bg-white rounded-xl border border-primary/8 p-6 animate-pulse space-y-3">
+                <div className="h-4 bg-primary/8 rounded w-1/4 mb-4" />
+                <div className="h-6 bg-primary/8 rounded w-3/4 mb-2" />
+                <div className="h-4 bg-primary/8 rounded w-full" />
+                <div className="h-4 bg-primary/8 rounded w-5/6" />
+              </div>
+            ) : founderLog ? (
+              founderLog.map((update: any, i: number) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className="bg-white rounded-xl border border-primary/8 p-6 hover:border-accent/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+                      {update.tag}
+                    </span>
+                    <span className="text-[11px] text-primary/30">{update.date}</span>
+                  </div>
+                  <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{update.title}</h3>
+                  <p className="text-sm text-primary/60 leading-relaxed">{update.body}</p>
+                </motion.div>
+              ))
+            ) : (
+              <div className="text-sm text-primary/50 text-center py-6">
+                No updates available right now.
+              </div>
+            )}
           </div>
         </section>
 
@@ -275,7 +285,7 @@ export const BetaMarketIntel = () => {
             Every editorial decision above has a story attached to it. Read them here.
           </p>
           <Link
-            to="/stories"
+            to="/posts"
             className="inline-flex items-center gap-2 bg-accent text-card font-semibold px-8 py-4 rounded-xl hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
             Browse all stories <ArrowRight size={15} />

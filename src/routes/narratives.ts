@@ -85,7 +85,7 @@ router.get('/country/:code', async (c) => {
         FROM articles a
         LEFT JOIN narrative_strategies ns ON a.narrative_strategy_id = ns.id
         WHERE a.country_code = ? AND a.status = 'published'
-        ORDER BY a.engagement_score DESC
+        ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
         LIMIT 10
     `).bind(code).all();
 
@@ -99,7 +99,7 @@ router.get('/country/:code', async (c) => {
 
     const countryData = country as Record<string, any>;
 
-    // AI Narrative Synthesis (The "Story So Far")
+    // Narrative Synthesis (The "Story So Far")
     const narrativeArc = await getCached(
         c.env,
         CACHE_KEYS.narrativeSynthesis(code),
@@ -125,7 +125,7 @@ router.get('/country/:code', async (c) => {
         country: {
             ...countryData,
             ...processCountries([country as unknown as Country])[0],
-            narrative_arc: narrativeArc // AI-Synthesized Story
+            narrative_arc: narrativeArc // -Synthesized Story
         },
         active_strategies: (narratives.results || []).map((n: any) => ({
             ...n,

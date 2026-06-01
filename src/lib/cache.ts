@@ -156,6 +156,6 @@ export const CACHE_TTL = {
     STATIC: 21600,      // 6 hours - countries, sectors
     FREQUENT: 300,      // 5 minutes - featured articles, search suggestions
     DYNAMIC: 120,       // 2 minutes - latest articles, analytics dashboard
-    DASHBOARD: 600,     // 10 minutes - dashboard summary, AI summaries
+    DASHBOARD: 600,     // 10 minutes - dashboard summary, summaries
     INTEL: 1800,        // 30 minutes - intelligence reports
 } as const;

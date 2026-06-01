@@ -1,20 +1,22 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Volume2, Pause, Play, Loader, AlertCircle } from 'lucide-react';
 import { request } from '../../services/api';
+import { useAudio } from '../../context/AudioContext';
 
 interface BetaAudioPlayerProps {
   slug: string;
+  title?: string;
+  subtitle?: string;
+  imageUrl?: string;
 }
 
-export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
+export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, imageUrl }: BetaAudioPlayerProps) => {
   const [status, setStatus] = useState<'checking' | 'available' | 'missing' | 'generating'>('checking');
   const [audioData, setAudioData] = useState<{ url: string; duration: number } | null>(null);
-  // C4 FIX: Track isPlaying from actual audio element events, not manual toggle.
-  // This prevents desync when the browser blocks autoplay.
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
   
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { currentTrack, isPlaying, togglePlay, playTrack, primeAudio } = useAudio();
+  
+  const isThisTrackPlaying = currentTrack?.slug === slug;
 
   useEffect(() => {
     // Check if audio exists
@@ -30,9 +32,8 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
       .catch(() => setStatus('missing'));
   }, [slug]);
 
-  // C1 FIX: generateAndPlay no longer calls togglePlay via stale setTimeout closure.
-  // Instead it sets audioData and lets the audio element handle playback directly.
   const generateAndPlay = async () => {
+    primeAudio();
     setStatus('generating');
     try {
       const res = await request<{ success: boolean; audio_url: string; duration_seconds: number }>(
@@ -42,7 +43,15 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
       if (res.success && res.audio_url) {
         setAudioData({ url: res.audio_url, duration: res.duration_seconds });
         setStatus('available');
-        // Auto-play will happen via the useEffect below once audioRef is set with new src
+        
+        playTrack({
+          title,
+          subtitle,
+          imageUrl,
+          slug,
+          audioUrl: res.audio_url,
+          durationSeconds: res.duration_seconds
+        });
       } else {
         setStatus('missing');
       }
@@ -51,56 +60,20 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
     }
   };
 
-  // Auto-play when audioData is first set (after generation)
-  const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
-
-  useEffect(() => {
-    if (pendingAutoPlay && audioRef.current && status === 'available') {
-      audioRef.current.play().catch(e => console.warn('Autoplay blocked by browser policy:', e));
-      setPendingAutoPlay(false);
+  const handlePlayClick = () => {
+    primeAudio();
+    if (isThisTrackPlaying) {
+      togglePlay();
+    } else if (audioData) {
+      playTrack({
+        title,
+        subtitle,
+        imageUrl,
+        slug,
+        audioUrl: audioData.url,
+        durationSeconds: audioData.duration
+      });
     }
-  }, [pendingAutoPlay, status]);
-
-  // Trigger autoplay pending flag when audio is generated (not on initial load)
-  const isFirstLoad = useRef(true);
-  useEffect(() => {
-    if (status === 'available') {
-      if (!isFirstLoad.current) {
-        setPendingAutoPlay(true);
-      }
-      isFirstLoad.current = false;
-    }
-  }, [status]);
-
-  const togglePlay = useCallback(() => {
-    if (!audioRef.current) return;
-    if (audioRef.current.paused) {
-      // C4 FIX: Use the returned promise to detect blocked autoplay
-      audioRef.current.play().catch(e => console.warn('Audio playback prevented:', e));
-    } else {
-      audioRef.current.pause();
-    }
-    // isPlaying is set by onPlay/onPause events — not here
-  }, []);
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
-    }
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioRef.current) {
-      const time = Number(e.target.value);
-      audioRef.current.currentTime = time;
-      setCurrentTime(time);
-    }
-  };
-
-  const formatTime = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   if (status === 'checking') {
@@ -139,58 +112,23 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
     );
   }
 
-  const duration = audioData?.duration || 0;
-  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-
   return (
     <div className="w-full max-w-md bg-card border border-accent/20 rounded-2xl p-4 flex flex-col gap-3">
-      {audioData && (
-        <audio 
-          ref={audioRef} 
-          src={audioData.url} 
-          onTimeUpdate={handleTimeUpdate}
-          // C4 FIX: Drive isPlaying state from actual audio element events
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => { setIsPlaying(false); setCurrentTime(0); }}
-        />
-      )}
-      
       <div className="flex items-center gap-4">
         <button 
-          onClick={togglePlay}
+          onClick={handlePlayClick}
           className="w-10 h-10 rounded-full bg-accent text-card flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isThisTrackPlaying && isPlaying ? 'Pause' : 'Play'}
         >
-          {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
+          {isThisTrackPlaying && isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
         </button>
         
-        <div className="flex-1 flex flex-col gap-1.5 w-full">
-          <div className="flex justify-between items-center text-[10px] font-mono font-medium text-white/40">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+        <div className="flex-1 flex flex-col gap-1 w-full">
+          <div className="text-sm font-medium text-white">
+            {isThisTrackPlaying ? 'Now Playing globally' : 'Listen to this article'}
           </div>
-          
-          <div className="relative h-1.5 w-full bg-white/10 rounded-full group">
-            <div 
-              className="absolute top-0 left-0 h-full bg-accent rounded-full transition-[width] duration-100" 
-              style={{ width: `${progressPercent}%` }}
-            />
-            {/* Native range input overlay for seeking */}
-            <input 
-              type="range" 
-              min="0" 
-              max={duration} 
-              value={currentTime} 
-              onChange={handleSeek}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              aria-label="Seek"
-            />
-            {/* Custom thumb that appears on hover */}
-            <div 
-              className="absolute top-1/2 -mt-1.5 w-3 h-3 bg-white rounded-full shadow border-2 border-accent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-              style={{ left: `calc(${progressPercent}% - 6px)` }}
-            />
+          <div className="text-[10px] text-white/40">
+            {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'High-quality TTS narration.'}
           </div>
         </div>
       </div>
@@ -198,7 +136,7 @@ export const BetaAudioPlayer = ({ slug }: BetaAudioPlayerProps) => {
       {audioData?.url.includes('best-of-africa-media.r2.dev/audio/tts') && (
         <div className="flex items-center gap-2 mt-1 px-1">
           <AlertCircle size={10} className="text-accent/50" />
-          <span className="text-[10px] text-white/30 italic">TTS mode — ElevenLabs integration pending.</span>
+          <span className="text-[10px] text-white/30 italic">TTS mode — Premium integration pending.</span>
         </div>
       )}
     </div>

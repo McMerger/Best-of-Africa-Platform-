@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // TRANSLATION SERVICE
 // Multi-language content support for Francophone, Arabic, and Lusophone Africa
-// Uses Workers AI m2m100 model for translation
+// Uses Workers m2m100 model for translation
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
@@ -37,7 +37,7 @@ export async function translateText(
     if (!text || text.trim().length === 0) return text;
 
     try {
-        // Workers AI translation model
+        // Workers translation model
         const response = await (env.AI as Record<string, any>).run('@cf/meta/m2m100-1.2b', {
             text: text.slice(0, 5000), // Limit input size
             source_lang: sourceLang,

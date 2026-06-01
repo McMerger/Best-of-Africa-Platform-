@@ -111,14 +111,14 @@ app.get('/health', (c) => {
     return c.json({ status: 'ok' });
 });
 
-// Public AI provider status — shows active model without exposing credentials
+// Public provider status — shows active model without exposing credentials
 app.get('/api/v1/ai-status', async (c) => {
     const env = c.env as any;
     let provider = 'workers_ai';
     let model = '@cf/meta/llama-3.1-70b-instruct';
     let source = 'fallback';
 
-    // Mirror the priority chain from ai.ts / callConfiguredAI
+    // Mirror the priority chain from .ts / callConfiguredAI
     try {
         const configRaw = await env.CACHE?.get('zeroclaw:provider_config');
         if (configRaw) {
@@ -277,6 +277,18 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         console.log('Running daily reporting worker...');
         await runDailyReporting(env);
     }
+
+    // 4. Newsletter Dispatch: Daily & Weekly at 6am UTC
+    if (hours === 6 && minutes === 0) {
+        console.log('Running daily newsletter dispatch...');
+        await runNewsletterDispatch(env, 'daily');
+        
+        // Sunday is 0
+        if (date.getUTCDay() === 0) {
+            console.log('Running weekly newsletter dispatch...');
+            await runNewsletterDispatch(env, 'weekly');
+        }
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -340,6 +352,12 @@ async function runDailyReporting(env: Env) {
     // Implemented in workers/reporter.ts
     const { runDailyReporting } = await import('./workers/reporter');
     await runDailyReporting(env);
+}
+
+async function runNewsletterDispatch(env: Env, frequency: 'daily' | 'weekly') {
+    // Implemented in workers/digest.ts
+    const { processDigests } = await import('./workers/digest');
+    await processDigests(env, frequency);
 }
 
 // ───────────────────────────────────────────────────────────────────────────────

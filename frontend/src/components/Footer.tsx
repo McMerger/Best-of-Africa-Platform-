@@ -49,9 +49,9 @@ export const Footer: React.FC = () => {
                     <div className="space-y-6">
                         <h4 className="text-xs font-bold uppercase tracking-[2px] text-primary-foreground">Intelligence</h4>
                         <ul className="space-y-4 text-sm">
-                            <li><Link to="/dashboards" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Regional Dashboards</Link></li>
-                            <li><Link to="/market-intel" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Sector Analysis</Link></li>
-                            <li><Link to="/reports" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Reports Archive</Link></li>
+                            <li><Link to="/dashboards/overview" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Regional Dashboards</Link></li>
+                            <li><Link to="/intel" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Sector Analysis</Link></li>
+                            <li><Link to="/posts" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Reports Archive</Link></li>
                         </ul>
                     </div>
 
@@ -59,9 +59,9 @@ export const Footer: React.FC = () => {
                     <div className="space-y-6">
                         <h4 className="text-xs font-bold uppercase tracking-[2px] text-primary-foreground">Diplomacy</h4>
                         <ul className="space-y-4 text-sm">
-                            <li><Link to="/narratives" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Narrative Strategy</Link></li>
+                            <li><Link to="/intelligence" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Narrative Strategy</Link></li>
                             <li><Link to="/countries" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Member States</Link></li>
-                            <li><Link to="/market-intel/audience" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Sentiment Analysis</Link></li>
+                            <li><Link to="/dashboards/overview" className="transition-colors hover:text-primary-foreground hover:underline hover:decoration-accent hover:underline-offset-4">Risk Dashboards</Link></li>
                         </ul>
                     </div>
 
@@ -82,7 +82,7 @@ export const Footer: React.FC = () => {
                         <span>© {new Date().getFullYear()} Best of Africa. All rights reserved.</span>
                         <Link to="/privacy" className="hover:text-primary-foreground">PRIVACY POLICY</Link>
                         <Link to="/terms" className="hover:text-primary-foreground">TERMS OF SERVICE</Link>
-                        <Link to="/editorial-guidelines" className="hover:text-primary-foreground">EDITORIAL GUIDELINES</Link>
+                        <Link to="/about" className="hover:text-primary-foreground">EDITORIAL GUIDELINES</Link>
                     </div>
                     <div className="flex items-center gap-3">
                         <span>BOA-Story · A Premium Pan-African Brand</span>

@@ -28,8 +28,8 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-card flex flex-col items-center justify-center p-6 text-center font-sans">
-          <div className="max-w-md w-full bg-card border border-accent/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center font-sans">
+          <div className="max-w-md w-full bg-white border border-accent/30 rounded-2xl p-8 shadow-2xl flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-6">
               <ShieldAlert size={32} className="text-accent" />
             </div>

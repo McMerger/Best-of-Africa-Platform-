@@ -3,9 +3,9 @@
 // Admin endpoints for setting up and managing Google Gemini subscription OAuth.
 //
 // Setup flow (one time):
-//   1. GET  /agent/gemini/oauth/authorize  → redirects to Google consent screen
-//   2. User approves → Google redirects to /agent/gemini/oauth/callback
-//   3. Tokens stored in KV — all AI generation uses Gemini from this point
+//   1. GET  //gemini/oauth/authorize  → redirects to Google consent screen
+//   2. User approves → Google redirects to //gemini/oauth/callback
+//   3. Tokens stored in KV — all generation uses Gemini from this point
 //
 // The callback route is public (browser redirect won't carry Authorization header).
 // CSRF is handled via a time-limited state parameter validated against KV.
@@ -34,7 +34,7 @@ router.use('/*', async (c, next) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/gemini/oauth/authorize
+// GET //gemini/oauth/authorize
 // Redirects to Google's OAuth consent screen.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/authorize', async (c) => {
@@ -57,7 +57,7 @@ router.get('/authorize', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/gemini/oauth/callback
+// GET //gemini/oauth/callback
 // Google redirects here after the user approves access.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/callback', async (c) => {
@@ -108,7 +108,7 @@ router.get('/callback', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /agent/gemini/oauth/status
+// GET //gemini/oauth/status
 // Shows token health without exposing any secrets.
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/status', async (c) => {
@@ -148,7 +148,7 @@ router.get('/status', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/gemini/oauth/bootstrap
+// POST //gemini/oauth/bootstrap
 //
 // Inject a token extracted from a Google session or service account.
 //
@@ -156,7 +156,7 @@ router.get('/status', async (c) => {
 //   1. Go to https://aistudio.google.com
 //   2. Sign in with your Google account
 //   3. Open DevTools → Network tab
-//   4. Send a prompt in AI Studio
+//   4. Send a prompt in Studio
 //   5. Find the generateContent request → copy the Authorization header value
 //   6. POST it here as { "access_token": "ya29...." }
 //
@@ -202,7 +202,7 @@ router.post('/bootstrap', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /agent/gemini/oauth/probe
+// POST //gemini/oauth/probe
 // Validates a raw token against the Gemini API.
 // Body: { "token": "ya29..." }
 // ───────────────────────────────────────────────────────────────────────────────
@@ -230,7 +230,7 @@ router.post('/probe', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// DELETE /agent/gemini/oauth/tokens
+// DELETE //gemini/oauth/tokens
 // Clears all stored tokens — forces re-authorization.
 // ───────────────────────────────────────────────────────────────────────────────
 router.delete('/tokens', async (c) => {

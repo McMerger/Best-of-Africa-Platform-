@@ -44,9 +44,9 @@ router.get('/evolve', async (c) => {
         ).run();
 
         // NOTE: Feedback rows are NOT marked as processed here.
-        // They will be marked processed by the agent-webhooks completion handler
+        // They will be marked processed by the -webhooks completion handler
         // when the 'evolve_instructions' task succeeds. This prevents feedback
-        // from being silently lost if the agent fails or the task is never picked up.
+        // from being silently lost if the fails or the task is never picked up.
 
         return c.json({
             success: true,

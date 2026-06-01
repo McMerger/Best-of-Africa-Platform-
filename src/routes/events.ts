@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // EVENTS ROUTER
-// Summits, Forums, and Conferences with AI Value Props
+// Summits, Forums, and Conferences with Value Props
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
@@ -41,7 +41,7 @@ router.get('/', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /events/:id - Event Details + AI Value Prop
+// GET /events/:id - Event Details + Value Prop
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/:id', async (c) => {
     const id = c.req.param('id');
@@ -54,7 +54,7 @@ router.get('/:id', async (c) => {
 
     const eventData = event as Record<string, any>;
 
-    // Lazy Generate AI Value Proposition if missing
+    // Lazy Generate Value Proposition if missing
     if (!eventData.ai_value_proposition) {
         try {
             const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;

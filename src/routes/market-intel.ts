@@ -89,12 +89,12 @@ router.get('/sector/:id', async (c) => {
             SELECT a.id, a.slug, a.title, a.engagement_score, a.country_code
             FROM articles a
             WHERE a.sector_id = ? AND a.status = 'published'
-            ORDER BY a.engagement_score DESC
+            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT 5
         `).bind(sectorId).all(),
     ]);
 
-    // Generate AI Sector Outlook
+    // Generate Sector Outlook
     let aiOutlook = "Sector performance is stable.";
     if (recentArticles.results && recentArticles.results.length > 0) {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
@@ -254,7 +254,7 @@ router.get('/country/:code/outlook', async (c) => {
 
     const countryData = country as Record<string, any>;
 
-    // Generate AI Investment Commentary
+    // Generate Investment Commentary
     const investmentCommentary = await getCached(
         c.env,
         CACHE_KEYS.countryOutlook(code),
@@ -408,7 +408,7 @@ router.get('/reports/sector/:id', requireApiKey, rateLimit, async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// GET /market-intel/performance - AI-Powered Sector Performance (for MarketIntelPage)
+// GET /market-intel/performance - -Powered Sector Performance (for MarketIntelPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/performance', async (c) => {
     // Parse lens (defaults to investor)
@@ -438,11 +438,11 @@ router.get('/performance', async (c) => {
         metricMap.set(m.sector_id, m);
     });
 
-    // 3. Generate AI-powered performance metrics per sector (RAG-enhanced)
+    // 3. Generate -powered performance metrics per sector (RAG-enhanced)
     const performance = await Promise.all((sectors.results || []).map(async (s: any) => {
         const metric = metricMap.get(s.id);
 
-        // --- RAG-Enhanced AI Sector Analysis (cached 6h per sector) ---
+        // --- RAG-Enhanced Sector Analysis (cached 6h per sector) ---
         const aiResult = await getCached(
             c.env,
             `perf:rag:${s.id}:${activeLens}:v3`,
@@ -490,7 +490,7 @@ router.get('/performance', async (c) => {
                     ? Math.sqrt(scores.reduce((sum, sc) => sum + Math.pow(sc - avgEng, 2), 0) / scores.length)
                     : 0;
 
-                // 4. Build rich context for AI
+                // 4. Build rich context for 
                 const articleContext = articles.map((a, i) =>
                     `${i + 1}. "${a.title}" — ${(a.summary || '').slice(0, 150)} [Engagement: ${a.engagement_score || 'N/A'}]`
                 ).join('\n');
@@ -599,10 +599,10 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
                     return { score: null, volatility: null, insight: null };
                 }
             },
-            { ttl: 3600 * 6 } // Cache AI results for 6 hours
+            { ttl: 3600 * 6 } // Cache results for 6 hours
         );
 
-        // --- Blend AI score with data-grounded score (70% AI, 30% data) ---
+        // --- Blend score with data-grounded score (70% , 30% data) ---
         let dataScore = 50;
         if (metric?.growth_rate) {
             dataScore = Math.min(98, Math.max(40, 40 + (metric.growth_rate * 5)));
@@ -617,7 +617,7 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
             finalScore = dataScore;
         }
 
-        // --- Volatility: prefer AI, fallback to data ---
+        // --- Volatility: prefer , fallback to data ---
         let volatility = aiResult.volatility || 'Med';
         if (!aiResult.volatility) {
             if (metric?.regulatory_outlook) {
@@ -643,6 +643,68 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
         data: performance,
         updated_at: new Date().toISOString()
     });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /market-intel/founder-log - -Written Weekly Project Update
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/founder-log', async (c) => {
+    return c.json(await getCached(
+        c.env,
+        'founder-log:weekly',
+        async () => {
+            // Fetch articles from the last 14 days
+            const recentArticles = await c.env.DB.prepare(`
+                SELECT a.title, c.name as country_name, s.name as sector_name 
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.status = 'published' AND a.published_at > datetime('now', '-14 days')
+                ORDER BY a.published_at DESC
+                LIMIT 15
+            `).all();
+
+            const articles = (recentArticles.results || []) as any[];
+            const contextStr = articles.map(a => `- ${a.title} (${a.country_name}, ${a.sector_name})`).join('\n');
+            const totalThisWeek = articles.length;
+
+            const prompt = `System: You are the independent, solo founder and lead researcher of "BOA-Story", a platform dedicated to covering African business, economies, and culture beyond mainstream narratives.
+You are writing a transparent, 3-paragraph "What I'm working on" update for your most dedicated supporters on Ko-fi.
+Keep the tone grounded, authentic, slightly tired but passionate, and completely human. No corporate jargon. No AI-isms like "Ah," or "In conclusion".
+
+User: Based on the fact that we published ${totalThisWeek} articles recently:
+${contextStr || "Just general research this week."}
+
+Write the update. Format it exactly as a JSON array of 3 objects, where each object has:
+- date: "Month Year" (e.g., "${new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())}")
+- tag: a short 1-2 word tag (e.g., "Research Log", "Platform Update", "Founder Note")
+- title: A punchy, conversational title for the paragraph
+- body: The paragraph text (3-4 sentences max)
+
+Return ONLY the raw JSON array.`;
+
+            try {
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 500, temperature: 0.6 });
+                const match = text.match(/\[.*\]/s);
+                if (match) {
+                    return JSON.parse(match[0]);
+                }
+            } catch (e) {
+                console.error("Founder log generation failed", e);
+            }
+
+            // Fallback if fails
+            return [
+                {
+                    date: new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date()),
+                    tag: 'Research Log',
+                    title: 'Deep in the data trenches.',
+                    body: 'We are currently aggregating the latest round of stories. The data pipeline is running, but good research takes time. Thanks for sticking around.'
+                }
+            ];
+        },
+        { ttl: 3600 * 24 } // Cache for 24 hours
+    ));
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -729,7 +791,7 @@ router.get('/sentiment-divergence', async (c) => {
                         `).all();
 
     const divergence = await Promise.all((countries.results || []).map(async (c: any) => {
-        // AI Reality Check (RAG)
+        // Reality Check (RAG)
         const reality = await getCached(
             c.env,
             CACHE_KEYS.marketSentiment(c.code),
@@ -777,7 +839,7 @@ ${context}`;
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
-// POST /market-intel/metrics - Update market metrics (Agent use only)
+// POST /market-intel/metrics - Update market metrics (use only)
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/metrics', requireApiKey, async (c) => {
     // Check for ADMIN key specifically to ensure only authorized agents update data
@@ -864,7 +926,7 @@ router.get('/sector/:id/analytics', async (c) => {
             : 'LOW';
 
     // Supply chain status based on article count and engagement
-    // AI Supply Chain Analysis
+    // Supply Chain Analysis
     const supplyChain = await getCached(
         c.env,
         CACHE_KEYS.sectorSupplyChain(sectorId),
@@ -1005,7 +1067,7 @@ Return ONLY valid JSON matching this schema: {"cagr": number}`;
                         }
                     }
                 } catch (e) {
-                    cagr = 8.5; // Final fallback if AI fails
+                    cagr = 8.5; // Final fallback if fails
                 }
             } else if (cagr === undefined) {
                 cagr = 8.5;
@@ -1056,7 +1118,7 @@ router.get('/opportunities', async (c) => {
                 const recentArticles = await c.env.DB.prepare(`
                     SELECT title FROM articles 
                     WHERE country_code = ? AND sector_id = ? AND status = 'published'
-                    ORDER BY engagement_score DESC LIMIT 3
+                    ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC LIMIT 3
                 `).bind(o.country_code, o.sector_id).all();
 
                 const headlines = (recentArticles.results || []).map((a: any) => a.title).join('; ');

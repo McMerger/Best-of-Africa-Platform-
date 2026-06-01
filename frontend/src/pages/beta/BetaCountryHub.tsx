@@ -58,7 +58,7 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 
 const ArticleCard = ({ article }: { article: ArticleListItem }) => (
   <Link
-    to={`/stories/${article.slug}`}
+    to={`/posts/${article.slug}`}
     className="group block bg-white rounded-xl border border-primary/8 overflow-hidden hover:border-accent/40 hover:shadow-[0_6px_24px_rgba(201,168,76,0.1)] transition-all duration-300 hover:-translate-y-0.5"
   >
     {(article.ai_image_url || article.hero_image_url) && (
@@ -327,7 +327,7 @@ export const BetaCountryHub = () => {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <Globe size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Editorial Narratives</h2>
+              <h2 className="font-serif text-2xl text-primary">Key Narratives</h2>
             </div>
             <div className="space-y-4">
               {narratives.slice(0, 4).map(n => (
@@ -395,6 +395,12 @@ export const BetaCountryHub = () => {
                   <ExternalLink size={13} className="text-accent" /> Tourism Portal
                 </a>
               )}
+              {isMember && (
+                <Link to={`/countries/${upperCode}/narratives`}
+                  className="inline-flex items-center gap-2 bg-primary/5 border border-primary/10 hover:border-accent/40 hover:bg-white px-4 py-2.5 rounded-xl text-sm font-bold text-primary transition-colors">
+                  <ExternalLink size={13} className="text-accent" /> Narrative Diplomacy Toolkit (Gov)
+                </Link>
+              )}
             </div>
           </section>
         )}
@@ -408,7 +414,7 @@ export const BetaCountryHub = () => {
             </div>
             {articles.length > 0 && (
               <Link
-                to={`/stories?country=${upperCode}`}
+                to={`/posts?country=${upperCode}`}
                 className="text-sm text-accent font-semibold hover:opacity-70 transition-opacity"
               >
                 View all →
@@ -445,7 +451,7 @@ export const BetaCountryHub = () => {
             <div className="bg-white rounded-2xl border border-primary/8 p-12 text-center">
               <Globe size={36} className="text-primary/20 mx-auto mb-4" />
               <p className="text-primary/50">No stories published for {countryName} yet.</p>
-              <p className="text-primary/30 text-sm mt-1">Our editorial team is monitoring this market continuously.</p>
+              <p className="text-primary/30 text-sm mt-1">We are monitoring this market continuously.</p>
             </div>
           )}
         </section>

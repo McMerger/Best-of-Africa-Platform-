@@ -53,7 +53,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
             </h3>
             <div className="grid grid-cols-1 gap-4">
                 {events.map((event) => (
-                    <Card key={event.id} className="group hover:border-primary/50 transition-all border-border bg-card/50 overflow-hidden">
+                    <Card key={event.id} className="group hover:border-primary/50 transition-all border-border bg-background/50 overflow-hidden">
                         <CardContent className="p-5">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1">

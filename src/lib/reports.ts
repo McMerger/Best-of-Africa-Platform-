@@ -66,7 +66,7 @@ export async function generateCountryBrief(
     // Get economic data
     const economics = await getKeyEconomicStats(env, countryCode);
 
-    // Generate AI executive summary
+    // Generate executive summary
     const articleContext = (articles.results || []).slice(0, 5).map((a: any) =>
         `${a.title}: ${a.summary?.slice(0, 100) || ''}`
     ).join('\n');
@@ -163,7 +163,7 @@ export async function generateSectorAnalysis(
         LIMIT 10
     `).bind(sectorId).all();
 
-    // AI analysis
+    // analysis
     let aiAnalysis = '';
     try {
         const context = (articles.results || []).slice(0, 5).map((a: any) =>

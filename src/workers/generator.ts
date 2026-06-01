@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // GENERATOR WORKER
-// Queue consumer for AI article generation
+// Queue consumer for article generation
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
@@ -11,6 +11,7 @@ import { autoTranslateArticle } from '../lib/translate';
 import { onArticlePublished } from '../lib/alerts';
 import { autoPostArticle } from '../lib/social';
 import { checkContentIntegrity } from '../lib';
+import { fullEnrich } from '../lib/enrichment';
 
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -87,6 +88,19 @@ export async function generateArticleFromQueue(
 
         if (!generated?.title || !generated?.content) {
             throw new Error('generateArticle returned empty title or content');
+        }
+
+        // Enrich the article with intelligence data
+        if (countryName) {
+            try {
+                console.log(`Enriching article for ${countryName}...`);
+                const enrichmentMarkdown = await fullEnrich(env, countryName, sectorName ?? undefined);
+                if (enrichmentMarkdown) {
+                    generated.content += enrichmentMarkdown;
+                }
+            } catch (err) {
+                console.error('Article enrichment failed:', err);
+            }
         }
 
         const articleId = crypto.randomUUID();
@@ -169,7 +183,7 @@ export const generateArticle = generateArticleFromQueue;
 // ───────────────────────────────────────────────────────────────────────────────
 // Stale Task Fallback (Cron — every 2 minutes)
 //
-// ZeroClaw is an external agent that polls /agent/tasks/pending. If it goes
+// ZeroClaw is an external that polls //tasks/pending. If it goes
 // offline, generate_article tasks pile up in agent_tasks with no one to claim
 // them. This function is the self-sufficient fallback: after a 15-minute grace
 // window it claims up to 3 tasks internally and runs the full generation +
@@ -227,6 +241,19 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
 
             if (!generated?.title || !generated?.content) {
                 throw new Error('generateArticle returned empty title or content');
+            }
+
+            // Enrich the article with intelligence data
+            if (payload.country_name) {
+                try {
+                    console.log(`[generator] Enriching article for ${payload.country_name}...`);
+                    const enrichmentMarkdown = await fullEnrich(env, payload.country_name, payload.sector_name ?? undefined);
+                    if (enrichmentMarkdown) {
+                        generated.content += enrichmentMarkdown;
+                    }
+                } catch (err) {
+                    console.error('[generator] Article enrichment failed:', err);
+                }
             }
 
             const articleId = crypto.randomUUID();

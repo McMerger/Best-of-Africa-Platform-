@@ -83,7 +83,7 @@ User: Sector: ${sector.name}. Context:\n${context}`;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Populate Narrative Strategies (for Narratives Page) - AI Powered
+// Populate Narrative Strategies (for Narratives Page) - Powered
 // ───────────────────────────────────────────────────────────────────────────────
 export async function populateNarrativeStrategies(env: Env): Promise<void> {
     // Find countries with articles but no narrative strategies
@@ -112,7 +112,7 @@ export async function populateNarrativeStrategies(env: Env): Promise<void> {
         for (const audience of audiences) {
             const strategyId = crypto.randomUUID();
 
-            // Generate AI Narrative
+            // Generate Narrative
             let keyMessages = [`Invest in ${country.name}`, `Growth potential`];
             let theme = `${country.name} Opportunity`;
 
@@ -281,7 +281,7 @@ export async function generateSystemicDynamicContent(env: Env): Promise<void> {
 // Generate Page Specific Content (Auth, Member, About, Error pages)
 // ───────────────────────────────────────────────────────────────────────────────
 export async function generatePageSpecificContent(env: Env): Promise<void> {
-    // Static page content that can be AI-refined based on engagement data
+    // Static page content that can be -refined based on engagement data
     const pageContent = {
         'auth_login_headline': 'Access Intelligence',
         'auth_login_subhead': 'Sign in to your analyst dashboard',
@@ -308,7 +308,7 @@ export async function generatePageSpecificContent(env: Env): Promise<void> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Generate AI Marketing Content (Weekly refresh of all marketing copy)
+// Generate Marketing Content (Weekly refresh of all marketing copy)
 // ───────────────────────────────────────────────────────────────────────────────
 export async function generateMarketingContent(env: Env): Promise<void> {
     // Check if we should run (weekly refresh - check last update)
@@ -329,7 +329,7 @@ export async function generateMarketingContent(env: Env): Promise<void> {
 
     console.log('Generating AI marketing content...');
 
-    // Get platform context for AI
+    // Get platform context for 
     const [articleCount, countryCount, trendingTopics] = await Promise.all([
         env.DB.prepare(`SELECT COUNT(*) as count FROM articles WHERE status = 'published'`).first<{ count: number }>(),
         env.DB.prepare(`SELECT COUNT(DISTINCT country_code) as count FROM articles WHERE status = 'published'`).first<{ count: number }>(),
@@ -456,10 +456,10 @@ User: Generate booking page content.`;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Generate AI Event Descriptions
+// Generate Event Descriptions
 // ───────────────────────────────────────────────────────────────────────────────
 export async function generateEventDescriptions(env: Env): Promise<void> {
-    // Find events without AI-generated descriptions or with stale descriptions
+    // Find events without -generated descriptions or with stale descriptions
     const events = await env.DB.prepare(`
         SELECT id, title, location, country_code, date, event_type, description
         FROM events

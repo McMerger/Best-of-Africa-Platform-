@@ -89,12 +89,12 @@ router.get('/sector/:id', async (c) => {
             SELECT a.id, a.slug, a.title, a.engagement_score, a.country_code
             FROM articles a
             WHERE a.sector_id = ? AND a.status = 'published'
-            ORDER BY a.engagement_score DESC
+            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT 5
         `).bind(sectorId).all(),
     ]);
 
-    // Generate AI Sector Outlook
+    // Generate Sector Outlook
     let aiOutlook = "Sector performance is stable.";
     if (recentArticles.results && recentArticles.results.length > 0) {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Layout } from '../components/Layout';
 
 export const PrivacyPage: React.FC = () => {
     return (
-        <Layout>
+        <>
             <div className="container py-20 max-w-3xl">
                 <header className="mb-12 border-b border-border pb-8">
                     <h1 className="mb-4 text-4xl font-serif font-extrabold tracking-tight text-foreground md:text-5xl">Privacy Policy</h1>
@@ -37,6 +36,6 @@ export const PrivacyPage: React.FC = () => {
                     </section>
                 </div>
             </div>
-        </Layout>
+        </>
     );
 };

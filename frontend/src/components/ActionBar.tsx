@@ -57,7 +57,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({ title, type, className }) 
                     </Button>
 
                     {type !== 'article' && (
-                        <Button variant="outline" size="sm" onClick={handleTrack} className={cn("gap-2", isTracked && "bg-green-500/10 text-green-600 border-green-500/20")}>
+                        <Button variant="outline" size="sm" onClick={handleTrack} className={cn("gap-2", isTracked && "bg-accent/10 text-accent border-accent/20")}>
                             {isTracked ? <CheckIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
                             <span className="hidden sm:inline">{isTracked ? "Tracking" : "Track Topic"}</span>
                         </Button>

@@ -51,7 +51,7 @@ router.get('/country/:code/outlook', async (c) => {
 
     const countryData = country as Record<string, any>;
 
-    // Generate AI Investment Commentary
+    // Generate Investment Commentary
     const investmentCommentary = await getCached(
         c.env,
         CACHE_KEYS.countryOutlook(code),

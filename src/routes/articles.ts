@@ -118,7 +118,8 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
       a.country_code, c.name as country_name, c.flag_emoji as country_flag,
       a.sector_id, s.name as sector_name,
       a.hero_image_url, a.reading_time_minutes,
-      a.published_at, a.engagement_score, a.is_sponsored
+      a.published_at, a.engagement_score, a.is_sponsored,
+      a.audio_url, a.audio_duration_seconds
     FROM articles a
     LEFT JOIN countries c ON a.country_code = c.code
     LEFT JOIN sectors s ON a.sector_id = s.id
@@ -175,12 +176,13 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                   a.sector_id, s.name as sector_name,
                   a.hero_image_url, a.reading_time_minutes,
                   a.published_at, a.engagement_score,
-                  a.ai_investor_brief, a.ai_push_message, a.ai_social_post
+                  a.ai_investor_brief, a.ai_push_message, a.ai_social_post,
+                  a.audio_url, a.audio_duration_seconds
                 FROM articles a
                 LEFT JOIN countries c ON a.country_code = c.code
                 LEFT JOIN sectors s ON a.sector_id = s.id
                 WHERE a.status = 'published' ${lensWhereClause}
-                ORDER BY a.engagement_score DESC, a.published_at DESC
+                ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC, a.published_at DESC
                 LIMIT ?
             `).bind(...lensParams, limitNum).all();
             return result.results || [];
@@ -188,7 +190,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
         { ttl: CACHE_TTL.FREQUENT }
     );
 
-    // AI Global Briefing (The "World View")
+    // Global Briefing (The "World View")
     const globalBriefing = await getCached(
         c.env,
         CACHE_KEYS.globalBriefing,
@@ -228,7 +230,7 @@ router.get('/latest', validate('query', ArticleQuerySchema.pick({ limit: true })
                   a.country_code, c.name as country_name, c.flag_emoji,
                   a.sector_id, s.name as sector_name,
                   a.hero_image_url, a.reading_time_minutes,
-                  a.published_at
+                  a.published_at, a.audio_url, a.audio_duration_seconds
                 FROM articles a
                 LEFT JOIN countries c ON a.country_code = c.code
                 LEFT JOIN sectors s ON a.sector_id = s.id
@@ -424,7 +426,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
                 WHERE status = 'published'
                   AND id != ?
                   AND (country_code = ? OR sector_id = ?)
-                ORDER BY engagement_score DESC
+                ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
                 LIMIT 4
             `).bind(article.id, article.country_code, article.sector_id).all();
             return result.results || [];
@@ -432,7 +434,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         { ttl: CACHE_TTL.FREQUENT } // 5 minutes
     );
 
-    // Generate AI Executive Brief (Key Takeaways & Strategic Implications)
+    // Generate Executive Brief (Key Takeaways & Strategic Implications)
     const aiContext = await getCached(
         c.env,
         CACHE_KEYS.articleContext(article.id),

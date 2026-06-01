@@ -66,7 +66,7 @@ export async function refreshDashboards(env: Env): Promise<void> {
                 SELECT a.id FROM articles a
                 JOIN countries c ON a.country_code = c.code
                 WHERE c.region = ? AND a.status = 'published'
-                ORDER BY a.engagement_score DESC
+                ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
                 LIMIT 6
             `).bind(region).all();
 
@@ -136,7 +136,7 @@ export async function updateCountryScores(env: Env): Promise<void> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Log Content Refinement (Track AI self-improvements)
+// Log Content Refinement (Track self-improvements)
 // ───────────────────────────────────────────────────────────────────────────────
 export async function logRefinement(
     env: Env,
