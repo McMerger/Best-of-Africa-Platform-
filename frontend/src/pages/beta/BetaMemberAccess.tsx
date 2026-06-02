@@ -296,14 +296,68 @@ export const BetaMemberAccess = () => {
                     </button>
                   </div>
                 </motion.div>
-              </div>
-            </>
-          )}
+              ) : (
+                // ── Initial Email Form State ───────────────────────────────────────
+                <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+                  <div className="mb-12">
+                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-white">
+                      Access your <br/>intelligence.
+                    </h1>
+                    <p className="text-white/50 text-[1.125rem] font-light leading-[1.8]">
+                      Enter the email address associated with your Ko-fi membership.
+                    </p>
+                  </div>
 
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Mail className="h-5 w-5 text-white/30" />
+                      </div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="founder@company.com"
+                        required
+                        disabled={isSubmitting}
+                        className="w-full bg-primary/50 border border-white/10 rounded-2xl pl-12 pr-4 py-5 text-white placeholder:text-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 font-medium text-lg"
+                      />
+                    </div>
+
+                    {errorMsg && (
+                      <p className="text-destructive text-[13px] text-center bg-destructive/10 p-3 rounded-lg border border-destructive/20" role="alert">{errorMsg}</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !email}
+                      className="w-full bg-white text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                    >
+                      {isSubmitting ? (
+                        <>Verifying...</>
+                      ) : (
+                        <>Continue <ArrowRight size={16} /></>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="mt-12 pt-8 border-t border-white/10 text-center">
+                    <p className="text-white/40 text-[13px] mb-4 font-medium">Not a member yet?</p>
+                    <a
+                      href={KO_FI_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent hover:text-white text-[11px] font-bold uppercase tracking-widest transition-colors"
+                    >
+                      Unlock Access on Ko-fi →
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      
+      )}
     </div>
   );
 };

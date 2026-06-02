@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Coffee } from 'lucide-react';
 import { KO_FI_URL } from '../constants/beta';
 
@@ -46,9 +47,9 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-xl border-b border-border shadow-sm">
+        <header className="sticky top-0 z-50 w-full bg-primary/80 backdrop-blur-2xl border-b border-white/5 shadow-2xl transition-all duration-300">
             {/* Pre-header Utilities */}
-            <div className="hidden lg:flex items-center justify-end gap-2 px-6 lg:px-8 py-1.5 bg-muted/30 border-b border-border/40 text-xs">
+            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-black/40 border-b border-white/5 text-[11px] font-medium tracking-wide">
                 <LanguageSelector />
                 <MissionControl />
                 <DensityToggle />
@@ -65,43 +66,63 @@ export const NavBar: React.FC = () => {
                 </div>
 
                 {/* CENTER: Desktop Nav */}
-                <nav className="hidden xl:flex items-center justify-center gap-6 xl:gap-8 text-[12px] font-bold text-primary/70 uppercase tracking-widest z-0 flex-1 ml-8">
-                    <Link to="/feed" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/feed' && 'text-primary')}>Briefing</Link>
-                    <Link to="/intel" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/intel' && 'text-primary')}>Market Intel</Link>
-                    <Link to="/countries" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname.startsWith('/countries') && 'text-primary')}>Countries</Link>
-                    <Link to="/events" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/events' && 'text-primary')}>Summits</Link>
-                    <Link to="/dashboards/overview" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname.startsWith('/dashboards') && 'text-primary')}>Dashboards</Link>
-                    <Link to="/intelligence" className={cn("hover:text-primary transition-colors whitespace-nowrap", location.pathname === '/intelligence' && 'text-primary')}>Intelligence</Link>
+                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-white/50 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
+                    {[
+                        { path: '/feed', label: 'Briefing' },
+                        { path: '/intel', label: 'Market Intel' },
+                        { path: '/countries', label: 'Countries' },
+                        { path: '/events', label: 'Summits' },
+                        { path: '/dashboards/overview', label: 'Dashboards' },
+                        { path: '/intelligence', label: 'Intelligence' },
+                    ].map((item) => {
+                        const isActive = location.pathname.startsWith(item.path);
+                        return (
+                            <Link 
+                                key={item.path}
+                                to={item.path} 
+                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-primary" : "hover:text-white")}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="nav-pill"
+                                        className="absolute inset-0 bg-accent rounded-full -z-10 shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                    />
+                                )}
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* RIGHT: Actions + Sign In */}
                 <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
                     {/* Icon Actions */}
                     <div className="hidden lg:flex items-center gap-1 mr-2">
-                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
                             <Link to="/search">
-                                <MagnifyingGlassIcon className="h-[18px] w-[18px]" />
+                                <MagnifyingGlassIcon className="h-5 w-5" />
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
                         <NotificationBell />
-                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
                             <Link to="/settings">
-                                <GearIcon className="h-[18px] w-[18px]" />
+                                <GearIcon className="h-5 w-5" />
                                 <span className="sr-only">Settings</span>
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground hover:text-foreground" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
                             <Link to="/admin">
-                                <LockClosedIcon className="h-[18px] w-[18px]" />
+                                <LockClosedIcon className="h-5 w-5" />
                                 <span className="sr-only">Admin</span>
                             </Link>
                         </Button>
                     </div>
                     
-                    <div className="hidden lg:block w-px h-5 bg-border mx-2" />
+                    <div className="hidden lg:block w-px h-6 bg-white/10 mx-2" />
                     
-                    <Button size="sm" asChild className="hidden lg:flex rounded font-bold px-6 h-9 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-none uppercase tracking-wider">
+                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-primary hover:bg-white hover:text-primary transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] text-[11px] uppercase tracking-widest">
                         <Link to="/login">Sign In</Link>
                     </Button>
 
