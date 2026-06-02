@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Globe, MapPin, Activity, ArrowRight, BarChart3, Newspaper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -20,25 +20,31 @@ export const BetaContinentalOverview: React.FC = () => {
 
   if (!isMember) {
     return (
-      <>
-        <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 bg-background">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 bg-primary text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-primary/80 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-dark z-20" />
+          <img src="/images/v2_intel_bg.png" alt="Intelligence" className="w-full h-full object-cover object-center" />
+        </div>
+        
+        <div className="relative z-30 max-w-lg bg-card p-12 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl">
+          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/20">
             <Globe className="w-10 h-10 text-accent" />
           </div>
-          <h1 className="font-serif text-4xl text-primary mb-4">Continental Dashboard</h1>
-          <p className="text-primary/60 max-w-md mb-8">
+          <h1 className="font-serif text-[2.5rem] text-white mb-6 leading-none">Continental Dashboard</h1>
+          <p className="text-white/60 mb-10 text-[1.125rem] font-light leading-relaxed">
             Access the high-level pan-African data, regional heatmaps, and executive insights reserved exclusively for Founding Members.
           </p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+            className="block w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] px-8 py-6 rounded-xl shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:brightness-110 transition-all"
           >
             Become a Founding Member
           </a>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -68,185 +74,204 @@ export const BetaContinentalOverview: React.FC = () => {
   }
 
   const { overview, by_region, top_countries, top_sectors, highlights } = data;
+  const { scrollY } = useScroll();
 
   return (
-    <>
+    <div className="bg-primary text-primary-foreground min-h-screen pb-24">
       <SEO 
         title="Continental Overview | BOA-Story Dashboard"
         description="Pan-African executive dashboard displaying macro trends, regional data, and highlighted stories."
       />
       
-      <div className="bg-background min-h-screen pb-24">
-        {/* Header */}
-        <div className="bg-primary text-white pt-20 pb-24 px-6 border-b border-accent/20 relative overflow-hidden">
-          {/* Faint map background or gradient overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
-          
-          <div className="max-w-6xl mx-auto relative z-10">
-            <div className="flex items-center gap-3 text-accent text-xs font-bold uppercase tracking-widest mb-4">
-              <BarChart3 size={16} />
+      {/* Header */}
+      <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-white/10">
+        <motion.div 
+          className="absolute inset-0 z-0"
+          style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+        >
+          <div className="absolute inset-0 bg-primary/80 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-dark z-20" />
+          <img 
+            src="/images/v2_intel_bg.png" 
+            alt="Continental Intelligence Data" 
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          />
+        </motion.div>
+
+        <div className="max-w-6xl mx-auto w-full relative z-30">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
+            <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+              <BarChart3 size={14} />
               Executive Dashboard
             </div>
             
-            <h1 className="font-serif text-5xl md:text-6xl font-bold leading-tight mb-6">
-              Continental Overview
+            <h1 className="font-serif text-[4rem] md:text-[5.5rem] font-bold leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl text-white">
+              Continental <br className="hidden md:block"/><span className="text-accent italic">Overview.</span>
             </h1>
-            <p className="text-white/70 text-lg max-w-2xl leading-relaxed">
+            <p className="text-white/70 text-[1.125rem] font-light max-w-2xl leading-[1.8] drop-shadow-md">
               A high-level view of our coverage across Africa over the past 30 days. Track active regions, trending nations, and the most heavily researched sectors.
             </p>
-          </div>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-40">
+        
+        {/* Top KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-white/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
+            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Newspaper className="text-accent w-7 h-7" />
+            </div>
+            <div>
+              <div className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-2">Articles (30D)</div>
+              <div className="text-[2.5rem] font-serif text-white leading-none">{overview.total_articles_30d}</div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-white/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
+            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <Globe className="text-accent w-7 h-7" />
+            </div>
+            <div>
+              <div className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-2">Countries Tracked</div>
+              <div className="text-[2.5rem] font-serif text-white leading-none">{overview.countries_covered}</div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-white/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
+            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <MapPin className="text-accent w-7 h-7" />
+            </div>
+            <div>
+              <div className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-2">Active Regions</div>
+              <div className="text-[2.5rem] font-serif text-white leading-none">{overview.regions}</div>
+            </div>
+          </motion.div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 -mt-12 relative z-10">
-          
-          {/* Top KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                <Newspaper className="text-accent w-6 h-6" />
-              </div>
-              <div>
-                <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-1">Articles (30D)</div>
-                <div className="text-4xl font-serif text-primary font-bold">{overview.total_articles_30d}</div>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                <Globe className="text-accent w-6 h-6" />
-              </div>
-              <div>
-                <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-1">Countries Tracked</div>
-                <div className="text-4xl font-serif text-primary font-bold">{overview.countries_covered}</div>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                <MapPin className="text-accent w-6 h-6" />
-              </div>
-              <div>
-                <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-1">Active Regions</div>
-                <div className="text-4xl font-serif text-primary font-bold">{overview.regions}</div>
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            {/* Chart: Regional Breakdown */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-primary/10 p-6 md:p-8 shadow-sm">
-              <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
-                <Activity className="text-accent" /> Regional Coverage Heatmap
-              </h3>
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={by_region} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E2E8F0" />
-                    <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                    <YAxis 
-                      type="category" 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fontSize: 12, fill: '#0A2540', fontWeight: 500 }} 
-                      width={120}
-                    />
-                    <Tooltip 
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      cursor={{ fill: '#f8fafc' }}
-                      formatter={(value: any) => [`${value} Stories`, 'Volume']}
-                    />
-                    <Bar dataKey="count" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={24} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">
+          {/* Chart: Regional Breakdown */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 bg-card rounded-3xl border border-white/10 p-8 md:p-10 shadow-2xl">
+            <h3 className="font-serif text-[2rem] text-white mb-8 flex items-center gap-4">
+              <Activity className="text-accent" size={32} /> Regional Coverage Heatmap
+            </h3>
+            <div className="h-[350px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={by_region} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.4)' }} />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 13, fill: 'rgba(255,255,255,0.8)', fontWeight: 300 }} 
+                    width={140}
+                  />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: '#050c14', color: '#fff' }}
+                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                    formatter={(value: any) => [`${value} Stories`, 'Volume']}
+                  />
+                  <Bar dataKey="count" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          </motion.div>
 
-            {/* List: Top Countries */}
-            <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm">
-              <h3 className="font-serif text-xl text-primary mb-6">Trending Nations</h3>
-              <ul className="space-y-4">
-                {top_countries.map((c) => (
-                  <li key={c.code} className="flex items-center justify-between group">
-                    <Link to={`/countries/${c.code}`} className="flex items-center gap-3">
-                      <span className="text-2xl w-8 text-center">{c.flag_emoji || FLAG_MAP[c.code] || '🌍'}</span>
-                      <span className="text-sm font-medium text-primary group-hover:text-accent transition-colors">
-                        {c.name}
-                      </span>
-                    </Link>
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-primary/80">{c.articles}</div>
-                      <div className="text-[10px] text-primary/40 uppercase">Stories</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <Link to="/countries" className="mt-6 flex items-center justify-center gap-2 w-full py-3 bg-primary/5 text-primary text-xs font-bold uppercase tracking-widest rounded-xl hover:bg-primary/10 transition-colors">
-                View All Directory <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* List: Top Sectors */}
-            <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm h-fit">
-              <h3 className="font-serif text-xl text-primary mb-6">Sectors in Focus</h3>
-              <ul className="space-y-3">
-                {top_sectors.map((s) => (
-                  <li key={s.id} className="flex items-center justify-between p-3 rounded-lg border border-primary/5 hover:border-accent/30 transition-colors">
-                    <span className="text-sm font-medium text-primary capitalize">
-                      {s.name}
+          {/* List: Top Countries */}
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-3xl border border-white/10 p-8 shadow-2xl flex flex-col">
+            <h3 className="font-serif text-[2rem] text-white mb-8">Trending Nations</h3>
+            <ul className="space-y-5 flex-1">
+              {top_countries.map((c) => (
+                <li key={c.code} className="flex items-center justify-between group">
+                  <Link to={`/countries/${c.code}`} className="flex items-center gap-4">
+                    <span className="text-[2rem] w-10 text-center drop-shadow-md">{c.flag_emoji || FLAG_MAP[c.code] || '🌍'}</span>
+                    <span className="text-[1.125rem] font-light text-white group-hover:text-accent transition-colors">
+                      {c.name}
                     </span>
-                    <span className="text-[11px] text-primary/60 bg-primary/5 px-2 py-1 rounded-md font-mono">
-                      {s.count}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  </Link>
+                  <div className="text-right">
+                    <div className="text-[1.125rem] font-serif text-white">{c.articles}</div>
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Stories</div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link to="/countries" className="mt-8 flex items-center justify-center gap-3 w-full py-5 bg-white/5 text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-white/10 hover:text-accent transition-colors">
+              View All Directory <ArrowRight size={14} />
+            </Link>
+          </motion.div>
+        </div>
 
-            {/* Highlights Feed */}
-            <div className="lg:col-span-2">
-              <h3 className="font-serif text-2xl text-primary mb-6">Editor's Highlights</h3>
-              <div className="space-y-4">
-                {highlights.map((article) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* List: Top Sectors */}
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-white/10 p-8 shadow-2xl h-fit">
+            <h3 className="font-serif text-[2rem] text-white mb-8">Sectors in Focus</h3>
+            <ul className="space-y-4">
+              {top_sectors.map((s) => (
+                <li key={s.id} className="flex items-center justify-between p-4 rounded-xl border border-white/5 hover:border-accent/30 bg-primary/30 transition-colors">
+                  <span className="text-[15px] font-light text-white capitalize">
+                    {s.name}
+                  </span>
+                  <span className="text-[13px] text-accent font-bold font-mono">
+                    {s.count}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Highlights Feed */}
+          <div className="lg:col-span-2">
+            <h3 className="font-serif text-[2.5rem] text-white mb-10 leading-none">Editor's Highlights</h3>
+            <div className="space-y-6">
+              {highlights.map((article, index) => (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  key={article.slug}
+                >
                   <Link
-                    key={article.slug}
                     to={`/posts/${article.slug}`}
-                    className="flex flex-col sm:flex-row gap-5 bg-white rounded-xl border border-primary/8 p-5 hover:border-accent/30 hover:shadow-md transition-all group"
+                    className="flex flex-col sm:flex-row gap-6 bg-card rounded-2xl border border-white/5 p-6 hover:border-accent/30 hover:bg-white/5 transition-all group shadow-xl"
                   >
                     {article.hero_image_url && (
-                      <div className="w-full sm:w-40 h-32 shrink-0 rounded-lg overflow-hidden">
+                      <div className="w-full sm:w-48 h-36 shrink-0 rounded-xl overflow-hidden relative">
+                        <div className="absolute inset-0 bg-primary/20 group-hover:bg-transparent transition-colors z-10" />
                         <img 
                           src={article.hero_image_url} 
                           alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 text-accent">
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest mb-3 text-accent/80">
                         {article.country_name && <span>{article.country_name}</span>}
-                        {article.country_name && article.sector_name && <span>·</span>}
+                        {article.country_name && article.sector_name && <span className="text-white/30">•</span>}
                         {article.sector_name && <span>{article.sector_name}</span>}
                       </div>
-                      <h4 className="font-serif text-xl font-bold mb-2 leading-snug text-primary group-hover:text-accent transition-colors">
+                      <h4 className="font-serif text-[1.5rem] leading-snug mb-3 text-white group-hover:text-accent transition-colors">
                         {article.title}
                       </h4>
                       {article.summary && (
-                        <p className="text-sm leading-relaxed text-primary/60 line-clamp-2">
+                        <p className="text-[15px] font-light leading-relaxed text-white/50 line-clamp-2">
                           {article.summary}
                         </p>
                       )}
                     </div>
                   </Link>
-                ))}
-              </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-          
         </div>
+        
       </div>
-    </>
+    </div>
   );
 };

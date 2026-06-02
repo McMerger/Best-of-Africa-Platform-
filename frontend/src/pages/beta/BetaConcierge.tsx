@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { api } from '../../services/api';
 import { PlaneIcon, BriefcaseIcon, BuildingIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
 
 export const BetaConcierge: React.FC = () => {
+    const { scrollY } = useScroll();
+    
     // Form State
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -46,80 +49,99 @@ export const BetaConcierge: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div className="min-h-screen bg-primary text-primary-foreground pb-24">
             <SEO 
                 title="Concierge & Corporate Services | BOA-Story" 
                 description="Bespoke travel, site visits, and corporate services for doing business in Africa."
             />
             
             {/* Header */}
-            <div className="bg-primary text-primary-foreground pt-20 pb-16 px-6">
-                <div className="max-w-4xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-6xl font-serif font-black tracking-tight mb-6">
-                        Concierge & Corporate Services
-                    </h1>
-                    <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-                        We facilitate seamless market entry, executive travel, and complex site visits across the continent.
-                    </p>
+            <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-white/10">
+                <motion.div 
+                  className="absolute inset-0 z-0"
+                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+                >
+                  <div className="absolute inset-0 bg-primary/70 mix-blend-multiply z-10" />
+                  <div className="gradient-overlay-dark z-20" />
+                  <img 
+                    src="/images/v2_concierge_concrete_1780371218016.png" 
+                    alt="African Luxury Concierge Desk" 
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+                  />
+                </motion.div>
+
+                <div className="max-w-6xl mx-auto w-full relative z-30">
+                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
+                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+                            <BriefcaseIcon size={14} />
+                            Private Client Services
+                        </div>
+                        <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
+                            Concierge & <br className="hidden md:block"/>Corporate Services
+                        </h1>
+                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                            We facilitate seamless market entry, executive travel, and complex site visits across the continent. Flawless execution.
+                        </p>
+                    </motion.div>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-16 grid grid-cols-1 lg:grid-cols-12 gap-16">
                 
                 {/* Left Column: Services Info */}
-                <div className="lg:col-span-5 space-y-10">
+                <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2, duration: 0.8 }} className="lg:col-span-5 space-y-12">
                     <div>
-                        <h2 className="text-2xl font-serif font-bold mb-4">Our Expertise</h2>
-                        <p className="text-muted-foreground leading-relaxed">
+                        <h2 className="text-[2.5rem] font-serif mb-6 leading-tight">Our Expertise</h2>
+                        <p className="text-white/60 text-[1.125rem] leading-[1.8] font-light">
                             Doing business in Africa requires local knowledge and flawless execution. Our specialized booking and concierge team leverages direct VIP partnerships to ensure your executive trips and site visits are perfectly orchestrated.
                         </p>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                    <div className="space-y-8">
+                        <div className="flex gap-5 group">
+                            <div className="w-14 h-14 rounded-full bg-card border border-white/10 flex items-center justify-center shrink-0 group-hover:border-accent/50 transition-colors shadow-lg">
                                 <PlaneIcon className="w-6 h-6 text-accent" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg mb-1">Executive Travel</h3>
-                                <p className="text-sm text-muted-foreground">Secure transportation, VIP airport protocols, and Tier-1 hotel reservations with exclusive corporate rates.</p>
+                                <h3 className="font-serif text-[1.5rem] mb-2 text-white">Executive Travel</h3>
+                                <p className="text-[15px] font-light text-white/50 leading-relaxed">Secure transportation, VIP airport protocols, and Tier-1 hotel reservations with exclusive corporate rates.</p>
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                        <div className="flex gap-5 group">
+                            <div className="w-14 h-14 rounded-full bg-card border border-white/10 flex items-center justify-center shrink-0 group-hover:border-accent/50 transition-colors shadow-lg">
                                 <BuildingIcon className="w-6 h-6 text-accent" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg mb-1">Site Visits</h3>
-                                <p className="text-sm text-muted-foreground">Complex multi-city itineraries, translator/guide services, and secure transport for industrial or real estate site visits.</p>
+                                <h3 className="font-serif text-[1.5rem] mb-2 text-white">Site Visits</h3>
+                                <p className="text-[15px] font-light text-white/50 leading-relaxed">Complex multi-city itineraries, translator/guide services, and secure transport for industrial or real estate site visits.</p>
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                        <div className="flex gap-5 group">
+                            <div className="w-14 h-14 rounded-full bg-card border border-white/10 flex items-center justify-center shrink-0 group-hover:border-accent/50 transition-colors shadow-lg">
                                 <BriefcaseIcon className="w-6 h-6 text-accent" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg mb-1">Market Entry Support</h3>
-                                <p className="text-sm text-muted-foreground">Coordination of local meetings, visa assistance, and high-level government or corporate introductions.</p>
+                                <h3 className="font-serif text-[1.5rem] mb-2 text-white">Market Entry Support</h3>
+                                <p className="text-[15px] font-light text-white/50 leading-relaxed">Coordination of local meetings, visa assistance, and high-level government or corporate introductions.</p>
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Right Column: Booking Form */}
-                <div className="lg:col-span-7">
-                    <div className="dark bg-card text-card-foreground rounded-2xl border border-border/50 p-8 md:p-10 shadow-lg">
+                <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="lg:col-span-7">
+                    <div className="bg-card text-white rounded-3xl border border-white/10 p-10 md:p-14 shadow-2xl relative overflow-hidden">
                         {isSuccess ? (
-                            <div className="flex flex-col items-center justify-center py-16 text-center h-full">
-                                <CheckCircleIcon className="w-20 h-20 text-accent mb-6" />
-                                <h3 className="text-3xl font-serif font-bold mb-4">Request Received</h3>
-                                <p className="text-muted-foreground text-lg mb-8 max-w-md">
+                            <div className="flex flex-col items-center justify-center py-20 text-center h-full">
+                                <CheckCircleIcon className="w-24 h-24 text-accent mb-8" />
+                                <h3 className="text-[2.5rem] font-serif mb-4 leading-none">Request Received</h3>
+                                <p className="text-white/60 text-[1.125rem] mb-12 max-w-md font-light leading-relaxed">
                                     Our concierge team will review your requirements and reach out within 24 hours to begin orchestrating your engagement.
                                 </p>
                                 <Button 
-                                    className="rounded-full"
+                                    className="rounded-xl px-10 py-6 bg-white text-primary hover:bg-accent font-bold uppercase tracking-widest text-[11px]"
                                     onClick={() => setIsSuccess(false)}
                                 >
                                     Submit Another Request
@@ -127,48 +149,51 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                         ) : (
                             <>
-                                <h2 className="text-2xl font-serif font-bold mb-8">Submit an Inquiry</h2>
-                                <form onSubmit={handleSubmit} className="space-y-6">
+                                <h2 className="text-[2rem] font-serif mb-10 leading-none">Submit an Inquiry</h2>
+                                <form onSubmit={handleSubmit} className="space-y-8">
                                     
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">Full Name</Label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <Label htmlFor="name" className="text-white/70 text-xs uppercase tracking-widest font-bold">Full Name</Label>
                                             <Input 
                                                 id="name" 
                                                 value={name} 
                                                 onChange={(e) => setName(e.target.value)} 
                                                 required 
+                                                className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Work Email</Label>
+                                        <div className="space-y-3">
+                                            <Label htmlFor="email" className="text-white/70 text-xs uppercase tracking-widest font-bold">Work Email</Label>
                                             <Input 
                                                 id="email" 
                                                 type="email" 
                                                 value={email} 
                                                 onChange={(e) => setEmail(e.target.value)} 
                                                 required 
+                                                className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                             />
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="organization">Organization / Company</Label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <Label htmlFor="organization" className="text-white/70 text-xs uppercase tracking-widest font-bold">Organization / Company</Label>
                                             <Input 
                                                 id="organization" 
                                                 value={organization} 
                                                 onChange={(e) => setOrganization(e.target.value)} 
                                                 required 
+                                                className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                             />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="serviceType">Service Required</Label>
+                                        <div className="space-y-3">
+                                            <Label htmlFor="serviceType" className="text-white/70 text-xs uppercase tracking-widest font-bold">Service Required</Label>
                                             <Select value={serviceType} onValueChange={setServiceType}>
-                                                <SelectTrigger id="serviceType">
+                                                <SelectTrigger id="serviceType" className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl">
                                                     <SelectValue placeholder="Select service" />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="bg-card border-white/10 text-white">
                                                     <SelectItem value="executive_travel">Executive Travel</SelectItem>
                                                     <SelectItem value="site_visit">Site Visit Coordination</SelectItem>
                                                     <SelectItem value="market_entry">Market Entry Support</SelectItem>
@@ -179,46 +204,47 @@ export const BetaConcierge: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="destination">Primary Destination(s)</Label>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="destination" className="text-white/70 text-xs uppercase tracking-widest font-bold">Primary Destination(s)</Label>
                                         <Input 
                                             id="destination" 
                                             placeholder="e.g. Lagos, Nigeria & Kigali, Rwanda"
                                             value={destination} 
                                             onChange={(e) => setDestination(e.target.value)} 
                                             required 
+                                            className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="details">Specific Requirements & Dates</Label>
+                                    <div className="space-y-3">
+                                        <Label htmlFor="details" className="text-white/70 text-xs uppercase tracking-widest font-bold">Specific Requirements & Dates</Label>
                                         <Textarea 
                                             id="details" 
                                             placeholder="Please provide initial details regarding your required travel dates, group size, and primary objectives..."
-                                            className="min-h-[120px]"
+                                            className="min-h-[160px] bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 rounded-xl resize-none p-4"
                                             value={details} 
                                             onChange={(e) => setDetails(e.target.value)} 
                                             required 
                                         />
                                     </div>
 
-                                    <div className="pt-4">
+                                    <div className="pt-6">
                                         <Button 
                                             type="submit" 
-                                            className="w-full md:w-auto rounded-full gap-2 px-8"
+                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all"
                                             disabled={bookingMutation.isPending}
                                         >
                                             {bookingMutation.isPending ? 'Submitting...' : 'Submit Inquiry'} <ArrowRightIcon size={16} />
                                         </Button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-4">
+                                    <p className="text-[13px] text-white/40 mt-6 leading-relaxed font-light text-center">
                                         By submitting this form, you consent to our team reviewing your requirements and communicating with you regarding concierge services. Your data is strictly confidential.
                                     </p>
                                 </form>
                             </>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
             </div>
         </div>

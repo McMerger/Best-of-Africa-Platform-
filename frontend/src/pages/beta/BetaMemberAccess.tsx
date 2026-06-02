@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mail, ArrowRight, Lock, RefreshCw } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { BetaDashboard } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { request } from '../../services/api';
@@ -136,11 +137,11 @@ export const BetaMemberAccess = () => {
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col min-h-screen bg-primary">
         <SEO title="Member Access | BOA-Story" />
         
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-accent/40 border-t-accent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-accent/20 border-t-accent rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -149,21 +150,21 @@ export const BetaMemberAccess = () => {
   // ── Expired state ──────────────────────────────────────────────────────────
   if (phase === 'expired') {
     return (
-      <div className="flex flex-col">
+      <div className="flex flex-col min-h-screen bg-primary text-primary-foreground">
         <SEO title="Access Expired | BOA-Story" />
         
-        <div className="flex-1 flex flex-col justify-center py-20 px-6">
-          <div className="max-w-md mx-auto w-full text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
+        <div className="flex-1 flex flex-col items-center justify-center py-20 px-6">
+          <div className="max-w-md mx-auto w-full text-center bg-card p-10 rounded-3xl border border-white/10 shadow-2xl">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-8">
               <RefreshCw className="w-8 h-8 text-accent" />
             </div>
-            <h1 className="font-serif text-3xl mb-3">Your access has expired</h1>
-            <p className="text-primary/60 mb-8">
+            <h1 className="font-serif text-[2.5rem] leading-none mb-4">Access Expired</h1>
+            <p className="text-white/60 mb-10 font-light leading-relaxed text-[1.125rem]">
               Your 30-day access token has expired. Re-enter your member email to get a fresh one, or renew your membership on Ko-fi.
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all mb-4"
+              className="w-full bg-white text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all mb-6"
             >
               Re-enter member email
             </button>
@@ -171,7 +172,7 @@ export const BetaMemberAccess = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-primary/40 hover:text-primary transition-colors"
+              className="text-[13px] text-white/40 hover:text-white transition-colors uppercase tracking-widest font-bold"
             >
               Renew on Ko-fi →
             </a>
@@ -183,18 +184,15 @@ export const BetaMemberAccess = () => {
   }
 
   return (
-    <div className="selection:bg-accent selection:text-primary flex flex-col">
+    <div className="selection:bg-accent selection:text-primary flex flex-col min-h-screen bg-primary text-primary-foreground">
       <SEO 
         title="Member Access | BOA-Story" 
         description="Access your Founding Member benefits and premium stories."
       />
       
-
-      <div className="flex-1 flex flex-col justify-center py-20 px-6">
-        <div className="max-w-md mx-auto w-full">
-
-          {phase === 'success' && memberData ? (
-            // ── Success state (Dashboard) ──────────────────────────────────────
+      {phase === 'success' && memberData ? (
+        // ── Success state (Dashboard) ──────────────────────────────────────
+        <div className="flex-1">
             <BetaDashboard
               memberData={memberData}
               onLogout={() => {
@@ -202,132 +200,102 @@ export const BetaMemberAccess = () => {
                 setPhase('form');
               }}
             />
-          ) : phase === 'otp' ? (
-            // ── OTP Form State ─────────────────────────────────────────────────
-            <>
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
-                  <Lock className="w-8 h-8 text-accent" />
-                </div>
-                <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
-                  Check your email
-                </h1>
-                <p className="text-primary/60 leading-relaxed max-w-sm mx-auto">
-                  We sent a 6-digit verification code to <strong>{email}</strong>. Entering it below will authorize this device.
-                </p>
-              </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col lg:flex-row">
+          
+          {/* Left Side Cover */}
+          <div className="hidden lg:block lg:w-1/2 relative">
+            <div className="absolute inset-0 bg-primary/40 mix-blend-multiply z-10" />
+            <div className="gradient-overlay-dark z-20" />
+            <img 
+              src="/images/v2_editorial_1.png" 
+              alt="Premium Access" 
+              className="absolute inset-0 w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 z-30 flex flex-col justify-end p-20 pb-32">
+                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                    <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+                        <Lock size={14} />
+                        Founding Members
+                    </div>
+                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl">
+                        Unrestricted <br/><span className="text-accent italic">Intelligence.</span>
+                    </h1>
+                    <p className="text-[1.125rem] font-light text-white/70 max-w-md leading-[1.8] drop-shadow-md">
+                        Log in to access your curated briefings, market analytics, and VIP concierge portal.
+                    </p>
+                </motion.div>
+            </div>
+          </div>
 
-              <form onSubmit={handleOtpSubmit} className="space-y-4 mb-4">
-                <div className="relative">
-                  <input
-                    ref={otpInputRef}
-                    type="text"
-                    value={otp}
-                    onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="0 0 0 0 0 0"
-                    required
-                    pattern="\d*"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    disabled={isSubmitting}
-                    className="w-full bg-white border border-accent/60 rounded-xl px-4 py-6 text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 text-center font-mono text-3xl tracking-widest font-bold"
-                  />
-                </div>
+          {/* Right Side Auth Flow */}
+          <div className="flex-1 lg:w-1/2 flex flex-col justify-center py-20 px-6 sm:px-12 lg:px-24 bg-card relative z-40 lg:-ml-6 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-white/5">
+            <div className="max-w-md w-full mx-auto">
 
-                {errorMsg && (
-                  <p className="text-destructive text-sm text-center" role="alert">{errorMsg}</p>
-                )}
+              {phase === 'otp' ? (
+                // ── OTP Form State ─────────────────────────────────────────────────
+                <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                  <div className="mb-12">
+                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-white">
+                      Check your email
+                    </h1>
+                    <p className="text-white/50 text-[1.125rem] font-light leading-[1.8]">
+                      We sent a 6-digit verification code to <strong className="text-white">{email}</strong>. Entering it below will authorize this device.
+                    </p>
+                  </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting || otp.length < 6}
-                  className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  Verify Code
-                </button>
-              </form>
+                  <form onSubmit={handleOtpSubmit} className="space-y-6 mb-8">
+                    <div className="relative">
+                      <input
+                        ref={otpInputRef}
+                        type="text"
+                        value={otp}
+                        onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="0 0 0 0 0 0"
+                        required
+                        pattern="\d*"
+                        maxLength={6}
+                        autoComplete="one-time-code"
+                        disabled={isSubmitting}
+                        className="w-full bg-primary/50 border border-white/10 rounded-2xl px-4 py-8 text-white placeholder:text-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 text-center font-mono text-4xl tracking-[0.5em] font-bold"
+                      />
+                    </div>
 
-              <div className="text-center mt-6 flex flex-col gap-3">
-                {resendSuccess && (
-                  <p className="text-sm text-accent font-medium" role="status">New code sent — check your inbox.</p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={isSubmitting || resendCooldown > 0}
-                  className="text-sm text-accent/70 hover:text-accent transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPhase('form'); setOtp(''); setErrorMsg(''); }}
-                  className="text-xs text-primary/30 hover:text-primary/60 underline transition-colors"
-                >
-                  Use a different email
-                </button>
-              </div>
-            </>
-          ) : (
-            // ── Email form state ───────────────────────────────────────────────
-            <>
-              <div className="text-center mb-10">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-6">
-                  <Lock className="w-8 h-8 text-accent" />
-                </div>
-                <h1 className="font-serif text-[2.25rem] leading-tight mb-3">
-                  Unlock member access
-                </h1>
-                <p className="text-primary/60 leading-relaxed max-w-sm mx-auto">
-                  Enter the email you used on Ko-fi to activate your full membership on this device.
-                </p>
-              </div>
+                    {errorMsg && (
+                      <p className="text-destructive text-[13px] text-center bg-destructive/10 p-3 rounded-lg border border-destructive/20" role="alert">{errorMsg}</p>
+                    )}
 
-              <form onSubmit={handleSubmit} className="space-y-4 mb-8">
-                <div className="relative">
-                  <Mail size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="Enter your member email"
-                    required
-                    name="email"
-                    disabled={isSubmitting}
-                    className="w-full bg-white border border-primary/10 rounded-xl pl-10 pr-4 py-4 text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50"
-                  />
-                </div>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || otp.length < 6}
+                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(212,175,55,0.2)]"
+                    >
+                      Verify Code
+                    </button>
+                  </form>
 
-                {phase === 'error' && (
-                  <p className="text-destructive text-sm" role="alert">{errorMsg}</p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !email.includes('@')}
-                  className="w-full bg-accent text-accent-foreground font-semibold py-4 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <div className="w-5 h-5 border-2 border-card/30 border-t-primary rounded-full animate-spin" />
-                  ) : (
-                    <>Activate membership <ArrowRight size={15} /></>
-                  )}
-                </button>
-              </form>
-
-              <div className="border-t border-primary/8 pt-8 text-center space-y-4">
-                <p className="text-primary/40 text-sm">Not a member yet?</p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-accent font-semibold hover:opacity-80 transition-opacity text-sm"
-                >
-                  Become a Founding Member on Ko-fi →
-                </a>
-                <p className="text-primary/25 text-xs max-w-xs mx-auto">
-                  After supporting on Ko-fi, return here with the same email to unlock access. No password required.
-                </p>
+                  <div className="flex flex-col gap-4">
+                    {resendSuccess && (
+                      <p className="text-[13px] text-accent text-center bg-accent/10 p-3 rounded-lg border border-accent/20 font-bold tracking-wide" role="status">New code sent — check your inbox.</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={isSubmitting || resendCooldown > 0}
+                      className="text-[11px] text-white/50 hover:text-white uppercase tracking-widest font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-center"
+                    >
+                      {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPhase('form'); setOtp(''); setErrorMsg(''); }}
+                      className="text-[11px] text-white/30 hover:text-white/60 uppercase tracking-widest font-bold underline transition-colors text-center mt-2"
+                    >
+                      Use a different email
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             </>
           )}
