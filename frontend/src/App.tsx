@@ -49,6 +49,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { BetaGlobalPlayer } from './components/beta/BetaGlobalPlayer';
 import { BetaChatWidget } from './components/beta/BetaChatWidget';
+import { CustomCursor } from './components/CustomCursor';
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ function App() {
                       </ErrorBoundary>
                       <BetaGlobalPlayer />
                       <BetaChatWidget />
+                      <CustomCursor />
                       <Toaster />
                       <CommandMenu />
                     </Router>

@@ -145,41 +145,71 @@ export const BetaStories = () => {
         description="Real, grounded stories about African lives, cities, creators, and everyday opportunity."
       />
       
-      <div className="max-w-7xl mx-auto px-6 py-24">
+      {/* Hero Image Section */}
+      <section className="relative h-[60vh] min-h-[500px] w-full flex flex-col justify-end pb-16 px-6 overflow-hidden border-b border-white/10">
+        <motion.div 
+          className="absolute inset-0 z-0"
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 10, ease: "easeOut" }}
+        >
+          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-dark z-20" />
+          <img 
+            src="/images/v2_editorial_2.png" 
+            alt="Stories from the Continent" 
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          />
+        </motion.div>
 
-        <header className="mb-10 text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
-              Stories from the Continent
-            </h1>
-            <p className="text-xl text-primary/75">
-              Real stories. Honest reporting.
-            </p>
-          </div>
-          <button 
-            onClick={() => {
-              const audioTracks: PlayableTrack[] = displayArticles
-                .filter(a => a.audio_url)
-                .map(a => ({
-                  title: a.title,
-                  subtitle: a.sector_name,
-                  audioUrl: a.audio_url!,
-                  imageUrl: a.hero_image_url,
-                  durationSeconds: a.audio_duration_seconds,
-                  slug: a.slug
-                }));
-              if (audioTracks.length > 0) {
-                playTrack(audioTracks[0], audioTracks);
-              }
-            }}
-            className="group flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-card hover:border-accent text-accent font-medium transition-all shadow-lg shadow-accent/5"
+        <div className="container mx-auto max-w-7xl relative z-30">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="flex flex-col md:flex-row md:items-end justify-between gap-8"
           >
-            <div className="w-8 h-8 rounded-full bg-accent text-card group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+            <div>
+              <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-6 backdrop-blur-md">
+                <Sparkles size={14} />
+                Original Reporting
+              </div>
+              <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 text-white drop-shadow-2xl">
+                Stories from<br/>the Continent.
+              </h1>
+              <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">
+                Real, grounded accounts from across the continent — the kind of story you won't find in a headline.
+              </p>
             </div>
-            <span>Listen to Daily Pulse</span>
-          </button>
-        </header>
+            
+            <button 
+              onClick={() => {
+                const audioTracks: PlayableTrack[] = displayArticles
+                  .filter(a => a.audio_url)
+                  .map(a => ({
+                    title: a.title,
+                    subtitle: a.sector_name,
+                    audioUrl: a.audio_url!,
+                    imageUrl: a.hero_image_url,
+                    durationSeconds: a.audio_duration_seconds,
+                    slug: a.slug
+                  }));
+                if (audioTracks.length > 0) {
+                  playTrack(audioTracks[0], audioTracks);
+                }
+              }}
+              className="group flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-card hover:border-accent text-accent font-medium transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] backdrop-blur-md"
+            >
+              <div className="w-10 h-10 rounded-full bg-accent text-card group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
+              </div>
+              <span className="uppercase tracking-widest text-xs font-bold">Listen to Daily Pulse</span>
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-6 py-16">
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (

@@ -12,6 +12,60 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
+import React from 'react';
+
+const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
+  const y1 = useTransform(scrollY, [0, 1000], [0, -300]);
+  const y2 = useTransform(scrollY, [0, 1000], [0, -500]);
+  const y3 = useTransform(scrollY, [0, 1000], [0, -200]);
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      <motion.div 
+        style={{ y: y1 }}
+        className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] max-w-[600px] max-h-[600px] rounded-full bg-accent/10 blur-[100px] mix-blend-screen opacity-60"
+      />
+      <motion.div 
+        style={{ y: y2 }}
+        className="absolute top-[40%] right-[5%] w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] rounded-full bg-[#C9A84C]/5 blur-[120px] mix-blend-screen opacity-50"
+      />
+      <motion.div 
+        style={{ y: y3 }}
+        className="absolute -bottom-[10%] left-[40%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full bg-white/5 blur-[150px] mix-blend-screen opacity-30"
+      />
+    </div>
+  );
+};
+
+const MagneticButton = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = ref.current!.getBoundingClientRect();
+    const middleX = clientX - (left + width / 2);
+    const middleY = clientY - (top + height / 2);
+    setPosition({ x: middleX * 0.15, y: middleY * 0.15 });
+  };
+
+  const reset = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      className={`inline-block ${className}`}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const stripMarkdown = (text: string): string => {
   if (!text) return text;
@@ -132,6 +186,8 @@ export const BetaLanding = () => {
             className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
           />
         </motion.div>
+        
+        <ParallaxOrbs scrollY={scrollY} />
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
           <SectionLabel text="Early Access" />
@@ -156,13 +212,15 @@ export const BetaLanding = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6"
+            className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20"
           >
-            <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-              <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-2xl">
-                Become a Founding Member
-              </GoldButton>
-            </a>
+            <MagneticButton>
+              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
+                <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)]">
+                  Become a Founding Member
+                </GoldButton>
+              </a>
+            </MagneticButton>
           </motion.div>
         </div>
       </section>
@@ -266,11 +324,13 @@ export const BetaLanding = () => {
                         <Lock className="text-accent mb-6" size={40} />
                         <h4 className="font-serif text-2xl mb-3 text-white">Founding Members Only</h4>
                         <p className="text-[1.125rem] font-light text-white/60 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
-                        <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full">
-                          <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-                            Unlock Access
-                          </GoldButton>
-                        </a>
+                        <MagneticButton className="w-full">
+                          <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
+                            <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                              Unlock Access
+                            </GoldButton>
+                          </a>
+                        </MagneticButton>
                       </div>
                     </div>
                   </motion.div>
@@ -456,11 +516,13 @@ export const BetaLanding = () => {
              viewport={{ once: true }}
              transition={{ duration: 1, delay: 0.4 }}
            >
-             <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer">
-               <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)]">
-                 Support on Ko-fi
-               </GoldButton>
-             </a>
+             <MagneticButton>
+               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
+                 <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)]">
+                   Support on Ko-fi
+                 </GoldButton>
+               </a>
+             </MagneticButton>
            </motion.div>
         </div>
       </section>
