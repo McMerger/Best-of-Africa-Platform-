@@ -1,0 +1,4 @@
+[submodule "zeroclaw"]
+	path = zeroclaw
+	url = https://github.com/McMerger/Best-of-Africa-Platform-.git
+	ignore = all
