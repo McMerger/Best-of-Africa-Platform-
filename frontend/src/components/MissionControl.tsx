@@ -43,8 +43,8 @@ export const MissionControl: React.FC = () => {
                 <Button
                     variant="ghost"
                     className={cn(
-                        "h-8 gap-2 rounded-full px-3 hover:bg-white/50",
-                        isOpen ? "bg-primary/10 text-primary" : "text-muted-foreground"
+                        "h-8 gap-2 rounded-full px-3 hover:bg-foreground/50",
+                        isOpen ? "bg-background/10 text-primary" : "text-muted-foreground"
                     )}
                 >
                     <Crosshair2Icon className="h-4 w-4 text-primary" />
@@ -56,7 +56,7 @@ export const MissionControl: React.FC = () => {
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[90vw] sm:w-[400px] p-0 rounded-3xl overflow-hidden border-border shadow-2xl" align="end">
-                <div className="relative flex flex-col h-[600px] bg-background/95 backdrop-blur-xl border border-white/20 text-foreground">
+                <div className="relative flex flex-col h-[600px] bg-background/95 backdrop-blur-xl border border-foreground/20 text-foreground">
 
                     {/* Golden Pulse Background (CSS) */}
                     <div className="absolute inset-0 z-0 opacity-40">
@@ -67,7 +67,7 @@ export const MissionControl: React.FC = () => {
                     {/* Content Layer */}
                     <div className="relative z-10 flex flex-col h-full">
                         {/* Header */}
-                        <div className="p-4 border-b border-border/10 bg-white/40">
+                        <div className="p-4 border-b border-border/10 bg-foreground/40">
                             <div className="flex items-center gap-2 mb-1">
                                 <Crosshair2Icon className="h-4 w-4 text-accent" />
                                 <h3 className="text-sm font-bold uppercase tracking-widest text-foreground">Mission Control</h3>
@@ -91,7 +91,7 @@ export const MissionControl: React.FC = () => {
                                                 "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-all",
                                                 role === r
                                                     ? "bg-accent/10 border-accent/50 text-accent shadow-sm"
-                                                    : "bg-white/40 border-border/50 hover:bg-white/60 text-foreground hover:border-amber-200"
+                                                    : "bg-foreground/40 border-border/50 hover:bg-foreground/60 text-foreground hover:border-amber-200"
                                             )}
                                         >
                                             <span className="text-xs font-bold uppercase">{r}</span>
@@ -117,7 +117,7 @@ export const MissionControl: React.FC = () => {
                                             key={f}
                                             variant="outline"
                                             className={cn(
-                                                "cursor-pointer px-3 py-1.5 capitalize transition-all border-border/50 bg-white/40 text-foreground hover:bg-white/60",
+                                                "cursor-pointer px-3 py-1.5 capitalize transition-all border-border/50 bg-foreground/40 text-foreground hover:bg-foreground/60",
                                                 format === f && "bg-accent/10 text-accent border-accent/50"
                                             )}
                                             onClick={() => setFormat(f)}
@@ -144,9 +144,9 @@ export const MissionControl: React.FC = () => {
                                                 variant="outline"
                                                 onClick={() => toggleCountry(c.code)}
                                                 className={cn(
-                                                    "cursor-pointer text-[10px] border-border/50 bg-white/40 transition-all text-foreground",
+                                                    "cursor-pointer text-[10px] border-border/50 bg-foreground/40 transition-all text-foreground",
                                                     focus.countries.includes(c.code)
-                                                        ? "bg-primary/10 text-primary border-primary/50"
+                                                        ? "bg-background/10 text-primary border-primary/50"
                                                         : "opacity-60 hover:opacity-100 hover:border-blue-200"
                                                 )}
                                             >
@@ -165,7 +165,7 @@ export const MissionControl: React.FC = () => {
                                                 variant="outline"
                                                 onClick={() => toggleSector(s.id)}
                                                 className={cn(
-                                                    "cursor-pointer text-[10px] border-border/50 bg-white/40 transition-all text-foreground",
+                                                    "cursor-pointer text-[10px] border-border/50 bg-foreground/40 transition-all text-foreground",
                                                     focus.sectors.includes(s.id)
                                                         ? "bg-accent/10 text-accent border-accent/50"
                                                         : "opacity-60 hover:opacity-100 hover:border-amber-200"

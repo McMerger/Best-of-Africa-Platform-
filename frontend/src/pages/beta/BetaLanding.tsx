@@ -31,7 +31,7 @@ const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
       />
       <motion.div 
         style={{ y: y3 }}
-        className="absolute -bottom-[10%] left-[40%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full bg-white/5 blur-[150px] mix-blend-screen opacity-30"
+        className="absolute -bottom-[10%] left-[40%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full bg-foreground/5 blur-[150px] mix-blend-screen opacity-30"
       />
     </div>
   );
@@ -172,14 +172,14 @@ export const BetaLanding = () => {
       
 
       {/* 1. HERO SECTION */}
-      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-white/10 bg-primary text-primary-foreground">
+      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-foreground/10 bg-background text-foreground">
         {/* Parallax Background */}
         <motion.div 
           className="absolute inset-0 z-0"
           style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
         >
-          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-dark z-20" />
+          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-light z-20" />
           <img 
             src="/images/v2_hero_kigali.png" 
             alt="Modern African Metropolis" 
@@ -203,7 +203,7 @@ export const BetaLanding = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
+            className="text-foreground/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
           >
             A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.
           </motion.p>
@@ -226,7 +226,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 2. KO-FI FUNDING STATUS */}
-      <section className="bg-primary/95 py-24 border-b border-white/5 relative z-20 overflow-hidden">
+      <section className="bg-background/95 py-24 border-b border-foreground/5 relative z-20 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent opacity-50" />
         <div className="container mx-auto px-6 max-w-4xl text-center relative z-10">
           <motion.div 
@@ -240,11 +240,11 @@ export const BetaLanding = () => {
               <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> Live Funding Progress
             </h3>
             
-            <div className="w-full max-w-2xl mb-6 text-white font-serif">
+            <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
               <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
                 Page Status: <span className="text-accent italic font-medium">Active</span> — 38% of $800 goal funded, 62 coffees received
               </p>
-              <div className="w-full bg-white/5 rounded-full h-4 overflow-hidden border border-white/10 mt-8 relative shadow-inner">
+              <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
                 <motion.div 
                   initial={{ width: 0 }}
                   whileInView={{ width: '38%' }}
@@ -252,12 +252,12 @@ export const BetaLanding = () => {
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(212,175,55,0.5)]"
                 >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                  <div className="absolute inset-0 bg-foreground/20 animate-pulse" />
                 </motion.div>
               </div>
             </div>
             
-            <p className="mt-8 text-[1.125rem] font-light text-white/50 max-w-xl leading-relaxed">
+            <p className="mt-8 text-[1.125rem] font-light text-foreground/50 max-w-xl leading-relaxed">
               BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.
             </p>
           </motion.div>
@@ -268,7 +268,7 @@ export const BetaLanding = () => {
       <section className="py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <SectionLabel text="Original Reporting" />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-white mb-4">Stories from the ground</h2>
+          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">Stories from the ground</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -287,7 +287,7 @@ export const BetaLanding = () => {
                 >
                   <motion.div 
                     whileHover={{ scale: 1.02, y: -8 }} 
-                    className={`group block bg-card rounded-[2rem] border border-white/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(212,175,55,0.15)] transition-all duration-500 ${isFeatured ? 'h-[500px] md:h-[650px]' : 'h-[500px]'}`}
+                    className={`group block bg-card rounded-[2rem] border border-foreground/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(212,175,55,0.15)] transition-all duration-500 ${isFeatured ? 'h-[500px] md:h-[650px]' : 'h-[500px]'}`}
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
@@ -310,10 +310,10 @@ export const BetaLanding = () => {
                           </div>
                           <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase bg-accent px-4 py-2 rounded-full shadow-lg">{article.sector_name}</span>
                         </div>
-                        <h3 className={`font-serif leading-[1.05] mb-5 text-white group-hover:text-accent transition-colors drop-shadow-lg ${isFeatured ? 'text-[2.5rem] md:text-[4.5rem]' : 'text-[2rem] md:text-[2.5rem]'}`}>
+                        <h3 className={`font-serif leading-[1.05] mb-5 text-foreground group-hover:text-accent transition-colors drop-shadow-lg ${isFeatured ? 'text-[2.5rem] md:text-[4.5rem]' : 'text-[2rem] md:text-[2.5rem]'}`}>
                           {stripMarkdown(article.title)}
                         </h3>
-                        <p className={`text-white/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>
+                        <p className={`text-foreground/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>
                           {stripMarkdown(article.summary)}
                         </p>
                       </div>
@@ -322,8 +322,8 @@ export const BetaLanding = () => {
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-black/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                       <div className="glass-panel p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100 border-accent/20">
                         <Lock className="text-accent mb-6" size={40} />
-                        <h4 className="font-serif text-2xl mb-3 text-white">Founding Members Only</h4>
-                        <p className="text-[1.125rem] font-light text-white/60 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
+                        <h4 className="font-serif text-2xl mb-3 text-foreground">Founding Members Only</h4>
+                        <p className="text-[1.125rem] font-light text-foreground/60 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
                         <MagneticButton className="w-full">
                           <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
                             <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
@@ -338,7 +338,7 @@ export const BetaLanding = () => {
               );
             })
           ) : (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-32 text-white/40 border border-white/5 rounded-3xl bg-card">
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
               <div className="animate-pulse text-2xl font-serif">Curating stories&hellip;</div>
             </div>
           )}
@@ -346,11 +346,11 @@ export const BetaLanding = () => {
       </section>
 
       {/* 4. TIERS */}
-      <section className="py-32 bg-primary border-y border-white/10 px-6">
+      <section className="py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
-            <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-white">Fund the platform</h2>
-            <p className="text-white/60 text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
+            <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">Fund the platform</h2>
+            <p className="text-foreground/60 text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
               This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.
             </p>
           </div>
@@ -359,12 +359,12 @@ export const BetaLanding = () => {
       </section>
 
       {/* 5. IMMERSIVE VISUAL MARQUEE (Replacing Static Previews) */}
-      <section className="py-32 bg-primary overflow-hidden border-b border-white/10 relative">
+      <section className="py-32 bg-background overflow-hidden border-b border-foreground/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="text-center mb-16 relative z-10 px-6">
           <SectionLabel text="Platform Experience" />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-white mb-6">A Premium Interface</h2>
-          <p className="text-white/60 text-[1.25rem] font-light max-w-2xl mx-auto">
+          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">A Premium Interface</h2>
+          <p className="text-foreground/60 text-[1.25rem] font-light max-w-2xl mx-auto">
             Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.
           </p>
         </div>
@@ -383,12 +383,12 @@ export const BetaLanding = () => {
               "/images/v2_hero_kigali.png",
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
-              <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl flex-shrink-0 group">
+              <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
                 <img src={src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-foreground">Cinematic Intelligence</div>
                 </div>
               </div>
             ))}
@@ -400,12 +400,12 @@ export const BetaLanding = () => {
               "/images/v2_hero_kigali.png",
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
-              <div key={`dup-${idx}`} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl flex-shrink-0 group">
+              <div key={`dup-${idx}`} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
                 <img src={src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-foreground">Cinematic Intelligence</div>
                 </div>
               </div>
             ))}
@@ -417,7 +417,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 6. MISSION BLOCK */}
-      <section className="py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden">
+      <section className="py-40 px-6 relative text-foreground text-center border-y border-foreground/10 overflow-hidden">
         <div className="absolute inset-0 z-0">
           <motion.img 
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
@@ -425,7 +425,7 @@ export const BetaLanding = () => {
             alt="Real African Street Night" 
             className="w-full h-[120%] object-cover opacity-50 absolute top-[-10%]" 
           />
-          <div className="gradient-overlay-dark z-10" />
+          <div className="gradient-overlay-light z-10" />
         </div>
         <div className="container mx-auto max-w-4xl relative z-20">
           <motion.div
@@ -436,7 +436,7 @@ export const BetaLanding = () => {
           >
             <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
             <h2 className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">We're building Africa's story. Properly.</h2>
-            <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
+            <p className="text-foreground/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
               The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.
             </p>
           </motion.div>
@@ -450,54 +450,54 @@ export const BetaLanding = () => {
           <CardReveal delay={0}>
             <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
                 <div className="text-4xl mb-6">🌐</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-white">Domain & Hosting</div>
-                <div className="text-[0.9rem] font-light text-white/50 leading-relaxed">Keeping the platform live and performant globally.</div>
+                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Domain & Hosting</div>
+                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Keeping the platform live and performant globally.</div>
             </div>
           </CardReveal>
           <CardReveal delay={0.1}>
             <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
                 <div className="text-4xl mb-6">🛠️</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-white">Platform Tools</div>
-                <div className="text-[0.9rem] font-light text-white/50 leading-relaxed">Building independently without VC funding constraints.</div>
+                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Platform Tools</div>
+                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Building independently without VC funding constraints.</div>
             </div>
           </CardReveal>
           <CardReveal delay={0.2}>
             <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
                 <div className="text-4xl mb-6">✍️</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-white">Research Time</div>
-                <div className="text-[0.9rem] font-light text-white/50 leading-relaxed">Funding deep dives into underreported markets.</div>
+                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Research Time</div>
+                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Funding deep dives into underreported markets.</div>
             </div>
           </CardReveal>
           <CardReveal delay={0.3}>
             <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
                 <div className="text-4xl mb-6">☕</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-white">Founder Fuel</div>
-                <div className="text-[0.9rem] font-light text-white/50 leading-relaxed">Direct support for an independent African creator.</div>
+                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Founder Fuel</div>
+                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Direct support for an independent African creator.</div>
             </div>
           </CardReveal>
         </div>
       </section>
 
       {/* 8. FAQ */}
-      <section className="py-32 px-6 border-t border-white/5 bg-primary relative overflow-hidden">
+      <section className="py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="font-serif text-[3rem] md:text-[4rem] text-white mb-16 text-center leading-tight">Frequently Asked Questions</h2>
-          <div className="glass-panel rounded-3xl border border-white/10 px-8 md:px-10 shadow-2xl">
+          <h2 className="font-serif text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">Frequently Asked Questions</h2>
+          <div className="glass-panel rounded-3xl border border-foreground/10 px-8 md:px-10 shadow-2xl">
             {FAQ_ITEMS.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
           </div>
         </div>
       </section>
 
       {/* 9. FOOTER CTA */}
-      <section className="py-40 px-6 text-center bg-primary relative overflow-hidden">
+      <section className="py-40 px-6 text-center bg-background relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
            <motion.h2 
              initial={{ opacity: 0, y: 30 }}
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 1 }}
-             className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-white"
+             className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-foreground"
            >
              Join before the <br/>official launch.
            </motion.h2>
@@ -506,7 +506,7 @@ export const BetaLanding = () => {
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 1, delay: 0.2 }}
-             className="text-white/60 mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
+             className="text-foreground/60 mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
            >
              Your support at this quiet, early stage is what turns an idea into reality.
            </motion.p>

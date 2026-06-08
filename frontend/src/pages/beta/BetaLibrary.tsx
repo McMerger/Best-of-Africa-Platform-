@@ -59,7 +59,7 @@ export const BetaLibrary: React.FC = () => {
                     </div>
                 ) : bookmarks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center text-center py-20 px-4">
-                        <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mb-6">
+                        <div className="w-20 h-20 bg-background/5 rounded-full flex items-center justify-center mb-6">
                             <BookmarkIcon className="w-10 h-10 text-primary/30" />
                         </div>
                         <h2 className="text-2xl font-serif font-bold text-foreground mb-3">Your library is empty</h2>
@@ -68,7 +68,7 @@ export const BetaLibrary: React.FC = () => {
                         </p>
                         <Link 
                             to="/feed" 
-                            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow transition-colors hover:bg-primary/90"
+                            className="inline-flex items-center justify-center rounded-full bg-background px-6 py-3 text-sm font-bold text-foreground shadow transition-colors hover:bg-background/90"
                         >
                             Explore Daily Briefing
                         </Link>
@@ -86,7 +86,7 @@ export const BetaLibrary: React.FC = () => {
                                 }} />
                                 <button
                                     onClick={() => removeBookmarkMutation.mutate(bookmark.id)}
-                                    className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
+                                    className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur text-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-foreground"
                                     title="Remove from saved"
                                 >
                                     <BookmarkIcon className="w-4 h-4 fill-current" />

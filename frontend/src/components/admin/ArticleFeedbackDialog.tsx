@@ -73,7 +73,7 @@ export const ArticleFeedbackDialog: React.FC<ArticleFeedbackDialogProps> = ({
                     <Button 
                         onClick={handleSubmit} 
                         disabled={isLoading || !feedback.trim()}
-                        className="bg-primary text-primary-foreground font-bold"
+                        className="bg-background text-foreground font-bold"
                     >
                         {isLoading ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" /> : null}
                         {actionLabel}

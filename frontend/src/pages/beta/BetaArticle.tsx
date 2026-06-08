@@ -84,7 +84,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on X / Twitter"
-        className={`p-2 rounded-lg bg-primary/5 hover:bg-white/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
+        className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Twitter size={13} />
       </a>
@@ -93,14 +93,14 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Share on LinkedIn"
-        className={`p-2 rounded-lg bg-primary/5 hover:bg-white/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
+        className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Linkedin size={13} />
       </a>
       <button
         onClick={hasShare ? handleNativeShare : copyLink}
         aria-label={hasShare ? "Share story" : "Copy link"}
-        className="p-2 rounded-lg bg-primary/5 hover:bg-white/10 text-primary/40 hover:text-primary transition-all"
+        className="p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all"
       >
         {copied ? <Check size={13} className="text-accent" /> : <Link2 size={13} />}
       </button>
@@ -110,14 +110,14 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 
 const ArticleSkeleton = () => (
   <div className="bg-background text-primary font-sans">
-    <div className="w-full h-[300px] md:h-[400px] bg-white animate-pulse" />
+    <div className="w-full h-[300px] md:h-[400px] bg-background animate-pulse" />
     <div className="max-w-3xl mx-auto px-6 py-12">
-      <div className="h-4 bg-primary/10 rounded w-32 mb-6 animate-pulse" />
-      <div className="h-10 bg-primary/10 rounded w-full mb-3 animate-pulse" />
-      <div className="h-10 bg-primary/10 rounded w-3/4 mb-8 animate-pulse" />
+      <div className="h-4 bg-background/10 rounded w-32 mb-6 animate-pulse" />
+      <div className="h-10 bg-background/10 rounded w-full mb-3 animate-pulse" />
+      <div className="h-10 bg-background/10 rounded w-3/4 mb-8 animate-pulse" />
       <div className="space-y-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={`h-4 bg-primary/5 rounded animate-pulse ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
+          <div key={i} className={`h-4 bg-background/5 rounded animate-pulse ${i % 3 === 2 ? 'w-2/3' : 'w-full'}`} />
         ))}
       </div>
     </div>
@@ -131,13 +131,13 @@ function ArticleMarkdown({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       components={{
         h2: ({ children }) => (
-          <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] text-white mt-16 mb-8 leading-[1.1] tracking-tight">{children}</h2>
+          <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">{children}</h2>
         ),
         h3: ({ children }) => (
-          <h3 className="font-serif text-[1.75rem] md:text-[2.25rem] text-white/90 mt-12 mb-6 leading-snug">{children}</h3>
+          <h3 className="font-serif text-[1.75rem] md:text-[2.25rem] text-foreground/90 mt-12 mb-6 leading-snug">{children}</h3>
         ),
         p: ({ children }) => (
-          <p className="text-white/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">{children}</p>
+          <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">{children}</p>
         ),
         strong: ({ children }) => (
           <strong className="text-accent font-semibold">{children}</strong>
@@ -165,19 +165,19 @@ function ArticleMarkdown({ content }: { content: string }) {
             );
           }
           return (
-            <li className="text-white/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3">
+            <li className="text-foreground/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3">
               <span className="text-accent mt-1 shrink-0">→</span>
               <span>{children}</span>
             </li>
           );
         },
         blockquote: ({ children }) => (
-          <blockquote className="my-10 border-l-[3px] border-accent pl-8 py-2 text-white/60 font-serif italic text-[1.5rem] leading-[1.6]">
+          <blockquote className="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/60 font-serif italic text-[1.5rem] leading-[1.6]">
             {children}
           </blockquote>
         ),
         code: ({ children }) => (
-          <code className="bg-white/5 text-accent text-sm px-2 py-1 rounded font-mono">{children}</code>
+          <code className="bg-foreground/5 text-accent text-sm px-2 py-1 rounded font-mono">{children}</code>
         ),
         hr: () => <hr className="my-10 border-primary/10" /> }}
     >
@@ -368,7 +368,7 @@ export const BetaArticle = () => {
 
           {/* Lede / standfirst — rendered from article.summary */}
           {article.summary && (
-            <p className="font-serif text-[1.5rem] md:text-[2rem] leading-[1.4] text-white/70 italic mb-10 border-l-2 border-accent pl-6 py-2">
+            <p className="font-serif text-[1.5rem] md:text-[2rem] leading-[1.4] text-foreground/70 italic mb-10 border-l-2 border-accent pl-6 py-2">
               {article.summary}
             </p>
           )}
@@ -416,8 +416,8 @@ export const BetaArticle = () => {
                   disabled={isReframing && lens === l}
                   className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 ${
                     lens === l 
-                      ? 'bg-white text-primary shadow-sm' 
-                      : 'text-primary/50 hover:text-primary hover:bg-white/50'
+                      ? 'bg-background text-primary shadow-sm' 
+                      : 'text-primary/50 hover:text-primary hover:bg-foreground/50'
                   }`}
                 >
                   {isReframing && lens === l && <Loader2 size={12} className="animate-spin" />}
@@ -447,7 +447,7 @@ export const BetaArticle = () => {
 
               {/* Lock overlay */}
               <div className="absolute inset-x-0 top-0 h-full flex flex-col items-center justify-center bg-gradient-to-b from-background/0 via-background/90 to-background pt-8 pb-16 px-6 text-center">
-                <div className="bg-white p-4 rounded-full border border-primary/10 shadow-sm mb-6">
+                <div className="bg-background p-4 rounded-full border border-primary/10 shadow-sm mb-6">
                   <span className="text-3xl">☕</span>
                 </div>
                 <h3 className="font-serif text-[28px] text-primary mb-3">
@@ -470,7 +470,7 @@ export const BetaArticle = () => {
 
           {/* Short article — soft support nudge after reading (only for non-members) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
-            <div className="mt-12 p-8 bg-white border border-primary/10 rounded-xl text-center">
+            <div className="mt-12 p-8 bg-background border border-primary/10 rounded-xl text-center">
               <span className="text-3xl mb-4 block">☕</span>
               <p className="text-primary/80 mb-2 font-serif text-xl">Enjoyed this story?</p>
               <p className="text-primary/60 text-sm mb-6 max-w-sm mx-auto">This project is completely independent. If you want to see more narrative-correcting stories, consider buying me a coffee.</p>

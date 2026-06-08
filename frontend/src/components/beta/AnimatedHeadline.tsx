@@ -23,8 +23,8 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
   return (
     <motion.h2
       ref={ref}
-      // text-white overrides the global @layer base { h2 { text-foreground } } which maps to navy blue
-      className={`text-white ${className}`}
+      // text-foreground overrides the global @layer base { h2 { text-foreground } } which maps to navy blue
+      className={`text-foreground ${className}`}
       variants={container}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}

@@ -90,7 +90,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                             : `linear-gradient(135deg, ${region.color}40, ${region.color}20)`,
                                     }}
                                 >
-                                    <span className="text-xs font-black text-white/90">{count || '—'}</span>
+                                    <span className="text-xs font-black text-foreground/90">{count || '—'}</span>
                                 </div>
 
                                 {/* Region label */}
@@ -100,7 +100,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
 
                                 {/* Country count sub-label */}
                                 {count > 0 && (
-                                    <span className={`text-[8px] font-bold mt-0.5 transition-colors duration-300 ${isActive ? 'text-white/60' : 'text-muted-foreground'}`}>
+                                    <span className={`text-[8px] font-bold mt-0.5 transition-colors duration-300 ${isActive ? 'text-foreground/60' : 'text-muted-foreground'}`}>
                                         {count} markets
                                     </span>
                                 )}
@@ -120,7 +120,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
             </div>
 
             {/* Diagrammatic Legend */}
-            <div className="absolute bottom-6 left-6 z-10 bg-white/90 dark:bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl p-4 shadow-sm flex items-center gap-6">
+            <div className="absolute bottom-6 left-6 z-10 bg-foreground/90 dark:bg-card/90 backdrop-blur-sm border border-border/50 rounded-xl p-4 shadow-sm flex items-center gap-6">
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-[#051828]"></div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Standard Activity</span>

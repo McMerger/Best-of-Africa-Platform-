@@ -147,7 +147,7 @@ export const SettingsPage: React.FC = () => {
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/10 text-primary">
                                         <PersonIcon className="h-5 w-5" />
                                     </div>
                                     <div>
@@ -191,7 +191,7 @@ export const SettingsPage: React.FC = () => {
                                 <div className="space-y-2">
                                     <Label>Account Tier</Label>
                                     <div className="flex items-center h-10 px-3 rounded-full bg-secondary border border-border">
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 mr-2">
+                                        <Badge variant="secondary" className="bg-background/10 text-primary hover:bg-background/20 mr-2">
                                             {user.tier}
                                         </Badge>
                                         <span className="text-sm text-muted-foreground">Access valid until Dec 2026</span>
@@ -205,7 +205,7 @@ export const SettingsPage: React.FC = () => {
                     <Card className="border-border shadow-sm">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/10 text-primary">
                                     <LightningBoltIcon className="h-5 w-5" />
                                 </div>
                                 <div>
@@ -230,7 +230,7 @@ export const SettingsPage: React.FC = () => {
                                                     className={cn(
                                                         "px-3 py-1 cursor-pointer transition-colors",
                                                         !isEditing && "opacity-70 cursor-not-allowed",
-                                                        isActive ? "bg-primary text-white" : "hover:bg-primary/5"
+                                                        isActive ? "bg-background text-foreground" : "hover:bg-background/5"
                                                     )}
                                                     onClick={() => toggleArrayItem('countries_of_interest', country)}
                                                 >
@@ -271,7 +271,7 @@ export const SettingsPage: React.FC = () => {
                     <Card className="border-border shadow-sm">
                         <CardHeader className="pb-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/10 text-primary">
                                     <BellIcon className="h-5 w-5" />
                                 </div>
                                 <div>

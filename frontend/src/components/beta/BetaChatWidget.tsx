@@ -78,7 +78,7 @@ export const BetaChatWidget = () => {
     <>
       {/* Floating Action Button */}
       <motion.button
-        className="fixed bottom-6 right-6 z-50 p-4 bg-primary text-white rounded-full shadow-lg border border-primary/20 hover:bg-primary/90 hover:scale-105 transition-all flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 p-4 bg-background text-foreground rounded-full shadow-lg border border-primary/20 hover:bg-background/90 hover:scale-105 transition-all flex items-center justify-center"
         onClick={() => setIsOpen(true)}
         initial={{ scale: 0 }}
         animate={{ scale: isOpen ? 0 : 1 }}
@@ -95,20 +95,20 @@ export const BetaChatWidget = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[350px] sm:w-[400px] h-[500px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[350px] sm:w-[400px] h-[500px] max-h-[80vh] bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-primary text-white p-4 flex justify-between items-center shrink-0">
+            <div className="bg-background text-foreground p-4 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} className="text-accent" />
                 <div>
                   <h3 className="font-serif text-lg leading-tight">Ask the Analyst</h3>
-                  <p className="text-[10px] text-white/60 uppercase tracking-wider font-bold">AI-Powered Research</p>
+                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">AI-Powered Research</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"
+                className="p-1 hover:bg-foreground/10 rounded-full transition-colors text-foreground/60 hover:text-foreground"
               >
                 <X size={18} />
               </button>
@@ -123,10 +123,10 @@ export const BetaChatWidget = () => {
                 >
                   <div className={`max-w-[85%] rounded-2xl p-3 ${
                     msg.role === 'user' 
-                      ? 'bg-primary text-white rounded-br-sm' 
+                      ? 'bg-background text-foreground rounded-br-sm' 
                       : msg.isError 
                         ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-bl-sm'
-                        : 'bg-white border border-primary/10 text-primary rounded-bl-sm shadow-sm'
+                        : 'bg-background border border-primary/10 text-primary rounded-bl-sm shadow-sm'
                   }`}>
                     {msg.isError && <AlertCircle size={14} className="inline mr-1.5 mb-0.5" />}
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
@@ -150,7 +150,7 @@ export const BetaChatWidget = () => {
               
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="max-w-[85%] rounded-2xl rounded-bl-sm p-4 bg-white border border-primary/10 text-primary/50 shadow-sm flex items-center gap-1.5">
+                  <div className="max-w-[85%] rounded-2xl rounded-bl-sm p-4 bg-background border border-primary/10 text-primary/50 shadow-sm flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-1.5 h-1.5 bg-accent rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -161,7 +161,7 @@ export const BetaChatWidget = () => {
             </div>
 
             {/* Input Area */}
-            <div className="p-3 bg-white border-t border-primary/10 shrink-0">
+            <div className="p-3 bg-background border-t border-primary/10 shrink-0">
               <form onSubmit={handleSubmit} className="flex items-center gap-2 relative">
                 <input
                   type="text"
@@ -174,7 +174,7 @@ export const BetaChatWidget = () => {
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="absolute right-1 p-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute right-1 p-2 bg-background text-foreground rounded-full hover:bg-background/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={14} />
                 </button>

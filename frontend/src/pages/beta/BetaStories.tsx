@@ -24,18 +24,18 @@ const stripMarkdown = (text: string): string => {
 };
 
 const StoryCardSkeleton = () => (
-  <div className="bg-white rounded-xl border border-primary/8 h-[380px] animate-pulse">
+  <div className="bg-background rounded-xl border border-primary/8 h-[380px] animate-pulse">
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
-        <div className="w-8 h-8 bg-primary/8 rounded-full" />
-        <div className="w-20 h-4 bg-primary/8 rounded" />
+        <div className="w-8 h-8 bg-background/8 rounded-full" />
+        <div className="w-20 h-4 bg-background/8 rounded" />
       </div>
-      <div className="h-6 bg-primary/8 rounded mb-2 w-full" />
-      <div className="h-6 bg-primary/8 rounded mb-4 w-3/4" />
+      <div className="h-6 bg-background/8 rounded mb-2 w-full" />
+      <div className="h-6 bg-background/8 rounded mb-4 w-3/4" />
       <div className="space-y-2">
-        <div className="h-4 bg-primary/5 rounded w-full" />
-        <div className="h-4 bg-primary/5 rounded w-5/6" />
-        <div className="h-4 bg-primary/5 rounded w-4/6" />
+        <div className="h-4 bg-background/5 rounded w-full" />
+        <div className="h-4 bg-background/5 rounded w-5/6" />
+        <div className="h-4 bg-background/5 rounded w-4/6" />
       </div>
     </div>
   </div>
@@ -146,15 +146,15 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative h-[60vh] min-h-[500px] w-full flex flex-col justify-end pb-16 px-6 overflow-hidden border-b border-white/10">
+      <section className="relative h-[60vh] min-h-[500px] w-full flex flex-col justify-end pb-16 px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 10, ease: "easeOut" }}
         >
-          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-dark z-20" />
+          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-light z-20" />
           <img 
             src="/images/v2_editorial_2.png" 
             alt="Stories from the Continent" 
@@ -174,10 +174,10 @@ export const BetaStories = () => {
                 <Sparkles size={14} />
                 Original Reporting
               </div>
-              <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 text-white drop-shadow-2xl">
+              <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 text-foreground drop-shadow-2xl">
                 Stories from<br/>the Continent.
               </h1>
-              <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">
+              <p className="text-[1.25rem] text-foreground/70 max-w-xl font-light drop-shadow-md">
                 Real, grounded accounts from across the continent — the kind of story you won't find in a headline.
               </p>
             </div>
@@ -213,7 +213,7 @@ export const BetaStories = () => {
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (
-          <div className="mb-6 px-4 py-2.5 rounded-lg bg-primary/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
+          <div className="mb-6 px-4 py-2.5 rounded-lg bg-background/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
             <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
             Live content is currently unavailable. Please check back shortly.
           </div>
@@ -222,12 +222,12 @@ export const BetaStories = () => {
         {/* Feed Mode Toggle (Visible only to members) */}
         {isMember && !isSearchMode && (
           <div className="flex justify-center md:justify-start mb-8">
-            <div className="inline-flex bg-primary/5 rounded-full p-1 border border-primary/10">
+            <div className="inline-flex bg-background/5 rounded-full p-1 border border-primary/10">
               <button
                 onClick={() => setFeedMode('latest')}
                 className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
                   feedMode === 'latest' 
-                    ? 'bg-white text-primary shadow-sm border border-primary/10' 
+                    ? 'bg-background text-primary shadow-sm border border-primary/10' 
                     : 'text-primary/50 hover:text-primary'
                 }`}
               >
@@ -250,7 +250,7 @@ export const BetaStories = () => {
 
         {/* Need Preferences State */}
         {needsPreferences && (
-          <div className="bg-white rounded-2xl border border-primary/10 p-10 text-center max-w-2xl mx-auto mb-16">
+          <div className="bg-background rounded-2xl border border-primary/10 p-10 text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-6">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
@@ -283,7 +283,7 @@ export const BetaStories = () => {
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
             aria-label="Search stories"
-            className="w-full md:max-w-lg bg-white border border-primary/8 rounded-lg pl-10 pr-10 py-3 text-sm text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+            className="w-full md:max-w-lg bg-background border border-primary/8 rounded-lg pl-10 pr-10 py-3 text-sm text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
           />
           {searchInput && (
             <button
@@ -368,9 +368,9 @@ export const BetaStories = () => {
                     >
                       <Link
                         to="/membership"
-                        className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-accent/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors block"
+                        className="group relative bg-background rounded-xl overflow-hidden border border-primary/8 flex flex-col h-auto md:h-[380px] cursor-pointer hover:border-accent/50 hover:shadow-[0_4px_24px_rgba(28,24,20,0.08)] transition-colors block"
                       >
-                      <div className="p-6 pb-2 border-b border-primary/8 relative z-10 bg-white" aria-hidden="true">
+                      <div className="p-6 pb-2 border-b border-primary/8 relative z-10 bg-background" aria-hidden="true">
                         <div className="flex justify-between items-center mb-4">
                           <span className="text-2xl">{article.country_flag}</span>
                           <span className="text-xs font-semibold tracking-wider text-primary/50 uppercase">{article.sector_name}</span>
@@ -386,12 +386,12 @@ export const BetaStories = () => {
                         </div>
                       </div>
                       <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-primary/8">
-                        <div className="absolute inset-0 backdrop-blur-[5px] bg-primary/65 transition-opacity duration-300" />
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-background/65 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
-                          <div className="bg-primary p-4 rounded-full border border-accent/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-accent/10 transition-all duration-300">
+                          <div className="bg-background p-4 rounded-full border border-accent/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-accent/10 transition-all duration-300">
                             <Lock className="w-6 h-6 text-accent" />
                           </div>
-                          <span className="font-serif text-lg text-white font-medium mb-1">Founding Members Only</span>
+                          <span className="font-serif text-lg text-foreground font-medium mb-1">Founding Members Only</span>
                           <span className="text-xs text-accent uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
                         </div>
                       </div>
@@ -411,7 +411,7 @@ export const BetaStories = () => {
                   >
                     <Link
                       to={`/posts/${article.slug}`}
-                      className="group relative bg-card rounded-2xl overflow-hidden border border-white/10 flex flex-col transition-all duration-500 hover:border-white/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] block h-full"
+                      className="group relative bg-card rounded-2xl overflow-hidden border border-foreground/10 flex flex-col transition-all duration-500 hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] block h-full"
                     >
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
@@ -439,7 +439,7 @@ export const BetaStories = () => {
                         <span className="text-2xl">{article.country_flag}</span>
                         <span className="text-xs font-semibold tracking-widest text-accent uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className={`font-serif leading-[1.1] mb-4 text-white group-hover:text-accent transition-colors ${index % 5 === 0 ? 'text-[2rem] md:text-[2.5rem]' : 'text-[1.5rem] md:text-[1.75rem]'}`}>
+                      <h3 className={`font-serif leading-[1.1] mb-4 text-foreground group-hover:text-accent transition-colors ${index % 5 === 0 ? 'text-[2rem] md:text-[2.5rem]' : 'text-[1.5rem] md:text-[1.75rem]'}`}>
                         {stripMarkdown(article.title)}
                       </h3>
                       
@@ -455,7 +455,7 @@ export const BetaStories = () => {
                         <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
                       )}
                     </div>
-                    <div className="p-6 pt-0 bg-white">
+                    <div className="p-6 pt-0 bg-background">
                       <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read

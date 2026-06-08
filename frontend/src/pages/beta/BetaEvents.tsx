@@ -60,20 +60,20 @@ export const BetaEvents: React.FC = () => {
     const { scrollY } = useScroll();
 
     return (
-        <div className="min-h-screen bg-primary text-primary-foreground pb-24">
+        <div className="min-h-screen bg-background text-foreground pb-24">
             <SEO 
                 title="Summits & Events | BOA-Story" 
                 description="Exclusive forums, summits, and executive roundtables focused on African markets."
             />
             
             {/* Header */}
-            <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-white/10">
+            <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-foreground/10">
                 <motion.div 
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
-                  <div className="absolute inset-0 bg-primary/70 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-dark z-20" />
+                  <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
+                  <div className="gradient-overlay-light z-20" />
                   <img 
                     src="/images/v2_events_concrete_1780371229306.png" 
                     alt="African Executive Summit" 
@@ -90,7 +90,7 @@ export const BetaEvents: React.FC = () => {
                         <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Summits & <br className="hidden md:block"/>Executive Forums
                         </h1>
-                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl leading-[1.8] drop-shadow-md">
                             Connect with industry leaders, investors, and policymakers shaping the future of African markets at our curated events.
                         </p>
                     </motion.div>
@@ -102,11 +102,11 @@ export const BetaEvents: React.FC = () => {
                 {isLoading ? (
                     <div className="space-y-12">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-64 rounded-3xl bg-card border border-white/10 animate-pulse" />
+                            <div key={i} className="h-64 rounded-3xl bg-card border border-foreground/10 animate-pulse" />
                         ))}
                     </div>
                 ) : events.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 text-white/40 bg-card rounded-3xl border border-white/10 shadow-2xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 text-foreground/40 bg-card rounded-3xl border border-foreground/10 shadow-2xl">
                         <CalendarIcon className="w-16 h-16 mx-auto mb-6 opacity-50" />
                         <h2 className="text-[2rem] font-serif mb-4">No upcoming events</h2>
                         <p className="text-[1.125rem] font-light">Check back later for newly scheduled summits.</p>
@@ -120,7 +120,7 @@ export const BetaEvents: React.FC = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: "-100px" }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="bg-card text-white rounded-3xl border border-white/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-colors duration-500"
+                                className="bg-card text-foreground rounded-3xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-colors duration-500"
                             >
                                 <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
                                     <div 
@@ -141,30 +141,30 @@ export const BetaEvents: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h2 className="text-[2.5rem] font-serif leading-none text-white mb-6">{event.title}</h2>
-                                    <p className="text-white/60 mb-10 text-[1.125rem] font-light leading-[1.8] line-clamp-3">
+                                    <h2 className="text-[2.5rem] font-serif leading-none text-foreground mb-6">{event.title}</h2>
+                                    <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8] line-clamp-3">
                                         {event.description}
                                     </p>
                                     
-                                    <div className="grid grid-cols-2 gap-6 mb-10 bg-white/5 border border-white/10 rounded-2xl p-6">
-                                        <div className="flex items-center gap-3 text-[15px] font-light text-white/80">
+                                    <div className="grid grid-cols-2 gap-6 mb-10 bg-foreground/5 border border-foreground/10 rounded-2xl p-6">
+                                        <div className="flex items-center gap-3 text-[15px] font-light text-foreground/80">
                                             <CalendarIcon className="w-5 h-5 text-accent" />
                                             {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                         </div>
-                                        <div className="flex items-center gap-3 text-[15px] font-light text-white/80">
+                                        <div className="flex items-center gap-3 text-[15px] font-light text-foreground/80">
                                             <MapPinIcon className="w-5 h-5 text-accent" />
                                             {event.is_virtual ? 'Virtual Event' : event.location || 'TBA'}
                                         </div>
                                     </div>
                                     
-                                    <div className="mt-auto flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-white/10">
-                                        <span className="text-[13px] font-bold uppercase tracking-widest text-white/60">
+                                    <div className="mt-auto flex flex-col sm:flex-row justify-between items-center gap-6 pt-6 border-t border-foreground/10">
+                                        <span className="text-[13px] font-bold uppercase tracking-widest text-foreground/60">
                                             {event.status === 'Open' ? 'Registration Open' : event.status}
                                         </span>
                                         <Button 
                                             onClick={() => handleRegisterClick(event)}
                                             disabled={event.status !== 'Open' && event.status !== 'Upcoming'}
-                                            className="w-full sm:w-auto rounded-xl gap-3 bg-white text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
+                                            className="w-full sm:w-auto rounded-xl gap-3 bg-background text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
                                         >
                                             Register Interest <ArrowRightIcon size={16} />
                                         </Button>
@@ -178,10 +178,10 @@ export const BetaEvents: React.FC = () => {
 
             {/* Registration Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[500px] bg-card border-white/10 text-white rounded-3xl p-8 shadow-2xl">
+                <DialogContent className="sm:max-w-[500px] bg-card border-foreground/10 text-foreground rounded-3xl p-8 shadow-2xl">
                     <DialogHeader className="mb-6">
                         <DialogTitle className="font-serif text-[2rem] leading-none mb-2">{isSuccess ? 'Registration Confirmed' : 'Register for Event'}</DialogTitle>
-                        <DialogDescription className="text-white/60 font-light text-[1.125rem]">
+                        <DialogDescription className="text-foreground/60 font-light text-[1.125rem]">
                             {isSuccess 
                                 ? 'We have received your registration details.'
                                 : selectedEvent?.title}
@@ -192,7 +192,7 @@ export const BetaEvents: React.FC = () => {
                         <div className="flex flex-col items-center justify-center py-10 text-center">
                             <CheckCircleIcon className="w-20 h-20 text-accent mb-6" />
                             <h3 className="text-[2rem] font-serif mb-4">You're on the list!</h3>
-                            <p className="text-white/60 font-light leading-relaxed mb-8">
+                            <p className="text-foreground/60 font-light leading-relaxed mb-8">
                                 Our team will be in touch shortly with your confirmation and attendance details.
                             </p>
                             <Button 
@@ -205,43 +205,43 @@ export const BetaEvents: React.FC = () => {
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="space-y-3">
-                                <Label htmlFor="name" className="text-white/70 text-xs uppercase tracking-widest font-bold">Full Name</Label>
+                                <Label htmlFor="name" className="text-foreground/70 text-xs uppercase tracking-widest font-bold">Full Name</Label>
                                 <Input 
                                     id="name" 
                                     value={name} 
                                     onChange={(e) => setName(e.target.value)} 
                                     required 
-                                    className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
+                                    className="bg-background/50 border-foreground/10 text-foreground focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                 />
                             </div>
                             <div className="space-y-3">
-                                <Label htmlFor="email" className="text-white/70 text-xs uppercase tracking-widest font-bold">Work Email</Label>
+                                <Label htmlFor="email" className="text-foreground/70 text-xs uppercase tracking-widest font-bold">Work Email</Label>
                                 <Input 
                                     id="email" 
                                     type="email" 
                                     value={email} 
                                     onChange={(e) => setEmail(e.target.value)} 
                                     required 
-                                    className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
+                                    className="bg-background/50 border-foreground/10 text-foreground focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                 />
                             </div>
                             <div className="space-y-3">
-                                <Label htmlFor="org" className="text-white/70 text-xs uppercase tracking-widest font-bold">Organization</Label>
+                                <Label htmlFor="org" className="text-foreground/70 text-xs uppercase tracking-widest font-bold">Organization</Label>
                                 <Input 
                                     id="org" 
                                     value={organization} 
                                     onChange={(e) => setOrganization(e.target.value)} 
                                     required 
-                                    className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
+                                    className="bg-background/50 border-foreground/10 text-foreground focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl"
                                 />
                             </div>
                             <div className="space-y-3">
-                                <Label htmlFor="ticket" className="text-white/70 text-xs uppercase tracking-widest font-bold">Ticket Type</Label>
+                                <Label htmlFor="ticket" className="text-foreground/70 text-xs uppercase tracking-widest font-bold">Ticket Type</Label>
                                 <Select value={ticketType} onValueChange={setTicketType}>
-                                    <SelectTrigger id="ticket" className="bg-primary/50 border-white/10 text-white focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl">
+                                    <SelectTrigger id="ticket" className="bg-background/50 border-foreground/10 text-foreground focus:border-accent/50 focus:ring-accent/20 h-12 rounded-xl">
                                         <SelectValue placeholder="Select ticket" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-card border-white/10 text-white">
+                                    <SelectContent className="bg-card border-foreground/10 text-foreground">
                                         <SelectItem value="Standard">Standard Pass</SelectItem>
                                         <SelectItem value="VIP">VIP Delegate</SelectItem>
                                         <SelectItem value="Media">Media/Press</SelectItem>

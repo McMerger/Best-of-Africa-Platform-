@@ -47,9 +47,9 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-primary/80 backdrop-blur-2xl border-b border-white/5 shadow-2xl transition-all duration-300">
+        <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-2xl border-b border-foreground/5 shadow-2xl transition-all duration-300">
             {/* Pre-header Utilities */}
-            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-black/40 border-b border-white/5 text-[11px] font-medium tracking-wide">
+            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-black/40 border-b border-foreground/5 text-[11px] font-medium tracking-wide">
                 <LanguageSelector />
                 <MissionControl />
                 <DensityToggle />
@@ -66,7 +66,7 @@ export const NavBar: React.FC = () => {
                 </div>
 
                 {/* CENTER: Desktop Nav */}
-                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-white/50 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
+                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-foreground/50 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
                     {[
                         { path: '/feed', label: 'Briefing' },
                         { path: '/intel', label: 'Market Intel' },
@@ -80,7 +80,7 @@ export const NavBar: React.FC = () => {
                             <Link 
                                 key={item.path}
                                 to={item.path} 
-                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-primary" : "hover:text-white")}
+                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-primary" : "hover:text-foreground")}
                             >
                                 {isActive && (
                                     <motion.div
@@ -99,20 +99,20 @@ export const NavBar: React.FC = () => {
                 <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
                     {/* Icon Actions */}
                     <div className="hidden lg:flex items-center gap-1 mr-2">
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
                         <NotificationBell />
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
                             <Link to="/settings">
                                 <GearIcon className="h-5 w-5" />
                                 <span className="sr-only">Settings</span>
                             </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-white/50 hover:text-white hover:bg-white/5 transition-colors" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
                             <Link to="/admin">
                                 <LockClosedIcon className="h-5 w-5" />
                                 <span className="sr-only">Admin</span>
@@ -120,9 +120,9 @@ export const NavBar: React.FC = () => {
                         </Button>
                     </div>
                     
-                    <div className="hidden lg:block w-px h-6 bg-white/10 mx-2" />
+                    <div className="hidden lg:block w-px h-6 bg-foreground/10 mx-2" />
                     
-                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-primary hover:bg-white hover:text-primary transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] text-[11px] uppercase tracking-widest">
+                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-primary hover:bg-background hover:text-primary transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] text-[11px] uppercase tracking-widest">
                         <Link to="/login">Sign In</Link>
                     </Button>
 
@@ -143,12 +143,12 @@ export const NavBar: React.FC = () => {
                                     <span className="sr-only">Toggle menu</span>
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="w-[85vw] max-w-sm bg-primary border-l border-primary/20 p-0 flex flex-col">
-                                <SheetHeader className="p-6 border-b border-white/10 text-left bg-primary/95">
-                                    <SheetTitle className="font-serif font-black text-2xl tracking-tight text-white">
+                            <SheetContent side="right" className="w-[85vw] max-w-sm bg-background border-l border-primary/20 p-0 flex flex-col">
+                                <SheetHeader className="p-6 border-b border-foreground/10 text-left bg-background/95">
+                                    <SheetTitle className="font-serif font-black text-2xl tracking-tight text-foreground">
                                         BEST OF AFRICA<span className="text-accent">.</span>
                                     </SheetTitle>
-                                    <div className="flex flex-wrap items-center gap-3 mt-4 text-white/70">
+                                    <div className="flex flex-wrap items-center gap-3 mt-4 text-foreground/70">
                                         <LanguageSelector />
                                         <DensityToggle />
                                     </div>
@@ -162,19 +162,19 @@ export const NavBar: React.FC = () => {
                                                 className={cn(
                                                     "block py-3 px-4 rounded text-sm uppercase tracking-widest font-bold transition-all",
                                                     location.pathname === link.href 
-                                                        ? "bg-white/10 text-white border-l-2 border-accent" 
-                                                        : "text-white/60 hover:text-white hover:bg-white/5 border-l-2 border-transparent"
+                                                        ? "bg-foreground/10 text-foreground border-l-2 border-accent" 
+                                                        : "text-foreground/60 hover:text-foreground hover:bg-foreground/5 border-l-2 border-transparent"
                                                 )}
                                             >
                                                 {link.label}
                                             </Link>
                                         ))}
                                     </div>
-                                    <div className="mt-auto pt-6 border-t border-white/10 space-y-3">
-                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-white/70 hover:text-white hover:bg-white/5 rounded">
+                                    <div className="mt-auto pt-6 border-t border-foreground/10 space-y-3">
+                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-foreground/70 hover:text-foreground hover:bg-foreground/5 rounded">
                                             <Link to="/settings"><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
                                         </Button>
-                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-white/70 hover:text-white hover:bg-white/5 rounded">
+                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-foreground/70 hover:text-foreground hover:bg-foreground/5 rounded">
                                             <Link to="/admin"><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
                                         </Button>
                                         <div className="pt-4 pb-2">

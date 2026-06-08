@@ -137,7 +137,7 @@ export const BetaMemberAccess = () => {
   // ── Checking state — validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
-      <div className="flex flex-col min-h-screen bg-primary">
+      <div className="flex flex-col min-h-screen bg-background">
         <SEO title="Member Access | BOA-Story" />
         
         <div className="flex-1 flex items-center justify-center">
@@ -150,21 +150,21 @@ export const BetaMemberAccess = () => {
   // ── Expired state ──────────────────────────────────────────────────────────
   if (phase === 'expired') {
     return (
-      <div className="flex flex-col min-h-screen bg-primary text-primary-foreground">
+      <div className="flex flex-col min-h-screen bg-background text-foreground">
         <SEO title="Access Expired | BOA-Story" />
         
         <div className="flex-1 flex flex-col items-center justify-center py-20 px-6">
-          <div className="max-w-md mx-auto w-full text-center bg-card p-10 rounded-3xl border border-white/10 shadow-2xl">
+          <div className="max-w-md mx-auto w-full text-center bg-card p-10 rounded-3xl border border-foreground/10 shadow-2xl">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 border border-accent/30 mb-8">
               <RefreshCw className="w-8 h-8 text-accent" />
             </div>
             <h1 className="font-serif text-[2.5rem] leading-none mb-4">Access Expired</h1>
-            <p className="text-white/60 mb-10 font-light leading-relaxed text-[1.125rem]">
+            <p className="text-foreground/60 mb-10 font-light leading-relaxed text-[1.125rem]">
               Your 30-day access token has expired. Re-enter your member email to get a fresh one, or renew your membership on Ko-fi.
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-white text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all mb-6"
+              className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all mb-6"
             >
               Re-enter member email
             </button>
@@ -172,7 +172,7 @@ export const BetaMemberAccess = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] text-white/40 hover:text-white transition-colors uppercase tracking-widest font-bold"
+              className="text-[13px] text-foreground/40 hover:text-foreground transition-colors uppercase tracking-widest font-bold"
             >
               Renew on Ko-fi →
             </a>
@@ -184,7 +184,7 @@ export const BetaMemberAccess = () => {
   }
 
   return (
-    <div className="selection:bg-accent selection:text-primary flex flex-col min-h-screen bg-primary text-primary-foreground">
+    <div className="selection:bg-accent selection:text-primary flex flex-col min-h-screen bg-background text-foreground">
       <SEO 
         title="Member Access | BOA-Story" 
         description="Access your Founding Member benefits and premium stories."
@@ -206,8 +206,8 @@ export const BetaMemberAccess = () => {
           
           {/* Left Side Cover */}
           <div className="hidden lg:block lg:w-1/2 relative">
-            <div className="absolute inset-0 bg-primary/40 mix-blend-multiply z-10" />
-            <div className="gradient-overlay-dark z-20" />
+            <div className="absolute inset-0 bg-background/40 mix-blend-multiply z-10" />
+            <div className="gradient-overlay-light z-20" />
             <img 
               src="/images/v2_editorial_1.png" 
               alt="Premium Access" 
@@ -219,10 +219,10 @@ export const BetaMemberAccess = () => {
                         <Lock size={14} />
                         Founding Members
                     </div>
-                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl">
+                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-foreground drop-shadow-2xl">
                         Unrestricted <br/><span className="text-accent italic">Intelligence.</span>
                     </h1>
-                    <p className="text-[1.125rem] font-light text-white/70 max-w-md leading-[1.8] drop-shadow-md">
+                    <p className="text-[1.125rem] font-light text-foreground/70 max-w-md leading-[1.8] drop-shadow-md">
                         Log in to access your curated briefings, market analytics, and VIP concierge portal.
                     </p>
                 </motion.div>
@@ -230,18 +230,18 @@ export const BetaMemberAccess = () => {
           </div>
 
           {/* Right Side Auth Flow */}
-          <div className="flex-1 lg:w-1/2 flex flex-col justify-center py-20 px-6 sm:px-12 lg:px-24 bg-card relative z-40 lg:-ml-6 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-white/5">
+          <div className="flex-1 lg:w-1/2 flex flex-col justify-center py-20 px-6 sm:px-12 lg:px-24 bg-card relative z-40 lg:-ml-6 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-foreground/5">
             <div className="max-w-md w-full mx-auto">
 
               {phase === 'otp' ? (
                 // ── OTP Form State ─────────────────────────────────────────────────
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
                   <div className="mb-12">
-                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-white">
+                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-foreground">
                       Check your email
                     </h1>
-                    <p className="text-white/50 text-[1.125rem] font-light leading-[1.8]">
-                      We sent a 6-digit verification code to <strong className="text-white">{email}</strong>. Entering it below will authorize this device.
+                    <p className="text-foreground/50 text-[1.125rem] font-light leading-[1.8]">
+                      We sent a 6-digit verification code to <strong className="text-foreground">{email}</strong>. Entering it below will authorize this device.
                     </p>
                   </div>
 
@@ -258,7 +258,7 @@ export const BetaMemberAccess = () => {
                         maxLength={6}
                         autoComplete="one-time-code"
                         disabled={isSubmitting}
-                        className="w-full bg-primary/50 border border-white/10 rounded-2xl px-4 py-8 text-white placeholder:text-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 text-center font-mono text-4xl tracking-[0.5em] font-bold"
+                        className="w-full bg-background/50 border border-foreground/10 rounded-2xl px-4 py-8 text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 text-center font-mono text-4xl tracking-[0.5em] font-bold"
                       />
                     </div>
 
@@ -283,14 +283,14 @@ export const BetaMemberAccess = () => {
                       type="button"
                       onClick={handleResend}
                       disabled={isSubmitting || resendCooldown > 0}
-                      className="text-[11px] text-white/50 hover:text-white uppercase tracking-widest font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-center"
+                      className="text-[11px] text-foreground/50 hover:text-foreground uppercase tracking-widest font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-center"
                     >
                       {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
                     </button>
                     <button
                       type="button"
                       onClick={() => { setPhase('form'); setOtp(''); setErrorMsg(''); }}
-                      className="text-[11px] text-white/30 hover:text-white/60 uppercase tracking-widest font-bold underline transition-colors text-center mt-2"
+                      className="text-[11px] text-foreground/30 hover:text-foreground/60 uppercase tracking-widest font-bold underline transition-colors text-center mt-2"
                     >
                       Use a different email
                     </button>
@@ -300,10 +300,10 @@ export const BetaMemberAccess = () => {
                 // ── Initial Email Form State ───────────────────────────────────────
                 <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                   <div className="mb-12">
-                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-white">
+                    <h1 className="font-serif text-[3rem] leading-none mb-4 text-foreground">
                       Access your <br/>intelligence.
                     </h1>
-                    <p className="text-white/50 text-[1.125rem] font-light leading-[1.8]">
+                    <p className="text-foreground/50 text-[1.125rem] font-light leading-[1.8]">
                       Enter the email address associated with your Ko-fi membership.
                     </p>
                   </div>
@@ -311,7 +311,7 @@ export const BetaMemberAccess = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-white/30" />
+                        <Mail className="h-5 w-5 text-foreground/30" />
                       </div>
                       <input
                         type="email"
@@ -320,7 +320,7 @@ export const BetaMemberAccess = () => {
                         placeholder="founder@company.com"
                         required
                         disabled={isSubmitting}
-                        className="w-full bg-primary/50 border border-white/10 rounded-2xl pl-12 pr-4 py-5 text-white placeholder:text-white/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 font-medium text-lg"
+                        className="w-full bg-background/50 border border-foreground/10 rounded-2xl pl-12 pr-4 py-5 text-foreground placeholder:text-foreground/20 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30 transition-all disabled:opacity-50 font-medium text-lg"
                       />
                     </div>
 
@@ -331,7 +331,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      className="w-full bg-white text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                      className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]"
                     >
                       {isSubmitting ? (
                         <>Verifying...</>
@@ -341,13 +341,13 @@ export const BetaMemberAccess = () => {
                     </button>
                   </form>
 
-                  <div className="mt-12 pt-8 border-t border-white/10 text-center">
-                    <p className="text-white/40 text-[13px] mb-4 font-medium">Not a member yet?</p>
+                  <div className="mt-12 pt-8 border-t border-foreground/10 text-center">
+                    <p className="text-foreground/40 text-[13px] mb-4 font-medium">Not a member yet?</p>
                     <a
                       href={KO_FI_URL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-accent hover:text-white text-[11px] font-bold uppercase tracking-widest transition-colors"
+                      className="text-accent hover:text-foreground text-[11px] font-bold uppercase tracking-widest transition-colors"
                     >
                       Unlock Access on Ko-fi →
                     </a>

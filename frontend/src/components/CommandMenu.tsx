@@ -113,8 +113,8 @@ export const CommandMenu = () => {
                         <div className="py-8 px-4">
                             <div className="mb-4 text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                 <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-background opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-background"></span>
                                 </span>
                                 Latest Updates
                             </div>
@@ -123,7 +123,7 @@ export const CommandMenu = () => {
                                 className="relative flex cursor-default select-none items-center rounded-md px-4 py-3 text-sm outline-none transition-colors text-foreground hover:bg-muted/50"
                             >
                                 <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background">
-                                    <div className="h-4 w-4 bg-primary/20 rounded-full" />
+                                    <div className="h-4 w-4 bg-background/20 rounded-full" />
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-bold">Open Analyst Console</div>
@@ -142,7 +142,7 @@ export const CommandMenu = () => {
                                             <div className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border",
                                                     signal.type === 'OPPORTUNITY' ? 'bg-accent/10 text-accent border-accent/20' :
                                                         signal.type === 'RISK' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                                                        'bg-primary/10 text-primary border-primary/20')}>
+                                                        'bg-background/10 text-primary border-primary/20')}>
                                                 {signal.type}
                                             </div>
                                             <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{signal.label}</span>
@@ -166,7 +166,7 @@ export const CommandMenu = () => {
                             onClick={() => handleSelect(item)}
                             className={cn(
                                 "relative flex cursor-default select-none items-center rounded-md px-4 py-3 text-sm outline-none transition-colors",
-                                index === selectedIndex ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/50"
+                                index === selectedIndex ? "bg-background/10 text-primary" : "text-foreground hover:bg-muted/50"
                             )}
                         >
                             <div className={cn("mr-3 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background", index === selectedIndex && "border-accent/50 bg-accent/10 text-accent")}>

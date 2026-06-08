@@ -119,7 +119,7 @@ export const BetaNewsletter = () => {
           </form>
 
           {/* Benefits */}
-          <div className="bg-white rounded-xl border border-primary/8 p-8 md:p-10 mb-12 shadow-sm">
+          <div className="bg-background rounded-xl border border-primary/8 p-8 md:p-10 mb-12 shadow-sm">
             <ul className="space-y-4">
               {[
                 'Weekly dispatch from across the continent',

@@ -63,7 +63,7 @@ export const NotificationBell: React.FC = () => {
             <button
                 id="notification-bell"
                 onClick={() => setOpen(o => !o)}
-                className="relative p-2 rounded-full hover:bg-primary/10 transition-colors text-primary/70 hover:text-primary"
+                className="relative p-2 rounded-full hover:bg-background/10 transition-colors text-primary/70 hover:text-primary"
                 aria-label="Notifications"
             >
                 <BellIcon className="w-5 h-5" />
@@ -81,7 +81,7 @@ export const NotificationBell: React.FC = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-primary/10 shadow-2xl z-50 overflow-hidden"
+                        className="absolute right-0 top-full mt-2 w-80 bg-background rounded-2xl border border-primary/10 shadow-2xl z-50 overflow-hidden"
                     >
                         <div className="flex items-center justify-between px-5 py-4 border-b border-primary/8">
                             <span className="text-sm font-bold text-primary">Alerts</span>
@@ -131,7 +131,7 @@ export const NotificationBell: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="px-5 py-3 border-t border-primary/8 bg-primary/2">
+                        <div className="px-5 py-3 border-t border-primary/8 bg-background/2">
                             <Link
                                 to="/settings"
                                 onClick={() => setOpen(false)}

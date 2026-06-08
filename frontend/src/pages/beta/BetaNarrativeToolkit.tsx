@@ -64,11 +64,11 @@ export const BetaNarrativeToolkit: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-primary text-white pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
+        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-6xl mx-auto relative z-10">
-            <Link to={`/countries/${code}`} className="inline-flex items-center gap-2 text-white/50 hover:text-accent text-sm font-bold uppercase tracking-widest mb-8 transition-colors">
+            <Link to={`/countries/${code}`} className="inline-flex items-center gap-2 text-foreground/50 hover:text-accent text-sm font-bold uppercase tracking-widest mb-8 transition-colors">
               <ArrowLeft size={16} /> Back to Hub
             </Link>
             
@@ -82,16 +82,16 @@ export const BetaNarrativeToolkit: React.FC = () => {
                 <h1 className="font-serif text-4xl md:text-5xl font-bold leading-tight mb-4 flex items-center gap-4">
                   {cData ? `${cData.name} Narrative Index` : 'Loading Toolkit...'}
                 </h1>
-                <p className="text-white/70 text-lg max-w-2xl leading-relaxed">
+                <p className="text-foreground/70 text-lg max-w-2xl leading-relaxed">
                   Real-time algorithmic measurement of how {cData?.name || 'this nation'} is positioned across global coverage, measuring diplomatic alignment and image strength.
                 </p>
               </div>
 
               {indexData && (
-                <div className="bg-white/10 p-6 rounded-2xl backdrop-blur-sm border border-white/10 text-center shrink-0 min-w-[200px]">
+                <div className="bg-foreground/10 p-6 rounded-2xl backdrop-blur-sm border border-foreground/10 text-center shrink-0 min-w-[200px]">
                   <div className="text-[10px] uppercase font-bold tracking-widest text-accent mb-2">Overall Alignment Score</div>
-                  <div className="text-6xl font-serif font-bold text-white mb-1">{indexData.narrative_index}</div>
-                  <div className="text-xs font-medium text-white/60">/ 100 possible</div>
+                  <div className="text-6xl font-serif font-bold text-foreground mb-1">{indexData.narrative_index}</div>
+                  <div className="text-xs font-medium text-foreground/60">/ 100 possible</div>
                 </div>
               )}
             </div>
@@ -102,14 +102,14 @@ export const BetaNarrativeToolkit: React.FC = () => {
           
           {isLoading ? (
             <div className="animate-pulse space-y-8">
-              <div className="h-32 bg-primary/5 rounded-2xl" />
-              <div className="h-64 bg-primary/5 rounded-2xl" />
+              <div className="h-32 bg-background/5 rounded-2xl" />
+              <div className="h-64 bg-background/5 rounded-2xl" />
             </div>
           ) : (
             <>
               {/* Key Metrics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm">
+                <div className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm">
                   <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                     <Globe size={16} className="text-accent" /> Diplomacy Score
                   </div>
@@ -117,12 +117,12 @@ export const BetaNarrativeToolkit: React.FC = () => {
                     <div className="text-4xl font-serif text-primary">{indexData?.diplomacy_score}</div>
                     <div className="text-sm font-bold text-primary/40 mb-1">/ 100</div>
                   </div>
-                  <div className="mt-4 w-full bg-primary/5 rounded-full h-1.5 overflow-hidden">
+                  <div className="mt-4 w-full bg-background/5 rounded-full h-1.5 overflow-hidden">
                     <div className="bg-accent h-full rounded-full" style={{ width: `${indexData?.diplomacy_score || 0}%` }} />
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm">
+                <div className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm">
                   <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                     <Activity size={16} className="text-accent" /> Image Strength
                   </div>
@@ -130,12 +130,12 @@ export const BetaNarrativeToolkit: React.FC = () => {
                     <div className="text-4xl font-serif text-primary">{indexData?.image_strength}</div>
                     <div className="text-sm font-bold text-primary/40 mb-1">/ 100</div>
                   </div>
-                  <div className="mt-4 w-full bg-primary/5 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-primary h-full rounded-full" style={{ width: `${indexData?.image_strength || 0}%` }} />
+                  <div className="mt-4 w-full bg-background/5 rounded-full h-1.5 overflow-hidden">
+                    <div className="bg-background h-full rounded-full" style={{ width: `${indexData?.image_strength || 0}%` }} />
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-center text-center">
+                <div className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-center text-center">
                   <div className="text-sm font-bold text-primary mb-2">Algorithmic Assessment</div>
                   <p className="text-primary/70 italic text-sm">"{indexData?.assessment}"</p>
                 </div>
@@ -146,7 +146,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                 <div className="lg:col-span-2 space-y-8">
                   
                   {/* Narrative Arc */}
-                  <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm relative overflow-hidden">
+                  <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-full pointer-events-none" />
                     <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                       <MessageSquare className="text-accent" /> The Story So Far
@@ -157,7 +157,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                   </div>
 
                   {/* Active Strategies */}
-                  <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm">
+                  <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm">
                     <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                       <Target className="text-accent" /> Active Narrative Strategies
                     </h3>
@@ -189,7 +189,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-8 text-primary/40 bg-primary/5 rounded-xl">
+                      <div className="text-center py-8 text-primary/40 bg-background/5 rounded-xl">
                         No active narrative strategies defined for this region.
                       </div>
                     )}
@@ -199,7 +199,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                 {/* Sidebar */}
                 <div className="space-y-8">
                   {/* Aligned Articles */}
-                  <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm">
+                  <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm">
                     <h3 className="font-serif text-xl text-primary mb-6 flex items-center gap-2">
                       <FileText className="text-accent" /> Highly Aligned Coverage
                     </h3>

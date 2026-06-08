@@ -79,7 +79,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                     <div className="mt-6 space-y-3">
                         <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Active Narrative Lens</div>
                         <div className="grid grid-cols-3 gap-2">
-                            <Button variant="outline" size="sm" className="bg-primary/5 border-primary/20 text-primary hover:bg-primary hover:text-white transition-colors">
+                            <Button variant="outline" size="sm" className="bg-background/5 border-primary/20 text-primary hover:bg-background hover:text-foreground transition-colors">
                                 Investor
                             </Button>
                             <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
@@ -97,13 +97,13 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                         {chatHistory.map((msg, i) => (
                             <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                                 <Avatar className="h-8 w-8 border border-border shrink-0">
-                                    <AvatarFallback className={msg.role === 'system' ? 'bg-primary text-white' : 'bg-muted'}>
+                                    <AvatarFallback className={msg.role === 'system' ? 'bg-background text-foreground' : 'bg-muted'}>
                                         {msg.role === 'system' ? <DesktopIcon className="h-4 w-4" /> : <PersonIcon className="h-4 w-4" />}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className={`p-3 rounded-lg text-sm leading-relaxed shadow-sm ${msg.role === 'system'
                                     ? 'bg-muted/50 border border-border text-foreground'
-                                    : 'bg-primary text-white'
+                                    : 'bg-background text-foreground'
                                     }`}>
                                     <span className="block mb-1 text-[10px] font-bold uppercase tracking-widest opacity-50">
                                         {msg.role === 'system' ? 'Analysis' : 'Input'}
@@ -117,9 +117,9 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
 
                 <div className="p-4 border-t border-border bg-background">
                     <div className="flex gap-2 mb-2 overflow-x-auto pb-2">
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10 transition-colors">Summarize Risks</Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10 transition-colors">Identify Opps</Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10 transition-colors">Draft Briefing</Badge>
+                        <Badge variant="outline" className="cursor-pointer hover:bg-background/10 transition-colors">Summarize Risks</Badge>
+                        <Badge variant="outline" className="cursor-pointer hover:bg-background/10 transition-colors">Identify Opps</Badge>
+                        <Badge variant="outline" className="cursor-pointer hover:bg-background/10 transition-colors">Draft Briefing</Badge>
                     </div>
                     <form
                         onSubmit={(e) => { e.preventDefault(); handleSend(); }}

@@ -33,20 +33,20 @@ export const BetaTravel: React.FC = () => {
     const { scrollY } = useScroll();
 
     return (
-        <div className="min-h-screen bg-primary text-primary-foreground pb-24">
+        <div className="min-h-screen bg-background text-foreground pb-24">
             <SEO 
                 title="Africa Business Travel Guide | BOA-Story" 
                 description="Curated corporate travel and VIP hotel partnerships across the African continent."
             />
             
             {/* Hero Section */}
-            <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-24 px-6 overflow-hidden border-b border-white/10">
+            <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-24 px-6 overflow-hidden border-b border-foreground/10">
                 <motion.div 
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
-                  <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-dark z-20" />
+                  <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
+                  <div className="gradient-overlay-light z-20" />
                   <img 
                     src="/images/v2_travel_concrete_1780371206765.png" 
                     alt="Luxury African Eco-Lodge" 
@@ -63,7 +63,7 @@ export const BetaTravel: React.FC = () => {
                         <h1 className="text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Travel with <br className="hidden md:block"/><span className="text-accent italic">Confidence.</span>
                         </h1>
-                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">
+                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">
                             We've negotiated direct VIP partnerships with the continent's finest business hotels to ensure your stays are secure, productive, and exceptionally comfortable.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -79,22 +79,22 @@ export const BetaTravel: React.FC = () => {
 
             {/* Why Book With Us */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-30">
-                <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8 }} className="bg-card text-white rounded-3xl border border-white/10 shadow-2xl p-8 md:p-14 backdrop-blur-xl">
+                <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8 }} className="bg-card text-foreground rounded-3xl border border-foreground/10 shadow-2xl p-8 md:p-14 backdrop-blur-xl">
                     <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
                         <div className="px-6 py-4 md:py-0">
                             <StarIcon className="w-12 h-12 text-accent mx-auto mb-6" />
                             <h3 className="text-xl font-serif font-bold mb-3">Exclusive VIP Benefits</h3>
-                            <p className="text-white/50 text-[15px] leading-relaxed font-light">Room upgrades, resort credits, and complimentary daily breakfasts at partner properties.</p>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Room upgrades, resort credits, and complimentary daily breakfasts at partner properties.</p>
                         </div>
                         <div className="px-6 py-4 md:py-0">
                             <ShieldCheckIcon className="w-12 h-12 text-accent mx-auto mb-6" />
                             <h3 className="text-xl font-serif font-bold mb-3">Vetted for Business</h3>
-                            <p className="text-white/50 text-[15px] leading-relaxed font-light">Every property is vetted for executive-grade security, reliable connectivity, and professional amenities.</p>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Every property is vetted for executive-grade security, reliable connectivity, and professional amenities.</p>
                         </div>
                         <div className="px-6 py-4 md:py-0">
                             <CheckIcon className="w-12 h-12 text-accent mx-auto mb-6" />
                             <h3 className="text-xl font-serif font-bold mb-3">No Hidden Costs</h3>
-                            <p className="text-white/50 text-[15px] leading-relaxed font-light">Book directly through our portal to receive negotiated corporate rates with no additional service fees.</p>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Book directly through our portal to receive negotiated corporate rates with no additional service fees.</p>
                         </div>
                     </div>
                 </motion.div>
@@ -103,8 +103,8 @@ export const BetaTravel: React.FC = () => {
             {/* Featured Partners */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24">
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
-                    <h2 className="text-[3rem] font-serif mb-6 text-white leading-none">Tier 1 VIP Partners</h2>
-                    <p className="text-white/60 max-w-2xl mx-auto text-[1.125rem] font-light leading-relaxed">
+                    <h2 className="text-[3rem] font-serif mb-6 text-foreground leading-none">Tier 1 VIP Partners</h2>
+                    <p className="text-foreground/60 max-w-2xl mx-auto text-[1.125rem] font-light leading-relaxed">
                         We earn a commission when you book directly with our partners at no additional cost to you. Booking through us unlocks exclusive VIP benefits not available on public booking engines.
                     </p>
                 </motion.div>
@@ -117,7 +117,7 @@ export const BetaTravel: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8 }}
-                            className="bg-card text-white rounded-3xl border border-white/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-all duration-500"
+                            className="bg-card text-foreground rounded-3xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-all duration-500"
                         >
                             <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
                                 <div 
@@ -131,18 +131,18 @@ export const BetaTravel: React.FC = () => {
                                 <div className="mb-4 text-[11px] font-bold uppercase tracking-widest text-accent">
                                     {hotel.location}
                                 </div>
-                                <h3 className="text-[2.5rem] font-serif leading-none mb-6 text-white">{hotel.name}</h3>
-                                <p className="text-white/60 mb-10 text-[1.125rem] font-light leading-[1.8]">
+                                <h3 className="text-[2.5rem] font-serif leading-none mb-6 text-foreground">{hotel.name}</h3>
+                                <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8]">
                                     {hotel.description}
                                 </p>
                                 
-                                <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-10">
+                                <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-8 mb-10">
                                     <div className="flex items-center gap-3 mb-6 font-bold text-[11px] uppercase tracking-widest text-accent">
                                         <StarIcon size={16} /> VIP Benefits Included
                                     </div>
                                     <ul className="grid sm:grid-cols-2 gap-4">
                                         {hotel.benefits.map((benefit, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-[15px] font-light text-white/80">
+                                            <li key={i} className="flex items-start gap-3 text-[15px] font-light text-foreground/80">
                                                 <CheckIcon className="w-5 h-5 text-accent mt-0 shrink-0" />
                                                 <span>{benefit}</span>
                                             </li>
@@ -150,12 +150,12 @@ export const BetaTravel: React.FC = () => {
                                     </ul>
                                 </div>
                                 
-                                <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-6 items-center justify-between border-t border-white/10">
-                                    <span className="text-[13px] text-white/40 italic">
+                                <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-6 items-center justify-between border-t border-foreground/10">
+                                    <span className="text-[13px] text-foreground/40 italic">
                                         *Benefits applied automatically
                                     </span>
                                     <Link to="/request-consultation">
-                                        <Button className="w-full sm:w-auto rounded-xl gap-3 bg-white text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]">
+                                        <Button className="w-full sm:w-auto rounded-xl gap-3 bg-background text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]">
                                             Book with VIP Benefits <ArrowRightIcon size={16} />
                                         </Button>
                                     </Link>
@@ -166,9 +166,9 @@ export const BetaTravel: React.FC = () => {
                 </div>
 
                 {/* Affiliate Disclosure */}
-                <div className="mt-24 p-8 bg-card rounded-2xl border border-white/5 text-center text-white/40 font-light max-w-4xl mx-auto">
+                <div className="mt-24 p-8 bg-card rounded-2xl border border-foreground/5 text-center text-foreground/40 font-light max-w-4xl mx-auto">
                     <p className="text-[13px] leading-[1.8]">
-                        <strong className="text-white/60">Editorial Disclosure:</strong> We earn revenue through affiliate links when you book hotels, flights, or services through our links. This helps keep our intelligence platform running. Our editorial recommendations are never influenced by affiliate partnerships—we only recommend properties and services we genuinely believe will benefit business travelers in Africa.
+                        <strong className="text-foreground/60">Editorial Disclosure:</strong> We earn revenue through affiliate links when you book hotels, flights, or services through our links. This helps keep our intelligence platform running. Our editorial recommendations are never influenced by affiliate partnerships—we only recommend properties and services we genuinely believe will benefit business travelers in Africa.
                     </p>
                 </div>
             </div>

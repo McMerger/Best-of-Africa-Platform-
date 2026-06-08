@@ -50,7 +50,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
 
   if (!isMember) {
     return (
-      <div className="bg-white rounded-2xl border border-primary/8 p-10 flex flex-col items-center justify-center text-center">
+      <div className="bg-background rounded-2xl border border-primary/8 p-10 flex flex-col items-center justify-center text-center">
         <div className="bg-accent/10 p-4 rounded-full mb-5">
           <Lock size={24} className="text-accent" />
         </div>
@@ -72,15 +72,15 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-2xl border border-primary/8 p-8 animate-pulse space-y-3">
-        {[1,2,3,4].map(i => <div key={i} className="h-4 bg-primary/8 rounded w-full" />)}
+      <div className="bg-background rounded-2xl border border-primary/8 p-8 animate-pulse space-y-3">
+        {[1,2,3,4].map(i => <div key={i} className="h-4 bg-background/8 rounded w-full" />)}
       </div>
     );
   }
 
   if (topCountries.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-primary/8 p-10 text-center text-primary/40 text-sm">
+      <div className="bg-background rounded-2xl border border-primary/8 p-10 text-center text-primary/40 text-sm">
         Coverage data is loading as stories are published.
       </div>
     );
@@ -89,7 +89,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
   return (
     <div className="grid sm:grid-cols-2 gap-6">
       {/* Countries */}
-      <div className="bg-white rounded-xl border border-primary/8 p-6">
+      <div className="bg-background rounded-xl border border-primary/8 p-6">
         <div className="flex items-center gap-2 mb-5">
           <MapPin size={16} className="text-accent" />
           <span className="text-[11px] font-bold uppercase tracking-widest text-primary/40">Countries in focus</span>
@@ -98,7 +98,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
           {topCountries.map(([country, count]) => (
             <li key={country} className="flex items-center justify-between">
               <span className="text-sm font-medium text-primary">{country}</span>
-              <span className="text-[11px] text-primary/40 bg-primary/5 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-primary/40 bg-background/5 px-2 py-0.5 rounded-full">
                 {count} {count === 1 ? 'story' : 'stories'}
               </span>
             </li>
@@ -107,7 +107,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
       </div>
 
       {/* Topics */}
-      <div className="bg-white rounded-xl border border-primary/8 p-6">
+      <div className="bg-background rounded-xl border border-primary/8 p-6">
         <div className="flex items-center gap-2 mb-5">
           <PenLine size={16} className="text-accent" />
           <span className="text-[11px] font-bold uppercase tracking-widest text-primary/40">Topics being covered</span>
@@ -121,7 +121,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
                   View Trends
                 </Link>
               </span>
-              <span className="text-[11px] text-primary/40 bg-primary/5 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] text-primary/40 bg-background/5 px-2 py-0.5 rounded-full">
                 {sector.count} {sector.count === 1 ? 'story' : 'stories'}
               </span>
             </li>
@@ -156,7 +156,7 @@ export const BetaMarketIntel = () => {
       
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="bg-primary text-white pt-8 pb-16 px-6">
+      <div className="bg-background text-foreground pt-8 pb-16 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Heart size={12} />
@@ -165,7 +165,7 @@ export const BetaMarketIntel = () => {
           <h1 className="font-serif text-[40px] md:text-[56px] leading-tight mb-4">
             Behind the<br />building.
           </h1>
-          <p className="text-white/50 text-lg max-w-xl leading-relaxed">
+          <p className="text-foreground/50 text-lg max-w-xl leading-relaxed">
             An honest, behind-the-scenes look at what's being researched, what's being published, and where the project is headed. For the people making it possible.
           </p>
         </div>
@@ -183,7 +183,7 @@ export const BetaMarketIntel = () => {
                 { value: stats.regions ?? '—', label: 'African regions' },
                 { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '—', label: 'Total reads' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-white rounded-xl border border-primary/8 p-5 text-center">
+                <div key={label} className="bg-background rounded-xl border border-primary/8 p-5 text-center">
                   <p className="font-serif text-[2rem] font-bold text-accent leading-none mb-1">{value}</p>
                   <p className="text-[11px] text-primary/40 uppercase tracking-widest font-medium">{label}</p>
                 </div>
@@ -201,11 +201,11 @@ export const BetaMarketIntel = () => {
 
           <div className="space-y-4">
             {isLogLoading ? (
-              <div className="bg-white rounded-xl border border-primary/8 p-6 animate-pulse space-y-3">
-                <div className="h-4 bg-primary/8 rounded w-1/4 mb-4" />
-                <div className="h-6 bg-primary/8 rounded w-3/4 mb-2" />
-                <div className="h-4 bg-primary/8 rounded w-full" />
-                <div className="h-4 bg-primary/8 rounded w-5/6" />
+              <div className="bg-background rounded-xl border border-primary/8 p-6 animate-pulse space-y-3">
+                <div className="h-4 bg-background/8 rounded w-1/4 mb-4" />
+                <div className="h-6 bg-background/8 rounded w-3/4 mb-2" />
+                <div className="h-4 bg-background/8 rounded w-full" />
+                <div className="h-4 bg-background/8 rounded w-5/6" />
               </div>
             ) : founderLog ? (
               founderLog.map((update: any, i: number) => (
@@ -214,7 +214,7 @@ export const BetaMarketIntel = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.08 }}
-                  className="bg-white rounded-xl border border-primary/8 p-6 hover:border-accent/30 transition-colors"
+                  className="bg-background rounded-xl border border-primary/8 p-6 hover:border-accent/30 transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-2.5 py-1 rounded-full">
@@ -247,7 +247,7 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── Ko-fi Progress ────────────────────────────────────────────── */}
-        <section className="bg-white rounded-2xl border border-primary/8 p-8">
+        <section className="bg-background rounded-2xl border border-primary/8 p-8">
           <div className="flex items-center gap-2 mb-5">
             <Coffee size={18} className="text-accent" />
             <h2 className="font-serif text-xl text-primary">Ko-fi goal progress</h2>
@@ -256,7 +256,7 @@ export const BetaMarketIntel = () => {
             <span className="font-serif text-3xl font-bold text-primary">38%</span>
             <span className="text-sm text-primary/40">of $800 goal</span>
           </div>
-          <div className="w-full h-2.5 bg-primary/8 rounded-full overflow-hidden mb-4">
+          <div className="w-full h-2.5 bg-background/8 rounded-full overflow-hidden mb-4">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: '38%' }}
@@ -278,10 +278,10 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
-        <section className="bg-primary rounded-2xl p-10 text-white text-center">
+        <section className="bg-background rounded-2xl p-10 text-foreground text-center">
           <p className="text-[10px] font-bold uppercase tracking-widest text-accent mb-4">Read the work</p>
           <h3 className="font-serif text-3xl mb-3">See the stories behind all of this.</h3>
-          <p className="text-white/50 mb-8 max-w-md mx-auto">
+          <p className="text-foreground/50 mb-8 max-w-md mx-auto">
             Every editorial decision above has a story attached to it. Read them here.
           </p>
           <Link

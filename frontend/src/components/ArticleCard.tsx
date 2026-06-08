@@ -25,7 +25,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
     const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/^📰\s*/g, '').trim();
     return (
         <Card className="flex flex-col md:flex-row overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-primary/50 group border-border/50 bg-background/50 backdrop-blur-sm">
-            <div className="hidden md:block w-1.5 bg-primary/10 shrink-0 group-hover:bg-primary transition-colors duration-300" />
+            <div className="hidden md:block w-1.5 bg-background/10 shrink-0 group-hover:bg-background transition-colors duration-300" />
 
             {/* Thumbnail Image */}
             {article.hero_image_url && !imgError && (
@@ -49,7 +49,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                         <span className="text-primary">{article.sector_name || 'General'}</span>
                     </div>
                     {featured && (
-                        <Badge className="bg-primary px-1.5 py-0.5 text-[10px] hover:bg-primary/90">
+                        <Badge className="bg-background px-1.5 py-0.5 text-[10px] hover:bg-background/90">
                             FEATURED
                         </Badge>
                     )}
@@ -74,7 +74,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                                     <div
                                         key={bar}
                                         className={`h-2 w-1 rounded-sm ${(article.engagement_score || 0) >= bar * 25
-                                            ? 'bg-primary/80'
+                                            ? 'bg-background/80'
                                             : 'bg-muted'
                                             }`}
                                     />

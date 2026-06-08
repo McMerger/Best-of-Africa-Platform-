@@ -51,7 +51,7 @@ export const ActionBar: React.FC<ActionBarProps> = ({ title, type, className }) 
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleSave} className={cn("gap-2", isSaved && "bg-primary/10 text-primary border-primary/20")}>
+                    <Button variant="outline" size="sm" onClick={handleSave} className={cn("gap-2", isSaved && "bg-background/10 text-primary border-primary/20")}>
                         {isSaved ? <BookmarkIcon className="h-4 w-4" /> : <BookmarkIcon className="h-4 w-4" />}
                         <span className="hidden sm:inline">{isSaved ? "Saved" : "Save"}</span>
                     </Button>

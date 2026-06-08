@@ -59,7 +59,7 @@ export const BetaGallery = () => {
             <CardReveal key={index} delay={index * 0.1}>
               <motion.div 
                 whileHover={{ y: -4 }}
-                className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 shadow-sm hover:shadow-xl transition-all duration-300 h-80"
+                className="group relative bg-background rounded-xl overflow-hidden border border-primary/8 shadow-sm hover:shadow-xl transition-all duration-300 h-80"
               >
                 <img 
                   src={img.url} 
@@ -72,7 +72,7 @@ export const BetaGallery = () => {
                   <span className="text-[10px] font-bold tracking-widest text-accent uppercase mb-2 block opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                     {img.category}
                   </span>
-                  <h3 className="font-serif text-xl text-white">
+                  <h3 className="font-serif text-xl text-foreground">
                     {img.caption}
                   </h3>
                 </div>

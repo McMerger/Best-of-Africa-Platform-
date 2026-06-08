@@ -95,7 +95,7 @@ function StatusDot({ health }: { health: string }) {
 
 function TaskBadge({ status }: { status: AgentTask['status'] }) {
   const cfg = {
-    pending:    { label: 'Queued',    cls: 'bg-white/10 text-white/50' },
+    pending:    { label: 'Queued',    cls: 'bg-foreground/10 text-foreground/50' },
     processing: { label: 'Running',   cls: 'bg-accent/20 text-accent' },
     completed:  { label: 'Done',      cls: 'bg-accent/20 text-accent' },
     failed:     { label: 'Failed',    cls: 'bg-destructive/20 text-destructive' },
@@ -155,16 +155,16 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/80 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-card border border-accent/30 rounded-2xl p-8 max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
-        <h3 className="font-serif text-2xl text-white mb-1">Configure Publishing Tools</h3>
-        <p className="text-white/50 text-sm mb-6">Connect your core publishing system</p>
+        <h3 className="font-serif text-2xl text-foreground mb-1">Configure Publishing Tools</h3>
+        <p className="text-foreground/50 text-sm mb-6">Connect your core publishing system</p>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-1.5">Provider</label>
+            <label className="block text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-1.5">Provider</label>
             <select
               value={provider}
               onChange={e => { setProvider(e.target.value); setModel(''); }}
-              className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
+              className="w-full bg-card border border-foreground/20 text-foreground rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
             >
               {PROVIDER_OPTIONS.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -174,23 +174,23 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
 
           {provider !== 'workers_ai' && (
             <div>
-              <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-1.5">API Key</label>
+              <label className="block text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-1.5">API Key</label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={e => setApiKey(e.target.value)}
                 placeholder={`sk-... or your ${PROVIDER_LABELS[provider]?.name} key`}
-                className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors placeholder:text-white/20 font-mono text-sm"
+                className="w-full bg-card border border-foreground/20 text-foreground rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors placeholder:text-foreground/20 font-mono text-sm"
               />
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold text-white/60 uppercase tracking-wider mb-1.5">Model</label>
+            <label className="block text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-1.5">Model</label>
             <select
               value={model}
               onChange={e => setModel(e.target.value)}
-              className="w-full bg-card border border-white/20 text-white rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
+              className="w-full bg-card border border-foreground/20 text-foreground rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition-colors"
             >
               <option value="">Default for provider</option>
               {selectedOpt?.models.map(m => (
@@ -206,14 +206,14 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
               onChange={e => setIsDefault(e.target.checked)}
               className="w-4 h-4 accent-accent"
             />
-            <span className="text-sm text-white/70">Set as default system provider</span>
+            <span className="text-sm text-foreground/70">Set as default system provider</span>
           </label>
         </div>
 
         {error && <p className="text-destructive text-sm mt-4">{error}</p>}
 
         <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 border border-white/20 text-white/70 py-3 rounded-lg hover:bg-white/5 transition-colors">
+          <button onClick={onClose} className="flex-1 border border-foreground/20 text-foreground/70 py-3 rounded-lg hover:bg-foreground/5 transition-colors">
             Cancel
           </button>
           <button
@@ -345,14 +345,14 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   // not the full "booting" screen which can persist for up to 30s.
   if (!inView || (isStatusLoading && !live)) {
     return (
-      <div ref={panelRef} className="bg-card border border-white/10 rounded-2xl overflow-hidden">
-        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-card">
+      <div ref={panelRef} className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-foreground/10 bg-card">
           <div className="flex gap-2">
             <div className="w-3 h-3 rounded-full bg-destructive/20 border border-destructive/50" />
             <div className="w-3 h-3 rounded-full bg-muted-foreground/20 border border-muted-foreground/50" />
             <div className="w-3 h-3 rounded-full bg-accent/20 border border-accent/50" />
           </div>
-          <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+          <div className="text-[10px] font-mono text-foreground/30 uppercase tracking-widest">
             Core OS v1.0.0
           </div>
         </div>
@@ -368,12 +368,12 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
   return (
     <>
-      <div ref={panelRef} className="bg-card border border-white/10 rounded-2xl overflow-hidden">
+      <div ref={panelRef} className="bg-card border border-foreground/10 rounded-2xl overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-foreground/5">
           <div className="flex items-center gap-3">
             <Activity size={18} className="text-accent" />
-            <span className="font-semibold text-white text-sm tracking-wide">Core System</span>
+            <span className="font-semibold text-foreground text-sm tracking-wide">Core System</span>
           </div>
           <div className="flex items-center gap-2">
             <StatusDot health={health} />
@@ -384,28 +384,28 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-white/5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-foreground/5">
           {[
-            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-white/50' },
+            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-foreground/50' },
             { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-accent' },
             { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-accent' },
             { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-destructive' },
-            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-white/20' },
+            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-foreground/20' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex flex-col items-center justify-center py-4 px-2 gap-1">
               <Icon size={14} className={color} />
               <span className={`text-lg font-bold font-serif ${color}`}>{value}</span>
-              <span className="text-[10px] text-white/30 uppercase tracking-wider">{label}</span>
+              <span className="text-[10px] text-foreground/30 uppercase tracking-wider">{label}</span>
             </div>
           ))}
         </div>
 
         {/* Active provider */}
-        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-foreground/5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-white/40 text-xs uppercase tracking-wider">Provider</span>
-            <span className="text-white/80 font-medium">{providerMeta?.logo} {providerInfo?.label || 'Workers AI'}</span>
-            <span className="text-white/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'llama-3.1-70b'}</span>
+            <span className="text-foreground/40 text-xs uppercase tracking-wider">Provider</span>
+            <span className="text-foreground/80 font-medium">{providerMeta?.logo} {providerInfo?.label || 'Workers AI'}</span>
+            <span className="text-foreground/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'llama-3.1-70b'}</span>
           </div>
           {adminKey && (
             <button
@@ -419,15 +419,15 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
         {/* Latest article */}
         {live?.latest_article && (
-          <div className="px-6 py-4 border-b border-white/5">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Latest Published</p>
+          <div className="px-6 py-4 border-b border-foreground/5">
+            <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-1">Latest Published</p>
             <a
               href={`/stories/${live.latest_article.slug}`}
-              className="text-sm text-white/80 hover:text-accent transition-colors line-clamp-1"
+              className="text-sm text-foreground/80 hover:text-accent transition-colors line-clamp-1"
             >
               {live.latest_article.title}
             </a>
-            <p className="text-[10px] text-white/30 mt-0.5">{relativeTime(live.latest_article.published_at)}</p>
+            <p className="text-[10px] text-foreground/30 mt-0.5">{relativeTime(live.latest_article.published_at)}</p>
           </div>
         )}
 
@@ -436,7 +436,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
           <div>
             <button
               onClick={() => setShowTasks(v => !v)}
-              className="w-full flex items-center justify-between px-6 py-3 text-xs text-white/40 hover:text-white/70 transition-colors"
+              className="w-full flex items-center justify-between px-6 py-3 text-xs text-foreground/40 hover:text-foreground/70 transition-colors"
             >
               <span className="uppercase tracking-wider font-semibold">Recent Tasks ({live.recent_tasks.length})</span>
               {showTasks ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -452,10 +452,10 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                 >
                   <div className="px-6 pb-4 space-y-2">
                     {live.recent_tasks.map(task => (
-                      <div key={task.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                      <div key={task.id} className="flex items-center justify-between py-2 border-b border-foreground/5 last:border-0">
                         <div>
                           <h4 className="font-medium text-[13px]">{getTaskLabel(task.type)}</h4>
-                          <p className="text-[10px] text-white/30">{relativeTime(task.created_at)}</p>
+                          <p className="text-[10px] text-foreground/30">{relativeTime(task.created_at)}</p>
                         </div>
                         <TaskBadge status={task.status} />
                       </div>
@@ -469,8 +469,8 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
         {/* Admin: provider list */}
         {adminKey && providersList.data?.data && providersList.data.data.length > 0 && (
-          <div className="px-6 pb-4 border-t border-white/5 pt-4">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-3">Configured Providers</p>
+          <div className="px-6 pb-4 border-t border-foreground/5 pt-4">
+            <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-3">Configured Providers</p>
             <div className="space-y-2">
               {providersList.data.data.map(p => {
                 const meta = PROVIDER_LABELS[p.provider];
@@ -478,7 +478,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                   <div key={p.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">{meta?.logo}</span>
-                      <span className="text-xs text-white/70">{p.label}</span>
+                      <span className="text-xs text-foreground/70">{p.label}</span>
                       {p.is_default ? <span className="text-[9px] bg-accent/20 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold">Default</span> : null}
                       {p.last_test_status && (
                         <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${p.last_test_status === 'ok' ? 'bg-accent/20 text-accent' : 'bg-destructive/20 text-destructive'}`}>
@@ -487,10 +487,10 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => testProvider(p.id)} className="text-white/30 hover:text-accent transition-colors" title="Test connection">
+                      <button onClick={() => testProvider(p.id)} className="text-foreground/30 hover:text-accent transition-colors" title="Test connection">
                         <TestTube size={12} />
                       </button>
-                      <button onClick={() => removeProvider(p.id)} className="text-white/30 hover:text-destructive transition-colors" title="Remove">
+                      <button onClick={() => removeProvider(p.id)} className="text-foreground/30 hover:text-destructive transition-colors" title="Remove">
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -503,12 +503,12 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
         {/* 7-day skill metrics table */}
         {live?.metrics_7d && live.metrics_7d.length > 0 && (
-          <div className="px-6 pb-4 border-t border-white/5 pt-4">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider mb-3">7-day skill performance</p>
+          <div className="px-6 pb-4 border-t border-foreground/5 pt-4">
+            <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-3">7-day skill performance</p>
             <div className="w-full overflow-x-auto">
               <table className="w-full text-[11px] text-left">
                 <thead>
-                  <tr className="text-white/25 uppercase tracking-wider">
+                  <tr className="text-foreground/25 uppercase tracking-wider">
                     <th className="pb-2 pr-4 font-medium">Pipeline</th>
                     <th className="pb-2 pr-3 font-medium text-right">Runs</th>
                     <th className="pb-2 pr-3 font-medium text-right">Done</th>
@@ -518,14 +518,14 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                 </thead>
                 <tbody>
                   {live.metrics_7d.map((row) => (
-                    <tr key={row.agent_name} className="border-t border-white/5">
-                      <td className="py-1.5 pr-4 text-white/70 font-medium">{row.agent_name}</td>
-                      <td className="py-1.5 pr-3 text-white/50 text-right">{row.runs}</td>
+                    <tr key={row.agent_name} className="border-t border-foreground/5">
+                      <td className="py-1.5 pr-4 text-foreground/70 font-medium">{row.agent_name}</td>
+                      <td className="py-1.5 pr-3 text-foreground/50 text-right">{row.runs}</td>
                       <td className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
                       <td className="py-1.5 pr-3 text-right">
-                        <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-white/20'}>{row.tasks_failed}</span>
+                        <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-foreground/20'}>{row.tasks_failed}</span>
                       </td>
-                      <td className="py-1.5 text-white/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
+                      <td className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -536,8 +536,8 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
 
         {/* Footer timestamp */}
         {live?.generated_at && (
-          <div className="px-6 py-3 border-t border-white/5">
-            <p className="text-[10px] text-white/20">Updated {relativeTime(live.generated_at)}</p>
+          <div className="px-6 py-3 border-t border-foreground/5">
+            <p className="text-[10px] text-foreground/20">Updated {relativeTime(live.generated_at)}</p>
           </div>
         )}
       </div>

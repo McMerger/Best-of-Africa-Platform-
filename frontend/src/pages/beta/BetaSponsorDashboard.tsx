@@ -61,9 +61,9 @@ export const BetaSponsorDashboard: React.FC = () => {
     return (
       <>
         <div className="max-w-6xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-8 bg-primary/10 rounded w-1/3 mb-12" />
+          <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-primary/5 rounded-xl border border-primary/10" />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-background/5 rounded-xl border border-primary/10" />)}
           </div>
         </div>
       </>
@@ -74,7 +74,7 @@ export const BetaSponsorDashboard: React.FC = () => {
     return (
       <>
         <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-6 bg-background">
-          <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mb-6">
+          <div className="w-16 h-16 bg-background/5 rounded-full flex items-center justify-center mb-6">
             <Target className="w-8 h-8 text-primary/40" />
           </div>
           <h2 className="font-serif text-3xl mb-3">No Active Campaigns</h2>
@@ -101,7 +101,7 @@ export const BetaSponsorDashboard: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
+        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -114,20 +114,20 @@ export const BetaSponsorDashboard: React.FC = () => {
               <h1 className="font-serif text-4xl md:text-5xl font-bold leading-tight mb-4">
                 Campaign Analytics
               </h1>
-              <p className="text-white/70 text-lg max-w-2xl leading-relaxed">
+              <p className="text-foreground/70 text-lg max-w-2xl leading-relaxed">
                 Real-time performance tracking and ROI measurement for your sponsored content.
               </p>
             </div>
 
             {/* Campaign Switcher */}
-            <div className="bg-white/10 p-1 rounded-xl backdrop-blur-sm border border-white/10 self-start md:self-end shrink-0">
+            <div className="bg-foreground/10 p-1 rounded-xl backdrop-blur-sm border border-foreground/10 self-start md:self-end shrink-0">
               <select 
                 value={selectedCampaignId!}
                 onChange={(e) => setActiveCampaignId(e.target.value)}
-                className="bg-transparent text-white border-none text-sm font-bold uppercase tracking-wider px-4 py-3 outline-none cursor-pointer hover:bg-white/5 transition-colors rounded-lg appearance-none w-64"
+                className="bg-transparent text-foreground border-none text-sm font-bold uppercase tracking-wider px-4 py-3 outline-none cursor-pointer hover:bg-foreground/5 transition-colors rounded-lg appearance-none w-64"
               >
                 {campaigns.map(c => (
-                  <option key={c.id} value={c.id} className="text-primary bg-white">{c.name}</option>
+                  <option key={c.id} value={c.id} className="text-primary bg-background">{c.name}</option>
                 ))}
               </select>
             </div>
@@ -138,7 +138,7 @@ export const BetaSponsorDashboard: React.FC = () => {
           
           {/* Status Banner */}
           {activeCampaign && (
-            <div className="bg-white rounded-xl p-4 border border-primary/10 shadow-sm flex items-center justify-between mb-8">
+            <div className="bg-background rounded-xl p-4 border border-primary/10 shadow-sm flex items-center justify-between mb-8">
               <div className="flex items-center gap-4">
                 {activeCampaign.status === 'active' ? (
                   <div className="flex items-center gap-2 text-accent bg-accent/10 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -159,7 +159,7 @@ export const BetaSponsorDashboard: React.FC = () => {
 
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
               <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                 <Eye size={16} className="text-accent" /> Impressions
               </div>
@@ -168,7 +168,7 @@ export const BetaSponsorDashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
               <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                 <MousePointerClick size={16} className="text-accent" /> Clicks
               </div>
@@ -180,14 +180,14 @@ export const BetaSponsorDashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full">
               <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                 <DollarSign size={16} className="text-accent" /> Budget Spent
               </div>
               <div className="text-4xl font-serif text-primary">
                 {isLoadingAnalytics ? '...' : `$${analytics?.budget_spent.toLocaleString()}`}
               </div>
-              <div className="mt-2 w-full bg-primary/5 rounded-full h-1.5 overflow-hidden">
+              <div className="mt-2 w-full bg-background/5 rounded-full h-1.5 overflow-hidden">
                 <div 
                   className="bg-accent h-full rounded-full" 
                   style={{ width: `${Math.min(((analytics?.budget_spent || 0) / (activeCampaign?.budget_usd || 1)) * 100, 100)}%` }}
@@ -195,7 +195,7 @@ export const BetaSponsorDashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-white rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full bg-accent/5">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-background rounded-2xl p-6 border border-primary/10 shadow-sm flex flex-col justify-between h-full bg-accent/5">
               <div className="flex items-center gap-2 text-primary/40 text-xs font-bold uppercase tracking-widest mb-4">
                 <TrendingUp size={16} className="text-accent" /> Estimated ROI
               </div>
@@ -210,13 +210,13 @@ export const BetaSponsorDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Chart: Growth Trajectory */}
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-primary/10 p-6 md:p-8 shadow-sm">
+            <div className="lg:col-span-2 bg-background rounded-2xl border border-primary/10 p-6 md:p-8 shadow-sm">
               <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                 <BarChart3 className="text-accent" /> Delivery Trajectory
               </h3>
               <div className="h-[300px] w-full">
                 {isLoadingAnalytics ? (
-                  <div className="w-full h-full bg-primary/5 animate-pulse rounded-xl" />
+                  <div className="w-full h-full bg-background/5 animate-pulse rounded-xl" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={mockTimeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -246,7 +246,7 @@ export const BetaSponsorDashboard: React.FC = () => {
             </div>
 
             {/* Quality Scores */}
-            <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm">
+            <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm">
               <h3 className="font-serif text-xl text-primary mb-6">Campaign Health</h3>
               
               <div className="space-y-6">
@@ -255,8 +255,8 @@ export const BetaSponsorDashboard: React.FC = () => {
                     <span className="font-bold text-primary">Reach Score</span>
                     <span className="text-accent font-bold">{analytics?.reach_score || 0}/100</span>
                   </div>
-                  <div className="w-full bg-primary/5 rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: `${analytics?.reach_score || 0}%` }} />
+                  <div className="w-full bg-background/5 rounded-full h-2">
+                    <div className="bg-background h-2 rounded-full" style={{ width: `${analytics?.reach_score || 0}%` }} />
                   </div>
                 </div>
 
@@ -265,8 +265,8 @@ export const BetaSponsorDashboard: React.FC = () => {
                     <span className="font-bold text-primary">ROI Score</span>
                     <span className="text-accent font-bold">{analytics?.roi_score || 0}/100</span>
                   </div>
-                  <div className="w-full bg-primary/5 rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full" style={{ width: `${analytics?.roi_score || 0}%` }} />
+                  <div className="w-full bg-background/5 rounded-full h-2">
+                    <div className="bg-background h-2 rounded-full" style={{ width: `${analytics?.roi_score || 0}%` }} />
                   </div>
                 </div>
 

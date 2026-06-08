@@ -78,9 +78,9 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
 
   if (status === 'checking') {
     return (
-      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-4 rounded-full bg-card border border-white/5 opacity-50">
-        <Volume2 size={16} className="text-white/20" />
-        <span className="text-xs text-white/30 font-medium">Checking audio availability...</span>
+      <div className="w-full max-w-sm h-12 flex items-center gap-3 px-4 rounded-full bg-card border border-foreground/5 opacity-50">
+        <Volume2 size={16} className="text-foreground/20" />
+        <span className="text-xs text-foreground/30 font-medium">Checking audio availability...</span>
       </div>
     );
   }
@@ -89,15 +89,15 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
     return (
       <button 
         onClick={generateAndPlay}
-        className="group w-full max-w-sm h-12 flex items-center justify-between px-5 rounded-full bg-card border border-white/10 hover:border-accent/40 transition-colors"
+        className="group w-full max-w-sm h-12 flex items-center justify-between px-5 rounded-full bg-card border border-foreground/10 hover:border-accent/40 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+          <div className="w-6 h-6 rounded-full bg-foreground/5 flex items-center justify-center group-hover:bg-accent/10 group-hover:text-accent transition-colors">
             <Volume2 size={12} />
           </div>
-          <span className="text-[13px] font-medium text-white/70 group-hover:text-white transition-colors">Listen to article</span>
+          <span className="text-[13px] font-medium text-foreground/70 group-hover:text-foreground transition-colors">Listen to article</span>
         </div>
-        <span className="text-[10px] uppercase tracking-wider text-white/30 group-hover:text-accent transition-colors font-bold">Generate Audio</span>
+        <span className="text-[10px] uppercase tracking-wider text-foreground/30 group-hover:text-accent transition-colors font-bold">Generate Audio</span>
       </button>
     );
   }
@@ -124,10 +124,10 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
         </button>
         
         <div className="flex-1 flex flex-col gap-1 w-full">
-          <div className="text-sm font-medium text-white">
+          <div className="text-sm font-medium text-foreground">
             {isThisTrackPlaying ? 'Now Playing globally' : 'Listen to this article'}
           </div>
-          <div className="text-[10px] text-white/40">
+          <div className="text-[10px] text-foreground/40">
             {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'High-quality TTS narration.'}
           </div>
         </div>
@@ -136,7 +136,7 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
       {audioData?.url.includes('best-of-africa-media.r2.dev/audio/tts') && (
         <div className="flex items-center gap-2 mt-1 px-1">
           <AlertCircle size={10} className="text-accent/50" />
-          <span className="text-[10px] text-white/30 italic">TTS mode — Premium integration pending.</span>
+          <span className="text-[10px] text-foreground/30 italic">TTS mode — Premium integration pending.</span>
         </div>
       )}
     </div>

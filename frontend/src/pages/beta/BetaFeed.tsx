@@ -13,14 +13,14 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 const FeedSkeleton = () => (
     <div className="space-y-6">
         {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-primary/8 p-6 animate-pulse">
+            <div key={i} className="bg-background rounded-xl border border-primary/8 p-6 animate-pulse">
                 <div className="flex gap-4">
-                    <div className="w-1 bg-primary/10 rounded-full shrink-0" />
+                    <div className="w-1 bg-background/10 rounded-full shrink-0" />
                     <div className="flex-1 space-y-3">
-                        <div className="h-3 bg-primary/8 rounded w-1/4" />
-                        <div className="h-5 bg-primary/10 rounded w-3/4" />
-                        <div className="h-4 bg-primary/5 rounded w-full" />
-                        <div className="h-4 bg-primary/5 rounded w-5/6" />
+                        <div className="h-3 bg-background/8 rounded w-1/4" />
+                        <div className="h-5 bg-background/10 rounded w-3/4" />
+                        <div className="h-4 bg-background/5 rounded w-full" />
+                        <div className="h-4 bg-background/5 rounded w-5/6" />
                     </div>
                 </div>
             </div>
@@ -41,14 +41,14 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
             to={`/posts/${article.slug}`}
             className={`group flex gap-5 rounded-2xl border p-6 transition-all hover:shadow-md ${
                 isHighlighted
-                    ? 'bg-primary text-white border-primary/20 hover:bg-primary/90'
-                    : 'bg-white border-primary/8 hover:border-accent/30'
+                    ? 'bg-background text-foreground border-primary/20 hover:bg-background/90'
+                    : 'bg-background border-primary/8 hover:border-accent/30'
             }`}
         >
             {/* Index marker */}
             <div className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent' : 'text-primary/20'}`}>
                 <span className="text-xs font-mono font-bold">{String(index + 1).padStart(2, '0')}</span>
-                <div className={`mt-2 w-px flex-1 ${isHighlighted ? 'bg-accent/30' : 'bg-primary/10'}`} />
+                <div className={`mt-2 w-px flex-1 ${isHighlighted ? 'bg-accent/30' : 'bg-background/10'}`} />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -63,11 +63,11 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                         {article.sector_name && <span>{article.sector_name}</span>}
                     </div>
                 )}
-                <h3 className={`font-serif text-xl font-bold mb-2 leading-snug ${isHighlighted ? 'text-white' : 'text-primary group-hover:text-accent'} transition-colors`}>
+                <h3 className={`font-serif text-xl font-bold mb-2 leading-snug ${isHighlighted ? 'text-foreground' : 'text-primary group-hover:text-accent'} transition-colors`}>
                     {article.title}
                 </h3>
                 {article.summary && (
-                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-white/70' : 'text-primary/60'}`}>
+                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/60'}`}>
                         {article.summary}
                     </p>
                 )}
@@ -95,7 +95,7 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                                 slug: article.slug
                             });
                         }}
-                        className={`flex items-center justify-center w-8 h-8 rounded-full ${isHighlighted ? 'bg-accent text-primary hover:bg-white' : 'bg-accent/10 text-accent hover:bg-accent hover:text-white'} transition-colors shadow-sm`}
+                        className={`flex items-center justify-center w-8 h-8 rounded-full ${isHighlighted ? 'bg-accent text-primary hover:bg-background' : 'bg-accent/10 text-accent hover:bg-accent hover:text-foreground'} transition-colors shadow-sm`}
                         title="Listen to this story"
                     >
                         <Headphones size={14} />
@@ -149,14 +149,14 @@ export const BetaFeed: React.FC = () => {
             />
 
             {/* Masthead */}
-            <div className="bg-primary text-white pt-20 pb-16 px-6">
+            <div className="bg-background text-foreground pt-20 pb-16 px-6">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
                             <Zap className="w-3.5 h-3.5" />
                             Daily Briefing
                         </div>
-                        <div className="flex items-center gap-2 text-white/40 text-xs">
+                        <div className="flex items-center gap-2 text-foreground/40 text-xs">
                             <Calendar className="w-3.5 h-3.5" />
                             {today}
                         </div>
@@ -164,7 +164,7 @@ export const BetaFeed: React.FC = () => {
                     <h1 className="font-serif text-5xl md:text-6xl font-black leading-tight mb-4">
                         The Africa<br />Intelligence Brief
                     </h1>
-                    <p className="text-white/60 text-lg max-w-xl">
+                    <p className="text-foreground/60 text-lg max-w-xl">
                         The continent's most important business stories, curated each morning for decision-makers.
                     </p>
                 </div>
@@ -195,7 +195,7 @@ export const BetaFeed: React.FC = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="py-6 px-6 bg-white rounded-xl border border-primary/8 text-center text-primary/50 text-sm">
+                            <div className="py-6 px-6 bg-background rounded-xl border border-primary/8 text-center text-primary/50 text-sm">
                                 <Sparkles className="w-8 h-8 text-accent/40 mx-auto mb-3" />
                                 <Link to="/settings" className="text-accent font-semibold hover:underline">
                                     Set your country and sector preferences
@@ -205,11 +205,11 @@ export const BetaFeed: React.FC = () => {
                         )}
 
                         <div className="my-12 flex items-center gap-4">
-                            <div className="flex-1 h-px bg-primary/10" />
+                            <div className="flex-1 h-px bg-background/10" />
                             <span className="text-xs font-bold uppercase tracking-widest text-primary/30 flex items-center gap-1">
                                 <BookOpen className="w-3 h-3" /> Latest Dispatches
                             </span>
-                            <div className="flex-1 h-px bg-primary/10" />
+                            <div className="flex-1 h-px bg-background/10" />
                         </div>
                     </section>
                 )}
@@ -245,10 +245,10 @@ export const BetaFeed: React.FC = () => {
 
                 {/* Upgrade CTA for non-members */}
                 {!isMember && (
-                    <div className="mt-14 p-8 bg-primary text-white rounded-2xl text-center">
+                    <div className="mt-14 p-8 bg-background text-foreground rounded-2xl text-center">
                         <Sparkles className="w-10 h-10 text-accent mx-auto mb-4" />
-                        <h3 className="font-serif text-2xl font-bold mb-3 text-white">Proprietary Briefing</h3>
-                        <p className="text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
+                        <h3 className="font-serif text-2xl font-bold mb-3 text-foreground">Proprietary Briefing</h3>
+                        <p className="text-foreground/70 mb-8 max-w-xl mx-auto leading-relaxed">
                             Founding Members receive an editor-curated briefing tailored to their exact markets and sectors — every single day.
                         </p>
                         <Link to="/membership" className="inline-block bg-accent text-primary font-bold px-8 py-3 rounded-full hover:brightness-110 transition-all">

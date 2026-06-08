@@ -80,7 +80,7 @@ export const AudioBriefingPlayer: React.FC<AudioBriefingPlayerProps> = ({ text, 
             <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                className="h-8 w-8 rounded-full bg-background text-foreground hover:bg-background/90"
                 onClick={togglePlay}
             >
                 {isPlaying && !isPaused ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4 ml-0.5" />}
@@ -107,7 +107,7 @@ export const AudioBriefingPlayer: React.FC<AudioBriefingPlayerProps> = ({ text, 
                     {[...Array(5)].map((_, i) => (
                         <div
                             key={i}
-                            className="w-1 bg-primary rounded-full animate-waveform"
+                            className="w-1 bg-background rounded-full animate-waveform"
                             style={{ animationDelay: `${i * 0.1}s` }}
                         />
                     ))}

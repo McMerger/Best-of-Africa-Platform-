@@ -47,13 +47,13 @@ export const PremiumSectorTrends: React.FC = () => {
     return (
       <>
         <div className="max-w-5xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-8 bg-primary/10 rounded w-1/3 mb-12" />
+          <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-primary/5 rounded-xl border border-primary/10" />
+              <div key={i} className="h-32 bg-background/5 rounded-xl border border-primary/10" />
             ))}
           </div>
-          <div className="h-[400px] bg-primary/5 rounded-2xl border border-primary/10" />
+          <div className="h-[400px] bg-background/5 rounded-2xl border border-primary/10" />
         </div>
       </>
     );
@@ -91,9 +91,9 @@ export const PremiumSectorTrends: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-primary text-white pt-16 pb-20 px-6 border-b border-accent/20">
+        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20">
           <div className="max-w-5xl mx-auto">
-            <Link to="/intel" className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-8 transition-colors">
+            <Link to="/intel" className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm mb-8 transition-colors">
               <ArrowLeft size={16} />
               Market Intelligence
             </Link>
@@ -106,7 +106,7 @@ export const PremiumSectorTrends: React.FC = () => {
             <h1 className="font-serif text-5xl md:text-6xl font-bold leading-tight mb-6">
               {sector.name}
             </h1>
-            <p className="text-white/70 text-lg max-w-2xl leading-relaxed">
+            <p className="text-foreground/70 text-lg max-w-2xl leading-relaxed">
               {sector.description || `Comprehensive financial trends, market size projections, and regulatory outlook for ${sector.name} across the continent.`}
             </p>
           </div>
@@ -115,28 +115,28 @@ export const PremiumSectorTrends: React.FC = () => {
         <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-10">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-xl p-6 border border-primary/10 shadow-sm">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Market Size ({summary.latest_year})</div>
               <div className="text-3xl font-serif text-primary">
                 {summary.current_market_size ? formatCurrency(summary.current_market_size) : 'N/A'}
               </div>
             </motion.div>
             
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white rounded-xl p-6 border border-primary/10 shadow-sm">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Growth Rate</div>
               <div className={`text-3xl font-serif ${isPositiveGrowth ? 'text-accent' : 'text-destructive'}`}>
                 {summary.current_growth_rate ? `${summary.current_growth_rate}%` : 'N/A'}
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-xl p-6 border border-primary/10 shadow-sm">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">YoY Change</div>
               <div className="text-3xl font-serif text-primary">
                 {summary.yoy_change ? (summary.yoy_change > 0 ? `+${summary.yoy_change}%` : `${summary.yoy_change}%`) : 'N/A'}
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-white rounded-xl p-6 border border-primary/10 shadow-sm">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Investment Vol</div>
               <div className="text-3xl font-serif text-primary">
                 {trends.length > 0 ? formatCurrency(trends[trends.length - 1].investment_volume) : 'N/A'}
@@ -147,7 +147,7 @@ export const PremiumSectorTrends: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Charts Section */}
             <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-2xl border border-primary/10 p-6 md:p-8">
+              <div className="bg-background rounded-2xl border border-primary/10 p-6 md:p-8">
                 <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                   <DollarSign className="text-accent" /> Market Size Projections (USD)
                 </h3>
@@ -179,7 +179,7 @@ export const PremiumSectorTrends: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-primary/10 p-6 md:p-8">
+              <div className="bg-background rounded-2xl border border-primary/10 p-6 md:p-8">
                 <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                   <TrendingUp className="text-accent" /> Investment Volume Over Time
                 </h3>
@@ -210,7 +210,7 @@ export const PremiumSectorTrends: React.FC = () => {
             {/* Sidebar / Analysis */}
             <div className="space-y-8">
               {/* Regulatory Outlook */}
-              <div className="bg-primary/5 rounded-2xl border border-primary/10 p-6">
+              <div className="bg-background/5 rounded-2xl border border-primary/10 p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <ShieldAlert className="text-accent w-5 h-5" />
                   <h3 className="font-serif text-xl text-primary">Regulatory Outlook</h3>
@@ -225,7 +225,7 @@ export const PremiumSectorTrends: React.FC = () => {
 
               {/* Top Companies */}
               {top_companies && top_companies.length > 0 && (
-                <div className="bg-white rounded-2xl border border-primary/10 p-6 shadow-sm">
+                <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-5">
                     <Building2 className="text-accent w-5 h-5" />
                     <h3 className="font-serif text-xl text-primary">Major Players</h3>

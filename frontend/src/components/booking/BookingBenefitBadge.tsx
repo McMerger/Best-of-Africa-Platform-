@@ -66,7 +66,7 @@ export const BookingBenefitBadge: React.FC<BookingBenefitBadgeProps> = ({
     if (variant === 'card') {
         return (
             <div className={cn("flex flex-col items-center justify-center p-3 rounded-lg bg-secondary/10 border border-secondary/20 text-center gap-2", className)}>
-                <div className={cn("p-2 rounded-full bg-white shadow-sm", iconColorClass)}>
+                <div className={cn("p-2 rounded-full bg-background shadow-sm", iconColorClass)}>
                     <Icon className={"h-4 w-4"} />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">

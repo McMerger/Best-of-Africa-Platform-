@@ -38,7 +38,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
             {/* Content */}
             <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 z-10 w-full md:w-3/4">
                 <div className="flex gap-3 mb-4">
-                    <Badge variant="default" className="bg-primary text-primary-foreground text-xs font-bold uppercase tracking-wider px-3 py-1">
+                    <Badge variant="default" className="bg-background text-foreground text-xs font-bold uppercase tracking-wider px-3 py-1">
                         {article.sector_name || 'Strategic Market'}
                     </Badge>
                     <Badge variant="outline" className="border-primary/50 text-foreground text-xs font-medium backdrop-blur-md bg-background/50 px-3 py-1">
@@ -47,10 +47,10 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                 </div>
 
                 <Link to={`/articles/${article.slug}`} className="block">
-                    <h2 className="text-3xl md:text-5xl font-black text-white leading-[1.1] mb-4 tracking-tight group-hover:text-primary transition-colors drop-shadow-xl font-serif">
+                    <h2 className="text-3xl md:text-5xl font-black text-foreground leading-[1.1] mb-4 tracking-tight group-hover:text-primary transition-colors drop-shadow-xl font-serif">
                         {cleanText(article.title)}
                     </h2>
-                    <p className="text-lg text-white/80 max-w-2xl line-clamp-3 leading-relaxed mb-6 border-l-2 border-primary/50 pl-4 bg-background/10 backdrop-blur-sm p-4 rounded-r-xl">
+                    <p className="text-lg text-foreground/80 max-w-2xl line-clamp-3 leading-relaxed mb-6 border-l-2 border-primary/50 pl-4 bg-background/10 backdrop-blur-sm p-4 rounded-r-xl">
                         {cleanText(article.summary)}
                     </p>
                     <div className="flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">
@@ -60,16 +60,16 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
             </div>
 
             {/* Signal Indicator */}
-            <div className="absolute top-8 right-8 z-20 hidden md:flex items-center gap-3 bg-background/40 backdrop-blur-md p-3 rounded-2xl border border-white/10">
+            <div className="absolute top-8 right-8 z-20 hidden md:flex items-center gap-3 bg-background/40 backdrop-blur-md p-3 rounded-2xl border border-foreground/10">
                 <div className="flex gap-1">
                     {[1, 2, 3, 4].map((bar) => (
                         <div
                             key={bar}
-                            className={`h-3 w-1.5 rounded-sm ${(article.engagement_score || 75) >= bar * 25 ? 'bg-primary' : 'bg-white/20'}`}
+                            className={`h-3 w-1.5 rounded-sm ${(article.engagement_score || 75) >= bar * 25 ? 'bg-background' : 'bg-foreground/20'}`}
                         />
                     ))}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white">Signal Strength</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Signal Strength</span>
             </div>
         </motion.div>
     );

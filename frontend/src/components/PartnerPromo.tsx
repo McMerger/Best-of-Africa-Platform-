@@ -60,7 +60,7 @@ export const PartnerPromo: React.FC<PartnerPromoProps> = ({
 
             <div className="relative z-20 flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-center justify-between">
-                    <Badge variant="outline" className="border-primary/30 bg-primary/10 text-[10px] font-bold uppercase tracking-widest text-primary">
+                    <Badge variant="outline" className="border-primary/30 bg-background/10 text-[10px] font-bold uppercase tracking-widest text-primary">
                         {category}
                     </Badge>
                     <LinkBreak1Icon className="h-4 w-4 text-muted-foreground opacity-50" />
@@ -79,7 +79,7 @@ export const PartnerPromo: React.FC<PartnerPromoProps> = ({
                         asChild
                         variant="secondary"
                         size="sm"
-                        className="w-full font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all group-hover:bg-primary group-hover:text-primary-foreground"
+                        className="w-full font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all group-hover:bg-background group-hover:text-foreground"
                     >
                         <a href={ctaUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
                             {ctaText} <ArrowTopRightIcon className="h-4 w-4" />
@@ -89,7 +89,7 @@ export const PartnerPromo: React.FC<PartnerPromoProps> = ({
             </div>
 
             {/* Premium "River Bridge" style accent */}
-            <div className="absolute bottom-0 left-0 h-1 w-0 bg-primary transition-all duration-700 group-hover:w-full" />
+            <div className="absolute bottom-0 left-0 h-1 w-0 bg-background transition-all duration-700 group-hover:w-full" />
         </motion.div>
     );
 };

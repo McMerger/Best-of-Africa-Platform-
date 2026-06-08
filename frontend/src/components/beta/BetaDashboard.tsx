@@ -45,7 +45,7 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
           </div>
           <button 
             onClick={onLogout}
-            className="p-3 bg-primary/5 rounded-full text-primary/40 hover:text-primary hover:bg-primary/10 transition-colors"
+            className="p-3 bg-background/5 rounded-full text-primary/40 hover:text-primary hover:bg-background/10 transition-colors"
             title="Sign out"
           >
             <LogOut size={16} />

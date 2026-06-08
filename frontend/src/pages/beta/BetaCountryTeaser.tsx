@@ -47,7 +47,7 @@ const CountryCard = ({
     >
       <Link
         to={`/countries/${country.code.toLowerCase()}`}
-        className="group relative bg-white rounded-xl overflow-hidden border border-primary/8 flex flex-col text-left transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
+        className="group relative bg-background rounded-xl overflow-hidden border border-primary/8 flex flex-col text-left transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
@@ -68,13 +68,13 @@ const CountryCard = ({
 };
 
 const CountryCardSkeleton = () => (
-  <div className="bg-white rounded-xl border border-primary/8 p-5 animate-pulse">
+  <div className="bg-background rounded-xl border border-primary/8 p-5 animate-pulse">
     <div className="flex items-center justify-between mb-3">
-      <div className="w-8 h-8 bg-white/10 rounded-full" />
-      <div className="w-16 h-4 bg-white/10 rounded-full" />
+      <div className="w-8 h-8 bg-foreground/10 rounded-full" />
+      <div className="w-16 h-4 bg-foreground/10 rounded-full" />
     </div>
-    <div className="h-4 bg-white/10 rounded w-2/3 mb-2" />
-    <div className="h-3 bg-primary/5 rounded w-1/2" />
+    <div className="h-4 bg-foreground/10 rounded w-2/3 mb-2" />
+    <div className="h-3 bg-background/5 rounded w-1/2" />
   </div>
 );
 
@@ -153,7 +153,7 @@ export const BetaCountryTeaser = () => {
             aria-label="Search countries or sectors"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-white border border-primary/10 rounded-xl pl-10 pr-4 py-3 text-sm text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
+            className="w-full bg-background border border-primary/10 rounded-xl pl-10 pr-4 py-3 text-sm text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
           />
           {search && (
             <button
@@ -177,7 +177,7 @@ export const BetaCountryTeaser = () => {
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
                     ? 'bg-accent text-card shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
-                    : 'bg-primary/5 text-primary/60 hover:bg-white/10 hover:text-primary border border-primary/8'
+                    : 'bg-background/5 text-primary/60 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
                 {region}

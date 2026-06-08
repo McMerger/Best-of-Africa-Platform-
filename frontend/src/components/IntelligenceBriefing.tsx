@@ -27,7 +27,7 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
 
     // Status config (Neutral/SaaS Style)
     const statusConfig = isStable
-        ? { color: "text-primary", bg: "bg-primary/10", border: "border-primary/20", text: "Stable Analysis" }
+        ? { color: "text-primary", bg: "bg-background/10", border: "border-primary/20", text: "Stable Analysis" }
         : isVolatile
             ? { color: "text-foreground", bg: "bg-muted", border: "border-border", text: "Watchlist" }
             : { color: "text-muted-foreground", bg: "bg-muted/50", border: "border-border/50", text: "Developing" };

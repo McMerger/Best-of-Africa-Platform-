@@ -45,7 +45,7 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
       <span className="text-sm text-primary/60">{label}</span>
       <span className="text-sm font-bold text-accent">{value}<span className="text-primary/30 font-normal">/100</span></span>
     </div>
-    <div className="h-1.5 bg-primary/8 rounded-full overflow-hidden">
+    <div className="h-1.5 bg-background/8 rounded-full overflow-hidden">
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
@@ -59,9 +59,9 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 const ArticleCard = ({ article }: { article: ArticleListItem }) => (
   <Link
     to={`/posts/${article.slug}`}
-    className="group block bg-card rounded-2xl border border-white/10 overflow-hidden hover:border-white/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
+    className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
-    <div className="aspect-[16/9] overflow-hidden bg-primary/20 relative">
+    <div className="aspect-[16/9] overflow-hidden bg-background/20 relative">
       <img
         src={article.hero_image_url || `/images/v2_editorial_${Math.floor(Math.random() * 2) + 1}.png`}
         alt={article.title}
@@ -76,24 +76,24 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
           {article.sector_name}
         </span>
       )}
-      <h3 className="font-serif text-[18px] font-semibold text-white leading-snug group-hover:text-accent transition-colors line-clamp-2">
+      <h3 className="font-serif text-[18px] font-semibold text-foreground leading-snug group-hover:text-accent transition-colors line-clamp-2">
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[14px] text-white/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
+        <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
       )}
-      <p className="text-[11px] text-white/30 mt-4">{article.reading_time_minutes} min read</p>
+      <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} min read</p>
     </div>
   </Link>
 );
 
 const SkeletonCard = () => (
-  <div className="bg-card rounded-2xl border border-white/10 overflow-hidden animate-pulse">
-    <div className="aspect-[16/9] bg-white/5" />
+  <div className="bg-card rounded-2xl border border-foreground/10 overflow-hidden animate-pulse">
+    <div className="aspect-[16/9] bg-foreground/5" />
     <div className="p-6 space-y-3">
-      <div className="h-3 bg-white/5 rounded w-1/4" />
-      <div className="h-5 bg-white/10 rounded w-3/4" />
-      <div className="h-3 bg-white/5 rounded w-full" />
+      <div className="h-3 bg-foreground/5 rounded w-1/4" />
+      <div className="h-5 bg-foreground/10 rounded w-3/4" />
+      <div className="h-3 bg-foreground/5 rounded w-full" />
     </div>
   </div>
 );
@@ -166,7 +166,7 @@ export const BetaCountryHub = () => {
   const { scrollY } = useScroll();
 
   return (
-    <div className="pb-24 bg-primary text-primary-foreground">
+    <div className="pb-24 bg-background text-foreground">
       <SEO
         title={`${countryName} | BOA-Story`}
         description={`Curated stories and independent insights for ${countryName}.`}
@@ -174,13 +174,13 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-white/10">
+      <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
         >
-          <div className="absolute inset-0 bg-primary/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-dark z-20" />
+          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
+          <div className="gradient-overlay-light z-20" />
           <img 
             src="/images/v2_country_hero.png" 
             alt="Country Landscape" 
@@ -191,7 +191,7 @@ export const BetaCountryHub = () => {
         <div className="max-w-5xl mx-auto w-full relative z-30">
           <Link
             to="/countries"
-            className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
+            className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             All 54 Countries
@@ -199,15 +199,15 @@ export const BetaCountryHub = () => {
 
           <div className="flex flex-col md:flex-row items-start md:items-end gap-8">
             {isLoading ? (
-              <div className="w-24 h-24 bg-white/10 rounded-3xl animate-pulse" />
+              <div className="w-24 h-24 bg-foreground/10 rounded-3xl animate-pulse" />
             ) : (
               <span className="text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
             )}
             <div className="flex-1 pb-2">
               {isLoading ? (
                 <div className="space-y-4">
-                  <div className="h-12 bg-white/10 rounded w-64 animate-pulse" />
-                  <div className="h-6 bg-white/10 rounded w-48 animate-pulse" />
+                  <div className="h-12 bg-foreground/10 rounded w-64 animate-pulse" />
+                  <div className="h-6 bg-foreground/10 rounded w-48 animate-pulse" />
                 </div>
               ) : (
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
@@ -216,14 +216,14 @@ export const BetaCountryHub = () => {
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
-                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full backdrop-blur-md">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70 bg-foreground/5 border border-foreground/10 px-4 py-1.5 rounded-full backdrop-blur-md">
                         {stats.article_count} {stats.article_count === 1 ? 'story' : 'stories'}
                       </span>
                     )}
                   </div>
                   <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-white/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
+                    <p className="text-foreground/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
                   )}
                 </motion.div>
               )}
@@ -237,7 +237,7 @@ export const BetaCountryHub = () => {
               className="flex flex-wrap gap-2 mt-12"
             >
               {investmentHighlights.map(h => (
-                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-white/80 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
+                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-foreground/80 bg-foreground/10 border border-foreground/20 px-4 py-2 rounded-full backdrop-blur-md">
                   {h}
                 </span>
               ))}
@@ -251,15 +251,15 @@ export const BetaCountryHub = () => {
         {/* ── Sentiment Scores (members only) ────────────────────────────── */}
         <motion.section 
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className="bg-card rounded-3xl border border-white/10 p-8 md:p-12 shadow-2xl relative overflow-hidden"
+          className="bg-card rounded-3xl border border-foreground/10 p-8 md:p-12 shadow-2xl relative overflow-hidden"
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
-            <h2 className="font-serif text-[2rem] text-white leading-none">Sentiment Scores</h2>
+            <h2 className="font-serif text-[2rem] text-foreground leading-none">Sentiment Scores</h2>
           </div>
 
           {!isMember ? (
-            <div className="relative bg-card rounded-2xl border border-white/5 p-8 overflow-hidden">
+            <div className="relative bg-card rounded-2xl border border-foreground/5 p-8 overflow-hidden">
               {/* blurred placeholder preview */}
               <div className="space-y-6 blur-md pointer-events-none select-none opacity-40" aria-hidden="true">
                 {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
@@ -268,8 +268,8 @@ export const BetaCountryHub = () => {
               </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
                 <Lock size={32} className="text-accent mb-4" />
-                  <p className="font-serif text-3xl font-semibold text-white mb-2">Backer-Only Data</p>
-                  <p className="text-lg text-white/50 mb-8 max-w-sm text-center">
+                  <p className="font-serif text-3xl font-semibold text-foreground mb-2">Backer-Only Data</p>
+                  <p className="text-lg text-foreground/50 mb-8 max-w-sm text-center">
                     Full sentiment scores, perception gaps, and sector signals.
                   </p>
                 <a
@@ -287,10 +287,10 @@ export const BetaCountryHub = () => {
               {[1, 2, 3, 4].map(i => (
                 <div key={i}>
                   <div className="flex justify-between mb-2">
-                    <div className="h-4 bg-white/10 rounded w-40" />
-                    <div className="h-4 bg-white/10 rounded w-12" />
+                    <div className="h-4 bg-foreground/10 rounded w-40" />
+                    <div className="h-4 bg-foreground/10 rounded w-12" />
                   </div>
-                  <div className="h-2 bg-white/5 rounded-full" />
+                  <div className="h-2 bg-foreground/5 rounded-full" />
                 </div>
               ))}
             </div>
@@ -302,7 +302,7 @@ export const BetaCountryHub = () => {
               <ScoreBar label="Engagement Level" value={outlook.engagement_level} delay={0.3} />
             </div>
           ) : (
-            <div className="text-center text-white/40 text-lg">
+            <div className="text-center text-foreground/40 text-lg">
               Outlook data unavailable for this country.
             </div>
           )}
@@ -313,7 +313,7 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <TrendingUp size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-white">Sector Activity</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">Sector Activity</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-6">
               {(sectorOpportunities.length > 0 ? sectorOpportunities : sectorCoverage.map(s => ({
@@ -324,16 +324,16 @@ export const BetaCountryHub = () => {
                 <motion.div
                   key={sector.id}
                   initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1, duration: 0.5 }} viewport={{ once: true }}
-                  className="bg-card rounded-2xl border border-white/10 p-6 hover:border-accent/40 transition-colors shadow-xl"
+                  className="bg-card rounded-2xl border border-foreground/10 p-6 hover:border-accent/40 transition-colors shadow-xl"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-serif text-white text-[1.25rem]">{sector.name}</span>
+                    <span className="font-serif text-foreground text-[1.25rem]">{sector.name}</span>
                     <span className="text-[11px] text-accent font-bold tracking-widest bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase">
                       {sector.articles} {sector.articles === 1 ? 'story' : 'stories'}
                     </span>
                   </div>
                   {sector.avg_engagement > 0 && (
-                    <p className="text-sm text-white/40">
+                    <p className="text-sm text-foreground/40">
                       Avg. engagement: {sector.avg_engagement.toFixed(1)}
                     </p>
                   )}
@@ -348,15 +348,15 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <Globe size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-white">Key Narratives</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">Key Narratives</h2>
             </div>
             <div className="space-y-6">
               {narratives.slice(0, 4).map((n, i) => (
-                <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} viewport={{ once: true }} className="bg-card rounded-2xl border border-white/10 p-8 shadow-xl">
+                <motion.div key={n.id} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1, duration: 0.5 }} viewport={{ once: true }} className="bg-card rounded-2xl border border-foreground/10 p-8 shadow-xl">
                   <div className="flex items-start justify-between gap-4 mb-6">
-                    <h3 className="font-serif text-[1.75rem] text-white leading-snug">{n.narrative_theme}</h3>
+                    <h3 className="font-serif text-[1.75rem] text-foreground leading-snug">{n.narrative_theme}</h3>
                     <span className={`shrink-0 text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border ${
-                      n.priority <= 2 ? 'text-accent bg-accent/10 border-accent/30' : 'text-white/50 bg-white/5 border-white/10'
+                      n.priority <= 2 ? 'text-accent bg-accent/10 border-accent/30' : 'text-foreground/50 bg-foreground/5 border-foreground/10'
                     }`}>
                       {n.tone}
                     </span>
@@ -364,7 +364,7 @@ export const BetaCountryHub = () => {
                   {n.key_messages.length > 0 && (
                     <ul className="space-y-3">
                       {n.key_messages.slice(0, 3).map((msg, i) => (
-                        <li key={i} className="text-[1.125rem] text-white/70 flex items-start gap-4 font-light">
+                        <li key={i} className="text-[1.125rem] text-foreground/70 flex items-start gap-4 font-light">
                           <span className="text-accent shrink-0 mt-1">→</span>
                           {msg}
                         </li>
@@ -380,14 +380,14 @@ export const BetaCountryHub = () => {
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="bg-card rounded-3xl p-12 text-white relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
               <div className="absolute top-0 right-0 p-8 opacity-10">
                  <Globe size={120} />
               </div>
               <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
                 Situation Report
               </div>
-              <p className="text-white/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
+              <p className="text-foreground/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
             </div>
           </motion.section>
         )}
@@ -402,25 +402,25 @@ export const BetaCountryHub = () => {
             <div className="flex flex-wrap gap-3">
               {country.business_portal_url && (
                 <a href={country.business_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
                   <ExternalLink size={13} className="text-accent" /> Business Portal
                 </a>
               )}
               {country.visa_portal_url && (
                 <a href={country.visa_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
                   <ExternalLink size={13} className="text-accent" /> Visa Portal
                 </a>
               )}
               {country.tourism_portal_url && (
                 <a href={country.tourism_portal_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
+                  className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
                   <ExternalLink size={13} className="text-accent" /> Tourism Portal
                 </a>
               )}
               {isMember && (
                 <Link to={`/countries/${upperCode}/narratives`}
-                  className="inline-flex items-center gap-2 bg-primary/5 border border-primary/10 hover:border-accent/40 hover:bg-white px-4 py-2.5 rounded-xl text-sm font-bold text-primary transition-colors">
+                  className="inline-flex items-center gap-2 bg-background/5 border border-primary/10 hover:border-accent/40 hover:bg-background px-4 py-2.5 rounded-xl text-sm font-bold text-primary transition-colors">
                   <ExternalLink size={13} className="text-accent" /> Narrative Diplomacy Toolkit (Gov)
                 </Link>
               )}
@@ -433,12 +433,12 @@ export const BetaCountryHub = () => {
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">
               <FileText size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-white">Stories from {countryName}</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">Stories from {countryName}</h2>
             </div>
             {articles.length > 0 && (
               <Link
                 to={`/posts?country=${upperCode}`}
-                className="text-[13px] text-accent font-bold uppercase tracking-widest hover:text-white transition-colors"
+                className="text-[13px] text-accent font-bold uppercase tracking-widest hover:text-foreground transition-colors"
               >
                 View all →
               </Link>
@@ -454,13 +454,13 @@ export const BetaCountryHub = () => {
               {articles.map((article, i) => {
                 const isLocked = !isMember && i >= 2;
                 return isLocked ? (
-                  <div key={article.id} className="relative rounded-2xl overflow-hidden border border-white/5">
+                  <div key={article.id} className="relative rounded-2xl overflow-hidden border border-foreground/5">
                     <div className="blur-md pointer-events-none opacity-40">
                       <ArticleCard article={article} />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 rounded-2xl z-10">
                       <Lock size={24} className="text-accent mb-3" />
-                      <p className="text-sm font-bold uppercase tracking-widest text-white text-center px-4">
+                      <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
                         Founding Members Only
                       </p>
                     </div>
@@ -473,10 +473,10 @@ export const BetaCountryHub = () => {
               })}
             </div>
           ) : (
-            <div className="bg-card rounded-3xl border border-white/10 p-16 text-center shadow-xl">
-              <Globe size={48} className="text-white/20 mx-auto mb-6" />
-              <p className="text-white/60 font-serif text-[1.5rem]">No stories published for {countryName} yet.</p>
-              <p className="text-white/30 text-lg mt-2">We are monitoring this market continuously.</p>
+            <div className="bg-card rounded-3xl border border-foreground/10 p-16 text-center shadow-xl">
+              <Globe size={48} className="text-foreground/20 mx-auto mb-6" />
+              <p className="text-foreground/60 font-serif text-[1.5rem]">No stories published for {countryName} yet.</p>
+              <p className="text-foreground/30 text-lg mt-2">We are monitoring this market continuously.</p>
             </div>
           )}
         </motion.section>

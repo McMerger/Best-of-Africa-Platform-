@@ -19,7 +19,7 @@ export function LanguageSelector() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-full hover:bg-white/50 hover:text-primary transition-all px-2.5">
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-full hover:bg-foreground/50 hover:text-primary transition-all px-2.5">
                     <GlobeIcon className="h-3.5 w-3.5" />
                     <span className="hidden lg:inline-block font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{language}</span>
                 </Button>
@@ -32,8 +32,8 @@ export function LanguageSelector() {
                         className={cn(
                             "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors",
                             language === lang.code
-                                ? "bg-primary text-primary-foreground font-bold"
-                                : "hover:bg-primary/10 text-muted-foreground hover:text-primary"
+                                ? "bg-background text-foreground font-bold"
+                                : "hover:bg-background/10 text-muted-foreground hover:text-primary"
                         )}
                     >
                         <div className="flex flex-col">

@@ -69,11 +69,11 @@ export const BetaMembership = () => {
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center p-1 bg-white border border-primary/8 rounded-full shadow-sm">
+          <div className="inline-flex items-center p-1 bg-background border border-primary/8 rounded-full shadow-sm">
             <button
               onClick={() => setIsAnnual(false)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                !isAnnual ? 'bg-primary text-white' : 'text-primary/60 hover:text-primary'
+                !isAnnual ? 'bg-background text-foreground' : 'text-primary/60 hover:text-primary'
               }`}
             >
               Monthly
@@ -81,7 +81,7 @@ export const BetaMembership = () => {
             <button
               onClick={() => setIsAnnual(true)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                isAnnual ? 'bg-primary text-white' : 'text-primary/60 hover:text-primary'
+                isAnnual ? 'bg-background text-foreground' : 'text-primary/60 hover:text-primary'
               }`}
             >
               Annual <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">~2 mo free</span>
@@ -93,7 +93,7 @@ export const BetaMembership = () => {
 
     {/* One-off tip */}
     <section className="py-16 px-6 border-t border-primary/8">
-      <div className="max-w-xl mx-auto text-center bg-white p-8 rounded-xl border border-primary/8">
+      <div className="max-w-xl mx-auto text-center bg-background p-8 rounded-xl border border-primary/8">
         <h3 className="font-serif text-2xl mb-3">Support the work.</h3>
         <p className="text-primary/60 text-sm mb-6">A one-time contribution keeps this reporting independent and brings African stories to the world.</p>
         <a
@@ -111,7 +111,7 @@ export const BetaMembership = () => {
     <section className="py-16 px-6 border-t border-primary/8">
       <div className="max-w-2xl mx-auto">
         <h2 className="font-serif text-3xl text-primary mb-10 text-center">Questions about membership</h2>
-        <div className="bg-white rounded-2xl border border-primary/8 px-6 md:px-8">
+        <div className="bg-background rounded-2xl border border-primary/8 px-6 md:px-8">
           {FAQ_ITEMS.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
         </div>
       </div>

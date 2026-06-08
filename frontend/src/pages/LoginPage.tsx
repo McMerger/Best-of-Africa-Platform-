@@ -83,7 +83,7 @@ export const LoginPage: React.FC = () => {
         <>
             <div className="dark relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-background px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-border/40 shadow-2xl">
                 {/* Background decorative elements */}
-                <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/20 blur-3xl" />
+                <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-background/20 blur-3xl" />
                 <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] pointer-events-none" />
 

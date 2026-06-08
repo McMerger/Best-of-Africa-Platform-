@@ -94,7 +94,7 @@ export function EventRegistrationForm({ eventId, onSuccess }: EventRegistrationF
                         Check your email for full details.
                     </p>
                 </div>
-                <div className="w-full p-3 bg-white dark:bg-card rounded border border-dashed border-accent/30">
+                <div className="w-full p-3 bg-background dark:bg-card rounded border border-dashed border-accent/30">
                     <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Confirmation Code</p>
                     <code className="text-lg font-mono font-bold text-primary">{confirmationCode}</code>
                 </div>

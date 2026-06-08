@@ -103,7 +103,7 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
                 </ZoomableGroup>
             </ComposableMap>
             {tooltipContent && (
-                <div className="absolute bottom-4 left-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-semibold pointer-events-none">
+                <div className="absolute bottom-4 left-4 bg-background text-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-semibold pointer-events-none">
                     {tooltipContent}
                 </div>
             )}

@@ -58,7 +58,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2">
-                                        <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] uppercase font-bold px-2 py-0">
+                                        <Badge variant="outline" className="bg-background/5 text-primary border-primary/20 text-[10px] uppercase font-bold px-2 py-0">
                                             {event.category}
                                         </Badge>
                                         <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest flex items-center gap-1">
@@ -92,7 +92,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                 ))}
             </div>
 
-            <Button variant="ghost" size="sm" asChild className="w-full text-xs font-bold text-primary hover:bg-primary/5 transition-colors">
+            <Button variant="ghost" size="sm" asChild className="w-full text-xs font-bold text-primary hover:bg-background/5 transition-colors">
                 <Link to="/events">Browse All Continent Summits &rarr;</Link>
             </Button>
         </div>

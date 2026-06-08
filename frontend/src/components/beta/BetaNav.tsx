@@ -49,13 +49,13 @@ export const BetaNav = () => {
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           scrolled
             ? 'bg-background/85 backdrop-blur-xl border-b border-primary/10 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]'
-            : isDarkHero ? 'bg-primary py-6 border-b border-white/5' : 'bg-background/70 backdrop-blur-xl border-b border-primary/10 py-3 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]'
+            : isDarkHero ? 'bg-background py-6 border-b border-foreground/5' : 'bg-background/70 backdrop-blur-xl border-b border-primary/10 py-3 border-t border-t-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.03)]'
         }`}
       >
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           
           <Link to="/" className="flex-shrink-0 flex items-center gap-2.5 group">
-            <span className={`font-serif font-bold text-xl transition-colors ${(scrolled || !isDarkHero) ? 'text-primary' : 'text-white'} group-hover:opacity-90`}>
+            <span className={`font-serif font-bold text-xl transition-colors ${(scrolled || !isDarkHero) ? 'text-primary' : 'text-foreground'} group-hover:opacity-90`}>
               BOA-<span className="text-accent">Story</span>
             </span>
           </Link>
@@ -74,7 +74,7 @@ export const BetaNav = () => {
                         className={`font-sans font-medium text-[0.9375rem] transition-colors duration-150 ${
                           (scrolled || !isDarkHero)
                             ? isActive ? 'text-primary' : 'text-primary/60 hover:text-primary'
-                            : isActive ? 'text-white' : 'text-white/70 hover:text-white'
+                            : isActive ? 'text-foreground' : 'text-foreground/70 hover:text-foreground'
                         }`}
                       >
                         {link.name}
@@ -93,7 +93,7 @@ export const BetaNav = () => {
             </a>
             
             <button 
-              className={`md:hidden transition-colors ${(scrolled || !isDarkHero) ? 'text-primary/80 hover:text-primary' : 'text-white/80 hover:text-white'}`}
+              className={`md:hidden transition-colors ${(scrolled || !isDarkHero) ? 'text-primary/80 hover:text-primary' : 'text-foreground/80 hover:text-foreground'}`}
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open menu"
             >

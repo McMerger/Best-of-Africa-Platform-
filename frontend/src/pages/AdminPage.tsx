@@ -190,11 +190,11 @@ export const AdminPage: React.FC = () => {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge className="bg-primary/10 text-primary border-primary/20">Live</Badge>
+                                                        <Badge className="bg-background/10 text-primary border-primary/20">Live</Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary" onClick={() => window.open(`/posts/${a.slug}`, '_blank')}>
+                                                            <Button variant="ghost" size="icon" className="rounded-full hover:bg-background/10 hover:text-primary" onClick={() => window.open(`/posts/${a.slug}`, '_blank')}>
                                                                 <EyeOpenIcon className="h-4 w-4" />
                                                             </Button>
                                                             <Button 
@@ -257,7 +257,7 @@ export const AdminPage: React.FC = () => {
                         </TabsContent>
 
                         <TabsContent value="evolution" className="space-y-6">
-                            <Alert className="bg-primary/5 border-primary/20 rounded-3xl">
+                            <Alert className="bg-background/5 border-primary/20 rounded-3xl">
                                 <MagicWandIcon className="h-4 w-4 text-primary" />
                                 <AlertTitle className="text-foreground font-bold">Editorial Rule Updates</AlertTitle>
                                 <AlertDescription className="text-muted-foreground">
@@ -270,7 +270,7 @@ export const AdminPage: React.FC = () => {
                                 <Card className="border-border rounded-3xl p-6 border-primary/20">
                                     <CardTitle className="text-lg font-serif mb-2">Update Rules</CardTitle>
                                     <CardDescription className="mb-6">Consolidate all pending editorial feedback into publishing rules.</CardDescription>
-                                    <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold" onClick={triggerEvolution}>
+                                    <Button className="w-full bg-background hover:bg-background/90 text-foreground font-bold" onClick={triggerEvolution}>
                                         Update Rules
                                     </Button>
                                 </Card>
@@ -314,8 +314,8 @@ export const AdminPage: React.FC = () => {
 
                 <Card className="w-full max-w-md border-border shadow-xl relative z-10 rounded-3xl overflow-hidden">
                     <CardHeader className="space-y-1 text-center pb-8 border-b border-border bg-card">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
-                            <LockClosedIcon className="h-8 w-8 text-white" />
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-background text-foreground shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
+                            <LockClosedIcon className="h-8 w-8 text-foreground" />
                         </div>
                         <CardTitle className="text-2xl font-serif font-black text-foreground tracking-tight">Intelligence Access</CardTitle>
                         <CardDescription>Authorized personnel only. Sessions are logs.</CardDescription>

@@ -39,15 +39,15 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
 
     return (
         <Card className="w-full max-w-md mx-auto overflow-hidden border-2 border-primary/10 shadow-xl">
-            <div className="bg-primary px-6 py-4 text-primary-foreground">
+            <div className="bg-background px-6 py-4 text-foreground">
                 <div className="flex items-center justify-between mb-1">
                     <h3 className="text-xl font-bold tracking-tight">Featured Property</h3>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-white/20">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 px-2 py-0.5 text-xs font-medium text-foreground ring-1 ring-inset ring-white/20">
                         <LockClosedIcon className="w-3 h-3" />
                         Verified Partner
                     </span>
                 </div>
-                <p className="text-primary-foreground/80 text-sm">Best of Africa Corporate Rates & Benefits</p>
+                <p className="text-foreground/80 text-sm">Best of Africa Corporate Rates & Benefits</p>
             </div>
 
             <Tabs defaultValue="vip" className="w-full">
@@ -123,7 +123,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
                         <div className="space-y-3">
                             <a href={affiliateUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 hover:bg-accent/50 transition-all group">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded bg-[#003580] flex items-center justify-center text-white font-bold text-xs">B.</div>
+                                    <div className="h-8 w-8 rounded bg-[#003580] flex items-center justify-center text-foreground font-bold text-xs">B.</div>
                                     <div>
                                         <div className="font-bold">Booking.com</div>
                                         <div className="text-xs text-muted-foreground">Public Rate</div>
@@ -195,7 +195,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
                                     placeholder="I need to visit Maputo, then Beira..."
                                 />
                             </div>
-                            <Button type="submit" variant="outline" className="w-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground">
+                            <Button type="submit" variant="outline" className="w-full border-primary/50 text-primary hover:bg-background hover:text-foreground">
                                 Contact Travel Desk
                             </Button>
                         </form>

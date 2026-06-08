@@ -57,18 +57,18 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
             </div>
           ) : (
             // Standard card
-            <div className="glass-panel border border-white/5 rounded-3xl p-8 md:p-10 flex flex-col h-full hover:border-accent/30 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(212,175,55,0.08)] transition-all duration-300 relative overflow-hidden group">
+            <div className="glass-panel border border-foreground/5 rounded-3xl p-8 md:p-10 flex flex-col h-full hover:border-accent/30 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(212,175,55,0.08)] transition-all duration-300 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <h3 className="font-serif text-[1.5rem] md:text-[2rem] mb-2 text-white/90 group-hover:text-white transition-colors">{tier.name}</h3>
+              <h3 className="font-serif text-[1.5rem] md:text-[2rem] mb-2 text-foreground/90 group-hover:text-foreground transition-colors">{tier.name}</h3>
               <div className="flex items-baseline gap-1 mb-1">
                 <span className="text-accent font-serif text-4xl drop-shadow-md">{displayPrice}</span>
-                <span className="text-white/30 text-sm">/{isAnnual ? 'yr' : 'mo'}</span>
+                <span className="text-foreground/30 text-sm">/{isAnnual ? 'yr' : 'mo'}</span>
               </div>
               {monthlyRef && (
-                <p className="text-white/20 text-xs mb-7 line-through font-medium tracking-wide">{monthlyRef}/mo billed monthly</p>
+                <p className="text-foreground/20 text-xs mb-7 line-through font-medium tracking-wide">{monthlyRef}/mo billed monthly</p>
               )}
               {!monthlyRef && <div className="mb-7" />}
-              <ul className="space-y-4 mb-10 flex-1 text-[0.9rem] text-white/60">
+              <ul className="space-y-4 mb-10 flex-1 text-[0.9rem] text-foreground/60">
                 {tier.features.map(f => (
                   <li key={f} className="flex items-start gap-3">
                     <span className="text-accent mt-0.5 shrink-0">✓</span>
@@ -77,7 +77,7 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
                 ))}
               </ul>
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="relative z-10">
-                <GoldButton variant="ghost" className="w-full border-white/10 text-white/70 hover:text-white hover:border-accent/50 hover:bg-white/5 transition-all">
+                <GoldButton variant="ghost" className="w-full border-foreground/10 text-foreground/70 hover:text-foreground hover:border-accent/50 hover:bg-foreground/5 transition-all">
                   {tier.ctaLabel}
                 </GoldButton>
               </a>

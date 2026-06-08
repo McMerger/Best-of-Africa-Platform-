@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
     const { data: config } = useSystemConfig();
 
     return (
-        <footer className="relative mt-20 border-t border-white/5 bg-primary overflow-hidden">
+        <footer className="relative mt-20 border-t border-foreground/5 bg-background overflow-hidden">
             {/* Ambient Background Glow */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-50" />
             <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
@@ -24,21 +24,21 @@ export const Footer: React.FC = () => {
                 >
                     {/* Brand / Mission Column */}
                     <div>
-                        <div className="mb-6 font-serif text-4xl md:text-5xl font-black tracking-tighter text-white drop-shadow-xl">
+                        <div className="mb-6 font-serif text-4xl md:text-5xl font-black tracking-tighter text-foreground drop-shadow-xl">
                             BEST OF AFRICA<span className="text-accent">.</span>
                         </div>
                         <div className="mb-6 flex items-center gap-3">
                             <span className="h-px w-8 bg-accent/50" />
                             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Intelligence Platform</span>
                         </div>
-                        <p className="mb-8 max-w-[400px] text-[1.125rem] font-serif font-light leading-[1.8] text-white/70">
+                        <p className="mb-8 max-w-[400px] text-[1.125rem] font-serif font-light leading-[1.8] text-foreground/70">
                             "{config?.['footer_mission_statement'] || "Real stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."}"
                         </p>
                         <a
                             href={KO_FI_URL}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-3 rounded-full bg-accent px-6 py-3.5 text-[11px] uppercase tracking-widest font-bold text-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:bg-white hover:text-primary transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                            className="inline-flex items-center gap-3 rounded-full bg-accent px-6 py-3.5 text-[11px] uppercase tracking-widest font-bold text-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:bg-background hover:text-primary transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
                         >
                             <Coffee className="h-4 w-4" />
                             Support the Mission
@@ -47,8 +47,8 @@ export const Footer: React.FC = () => {
 
                     {/* BOA-Story Column */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">BOA-Story</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-white/60">
+                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">BOA-Story</h4>
+                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
                             <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Posts</Link></li>
                             <li><Link to="/countries" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Countries</Link></li>
                             <li><Link to="/gallery" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Gallery</Link></li>
@@ -60,8 +60,8 @@ export const Footer: React.FC = () => {
 
                     {/* Intelligence Column */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Intelligence</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-white/60">
+                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Intelligence</h4>
+                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
                             <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Regional Dashboards</Link></li>
                             <li><Link to="/intel" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Sector Analysis</Link></li>
                             <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Reports Archive</Link></li>
@@ -70,8 +70,8 @@ export const Footer: React.FC = () => {
 
                     {/* Diplomacy Column */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Diplomacy</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-white/60">
+                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Diplomacy</h4>
+                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
                             <li><Link to="/intelligence" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Narrative Strategy</Link></li>
                             <li><Link to="/countries" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Member States</Link></li>
                             <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Risk Dashboards</Link></li>
@@ -80,8 +80,8 @@ export const Footer: React.FC = () => {
 
                     {/* Client Access Column */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Client Access</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-white/60">
+                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Client Access</h4>
+                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
                             <li><Link to="/login" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Secure Login</Link></li>
                             <li><Link to="/contact" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Contact Support</Link></li>
                             <li><Link to="/newsletter" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Newsletter</Link></li>
@@ -95,15 +95,15 @@ export const Footer: React.FC = () => {
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 1, delay: 0.2 }}
-                    className="flex flex-col items-center justify-between gap-6 border-t border-white/5 pt-10 text-[10px] font-bold uppercase tracking-widest text-white/40 md:flex-row"
+                    className="flex flex-col items-center justify-between gap-6 border-t border-foreground/5 pt-10 text-[10px] font-bold uppercase tracking-widest text-foreground/40 md:flex-row"
                 >
                     <div className="flex flex-wrap items-center justify-center gap-6">
                         <span>© {new Date().getFullYear()} Best of Africa.</span>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-white/20" />
+                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
                         <Link to="/privacy" className="hover:text-accent transition-colors">PRIVACY POLICY</Link>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-white/20" />
+                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
                         <Link to="/terms" className="hover:text-accent transition-colors">TERMS OF SERVICE</Link>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-white/20" />
+                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
                         <Link to="/about" className="hover:text-accent transition-colors">EDITORIAL GUIDELINES</Link>
                     </div>
                     <div className="flex items-center gap-3 text-accent/80">
@@ -117,7 +117,7 @@ export const Footer: React.FC = () => {
                     whileInView={{ opacity: 0.03, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="absolute -bottom-10 md:-bottom-20 left-0 right-0 font-serif font-black text-[15vw] leading-none text-center pointer-events-none select-none text-white whitespace-nowrap overflow-hidden"
+                    className="absolute -bottom-10 md:-bottom-20 left-0 right-0 font-serif font-black text-[15vw] leading-none text-center pointer-events-none select-none text-foreground whitespace-nowrap overflow-hidden"
                 >
                     AFRICA.
                 </motion.div>

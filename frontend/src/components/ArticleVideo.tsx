@@ -55,15 +55,15 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
 
     return (
         <div
-            className="group relative aspect-video w-full overflow-hidden rounded-3xl border border-white/10 bg-black shadow-2xl"
+            className="group relative aspect-video w-full overflow-hidden rounded-3xl border border-foreground/10 bg-black shadow-2xl"
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => isPlaying && setShowControls(false)}
         >
             {/* News Ticker Overlay (Top) */}
             <div className="absolute top-0 left-0 z-20 w-full bg-black/60 backdrop-blur-md px-6 py-3 border-b border-primary/20 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                    <div className="bg-primary px-2 py-0.5 rounded text-[10px] font-black text-white animate-pulse">LIVE</div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/90">{subtitle}</div>
+                    <div className="bg-background px-2 py-0.5 rounded text-[10px] font-black text-foreground animate-pulse">LIVE</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-foreground/90">{subtitle}</div>
                 </div>
                 <div className="text-[10px] font-mono text-primary">v3.0.4-SIGNAL-DETECTED</div>
             </div>
@@ -84,10 +84,10 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className="bg-primary px-4 py-2 border-l-4 border-white"
+                    className="bg-background px-4 py-2 border-l-4 border-border"
                 >
-                    <div className="text-white font-serif font-black text-lg tracking-tighter leading-none">Best of Africa</div>
-                    <div className="text-white/80 text-[10px] uppercase font-bold tracking-widest mt-1">BOA-Story</div>
+                    <div className="text-foreground font-serif font-black text-lg tracking-tighter leading-none">Best of Africa</div>
+                    <div className="text-foreground/80 text-[10px] uppercase font-bold tracking-widest mt-1">BOA-Story</div>
                 </motion.div>
                 <motion.div
                     initial={{ x: -20, opacity: 0 }}
@@ -95,7 +95,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                     transition={{ delay: 0.2 }}
                     className="bg-black/80 backdrop-blur-md px-4 py-1.5 mt-1 border-l-4 border-primary"
                 >
-                    <div className="text-white text-xs font-bold truncate max-w-[250px]">{title}</div>
+                    <div className="text-foreground text-xs font-bold truncate max-w-[250px]">{title}</div>
                 </motion.div>
             </div>
 
@@ -109,7 +109,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                         className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"
                         onClick={togglePlay}
                     >
-                        <div className="group/play flex h-20 w-20 items-center justify-center rounded-full bg-primary/90 text-white shadow-2xl transition-transform hover:scale-110 active:scale-95">
+                        <div className="group/play flex h-20 w-20 items-center justify-center rounded-full bg-background/90 text-foreground shadow-2xl transition-transform hover:scale-110 active:scale-95">
                             <PlayIcon className="h-10 w-10 ml-1" />
                         </div>
                     </motion.div>
@@ -117,16 +117,16 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
             </AnimatePresence>
 
             {/* News Ticker Overlay (Bottom Scroller) */}
-            <div className="absolute bottom-0 left-0 z-20 w-full bg-primary/90 text-white py-1.5 overflow-hidden border-t border-white/20">
+            <div className="absolute bottom-0 left-0 z-20 w-full bg-background/90 text-foreground py-1.5 overflow-hidden border-t border-foreground/20">
                 <div className="flex whitespace-nowrap animate-marquee">
                     {[1, 2, 3].map(i => (
                         <div key={i} className="flex items-center gap-8 mr-8">
                             <span className="text-[10px] font-black uppercase tracking-widest">Market Alert: Mozambique Energy Sector Surge</span>
-                            <span className="h-1 w-1 rounded-full bg-white opacity-50" />
+                            <span className="h-1 w-1 rounded-full bg-background opacity-50" />
                             <span className="text-[10px] font-black uppercase tracking-widest">Policy Update: AfCFTA Implementation Readiness</span>
-                            <span className="h-1 w-1 rounded-full bg-white opacity-50" />
+                            <span className="h-1 w-1 rounded-full bg-background opacity-50" />
                             <span className="text-[10px] font-black uppercase tracking-widest">Currency Brief: NGN Stabilizing against USD</span>
-                            <span className="h-1 w-1 rounded-full bg-white opacity-50" />
+                            <span className="h-1 w-1 rounded-full bg-background opacity-50" />
                         </div>
                     ))}
                 </div>
@@ -144,19 +144,19 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md"
+                            className="h-8 w-8 rounded-full bg-black/50 text-foreground hover:bg-black/70 backdrop-blur-md"
                             onClick={togglePlay}
                         >
                             {isPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
                         </Button>
 
-                        <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden cursor-pointer relative group/progress">
+                        <div className="flex-1 h-1 bg-foreground/20 rounded-full overflow-hidden cursor-pointer relative group/progress">
                             <div
-                                className="absolute top-0 left-0 h-full bg-primary transition-all duration-100"
+                                className="absolute top-0 left-0 h-full bg-background transition-all duration-100"
                                 style={{ width: `${progress}%` }}
                             />
                             <div
-                                className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-white rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                className="absolute top-1/2 -translate-y-1/2 h-3 w-3 bg-background rounded-full shadow-lg opacity-0 group-hover/progress:opacity-100 transition-opacity"
                                 style={{ left: `${progress}%` }}
                             />
                         </div>
@@ -164,7 +164,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md"
+                            className="h-8 w-8 rounded-full bg-black/50 text-foreground hover:bg-black/70 backdrop-blur-md"
                             onClick={toggleMute}
                         >
                             {isMuted ? <SpeakerOffIcon className="h-4 w-4" /> : <SpeakerLoudIcon className="h-4 w-4" />}
@@ -173,7 +173,7 @@ export const ArticleVideo: React.FC<ArticleVideoProps> = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md"
+                            className="h-8 w-8 rounded-full bg-black/50 text-foreground hover:bg-black/70 backdrop-blur-md"
                         >
                             <EnterFullScreenIcon className="h-4 w-4" />
                         </Button>

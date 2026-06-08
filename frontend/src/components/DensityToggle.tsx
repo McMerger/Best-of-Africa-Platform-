@@ -11,7 +11,7 @@ export const DensityToggle: React.FC = () => {
             variant="ghost"
             size="icon"
             onClick={toggleDensity}
-            className="w-8 h-8 rounded-full text-muted-foreground hover:bg-white/50 hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
+            className="w-8 h-8 rounded-full text-muted-foreground hover:bg-foreground/50 hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
             aria-label={density === 'comfortable' ? 'Switch to compact layout' : 'Switch to comfortable layout'}
             title={density === 'comfortable' ? 'Switch to compact layout' : 'Switch to comfortable layout'}
         >

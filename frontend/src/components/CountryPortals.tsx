@@ -33,7 +33,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
                                         Official portal for e-visas and entry requirements for {country.name}.
                                     </p>
                                 </div>
-                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-primary/5">
+                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-background/5">
                                     <a href={country.visa_portal_url} target="_blank" rel="noopener noreferrer">
                                         Open E-Visa <ExternalLinkIcon className="h-3 w-3" />
                                     </a>
@@ -56,7 +56,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
                                         Register your company and explore local partnership opportunities in {country.name}.
                                     </p>
                                 </div>
-                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-primary/5">
+                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-background/5">
                                     <a href={country.business_portal_url} target="_blank" rel="noopener noreferrer">
                                         Commercial Portal <ExternalLinkIcon className="h-3 w-3" />
                                     </a>
@@ -79,7 +79,7 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
                                         Official tourism board info, hotels, and travel experiences.
                                     </p>
                                 </div>
-                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-primary/5">
+                                <Button asChild variant="outline" size="sm" className="w-full gap-2 rounded-full border-primary/20 hover:bg-background/5">
                                     <a href={country.tourism_portal_url} target="_blank" rel="noopener noreferrer">
                                         Visit {country.name} <ExternalLinkIcon className="h-3 w-3" />
                                     </a>
@@ -90,8 +90,8 @@ export const CountryPortals: React.FC<CountryPortalsProps> = ({ country }) => {
                 )}
             </div>
 
-            <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4 text-xs text-muted-foreground flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <div className="rounded-2xl bg-background/5 border border-primary/10 p-4 text-xs text-muted-foreground flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-background animate-pulse" />
                 <span>The platform facilitates direct links to sovereign government assets for investor clarity.</span>
             </div>
         </div>

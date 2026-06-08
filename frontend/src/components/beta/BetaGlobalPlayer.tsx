@@ -46,7 +46,7 @@ export const BetaGlobalPlayer = () => {
                         {playlist.map((track, idx) => (
                             <div 
                                 key={idx} 
-                                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${idx === currentIndex ? 'bg-primary/10 border border-primary/20 shadow-sm' : 'hover:bg-muted/50 border border-transparent cursor-pointer'}`}
+                                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all ${idx === currentIndex ? 'bg-background/10 border border-primary/20 shadow-sm' : 'hover:bg-muted/50 border border-transparent cursor-pointer'}`}
                             >
                                 <div className="text-xs font-mono text-muted-foreground w-5 flex justify-center">
                                     {idx === currentIndex ? (

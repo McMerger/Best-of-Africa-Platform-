@@ -61,16 +61,16 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 {status === 'success' ? (
-                    <Card className="border-primary/20 bg-primary/5 text-center text-foreground shadow-sm">
+                    <Card className="border-primary/20 bg-background/5 text-center text-foreground shadow-sm">
                         <CardContent className="flex flex-col items-center py-12">
-                            <div className="mb-6 rounded-full bg-primary/10 p-4">
+                            <div className="mb-6 rounded-full bg-background/10 p-4">
                                 <PaperPlaneIcon className="h-12 w-12 text-primary" />
                             </div>
                             <h2 className="mb-2 text-2xl font-bold">Message Sent</h2>
                             <p className="mb-8 text-muted-foreground">Thank you for reaching out. We will review your inquiry shortly.</p>
                             <Button
                                 variant="outline"
-                                className="border-primary text-primary hover:bg-primary/10"
+                                className="border-primary text-primary hover:bg-background/10"
                                 onClick={() => {
                                     setStatus('idle');
                                     toast.info("Ready for new message");
