@@ -27,3 +27,6 @@ logs/
 
 # Test
 coverage/
+
+# Local agent tooling (was a self-referential submodule — kept local, not tracked)
+zeroclaw/
