@@ -1,5 +1,5 @@
 import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Lock, Globe, Wrench, PenLine, Coffee } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { GoldButton,
@@ -75,17 +75,18 @@ const stripMarkdown = (text: string): string => {
   return t.trim();
 };
 
-const SUBHEADLINES = ['Cities.', 'Creators.', 'Culture.', 'Everyday.', 'Stories.'];
+const SUBHEADLINES = ['Cities.', 'Creators.', 'Culture.', 'Stories.'];
 
 function RotatingSubheadline() {
   const [index, setIndex] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setIndex(i => (i + 1) % SUBHEADLINES.length), 2200);
+    // Spec §2.2: slow rotation to 2.5s per word
+    const t = setInterval(() => setIndex(i => (i + 1) % SUBHEADLINES.length), 2500);
     return () => clearInterval(t);
   }, []);
 
   return (
-    <div className="h-8 flex items-center justify-center mb-4 overflow-hidden">
+    <div className="h-9 flex items-center justify-center mb-4 overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.span
           key={SUBHEADLINES[index]}
@@ -93,7 +94,7 @@ function RotatingSubheadline() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -20, opacity: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="text-accent font-serif text-xl font-semibold tracking-wide"
+          className="text-accent font-serif italic text-2xl font-semibold tracking-wide"
         >
           {SUBHEADLINES[index]}
         </motion.span>
@@ -171,39 +172,39 @@ export const BetaLanding = () => {
       />
       
 
-      {/* 1. HERO SECTION */}
-      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-foreground/10 bg-background text-foreground">
+      {/* 1. HERO SECTION — full navy band (spec §2.2) */}
+      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-white/10 bg-navy text-white">
         {/* Parallax Background */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0 z-0"
           style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
         >
-          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_hero_kigali.png" 
-            alt="Modern African Metropolis" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_hero_kigali.png"
+            alt="Modern African Metropolis"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
           />
+          {/* Navy wash keeps the band on-brand and the white headline legible */}
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
         </motion.div>
-        
+
         <ParallaxOrbs scrollY={scrollY} />
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
           <SectionLabel text="Early Access" />
-          
-          <AnimatedHeadline 
-            text="Africa without the filter." 
-            className="font-serif text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
+
+          <AnimatedHeadline
+            text="Africa without the filter."
+            className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
           />
 
           <RotatingSubheadline />
 
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="text-foreground/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
+            className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
           >
             A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.
           </motion.p>
@@ -285,19 +286,26 @@ export const BetaLanding = () => {
                   transition={{ duration: 0.8, delay: delays[index], type: "spring", bounce: 0.2 }}
                   className={isFeatured ? "md:col-span-2" : ""}
                 >
-                  <motion.div 
-                    whileHover={{ scale: 1.02, y: -8 }} 
-                    className={`group block bg-card rounded-[2rem] border border-foreground/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(212,175,55,0.15)] transition-all duration-500 ${isFeatured ? 'h-[500px] md:h-[650px]' : 'h-[500px]'}`}
+                  <motion.div
+                    whileHover={{ scale: 1.02, y: -8 }}
+                    className={`group block bg-navy rounded-[2rem] border border-white/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(201,168,76,0.25)] transition-all duration-500 ${isFeatured ? 'h-[500px] md:h-[650px]' : 'h-[500px]'}`}
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
-                      <img 
+                      <img
                         src={article.hero_image_url || `/images/v2_editorial_${index + 1}.png`}
                         alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-60 mix-blend-screen"
+                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-70"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-primary/90 to-primary/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/20" />
                     </div>
+
+                    {/* FREE READ badge on the first (unlocked) card — spec §2.4 */}
+                    {isFeatured && (
+                      <span className="absolute top-6 right-6 z-30 text-[10px] font-bold tracking-[0.2em] uppercase text-navy bg-accent px-4 py-2 rounded-full shadow-lg">
+                        Free Read
+                      </span>
+                    )}
 
                     <div className="p-10 h-full flex flex-col justify-between relative z-10 transition-all duration-300">
                       <div className="mt-auto">
@@ -308,31 +316,38 @@ export const BetaLanding = () => {
                               <p className="text-[11px] text-accent font-bold uppercase tracking-widest mt-3 drop-shadow-md">{article.country_name}</p>
                             )}
                           </div>
-                          <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase bg-accent px-4 py-2 rounded-full shadow-lg">{article.sector_name}</span>
+                          <span className="text-[10px] font-bold tracking-[0.2em] text-navy uppercase bg-accent px-4 py-2 rounded-full shadow-lg">{article.sector_name}</span>
                         </div>
-                        <h3 className={`font-serif leading-[1.05] mb-5 text-foreground group-hover:text-accent transition-colors drop-shadow-lg ${isFeatured ? 'text-[2.5rem] md:text-[4.5rem]' : 'text-[2rem] md:text-[2.5rem]'}`}>
+                        <h3 className={`font-serif leading-[1.05] mb-5 text-white group-hover:text-accent transition-colors drop-shadow-lg ${isFeatured ? 'text-[2.5rem] md:text-[4.5rem]' : 'text-[2rem] md:text-[2.5rem]'}`}>
                           {stripMarkdown(article.title)}
                         </h3>
-                        <p className={`text-foreground/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>
+                        <p className={`text-white/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>
                           {stripMarkdown(article.summary)}
                         </p>
-                      </div>
-                    </div>
-                    {/* OVERLAY */}
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-black/60 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="glass-panel p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100 border-accent/20">
-                        <Lock className="text-accent mb-6" size={40} />
-                        <h4 className="font-serif text-2xl mb-3 text-foreground">Founding Members Only</h4>
-                        <p className="text-[1.125rem] font-light text-foreground/60 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
-                        <MagneticButton className="w-full">
-                          <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
-                            <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-                              Unlock Access
-                            </GoldButton>
+                        {isFeatured && (
+                          <a href={`/posts/${article.slug}`} className="inline-flex items-center gap-2 mt-8 text-accent font-semibold uppercase tracking-[0.12em] text-sm hover:gap-3 transition-all">
+                            Read story →
                           </a>
-                        </MagneticButton>
+                        )}
                       </div>
                     </div>
+                    {/* PAYWALL OVERLAY — only on gated (non-featured) cards */}
+                    {!isFeatured && (
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-navy/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="bg-navy-card/90 border border-accent/30 p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                          <Lock className="text-accent mb-6" size={40} />
+                          <h4 className="font-serif text-2xl mb-3 text-white">Founding Members Only</h4>
+                          <p className="text-[1.125rem] font-light text-white/70 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
+                          <MagneticButton className="w-full">
+                            <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
+                              <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(201,168,76,0.3)]">
+                                Unlock Access
+                              </GoldButton>
+                            </a>
+                          </MagneticButton>
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 </motion.div>
               );
@@ -388,7 +403,7 @@ export const BetaLanding = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-foreground">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
                 </div>
               </div>
             ))}
@@ -405,27 +420,27 @@ export const BetaLanding = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-foreground">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
                 </div>
               </div>
             ))}
           </motion.div>
           {/* Edge gradients to fade out marquee */}
-          <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-primary to-transparent z-20 pointer-events-none" />
-          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-primary to-transparent z-20 pointer-events-none" />
+          <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-page to-transparent z-20 pointer-events-none" />
+          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-page to-transparent z-20 pointer-events-none" />
         </div>
       </section>
 
-      {/* 6. MISSION BLOCK */}
-      <section className="py-40 px-6 relative text-foreground text-center border-y border-foreground/10 overflow-hidden">
+      {/* 6. MISSION BLOCK — full navy band, gold italic "Properly." (spec §2.7) */}
+      <section className="py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
         <div className="absolute inset-0 z-0">
-          <motion.img 
+          <motion.img
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
-            src="/images/v2_real_background.png" 
-            alt="Real African Street Night" 
-            className="w-full h-[120%] object-cover opacity-50 absolute top-[-10%]" 
+            src="/images/v2_real_background.png"
+            alt="Real African Street Night"
+            className="w-full h-[120%] object-cover opacity-25 absolute top-[-10%]"
           />
-          <div className="gradient-overlay-light z-10" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/80" />
         </div>
         <div className="container mx-auto max-w-4xl relative z-20">
           <motion.div
@@ -435,46 +450,36 @@ export const BetaLanding = () => {
             transition={{ duration: 1 }}
           >
             <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
-            <h2 className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">We're building Africa's story. Properly.</h2>
-            <p className="text-foreground/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
+            <h2 className="font-serif text-white text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">
+              We're building Africa's story. <span className="italic text-accent">Properly.</span>
+            </h2>
+            <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
               The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* 7. TRANSPARENCY SECTION */}
+      {/* 7. TRANSPARENCY SECTION — gold SVG icons on navy circles (spec §2.8) */}
       <section className="py-32 px-6 container mx-auto max-w-6xl text-center">
         <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">Where your money goes</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          <CardReveal delay={0}>
-            <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
-                <div className="text-4xl mb-6">🌐</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Domain & Hosting</div>
-                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Keeping the platform live and performant globally.</div>
-            </div>
-          </CardReveal>
-          <CardReveal delay={0.1}>
-            <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
-                <div className="text-4xl mb-6">🛠️</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Platform Tools</div>
-                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Building independently without VC funding constraints.</div>
-            </div>
-          </CardReveal>
-          <CardReveal delay={0.2}>
-            <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
-                <div className="text-4xl mb-6">✍️</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Research Time</div>
-                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Funding deep dives into underreported markets.</div>
-            </div>
-          </CardReveal>
-          <CardReveal delay={0.3}>
-            <div className="glass-panel p-8 rounded-3xl h-full border-accent/10 hover:border-accent/40 transition-colors">
-                <div className="text-4xl mb-6">☕</div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-foreground">Founder Fuel</div>
-                <div className="text-[0.9rem] font-light text-foreground/50 leading-relaxed">Direct support for an independent African creator.</div>
-            </div>
-          </CardReveal>
+          {[
+            { Icon: Globe, label: 'Domain & Hosting', desc: 'Keeping the platform live and performant globally.' },
+            { Icon: Wrench, label: 'Platform Tools', desc: 'Building independently without VC funding constraints.' },
+            { Icon: PenLine, label: 'Research Time', desc: 'Funding deep dives into underreported markets.' },
+            { Icon: Coffee, label: 'Founder Fuel', desc: 'Direct support for an independent African creator.' },
+          ].map((item, i) => (
+            <CardReveal key={item.label} delay={i * 0.1}>
+              <div className="bg-white rounded-3xl h-full p-8 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-shadow">
+                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-navy">
+                  <item.Icon className="text-accent" size={24} />
+                </div>
+                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-ink">{item.label}</div>
+                <div className="text-[0.9rem] font-light text-ink-blue leading-relaxed">{item.desc}</div>
+              </div>
+            </CardReveal>
+          ))}
         </div>
       </section>
 

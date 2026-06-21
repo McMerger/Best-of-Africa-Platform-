@@ -81,32 +81,33 @@ export const LoginPage: React.FC = () => {
 
     return (
         <>
-            <div className="dark relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-background px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-border/40 shadow-2xl">
-                {/* Background decorative elements */}
-                <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-background/20 blur-3xl" />
+            <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-navy text-white px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-white/10 shadow-2xl">
+                {/* Background decorative elements — amber/gold radial glow */}
+                <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl" />
                 <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] pointer-events-none" />
 
                 <div className="relative z-10 w-full max-w-[420px] py-12">
                     <div className="mb-10 text-center">
-                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/20 bg-card shadow-[0_0_40px_rgba(var(--accent),0.15)]">
+                        <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_50px_rgba(201,168,76,0.35)]">
+                            <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl" />
                             {status === 'LOADING' ? (
-                                <UpdateIcon className="h-9 w-9 animate-spin text-accent" />
+                                <UpdateIcon className="relative h-9 w-9 animate-spin text-accent" />
                             ) : step === 'SUCCESS' ? (
-                                <CheckCircledIcon className="h-9 w-9 text-accent" />
+                                <CheckCircledIcon className="relative h-9 w-9 text-accent" />
                             ) : (
-                                <LockClosedIcon className="h-8 w-8 text-accent" />
+                                <LockClosedIcon className="relative h-8 w-8 text-accent" />
                             )}
                         </div>
-                        <h1 className="mb-2 text-3xl font-serif font-bold uppercase tracking-tight text-foreground">
-                            {config?.['auth_login_header'] || "Client Portal"}
+                        <h1 className="mb-2 text-3xl font-serif font-bold uppercase tracking-tight text-white">
+                            {config?.['auth_login_header'] || "Member Portal"}
                         </h1>
-                        <p className="font-mono text-xs text-muted-foreground">
+                        <p className="font-mono text-xs text-white/50">
                             {step === 'EMAIL' ? "PASSWORDLESS LOGIN" : step === 'OTP' ? "VERIFICATION REQUIRED" : "AUTHENTICATED"}
                         </p>
                     </div>
 
-                    <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl">
+                    <Card className="border-white/10 bg-navy-card/70 backdrop-blur-xl shadow-2xl">
                         <CardContent className="p-8">
                             {step === 'SUCCESS' ? (
                                 <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">
@@ -117,19 +118,22 @@ export const LoginPage: React.FC = () => {
                             ) : step === 'EMAIL' ? (
                                 <form onSubmit={handleEmailSubmit} className="space-y-6">
                                     <div className="space-y-2">
-                                        <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Client ID / Email</Label>
+                                        <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-white/60">Email Address</Label>
                                         <div className="relative">
-                                            <PersonIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                            <PersonIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                                             <Input
                                                 id="email"
                                                 type="email"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="border-border bg-background pl-10 font-mono text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+                                                className="border-white/30 bg-navy pl-10 font-mono text-white placeholder:text-white/40 focus-visible:ring-accent"
                                                 placeholder="name@organization.com"
                                                 required
                                             />
                                         </div>
+                                        <p className="pt-1 text-xs text-white/45 leading-relaxed">
+                                            We'll email you a one-click login link. No password needed.
+                                        </p>
                                     </div>
 
                                     {error && (
@@ -156,14 +160,14 @@ export const LoginPage: React.FC = () => {
                                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent mb-3">
                                             <EnvelopeClosedIcon className="h-6 w-6" />
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
+                                        <p className="text-sm text-white/60">
                                             We sent a 6-digit verification code to <br/>
-                                            <span className="font-bold text-foreground">{email}</span>
+                                            <span className="font-bold text-accent">{email}</span>
                                         </p>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="otp" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Verification Code</Label>
+                                        <Label htmlFor="otp" className="text-[11px] font-bold uppercase tracking-widest text-white/60">Verification Code</Label>
                                         <Input
                                             id="otp"
                                             type="text"
@@ -171,7 +175,7 @@ export const LoginPage: React.FC = () => {
                                             maxLength={6}
                                             value={otp}
                                             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                            className="border-border bg-background text-center text-2xl tracking-[0.5em] font-mono text-foreground focus-visible:ring-primary h-14"
+                                            className="border-white/30 bg-navy text-center text-2xl tracking-[0.5em] font-mono text-white focus-visible:ring-accent h-14"
                                             placeholder="------"
                                             required
                                             autoFocus
@@ -205,7 +209,7 @@ export const LoginPage: React.FC = () => {
                                                 setOtp('');
                                                 setError(null);
                                             }}
-                                            className="w-full text-xs text-muted-foreground hover:text-foreground"
+                                            className="w-full text-xs text-white/60 hover:text-white"
                                         >
                                             Use a different email
                                         </Button>

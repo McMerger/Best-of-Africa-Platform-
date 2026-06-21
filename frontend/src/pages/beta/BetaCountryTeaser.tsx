@@ -47,7 +47,7 @@ const CountryCard = ({
     >
       <Link
         to={`/countries/${country.code.toLowerCase()}`}
-        className="group relative bg-background rounded-xl overflow-hidden border border-primary/8 flex flex-col text-left transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
+        className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-[0_1px_6px_rgba(0,0,0,0.06)] flex flex-col text-left transition-all duration-200 hover:border-accent/60 hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-5 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
@@ -153,7 +153,7 @@ export const BetaCountryTeaser = () => {
             aria-label="Search countries or sectors"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-background border border-primary/10 rounded-xl pl-10 pr-4 py-3 text-sm text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
+            className="w-full bg-white border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
           />
           {search && (
             <button
@@ -176,12 +176,12 @@ export const BetaCountryTeaser = () => {
                 onClick={() => setActiveRegion(region)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
-                    ? 'bg-accent text-card shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
+                    ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
                     : 'bg-background/5 text-primary/60 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
                 {region}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-card/70' : 'text-primary/30'}`}>
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy/70' : 'text-primary/30'}`}>
                   {regionCounts[region]}
                 </span>
               </button>
@@ -232,7 +232,7 @@ export const BetaCountryTeaser = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-accent text-card font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+            className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
             Unlock All 54 Country Hubs — Join as a Founding Member
           </a>

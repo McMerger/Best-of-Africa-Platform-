@@ -18,25 +18,24 @@ export const BetaAbout = () => {
         description="A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."
       />
       
-      {/* 1. HERO */}
-      <section className="relative min-h-[80vh] flex flex-col justify-center pt-24 pb-24 px-6 border-b border-foreground/10 overflow-hidden">
-        <motion.div 
+      {/* 1. HERO — full navy band (spec §3.7) */}
+      <section className="relative min-h-[80vh] flex flex-col justify-center pt-24 pb-24 px-6 border-b border-white/10 overflow-hidden bg-navy">
+        <motion.div
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
         >
-          <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_about_hero.png" 
-            alt="African Visionary" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_about_hero.png"
+            alt="African Visionary"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-30"
           />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
         </motion.div>
-        
-        <div className="max-w-4xl mx-auto text-center text-foreground relative z-30">
-          <motion.h1 
+
+        <div className="max-w-4xl mx-auto text-center text-white relative z-30">
+          <motion.h1
             initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}
-            className="font-serif text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
+            className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
           >
             We're building Africa's story.<br /><span className="text-accent italic">Properly.</span>
           </motion.h1>
@@ -134,7 +133,7 @@ export const BetaAbout = () => {
               href="https://ko-fi.com/maillescortes"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-accent text-card font-bold uppercase tracking-widest px-12 py-5 rounded-2xl shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:brightness-110 transition-transform hover:-translate-y-1 text-sm"
+              className="inline-block bg-accent text-navy font-bold uppercase tracking-widest px-12 py-5 rounded-2xl shadow-[0_4px_24px_rgba(201,168,76,0.4)] hover:bg-gold-italic transition-all hover:-translate-y-1 text-sm"
             >
               Buy me a coffee on Ko-fi
             </a>

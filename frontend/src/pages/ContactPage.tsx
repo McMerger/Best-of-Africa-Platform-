@@ -55,22 +55,21 @@ export const ContactPage: React.FC = () => {
                     <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">
                         {config?.['contact_headline'] || "Contact Best of Africa"}
                     </h1>
-                    <p className="text-xl text-muted-foreground">
+                    <p className="text-xl text-ink-blue">
                         For media inquiries, partnership opportunities, or support.
                     </p>
                 </div>
 
                 {status === 'success' ? (
-                    <Card className="border-primary/20 bg-background/5 text-center text-foreground shadow-sm">
+                    <Card className="border-white/10 bg-navy text-center text-white shadow-lg">
                         <CardContent className="flex flex-col items-center py-12">
-                            <div className="mb-6 rounded-full bg-background/10 p-4">
-                                <PaperPlaneIcon className="h-12 w-12 text-primary" />
+                            <div className="mb-6 rounded-full bg-navy-card p-4">
+                                <PaperPlaneIcon className="h-12 w-12 text-accent" />
                             </div>
                             <h2 className="mb-2 text-2xl font-bold">Message Sent</h2>
-                            <p className="mb-8 text-muted-foreground">Thank you for reaching out. We will review your inquiry shortly.</p>
+                            <p className="mb-8 text-white/60">Thank you for reaching out. We will review your inquiry shortly.</p>
                             <Button
-                                variant="outline"
-                                className="border-primary text-primary hover:bg-background/10"
+                                className="bg-accent text-navy hover:bg-gold-italic font-bold"
                                 onClick={() => {
                                     setStatus('idle');
                                     toast.info("Ready for new message");
@@ -81,10 +80,10 @@ export const ContactPage: React.FC = () => {
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="border-border shadow-lg">
+                    <Card className="border-white/10 bg-navy text-white shadow-lg">
                         <CardHeader>
-                            <CardTitle>Send us a message</CardTitle>
-                            <CardDescription>We typically respond within 24 business hours.</CardDescription>
+                            <CardTitle className="text-white">Send us a message</CardTitle>
+                            <CardDescription className="text-white/60">We typically respond within 24 business hours.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {error && (
@@ -102,6 +101,7 @@ export const ContactPage: React.FC = () => {
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="Your Name"
+                                            className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -111,6 +111,7 @@ export const ContactPage: React.FC = () => {
                                             value={formData.organization}
                                             onChange={e => setFormData({ ...formData, organization: e.target.value })}
                                             placeholder="Company / Institution"
+                                            className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
                                         />
                                     </div>
                                 </div>
@@ -124,6 +125,7 @@ export const ContactPage: React.FC = () => {
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
                                         placeholder="official@organization.com"
+                                        className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
                                     />
                                 </div>
 
@@ -133,7 +135,7 @@ export const ContactPage: React.FC = () => {
                                         value={formData.inquiry_type}
                                         onValueChange={(value) => setFormData({ ...formData, inquiry_type: value })}
                                     >
-                                        <SelectTrigger id="type" className="bg-background">
+                                        <SelectTrigger id="type" className="bg-white text-ink border-[#3A5070]">
                                             <SelectValue placeholder="Select Inquiry Type" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -155,14 +157,14 @@ export const ContactPage: React.FC = () => {
                                         value={formData.message}
                                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, message: e.target.value })}
                                         placeholder="How can we assist you?"
-                                        className="bg-background"
+                                        className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
                                     />
                                 </div>
 
                                 <Button
                                     type="submit"
                                     disabled={status === 'submitting'}
-                                    className="w-full font-bold"
+                                    className="w-full font-bold bg-accent text-navy hover:bg-gold-italic"
                                 >
                                     {status === 'submitting' ? (
                                         <>
@@ -180,12 +182,12 @@ export const ContactPage: React.FC = () => {
                 )}
 
                 <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="flex flex-col items-center rounded-3xl bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
+                    <div className="flex flex-col items-center rounded-3xl bg-white border border-border p-8 text-center shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
                         <ChatBubbleIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">Press Inquiries</h3>
                         <p className="text-sm text-muted-foreground font-medium">press@bestofafrica.com</p>
                     </div>
-                    <div className="flex flex-col items-center rounded-3xl bg-secondary/50 p-8 text-center transition-colors hover:bg-secondary">
+                    <div className="flex flex-col items-center rounded-3xl bg-white border border-border p-8 text-center shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
                         <EnvelopeClosedIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">General Support</h3>
                         <p className="text-sm text-muted-foreground font-medium">support@bestofafrica.com</p>

@@ -61,6 +61,28 @@ export default {
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
+                /* ── Combined brand palette (Combination of both.md §1) ── */
+                navy: {
+                    DEFAULT: '#0F1F3D', /* navy-deep: hero bands, footer, login, admin */
+                    deep: '#0F1F3D',
+                    mid: '#112240',     /* secondary dark sections */
+                    card: '#1A2F50',    /* dark form cards / branded placeholders */
+                },
+                gold: {
+                    DEFAULT: '#C9A84C', /* gold-primary: CTAs, labels, accents */
+                    italic: '#B8942A',  /* gold italic type ("Properly.") + hover */
+                    deep: '#9E7B1F',    /* active state */
+                    light: '#E5D5A3',   /* disabled */
+                    glow: '#F5EDD0',    /* pale gold icon-circle bg */
+                },
+                page: '#F5F7FA',        /* main content section bg */
+                surface: '#EFF2F6',     /* alternate light section bg */
+                ink: {
+                    DEFAULT: '#0F1F3D', /* text-primary */
+                    soft: '#374151',    /* legal body copy */
+                    blue: '#6B7FA3',    /* text-secondary / meta */
+                    mute: '#9CA3AF',    /* placeholder / disabled */
+                },
                 chart: {
                     '1': 'hsl(var(--chart-1))',
                     '2': 'hsl(var(--chart-2))',

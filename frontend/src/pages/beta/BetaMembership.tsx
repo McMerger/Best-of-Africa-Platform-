@@ -73,7 +73,7 @@ export const BetaMembership = () => {
             <button
               onClick={() => setIsAnnual(false)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                !isAnnual ? 'bg-background text-foreground' : 'text-primary/60 hover:text-primary'
+                !isAnnual ? 'bg-white text-navy shadow-sm' : 'text-primary/60 hover:text-primary'
               }`}
             >
               Monthly
@@ -81,7 +81,7 @@ export const BetaMembership = () => {
             <button
               onClick={() => setIsAnnual(true)}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${
-                isAnnual ? 'bg-background text-foreground' : 'text-primary/60 hover:text-primary'
+                isAnnual ? 'bg-white text-navy shadow-sm' : 'text-primary/60 hover:text-primary'
               }`}
             >
               Annual <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">~2 mo free</span>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, IdCardIcon, EnvelopeClosedIcon, LightningBoltIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +21,7 @@ const AVAILABLE_SECTORS = [
 ];
 
 export const SettingsPage: React.FC = () => {
-    const { logout } = useAuth();
+    const { logout, isAuthenticated } = useAuth();
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('boa_client_info');
         if (saved) {
@@ -121,6 +122,24 @@ export const SettingsPage: React.FC = () => {
         }
     };
 
+    // AUTH GATE — no settings form is shown to unauthenticated visitors (spec §3.10)
+    if (!isAuthenticated) {
+        return (
+            <div className="container py-20 max-w-4xl">
+                <div className="mx-auto flex max-w-md flex-col items-center rounded-xl border border-white/10 bg-navy px-8 py-14 text-center text-white shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
+                    <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_40px_rgba(201,168,76,0.3)]">
+                        <LockClosedIcon className="h-7 w-7 text-accent" />
+                    </div>
+                    <h1 className="mb-3 text-2xl font-serif font-bold">Sign in to access your settings</h1>
+                    <p className="mb-8 text-sm text-white/60">Your account, preferences, and subscription live behind a secure login.</p>
+                    <Button asChild className="bg-accent text-navy hover:bg-gold-italic font-bold uppercase tracking-widest px-8">
+                        <Link to="/login">Sign In</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="container py-20 max-w-4xl">
@@ -132,10 +151,9 @@ export const SettingsPage: React.FC = () => {
                 <div className="grid gap-10">
                     <div className="flex justify-end -mb-4">
                         <Button
-                            variant={isEditing ? "default" : "outline"}
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="px-8 font-bold"
+                            className="px-8 font-bold bg-accent text-navy hover:bg-gold-italic"
                         >
                             {isSaving && <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />}
                             {isEditing ? 'Save Changes' : 'Edit Profile'}

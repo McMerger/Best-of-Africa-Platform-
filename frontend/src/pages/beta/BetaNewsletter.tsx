@@ -85,10 +85,10 @@ export const BetaNewsletter = () => {
         <div className="max-w-md mx-auto w-full flex flex-col items-center text-center">
 
           <div className="mb-10 w-full">
-            <h1 className="font-serif text-[40px] md:text-[48px] leading-tight mb-4">
-              Stay close to Africa's story.
+            <h1 className="font-serif text-ink text-[40px] md:text-[48px] leading-tight mb-4">
+              Stay close to Africa's <span className="italic text-accent">story.</span>
             </h1>
-            <p className="text-lg text-primary/70 max-w-sm mx-auto leading-relaxed">
+            <p className="text-lg text-ink-blue max-w-sm mx-auto leading-relaxed">
               Free weekly dispatches — cities, founders, opportunities. No noise. Unsubscribe anytime.
             </p>
           </div>
@@ -104,8 +104,9 @@ export const BetaNewsletter = () => {
               required
               disabled={status === 'loading'}
               autoComplete="email"
-              className="w-full bg-background border border-primary/15 rounded-xl pl-12 pr-4 py-4 text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all shadow-sm"
+              className="w-full bg-white border border-border rounded-xl px-4 py-4 text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all shadow-sm"
             />
+            <p className="text-xs text-ink-blue text-left">No spam. Unsubscribe anytime.</p>
             {status === 'error' && (
               <p className="text-destructive text-sm -mt-2" role="alert">{errorMessage}</p>
             )}
@@ -118,17 +119,24 @@ export const BetaNewsletter = () => {
             </button>
           </form>
 
-          {/* Benefits */}
-          <div className="bg-background rounded-xl border border-primary/8 p-8 md:p-10 mb-12 shadow-sm">
-            <ul className="space-y-4">
+          {/* Sample dispatch preview — shows readers exactly what they'll get (spec §3.9) */}
+          <div className="bg-white rounded-xl border border-border p-8 md:p-10 mb-12 shadow-[0_1px_6px_rgba(0,0,0,0.08)] w-full text-left">
+            <div className="flex items-center justify-between mb-6">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Sample Dispatch</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-blue">Sunday · 5 min read</span>
+            </div>
+            <ul className="space-y-5">
               {[
-                'Weekly dispatch from across the continent',
-                'First look at new country coverage',
-                'Exclusive early access to platform features',
-              ].map(benefit => (
-                <li key={benefit} className="flex items-start gap-3">
-                  <span className="text-accent font-bold shrink-0">•</span>
-                  <span className="text-primary/80 font-medium">{benefit}</span>
+                { country: '🇰🇪 Kenya', sector: 'Technology', headline: 'The quiet infrastructure bet paying off in Nairobi' },
+                { country: '🇳🇬 Nigeria', sector: 'Finance', headline: 'Inside the fintech quietly banking the unbanked' },
+                { country: '🇷🇼 Rwanda', sector: 'Agriculture', headline: 'How smallholder co-ops are rewriting the export map' },
+              ].map(item => (
+                <li key={item.headline} className="border-b border-border last:border-0 pb-5 last:pb-0">
+                  <div className="flex items-center gap-3 mb-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-blue">{item.country}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent">{item.sector}</span>
+                  </div>
+                  <p className="font-serif text-lg text-ink leading-snug">{item.headline}</p>
                 </li>
               ))}
             </ul>

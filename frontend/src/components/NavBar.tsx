@@ -15,6 +15,7 @@ import { MissionControl } from './MissionControl';
 import { DensityToggle } from './DensityToggle';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from './NotificationBell';
 
 import {
@@ -29,6 +30,7 @@ import { cn } from "@/lib/utils";
 export const NavBar: React.FC = () => {
     const location = useLocation();
     const { t } = useLanguage();
+    const { isAuthenticated } = useAuth();
 
     const mobileLinks = [
         { href: "/", label: t("nav.home", "Home") },
@@ -47,26 +49,27 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-2xl border-b border-foreground/5 shadow-2xl transition-all duration-300">
-            {/* Pre-header Utilities */}
-            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-black/40 border-b border-foreground/5 text-[11px] font-medium tracking-wide">
+        <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-2xl border-b border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300">
+            {/* Pre-header Utilities — lens / feed-mode controls only for signed-in users */}
+            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
                 <LanguageSelector />
-                <MissionControl />
-                <DensityToggle />
+                {isAuthenticated && <MissionControl />}
+                {isAuthenticated && <DensityToggle />}
             </div>
 
             <div className="flex h-16 items-center justify-between px-4 lg:px-8 max-w-[1400px] mx-auto">
-                {/* LEFT: Logo */}
+                {/* LEFT: Logo — "B BOA." lockup */}
                 <div className="flex items-center min-w-0 shrink-0 z-10">
-                    <Link to="/" className="flex items-center group shrink-0">
-                        <span className="text-xl md:text-2xl font-serif font-black tracking-tight text-primary">
-                            BEST OF AFRICA<span className="text-accent">.</span>
+                    <Link to="/" className="flex items-center gap-2 group shrink-0">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy font-serif font-black text-white text-lg leading-none shadow-sm">B</span>
+                        <span className="text-xl md:text-2xl font-serif font-black tracking-tight text-navy">
+                            BOA<span className="text-accent">.</span>
                         </span>
                     </Link>
                 </div>
 
                 {/* CENTER: Desktop Nav */}
-                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-foreground/50 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
+                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
                     {[
                         { path: '/feed', label: 'Briefing' },
                         { path: '/intel', label: 'Market Intel' },
@@ -77,15 +80,15 @@ export const NavBar: React.FC = () => {
                     ].map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
-                            <Link 
+                            <Link
                                 key={item.path}
-                                to={item.path} 
-                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-primary" : "hover:text-foreground")}
+                                to={item.path}
+                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-navy" : "hover:text-accent")}
                             >
                                 {isActive && (
                                     <motion.div
                                         layoutId="nav-pill"
-                                        className="absolute inset-0 bg-accent rounded-full -z-10 shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                                        className="absolute inset-0 bg-accent/15 rounded-full -z-10"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}
@@ -97,33 +100,37 @@ export const NavBar: React.FC = () => {
 
                 {/* RIGHT: Actions + Sign In */}
                 <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
-                    {/* Icon Actions */}
+                    {/* Icon Actions — Settings/Admin/Notifications only when signed in */}
                     <div className="hidden lg:flex items-center gap-1 mr-2">
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
+                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
-                        <NotificationBell />
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
-                            <Link to="/settings">
-                                <GearIcon className="h-5 w-5" />
-                                <span className="sr-only">Settings</span>
-                            </Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-foreground/50 hover:text-foreground hover:bg-foreground/5 transition-colors" asChild>
-                            <Link to="/admin">
-                                <LockClosedIcon className="h-5 w-5" />
-                                <span className="sr-only">Admin</span>
-                            </Link>
-                        </Button>
+                        {isAuthenticated && <NotificationBell />}
+                        {isAuthenticated && (
+                            <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
+                                <Link to="/settings">
+                                    <GearIcon className="h-5 w-5" />
+                                    <span className="sr-only">Settings</span>
+                                </Link>
+                            </Button>
+                        )}
+                        {isAuthenticated && (
+                            <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
+                                <Link to="/admin">
+                                    <LockClosedIcon className="h-5 w-5" />
+                                    <span className="sr-only">Admin</span>
+                                </Link>
+                            </Button>
+                        )}
                     </div>
-                    
-                    <div className="hidden lg:block w-px h-6 bg-foreground/10 mx-2" />
-                    
-                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-primary hover:bg-background hover:text-primary transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] text-[11px] uppercase tracking-widest">
-                        <Link to="/login">Sign In</Link>
+
+                    <div className="hidden lg:block w-px h-6 bg-border mx-2" />
+
+                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
+                        <Link to="/login">{isAuthenticated ? 'Account' : 'Sign In'}</Link>
                     </Button>
 
                     {/* Mobile: compact Sign In + Hamburger */}
@@ -145,8 +152,9 @@ export const NavBar: React.FC = () => {
                             </SheetTrigger>
                             <SheetContent side="right" className="w-[85vw] max-w-sm bg-background border-l border-primary/20 p-0 flex flex-col">
                                 <SheetHeader className="p-6 border-b border-foreground/10 text-left bg-background/95">
-                                    <SheetTitle className="font-serif font-black text-2xl tracking-tight text-foreground">
-                                        BEST OF AFRICA<span className="text-accent">.</span>
+                                    <SheetTitle className="flex items-center gap-2 font-serif font-black text-2xl tracking-tight text-navy">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-white text-lg leading-none">B</span>
+                                        BOA<span className="text-accent">.</span>
                                     </SheetTitle>
                                     <div className="flex flex-wrap items-center gap-3 mt-4 text-foreground/70">
                                         <LanguageSelector />
@@ -170,16 +178,22 @@ export const NavBar: React.FC = () => {
                                             </Link>
                                         ))}
                                     </div>
-                                    <div className="mt-auto pt-6 border-t border-foreground/10 space-y-3">
-                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-foreground/70 hover:text-foreground hover:bg-foreground/5 rounded">
-                                            <Link to="/settings"><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
-                                        </Button>
-                                        <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-foreground/70 hover:text-foreground hover:bg-foreground/5 rounded">
-                                            <Link to="/admin"><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
-                                        </Button>
-                                        <div className="pt-4 pb-2">
-                                            <MissionControl />
-                                        </div>
+                                    <div className="mt-auto pt-6 border-t border-border space-y-3">
+                                        {isAuthenticated && (
+                                            <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-navy/70 hover:text-accent hover:bg-accent/10 rounded">
+                                                <Link to="/settings"><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
+                                            </Button>
+                                        )}
+                                        {isAuthenticated && (
+                                            <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-navy/70 hover:text-accent hover:bg-accent/10 rounded">
+                                                <Link to="/admin"><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
+                                            </Button>
+                                        )}
+                                        {isAuthenticated && (
+                                            <div className="pt-4 pb-2">
+                                                <MissionControl />
+                                            </div>
+                                        )}
                                         <a
                                             href={KO_FI_URL}
                                             target="_blank"

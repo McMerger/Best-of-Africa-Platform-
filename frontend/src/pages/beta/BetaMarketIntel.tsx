@@ -168,6 +168,7 @@ export const BetaMarketIntel = () => {
           <p className="text-foreground/50 text-lg max-w-xl leading-relaxed">
             An honest, behind-the-scenes look at what's being researched, what's being published, and where the project is headed. For the people making it possible.
           </p>
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-ink-blue">Open to all · No login required</p>
         </div>
       </div>
 
@@ -183,9 +184,9 @@ export const BetaMarketIntel = () => {
                 { value: stats.regions ?? '—', label: 'African regions' },
                 { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '—', label: 'Total reads' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-background rounded-xl border border-primary/8 p-5 text-center">
+                <div key={label} className="bg-white rounded-xl border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 text-center">
                   <p className="font-serif text-[2rem] font-bold text-accent leading-none mb-1">{value}</p>
-                  <p className="text-[11px] text-primary/40 uppercase tracking-widest font-medium">{label}</p>
+                  <p className="text-[11px] text-ink-blue uppercase tracking-widest font-medium">{label}</p>
                 </div>
               ))}
             </div>

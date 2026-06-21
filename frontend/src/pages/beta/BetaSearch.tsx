@@ -78,21 +78,21 @@ export const BetaSearch: React.FC = () => {
                 description="Search thousands of African business intelligence briefings, country profiles, and sector analysis."
             />
 
-            {/* Search Header */}
-            <div className="bg-background pt-32 pb-16 px-6 border-b border-foreground/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
+            {/* Search Header — navy band (spec §3.1) */}
+            <div className="bg-navy text-white pt-32 pb-16 px-6 border-b border-white/10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">
                             <SparklesIcon size={14} /> Intelligence Search
                         </p>
-                        <h1 className="font-serif text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-12 text-foreground">
+                        <h1 className="font-serif text-white text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-12">
                             What are you <br className="hidden md:block"/><span className="text-accent italic">researching?</span>
                         </h1>
-                        {/* Search Input */}
+                        {/* Search Input — dark navy field with gold border */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowSuggestions(false); }}>
-                            <div className="flex items-center gap-4 bg-card/80 backdrop-blur-xl border border-foreground/10 rounded-[2rem] px-8 py-6 focus-within:border-accent/60 focus-within:bg-card focus-within:shadow-[0_0_40px_rgba(212,175,55,0.15)] transition-all group">
-                                <SearchIcon className="w-6 h-6 text-foreground/40 group-focus-within:text-accent shrink-0 transition-colors" />
+                            <div className="flex items-center gap-4 bg-navy-card border border-accent/50 rounded-[2rem] px-8 py-6 focus-within:border-accent focus-within:shadow-[0_0_40px_rgba(201,168,76,0.2)] transition-all group">
+                                <SearchIcon className="w-6 h-6 text-white/40 group-focus-within:text-accent shrink-0 transition-colors" />
                                 <input
                                     ref={inputRef}
                                     id="search-input"
@@ -101,11 +101,11 @@ export const BetaSearch: React.FC = () => {
                                     onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true); }}
                                     onFocus={() => setShowSuggestions(true)}
                                     placeholder="Search Africa intelligence, countries, sectors..."
-                                    className="flex-1 bg-transparent text-foreground placeholder:text-foreground/30 text-[1.25rem] font-light outline-none"
+                                    className="flex-1 bg-transparent text-white placeholder:text-white/40 text-[1.25rem] font-light outline-none"
                                     autoComplete="off"
                                 />
                                 {inputValue && (
-                                    <button onClick={() => { setInputValue(''); setDebouncedQ(''); setSearchParams({}); setSuggestions([]); inputRef.current?.focus(); }} className="text-foreground/30 hover:text-foreground transition-colors bg-foreground/5 rounded-full p-2">
+                                    <button onClick={() => { setInputValue(''); setDebouncedQ(''); setSearchParams({}); setSuggestions([]); inputRef.current?.focus(); }} className="text-white/40 hover:text-white transition-colors bg-white/10 rounded-full p-2">
                                         <XIcon className="w-5 h-5" />
                                     </button>
                                 )}

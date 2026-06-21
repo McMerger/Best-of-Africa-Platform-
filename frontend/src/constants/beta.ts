@@ -48,7 +48,7 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
     features: [
       'Access to all published stories',
       'Behind-the-scenes creator updates',
-      'My sincere gratitude',
+      'Early supporter badge on your profile',
     ],
     ctaLabel: 'Become a Supporter',
   },
@@ -58,7 +58,7 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
     price: '$15',
     features: [
       'Everything in Supporter',
-      'Direct input on future story coverage',
+      'Vote on the next story topic via monthly poll',
       'Early access to new drafts',
     ],
     ctaLabel: 'Become a Founding Member',
@@ -71,7 +71,7 @@ export const MEMBERSHIP_TIERS: MembershipTier[] = [
     features: [
       'Everything in Founding Member',
       'Monthly 1-on-1 chat about the project',
-      'Name credited on the platform as a core sponsor',
+      'Credited as a core sponsor in every published report',
     ],
     ctaLabel: 'Become a Patron',
   },
@@ -84,7 +84,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     perks: [
       'Access to all published stories',
       'Behind-the-scenes creator updates',
-      'My sincere gratitude',
+      'Early supporter badge on your profile',
     ],
   },
   premium: {
@@ -92,7 +92,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     desc: 'Direct input on future story coverage.',
     perks: [
       'Everything in Supporter',
-      'Direct input on future story coverage',
+      'Vote on the next story topic via monthly poll',
       'Early access to new drafts',
     ],
   },
@@ -102,7 +102,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     perks: [
       'Everything in Founding Member',
       'Monthly 1-on-1 chat about the project',
-      'Name credited on the platform as a core sponsor',
+      'Credited as a core sponsor in every published report',
     ],
   },
   supporter: {
@@ -111,7 +111,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     perks: [
       'Access to all published stories',
       'Behind-the-scenes creator updates',
-      'My sincere gratitude',
+      'Early supporter badge on your profile',
     ],
   },
   founding: {
@@ -119,7 +119,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     desc: 'Direct input on future story coverage.',
     perks: [
       'Everything in Supporter',
-      'Direct input on future story coverage',
+      'Vote on the next story topic via monthly poll',
       'Early access to new drafts',
     ],
   },
@@ -129,7 +129,7 @@ export const TIER_LABELS: Record<string, { title: string; desc: string; perks: s
     perks: [
       'Everything in Founding Member',
       'Monthly 1-on-1 chat about the project',
-      'Name credited on the platform as a core sponsor',
+      'Credited as a core sponsor in every published report',
     ],
   },
 };

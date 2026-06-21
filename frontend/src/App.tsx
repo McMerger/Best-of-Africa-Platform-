@@ -83,7 +83,9 @@ const AnimatedRoutes = () => {
           <Route path="/countries/:code" element={<PageTransition><BetaCountryHub /></PageTransition>} />
           <Route path="/countries/:code/narratives" element={<PageTransition><BetaNarrativeToolkit /></PageTransition>} />
           <Route path="/intelligence"    element={<PageTransition><BetaIntelligence /></PageTransition>} />
-          <Route path="/intel" element={<PageTransition><BetaMarketIntel /></PageTransition>} />
+          {/* P0 routing fix (spec §3.14): /intel must NOT serve the Supporter Feed.
+              Supporter Feed lives at /supporter-feed; /intel resolves to distinct Sector/Intelligence content. */}
+          <Route path="/intel" element={<PageTransition><BetaIntelligence /></PageTransition>} />
           <Route path="/sectors/:id/trends" element={<PageTransition><PremiumSectorTrends /></PageTransition>} />
           <Route path="/dashboards/overview" element={<PageTransition><BetaContinentalOverview /></PageTransition>} />
           <Route path="/dashboards"      element={<Navigate to="/dashboards/overview" replace />} />

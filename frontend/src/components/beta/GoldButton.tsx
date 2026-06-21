@@ -10,11 +10,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center uppercase tracking-[0.04em] font-sans font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E0C0A]",
+  "inline-flex items-center justify-center uppercase tracking-[0.04em] font-sans font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   {
     variants: {
       variant: {
-        primary: "bg-gradient-to-br from-[#C9A84C] to-[#E8C96A] text-card shadow-[0_4px_24px_rgba(201,168,76,0.3)]",
+        primary: "bg-gradient-to-br from-[#C9A84C] to-[#E8C96A] text-navy shadow-[0_4px_24px_rgba(201,168,76,0.3)]",
         ghost: "bg-transparent border border-accent/40 text-accent hover:bg-accent/10",
       },
       size: {

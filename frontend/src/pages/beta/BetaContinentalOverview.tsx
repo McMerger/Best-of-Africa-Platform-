@@ -28,18 +28,29 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
         
         <div className="relative z-30 max-w-lg bg-card p-12 rounded-3xl border border-foreground/10 shadow-2xl backdrop-blur-xl">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/20">
+          <div className="w-20 h-20 bg-gold-glow rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/40">
             <Globe className="w-10 h-10 text-accent" />
           </div>
           <h1 className="font-serif text-[2.5rem] text-foreground mb-6 leading-none">Continental Dashboard</h1>
-          <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-relaxed">
+          <p className="text-foreground/60 mb-8 text-[1.125rem] font-light leading-relaxed">
             Access the high-level pan-African data, regional heatmaps, and executive insights reserved exclusively for Founding Members.
           </p>
+
+          {/* Teaser of real data points behind the gate (spec §3.13) */}
+          <div className="space-y-2 mb-10 text-left">
+            {['West Africa GDP Growth Rate', 'Nigeria FDI Trends 2025', 'East Africa Trade Corridors'].map(label => (
+              <div key={label} className="flex items-center justify-between rounded-lg border border-border bg-page px-4 py-3">
+                <span className="text-sm font-medium text-ink">{label}</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-ink-blue">🔒 Members only</span>
+              </div>
+            ))}
+          </div>
+
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] px-8 py-6 rounded-xl shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:brightness-110 transition-all"
+            className="block w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] px-8 py-6 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:bg-gold-italic transition-all"
           >
             Become a Founding Member
           </a>

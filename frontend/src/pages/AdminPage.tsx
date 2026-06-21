@@ -309,28 +309,28 @@ export const AdminPage: React.FC = () => {
 
     return (
         <>
-            <div className="flex min-h-[70vh] items-center justify-center bg-background relative overflow-hidden">
+            <div className="flex min-h-[70vh] items-center justify-center bg-page relative overflow-hidden px-4">
                 <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--muted-foreground)/0.2)_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
 
-                <Card className="w-full max-w-md border-border shadow-xl relative z-10 rounded-3xl overflow-hidden">
-                    <CardHeader className="space-y-1 text-center pb-8 border-b border-border bg-card">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-background text-foreground shadow-lg rotate-3 group-hover:rotate-0 transition-transform">
-                            <LockClosedIcon className="h-8 w-8 text-foreground" />
+                <Card className="w-full max-w-md border-white/10 bg-navy text-white shadow-[0_8px_32px_rgba(0,0,0,0.18)] relative z-10 rounded-xl overflow-hidden">
+                    <CardHeader className="space-y-1 text-center pb-8 border-b border-white/10">
+                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-navy-card border border-accent/30 shadow-lg">
+                            <LockClosedIcon className="h-8 w-8 text-accent" />
                         </div>
-                        <CardTitle className="text-2xl font-serif font-black text-foreground tracking-tight">Intelligence Access</CardTitle>
-                        <CardDescription>Authorized personnel only. Sessions are logs.</CardDescription>
+                        <CardTitle className="text-2xl font-serif font-black italic text-white tracking-tight">Intelligence Access</CardTitle>
+                        <CardDescription className="text-ink-mute">Authorized personnel only. Sessions are logged.</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-8">
                         <form onSubmit={handleLogin} className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="token" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Security Token</Label>
+                                <Label htmlFor="token" className="text-xs font-black uppercase tracking-widest text-accent">Security Token</Label>
                                 <Input
                                     id="token"
                                     type="password"
                                     placeholder="Enter authorization key..."
                                     value={token}
                                     onChange={(e) => setToken(e.target.value)}
-                                    className="font-mono rounded-xl border-border/50 focus:ring-primary/20"
+                                    className="font-mono rounded-xl border-white/20 bg-navy-card text-white placeholder:text-white/40 focus-visible:ring-accent"
                                 />
                             </div>
 
@@ -342,7 +342,7 @@ export const AdminPage: React.FC = () => {
                                 </Alert>
                             )}
 
-                            <Button type="submit" className="w-full font-black uppercase tracking-widest rounded-xl py-6" disabled={status === 'loading'}>
+                            <Button type="submit" className="w-full font-black uppercase tracking-widest rounded-xl py-6 bg-accent text-navy hover:bg-gold-italic" disabled={status === 'loading'}>
                                 {status === 'loading' ? <UpdateIcon className="mr-2 h-4 w-4 animate-spin" /> : 'Authenticate'}
                             </Button>
                         </form>

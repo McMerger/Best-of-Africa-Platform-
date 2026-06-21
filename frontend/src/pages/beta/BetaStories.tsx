@@ -198,9 +198,9 @@ export const BetaStories = () => {
                   playTrack(audioTracks[0], audioTracks);
                 }
               }}
-              className="group flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-card hover:border-accent text-accent font-medium transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] backdrop-blur-md"
+              className="group flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-navy hover:border-accent text-accent font-medium transition-all shadow-[0_0_30px_rgba(212,175,55,0.2)] backdrop-blur-md"
             >
-              <div className="w-10 h-10 rounded-full bg-accent text-card group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
+              <div className="w-10 h-10 rounded-full bg-accent text-navy group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
               </div>
               <span className="uppercase tracking-widest text-xs font-bold">Listen to Daily Pulse</span>
@@ -237,7 +237,7 @@ export const BetaStories = () => {
                 onClick={() => setFeedMode('foryou')}
                 className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
                   feedMode === 'foryou' 
-                    ? 'bg-accent text-card shadow-sm border border-accent/20' 
+                    ? 'bg-accent text-navy shadow-sm border border-accent/20' 
                     : 'text-primary/50 hover:text-accent'
                 }`}
               >
@@ -260,7 +260,7 @@ export const BetaStories = () => {
             </p>
             <Link 
               to="/settings"
-              className="inline-block bg-accent text-card font-medium px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+              className="inline-block bg-accent text-navy font-medium px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
             >
               Set Preferences
             </Link>
@@ -283,7 +283,7 @@ export const BetaStories = () => {
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
             aria-label="Search stories"
-            className="w-full md:max-w-lg bg-background border border-primary/8 rounded-lg pl-10 pr-10 py-3 text-sm text-primary placeholder:text-primary/40 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30 transition-colors"
+            className="w-full md:max-w-lg bg-[#F9FAFB] border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
           />
           {searchInput && (
             <button
@@ -315,7 +315,7 @@ export const BetaStories = () => {
                 onClick={() => { setActiveFilter(sector); setPage(1); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
                   activeFilter === sector
-                    ? 'bg-accent text-card border-accent'
+                    ? 'bg-accent text-navy border-accent'
                     : 'border-primary/10 text-primary/65 hover:border-primary/30 hover:text-primary'
                 }`}
               >
@@ -413,6 +413,10 @@ export const BetaStories = () => {
                       to={`/posts/${article.slug}`}
                       className="group relative bg-card rounded-2xl overflow-hidden border border-foreground/10 flex flex-col transition-all duration-500 hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] block h-full"
                     >
+                      {/* FREE READ badge on the first story (spec §3.4) */}
+                      {index === 0 && !isSearchMode && (
+                        <span className="absolute top-4 right-4 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">Free Read</span>
+                      )}
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
                       <div className={`overflow-hidden shrink-0 ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
@@ -481,7 +485,7 @@ export const BetaStories = () => {
                                   slug: article.slug
                                 });
                               }}
-                              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-card transition-colors shadow-sm"
+                              className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-navy transition-colors shadow-sm"
                             >
                               <Headphones size={12} />
                               <span className="font-semibold text-[10px] uppercase tracking-wider">Listen</span>
@@ -543,7 +547,7 @@ export const BetaStories = () => {
         <div className="text-center">
           <Link
             to="/membership"
-            className="inline-block bg-accent text-card font-medium font-sans px-8 py-4 rounded-lg shadow-sm hover:brightness-110 transition-transform hover:-translate-y-0.5"
+            className="inline-block bg-accent text-navy font-medium font-sans px-8 py-4 rounded-lg shadow-sm hover:brightness-110 transition-transform hover:-translate-y-0.5"
           >
             Unlock all stories on Ko-fi
           </Link>
