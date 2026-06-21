@@ -74,3 +74,21 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy frontend/dist --project-name=best-of-africa-frontend --commit-dirty=true
+
+      # Direct-upload to the two public URLs. This bypasses the flaky Cloudflare
+      # Git-integration build on best-of-africa-platform (which was failing on the
+      # remote builder) by shipping the dist built in CI above. --branch main
+      # targets the production environment for both projects.
+      - name: Deploy to Cloudflare Pages (best-of-africa-platform)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend/dist --project-name=best-of-africa-platform --branch=main --commit-dirty=true
+
+      - name: Deploy to Cloudflare Pages (best-of-africa)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy frontend/dist --project-name=best-of-africa --branch=main --commit-dirty=true
