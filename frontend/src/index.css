@@ -99,8 +99,11 @@ body {
 
   html {
     scroll-behavior: smooth;
-    touch-action: manipulation;
-    overflow-x: hidden;
+    /* overflow-x: clip prevents a horizontal scrollbar WITHOUT making <html> a
+       scroll container (which `hidden` does, by coercing overflow-y to auto and
+       breaking two-finger/trackpad wheel scrolling). touch-action removed so
+       Windows precision-touchpad pan gestures aren't suppressed. */
+    overflow-x: clip;
   }
 
   body {
@@ -108,9 +111,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    overscroll-behavior-y: none;
-    overflow-x: hidden;
-    /* Prevents "bounce" on pull-to-refresh feeling glitchy */
+    overflow-x: clip;
   }
 
   /* Typography System */
