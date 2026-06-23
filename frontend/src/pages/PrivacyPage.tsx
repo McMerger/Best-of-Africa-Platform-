@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../components/SEO';
 
 const SECTIONS = [
     { id: 'data-collection', title: '1. Data Collection' },
@@ -12,6 +13,7 @@ const SECTIONS = [
 export const PrivacyPage: React.FC = () => {
     return (
         <>
+            <SEO title="Privacy Policy" description="How Best of Africa collects, uses, and protects your personal information, including PIPEDA rights for Canadian users." />
             <div className="container py-20 max-w-3xl">
                 <header className="mb-10 border-b border-border pb-8">
                     <h1 className="mb-4 text-4xl font-serif font-extrabold tracking-tight text-ink md:text-5xl">Privacy Policy</h1>

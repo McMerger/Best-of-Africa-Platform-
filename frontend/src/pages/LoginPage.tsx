@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { SEO } from '../components/SEO';
 
 export const LoginPage: React.FC = () => {
     const { data: config } = useSystemConfig();
@@ -81,6 +82,7 @@ export const LoginPage: React.FC = () => {
 
     return (
         <>
+            <SEO title="Member Portal" description="Sign in to your Best of Africa membership with a one-click email login link." />
             <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-navy text-white px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-white/10 shadow-2xl">
                 {/* Background decorative elements — amber/gold radial glow */}
                 <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl" />

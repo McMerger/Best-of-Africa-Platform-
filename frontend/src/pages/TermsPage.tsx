@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SEO } from '../components/SEO';
 
 const SECTIONS = [
     { id: 'acceptance', title: '1. Acceptance of Terms' },
@@ -11,6 +12,7 @@ const SECTIONS = [
 export const TermsPage: React.FC = () => {
     return (
         <>
+            <SEO title="Terms of Service" description="The terms governing use of the Best of Africa platform and its content." />
             <div className="container py-20 max-w-3xl">
                 <header className="mb-10 border-b border-border pb-8">
                     <h1 className="mb-4 text-4xl font-serif font-extrabold tracking-tight text-ink md:text-5xl">Terms of Service</h1>

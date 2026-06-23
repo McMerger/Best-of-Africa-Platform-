@@ -22,7 +22,7 @@
   --secondary-foreground: 219 60% 15%;
 
   --muted: 210 20% 95%;
-  --muted-foreground: 218 24% 53%; /* #6B7FA3 text-secondary */
+  --muted-foreground: 218 23% 45%; /* #586C8D — darkened to meet WCAG AA on white */
 
   --popover: 0 0% 100%;
   --popover-foreground: 219 60% 15%;

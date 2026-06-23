@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { SEO } from '../components/SEO';
 import { 
     LockClosedIcon, 
     ExclamationTriangleIcon, 
@@ -309,6 +310,7 @@ export const AdminPage: React.FC = () => {
 
     return (
         <>
+            <SEO title="Admin Access" description="Authorized personnel only." />
             <div className="flex min-h-[70vh] items-center justify-center bg-page relative overflow-hidden px-4">
                 <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--muted-foreground)/0.2)_1px,transparent_1px)] [background-size:16px_16px] opacity-20 pointer-events-none"></div>
 

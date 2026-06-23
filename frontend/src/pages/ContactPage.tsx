@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { SEO } from '../components/SEO';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
@@ -50,6 +51,7 @@ export const ContactPage: React.FC = () => {
 
     return (
         <>
+            <SEO title="Contact" description="Reach Best of Africa for media inquiries, partnership opportunities, or support." />
             <div className="container py-20 max-w-4xl">
                 <div className="mb-12 text-center">
                     <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">

@@ -79,7 +79,7 @@ export default {
                 ink: {
                     DEFAULT: '#0F1F3D', /* text-primary */
                     soft: '#374151',    /* legal body copy */
-                    blue: '#6B7FA3',    /* text-secondary / meta */
+                    blue: '#586C8D',    /* text-secondary / meta — darkened to meet WCAG AA (≈5.3:1 on white) */
                     mute: '#9CA3AF',    /* placeholder / disabled */
                 },
                 chart: {
