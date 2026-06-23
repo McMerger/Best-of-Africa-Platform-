@@ -40,7 +40,8 @@
       "Bash(curl -s -X POST __TRACKED_VAR__/articles/__TRACKED_VAR__/audio -H 'X-API-Key: diagnostic' -w '\\\\nHTTP %{http_code}\\\\n')",
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/search?q=nigeria%20fintech -w '\\\\n[%{http_code}]\\\\n')",
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/search?q=kenya -w ' [%{http_code}]\\\\n')",
-      "Bash(curl -s __TRACKED_VAR__/search?q=nigeria -w '\\\\n[%{http_code}]\\\\n')"
+      "Bash(curl -s __TRACKED_VAR__/search?q=nigeria -w '\\\\n[%{http_code}]\\\\n')",
+      "Bash(curl -s -X POST __TRACKED_VAR__/members/verify-email -H 'Content-Type: application/json' -d '{\"email\":\"audit-test@example.com\"}' -w '\\\\n[%{http_code}]\\\\n')"
     ]
   }
 }
