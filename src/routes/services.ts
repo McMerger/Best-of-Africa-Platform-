@@ -344,7 +344,7 @@ router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), vali
         confirmationCode
     ).run();
 
-    sendRegistrationConfirmation({
+    sendRegistrationConfirmation(c.env, {
         registrationId,
         confirmationCode,
         user_email,

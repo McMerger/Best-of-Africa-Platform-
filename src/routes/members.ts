@@ -103,7 +103,7 @@ router.post('/kofi-webhook', async (c) => {
 
     // Send Welcome Email in the background
     c.executionCtx.waitUntil(
-        sendWelcomeEmail(email, name, tier)
+        sendWelcomeEmail(c.env, email, name, tier)
             .then(success => {
                 const status = success ? 'SUCCESS' : 'FAILED';
                 console.log(`[Email] MailChannels Welcome email for ${email}: ${status}`);
@@ -220,7 +220,7 @@ router.post('/verify-email', async (c) => {
 
     c.executionCtx.waitUntil(
         import('../lib/email').then(({ sendEmail }) => {
-            return sendEmail({
+            return sendEmail(c.env, {
                 to: email,
                 toName: client.name,
                 subject: `${otp} is your verification code`,

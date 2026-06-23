@@ -91,7 +91,7 @@ router.post('/subscribe', async (c) => {
 
     c.executionCtx.waitUntil(
         import('../lib/email').then(({ sendEmail }) => {
-            return sendEmail({
+            return sendEmail(c.env, {
                 to: email.toLowerCase(),
                 toName: 'Subscriber',
                 subject: 'Welcome to the BOA-Story Dispatch',
