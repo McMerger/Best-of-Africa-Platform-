@@ -4,15 +4,34 @@ import { motion } from 'framer-motion';
 export const CustomCursor = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  // Only enable on devices with a precise pointer + hover (desktop mouse/trackpad),
+  // and never when the user prefers reduced motion. Touch/coarse devices keep the
+  // native cursor and are unaffected.
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const pointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setEnabled(pointer.matches && !reduce.matches);
+    update();
+    pointer.addEventListener('change', update);
+    reduce.addEventListener('change', update);
+    return () => {
+      pointer.removeEventListener('change', update);
+      reduce.removeEventListener('change', update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Check if hovering over interactive elements
       if (
         window.getComputedStyle(target).cursor === 'pointer' ||
         target.tagName.toLowerCase() === 'a' ||
@@ -26,31 +45,27 @@ export const CustomCursor = () => {
 
     window.addEventListener('mousemove', updateMousePosition);
     window.addEventListener('mouseover', handleMouseOver);
-
     return () => {
       window.removeEventListener('mousemove', updateMousePosition);
       window.removeEventListener('mouseover', handleMouseOver);
     };
-  }, []);
+  }, [enabled]);
 
-  // Use a custom style to hide default cursor globally when this component is mounted
+  // Hide the native cursor only on desktop, and preserve the text I-beam inside
+  // form fields so typing still has the expected affordance.
   useEffect(() => {
-    document.body.style.cursor = 'none';
-    
-    // Also inject a style tag to force hide cursor on all elements except when we want it
+    if (!enabled) return;
     const style = document.createElement('style');
     style.innerHTML = `
-      * {
-        cursor: none !important;
-      }
+      *:not(input):not(textarea):not([contenteditable="true"]) { cursor: none !important; }
     `;
     document.head.appendChild(style);
-    
     return () => {
-      document.body.style.cursor = 'auto';
-      document.head.removeChild(style);
+      style.remove();
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   const variants = {
     default: {
@@ -59,7 +74,7 @@ export const CustomCursor = () => {
       height: 32,
       width: 32,
       backgroundColor: 'transparent',
-      border: '2px solid rgba(212, 175, 55, 0.5)',
+      border: '2px solid rgba(201, 168, 76, 0.5)',
       mixBlendMode: 'normal' as const,
     },
     hover: {
@@ -67,8 +82,8 @@ export const CustomCursor = () => {
       y: mousePosition.y - 32,
       height: 64,
       width: 64,
-      backgroundColor: 'rgba(212, 175, 55, 1)',
-      border: '0px solid rgba(212, 175, 55, 0)',
+      backgroundColor: 'rgba(201, 168, 76, 1)',
+      border: '0px solid rgba(201, 168, 76, 0)',
       mixBlendMode: 'difference' as const,
     }
   };
