@@ -326,9 +326,13 @@ export const BetaArticle = () => {
             transition={{ duration: 1.5, ease: "easeOut" }}
             src={article.hero_image_url}
             alt={article.title}
+            onError={(e) => {
+              const img = e.currentTarget as HTMLImageElement;
+              if (!img.dataset.fellback) { img.dataset.fellback = '1'; img.src = '/images/fallback_business.png'; }
+            }}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0E0C0A] via-[#0E0C0A]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
           <div className="absolute bottom-6 left-6 md:left-12 z-10">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>
@@ -343,7 +347,7 @@ export const BetaArticle = () => {
             alt={article.title}
             className="w-full h-full object-cover opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0E0C0A]/90 via-[#0E0C0A]/60 to-transparent mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-br from-navy/90 via-navy/60 to-transparent mix-blend-multiply" />
           <div className="absolute bottom-6 left-6 md:left-12 z-10">
             <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
           </div>

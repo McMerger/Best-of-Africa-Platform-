@@ -9,6 +9,7 @@ import { GoldButton,
   MembershipTiersGrid
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
+import { SafeImage } from '../../components/SafeImage';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
@@ -292,9 +293,10 @@ export const BetaLanding = () => {
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
-                      <img
+                      <SafeImage
                         src={article.hero_image_url || `/images/v2_editorial_${index + 1}.png`}
                         alt={article.title}
+                        caption={stripMarkdown(article.title)}
                         className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-70"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/20" />
