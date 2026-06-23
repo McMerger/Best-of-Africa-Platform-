@@ -34,7 +34,10 @@
       "Bash(git add *)",
       "Bash(git commit -q -m ' *)",
       "Bash(git push *)",
-      "Bash(perl -pi -e 's/bg-background text-primary hover:bg-accent/bg-accent text-navy hover:bg-gold-italic/g' BetaTravel.tsx BetaEvents.tsx BetaConcierge.tsx)"
+      "Bash(perl -pi -e 's/bg-background text-primary hover:bg-accent/bg-accent text-navy hover:bg-gold-italic/g' BetaTravel.tsx BetaEvents.tsx BetaConcierge.tsx)",
+      "Bash(curl -s __TRACKED_VAR__/articles?limit=3)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(a.get\\('slug'\\),'| audio:',a.get\\('audio_url'\\)\\) for a in d.get\\('data',[]\\)]\")",
+      "Bash(curl -s -X POST __TRACKED_VAR__/articles/__TRACKED_VAR__/audio -H 'X-API-Key: diagnostic' -w '\\\\nHTTP %{http_code}\\\\n')"
     ]
   }
 }

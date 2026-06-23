@@ -6,6 +6,14 @@
 import type { Env } from '../types';
 import { getCached } from './cache';
 
+// Decode a base64 string (e.g. MeloTTS audio output) into raw bytes for R2 storage.
+function base64ToBytes(b64: string): Uint8Array {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
+}
+
 // ───────────────────────────────────────────────────────────────────────────────
 // Generate Audio Narration for Article
 // ───────────────────────────────────────────────────────────────────────────────
@@ -46,17 +54,18 @@ export async function generateAudioNarration(
             }
         }
 
-        // 2. Fallback to Workers TTS
+        // 2. Fallback to Workers AI TTS (MeloTTS). Returns base64-encoded MP3.
         if (!audioBuffer) {
-            const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
-                text: narrationText.slice(0, 5000), // Limit to avoid timeout
+            const response = await (env.AI as Record<string, any>).run('@cf/myshell-ai/melotts', {
+                prompt: narrationText.slice(0, 2000), // Limit to avoid timeout
+                lang: 'en',
             });
 
             if (!response || !response.audio) {
                 console.error('TTS response missing audio');
                 return null;
             }
-            audioBuffer = response.audio;
+            audioBuffer = base64ToBytes(response.audio);
         }
 
         // Store audio in R2 bucket
@@ -149,17 +158,18 @@ export async function generateBriefAudio(
 
             const transcript = `Good morning. This is your ${country?.name || countryCode} market briefing for ${date}. Today's top stories: ${headlines}. That's your briefing. Visit BOA-Story for full coverage.`;
 
-            // Generate audio
-            const response = await (env.AI as Record<string, any>).run('@cf/microsoft/speecht5-tts', {
-                text: transcript,
+            // Generate audio (MeloTTS — base64-encoded MP3)
+            const response = await (env.AI as Record<string, any>).run('@cf/myshell-ai/melotts', {
+                prompt: transcript.slice(0, 2000),
+                lang: 'en',
             });
 
             if (!response?.audio) return null;
 
             // Store in R2
-            const audioKey = `briefs/${countryCode}/${date}.wav`;
-            await env.MEDIA.put(audioKey, response.audio, {
-                httpMetadata: { contentType: 'audio/wav' },
+            const audioKey = `briefs/${countryCode}/${date}.mp3`;
+            await env.MEDIA.put(audioKey, base64ToBytes(response.audio), {
+                httpMetadata: { contentType: 'audio/mpeg' },
             });
 
             return {
