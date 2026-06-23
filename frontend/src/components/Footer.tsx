@@ -63,7 +63,7 @@ export const Footer: React.FC = () => {
                         <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Intelligence</h4>
                         <ul className="space-y-4 text-[13px] font-medium text-white/60">
                             <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Regional Dashboards</Link></li>
-                            <li><Link to="/intel" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Sector Analysis</Link></li>
+                            <li><Link to="/intelligence" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Sector Analysis</Link></li>
                             <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Reports Archive</Link></li>
                         </ul>
                     </div>

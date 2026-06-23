@@ -14,6 +14,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { KO_FI_URL } from '../../constants/beta';
+import { SafeImage } from '../../components/SafeImage';
 import type { ArticleListItem } from '../../types';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -62,9 +63,10 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
     className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
     <div className="aspect-[16/9] overflow-hidden bg-background/20 relative">
-      <img
+      <SafeImage
         src={article.hero_image_url || `/images/v2_editorial_${Math.floor(Math.random() * 2) + 1}.png`}
         alt={article.title}
+        caption={stripMarkdown(article.title)}
         loading="lazy"
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
       />

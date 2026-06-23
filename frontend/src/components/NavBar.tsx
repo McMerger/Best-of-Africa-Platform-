@@ -35,7 +35,6 @@ export const NavBar: React.FC = () => {
     const mobileLinks = [
         { href: "/", label: t("nav.home", "Home") },
         { href: "/feed", label: t("nav.feed", "Daily Briefing") },
-        { href: "/intel", label: t("nav.sectors", "Market Intel") },
         { href: "/countries", label: t("nav.countries", "Countries") },
         { href: "/dashboards/overview", label: t("nav.dashboards", "Risk Dashboards") },
         { href: "/posts", label: t("nav.reports", "Stories & Reports") },
@@ -72,7 +71,6 @@ export const NavBar: React.FC = () => {
                 <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
                     {[
                         { path: '/feed', label: 'Briefing' },
-                        { path: '/intel', label: 'Market Intel' },
                         { path: '/countries', label: 'Countries' },
                         { path: '/events', label: 'Summits' },
                         { path: '/dashboards/overview', label: 'Dashboards' },

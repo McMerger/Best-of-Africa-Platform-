@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
+import { SafeImage } from '../../components/SafeImage';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
@@ -419,9 +420,10 @@ export const BetaStories = () => {
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
                       <div className={`overflow-hidden shrink-0 ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
-                        <img
+                        <SafeImage
                           src={article.hero_image_url}
                           alt={stripMarkdown(article.title)}
+                          caption={stripMarkdown(article.title)}
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
