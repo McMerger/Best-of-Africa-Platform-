@@ -75,7 +75,7 @@ export const NavBar: React.FC = () => {
     return (
         <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-2xl border-b border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300">
             {/* Pre-header Utilities — lens / feed-mode controls only for signed-in users */}
-            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
+            <div className="hidden xl:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
                 <LanguageSelector />
                 {isAuthenticated && <MissionControl />}
                 {isAuthenticated && <DensityToggle />}
@@ -125,7 +125,7 @@ export const NavBar: React.FC = () => {
                 {/* RIGHT: Actions + Sign In */}
                 <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
                     {/* Icon Actions — Settings/Admin/Notifications only when signed in */}
-                    <div className="hidden lg:flex items-center gap-1 mr-2">
+                    <div className="hidden xl:flex items-center gap-1 mr-2">
                         <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
@@ -151,17 +151,18 @@ export const NavBar: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="hidden lg:block w-px h-6 bg-border mx-2" />
+                    <div className="hidden xl:block w-px h-6 bg-border mx-2" />
 
-                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
+                    <Button size="sm" asChild className="hidden xl:flex rounded-full font-bold px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
                         <Link to="/login">{isAuthenticated ? 'Account' : 'Sign In'}</Link>
                     </Button>
 
                     {/* Mobile: compact Sign In + Hamburger */}
-                    <div className="flex lg:hidden items-center gap-2">
+                    <div className="flex xl:hidden items-center gap-2">
                         <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
+                                <span className="sr-only">Search</span>
                             </Link>
                         </Button>
                         <Button size="sm" asChild className="rounded font-bold px-4 h-8 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-none uppercase tracking-wider">

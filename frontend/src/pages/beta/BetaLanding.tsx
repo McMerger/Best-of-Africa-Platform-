@@ -388,10 +388,10 @@ export const BetaLanding = () => {
         
         {/* Animated Infinite Marquee */}
         <div className="relative w-full h-[400px] md:h-[500px] flex items-center overflow-hidden z-10">
-          <motion.div 
+          <motion.div
             className="flex gap-8 px-8 absolute left-0 whitespace-nowrap"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ ease: "linear", duration: 40, repeat: Infinity }}
+            animate={prefersReducedMotion ? undefined : { x: ["0%", "-50%"] }}
+            transition={prefersReducedMotion ? undefined : { ease: "linear", duration: 40, repeat: Infinity }}
           >
             {[
               "/images/v2_concierge_concrete_1780371218016.png",
