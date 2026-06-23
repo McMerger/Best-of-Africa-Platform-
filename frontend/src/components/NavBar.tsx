@@ -32,19 +32,44 @@ export const NavBar: React.FC = () => {
     const { t } = useLanguage();
     const { isAuthenticated } = useAuth();
 
-    const mobileLinks = [
-        { href: "/", label: t("nav.home", "Home") },
-        { href: "/feed", label: t("nav.feed", "Daily Briefing") },
-        { href: "/countries", label: t("nav.countries", "Countries") },
-        { href: "/dashboards/overview", label: t("nav.dashboards", "Risk Dashboards") },
-        { href: "/posts", label: t("nav.reports", "Stories & Reports") },
-        { href: "/events", label: t("nav.summits", "Global Summits") },
-        { href: "/request-consultation", label: t("nav.concierge", "Concierge") },
-        { href: "/travel", label: t("nav.travel", "Secure Travel") },
-        { href: "/library", label: t("nav.library", "Saved Intel") },
-        { href: "/intelligence", label: t("nav.intelligence", "Intelligence") },
-        { href: "/newsletter", label: t("nav.newsletter", "Newsletter") },
-        { href: "/membership", label: t("nav.membership", "Membership") },
+    // Full mobile menu — every primary page is reachable here, grouped by section.
+    const mobileSections: { heading: string; links: { href: string; label: string }[] }[] = [
+        {
+            heading: t("nav.read", "Read"),
+            links: [
+                { href: "/", label: t("nav.home", "Home") },
+                { href: "/posts", label: t("nav.reports", "Stories") },
+                { href: "/feed", label: t("nav.feed", "Daily Briefing") },
+                { href: "/countries", label: t("nav.countries", "Countries") },
+                { href: "/gallery", label: t("nav.gallery", "Gallery") },
+                { href: "/supporter-feed", label: t("nav.supporter", "Supporter Feed") },
+            ],
+        },
+        {
+            heading: t("nav.intel", "Intelligence"),
+            links: [
+                { href: "/intelligence", label: t("nav.intelligence", "Market Intelligence") },
+                { href: "/dashboards/overview", label: t("nav.dashboards", "Continental Dashboard") },
+                { href: "/library", label: t("nav.library", "Saved Library") },
+            ],
+        },
+        {
+            heading: t("nav.services", "Services"),
+            links: [
+                { href: "/events", label: t("nav.summits", "Summits & Events") },
+                { href: "/request-consultation", label: t("nav.concierge", "Concierge") },
+                { href: "/travel", label: t("nav.travel", "Business Travel") },
+            ],
+        },
+        {
+            heading: t("nav.account", "Membership & Account"),
+            links: [
+                { href: "/membership", label: t("nav.membership", "Membership") },
+                { href: "/newsletter", label: t("nav.newsletter", "Newsletter") },
+                { href: "/about", label: t("nav.about", "About") },
+                { href: "/contact", label: t("nav.contact", "Contact") },
+            ],
+        },
     ];
 
     return (
@@ -70,11 +95,12 @@ export const NavBar: React.FC = () => {
                 {/* CENTER: Desktop Nav */}
                 <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
                     {[
-                        { path: '/feed', label: 'Briefing' },
+                        { path: '/posts', label: 'Stories' },
                         { path: '/countries', label: 'Countries' },
-                        { path: '/events', label: 'Summits' },
-                        { path: '/dashboards/overview', label: 'Dashboards' },
+                        { path: '/feed', label: 'Briefing' },
                         { path: '/intelligence', label: 'Intelligence' },
+                        { path: '/membership', label: 'Membership' },
+                        { path: '/about', label: 'About' },
                     ].map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
@@ -160,20 +186,27 @@ export const NavBar: React.FC = () => {
                                     </div>
                                 </SheetHeader>
                                 <div className="flex-1 overflow-y-auto p-6 flex flex-col">
-                                    <div className="grid gap-1 mb-8">
-                                        {mobileLinks.map((link) => (
-                                            <Link
-                                                key={link.href}
-                                                to={link.href}
-                                                className={cn(
-                                                    "block py-3 px-4 rounded text-sm uppercase tracking-widest font-bold transition-all",
-                                                    location.pathname === link.href 
-                                                        ? "bg-foreground/10 text-foreground border-l-2 border-accent" 
-                                                        : "text-foreground/60 hover:text-foreground hover:bg-foreground/5 border-l-2 border-transparent"
-                                                )}
-                                            >
-                                                {link.label}
-                                            </Link>
+                                    <div className="mb-8 space-y-6">
+                                        {mobileSections.map((section) => (
+                                            <div key={section.heading}>
+                                                <p className="px-4 mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">{section.heading}</p>
+                                                <div className="grid gap-0.5">
+                                                    {section.links.map((link) => (
+                                                        <Link
+                                                            key={link.href}
+                                                            to={link.href}
+                                                            className={cn(
+                                                                "block py-2.5 px-4 rounded text-sm uppercase tracking-widest font-bold transition-all",
+                                                                location.pathname === link.href
+                                                                    ? "bg-accent/10 text-navy border-l-2 border-accent"
+                                                                    : "text-navy/60 hover:text-accent hover:bg-accent/10 border-l-2 border-transparent"
+                                                            )}
+                                                        >
+                                                            {link.label}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                     <div className="mt-auto pt-6 border-t border-border space-y-3">
