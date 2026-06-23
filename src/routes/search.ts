@@ -38,22 +38,21 @@ router.get('/', async (c) => {
     );
 
     if (type === 'semantic' || type === 'hybrid') {
-        // Generate embedding for query using Workers 
-        const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
-            text: q,
-        });
-
-        const queryVector = (embeddingResponse as Record<string, any>).data[0];
-
-        // Search Vectorize
-        let vectorResults;
+        // Generate embedding for the query and search Vectorize. If Workers AI is
+        // unavailable (e.g. neuron quota exhausted or a model change), degrade
+        // gracefully to keyword/full-text search instead of failing the request.
+        let vectorResults: { matches: any[] } = { matches: [] };
         try {
+            const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
+                text: q,
+            });
+            const queryVector = (embeddingResponse as Record<string, any>).data[0];
             vectorResults = await c.env.VECTORS.query(queryVector, {
                 topK: limitNum,
                 returnMetadata: 'all',
             });
         } catch (e) {
-            console.warn('Vector search failed (likely local dev), continuing without semantic results:', e);
+            console.warn('Semantic search unavailable, falling back to keyword/full-text search:', e);
             vectorResults = { matches: [] };
         }
 
