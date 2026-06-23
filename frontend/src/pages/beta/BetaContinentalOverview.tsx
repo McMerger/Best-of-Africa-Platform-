@@ -185,7 +185,7 @@ export const BetaContinentalOverview: React.FC = () => {
                     cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                     formatter={(value: any) => [`${value} Stories`, 'Volume']}
                   />
-                  <Bar dataKey="count" fill="#D4AF37" radius={[0, 4, 4, 0]} barSize={24} />
+                  <Bar dataKey="count" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

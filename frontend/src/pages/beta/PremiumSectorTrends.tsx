@@ -34,7 +34,7 @@ export const PremiumSectorTrends: React.FC = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+            className="bg-accent text-navy font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
           >
             Become a Founding Member
           </a>
@@ -156,8 +156,8 @@ export const PremiumSectorTrends: React.FC = () => {
                     <AreaChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorSize" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#C9A84C" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
@@ -173,7 +173,7 @@ export const PremiumSectorTrends: React.FC = () => {
                         contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         formatter={(value: any) => [`$${value}M`, 'Market Size']}
                       />
-                      <Area type="monotone" dataKey="market_size" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" />
+                      <Area type="monotone" dataKey="market_size" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>

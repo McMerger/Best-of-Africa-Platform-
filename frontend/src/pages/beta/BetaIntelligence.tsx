@@ -52,16 +52,15 @@ export const BetaIntelligence = () => {
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
         >
-          <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_intel_concrete_1780358106973.png" 
-            alt="Futuristic African Trading Floor" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_intel_concrete_1780358106973.png"
+            alt="Futuristic African Trading Floor"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
           />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
         </motion.div>
 
-        <div className="max-w-6xl mx-auto w-full relative z-30">
+        <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
               <div className="flex items-center gap-4 mb-6">
@@ -70,15 +69,15 @@ export const BetaIntelligence = () => {
                   Live Data
                 </span>
               </div>
-              <h1 className="font-serif text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
-              <p className="text-foreground/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
+              <h1 className="font-serif text-white text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
+              <p className="text-white/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
                 Algorithmic insights tracking strategic opportunities, sentiment divergence, and sector velocity across 54 African nations.
               </p>
             </motion.div>
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.8 }}>
               <Link 
                 to="/dashboards/overview" 
-                className="flex items-center gap-3 bg-accent text-card px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:brightness-110 transition-all w-fit shrink-0 shadow-[0_0_30px_rgba(212,175,55,0.3)]"
+                className="flex items-center gap-3 bg-accent text-navy px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:brightness-110 transition-all w-fit shrink-0 shadow-[0_0_30px_rgba(201,168,76,0.3)]"
               >
                 <BarChart2 size={16} />
                 Continental Dashboard
@@ -122,14 +121,14 @@ export const BetaIntelligence = () => {
                   <div className="text-sm text-foreground/60 font-light">Overall platform sentiment</div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="bg-accent rounded-3xl border border-accent/20 p-8 shadow-[0_0_40px_rgba(212,175,55,0.15)] relative overflow-hidden group">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="bg-accent rounded-3xl border border-accent/20 p-8 shadow-[0_0_40px_rgba(201,168,76,0.15)] relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-card/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
-                  <div className="flex items-center gap-3 mb-6 text-card/70">
+                  <div className="flex items-center gap-3 mb-6 text-navy/70">
                     <Activity size={20} />
                     <span className="text-[11px] font-bold uppercase tracking-widest">Activity Pulse</span>
                   </div>
-                  <div className="text-[3rem] font-serif text-card mb-2 leading-none">{analytics.total_articles_7d}</div>
-                  <div className="text-sm text-card/80 font-semibold">Intelligence briefings published (7d)</div>
+                  <div className="text-[3rem] font-serif text-navy mb-2 leading-none">{analytics.total_articles_7d}</div>
+                  <div className="text-sm text-navy/80 font-semibold">Intelligence briefings published (7d)</div>
                 </motion.div>
               </>
             )}

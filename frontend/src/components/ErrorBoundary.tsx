@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: null });
                 window.location.href = '/';
               }}
-              className="w-full bg-accent text-card py-3 rounded-lg font-semibold hover:bg-background transition-colors uppercase tracking-wider text-sm mb-4"
+              className="w-full bg-accent text-navy py-3 rounded-lg font-semibold hover:bg-background transition-colors uppercase tracking-wider text-sm mb-4"
             >
               Return to Core Hub
             </button>

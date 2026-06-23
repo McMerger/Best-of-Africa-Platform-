@@ -179,19 +179,18 @@ export const BetaCountryHub = () => {
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
         >
-          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_country_hero.png" 
-            alt="Country Landscape" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_country_hero.png"
+            alt="Country Landscape"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
           />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
         </motion.div>
 
-        <div className="max-w-5xl mx-auto w-full relative z-30">
+        <div className="max-w-5xl mx-auto w-full relative z-30 text-white">
           <Link
             to="/countries"
-            className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
+            className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             All 54 Countries
@@ -216,14 +215,14 @@ export const BetaCountryHub = () => {
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
-                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70 bg-foreground/5 border border-foreground/10 px-4 py-1.5 rounded-full backdrop-blur-md">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 bg-white/10 border border-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
                         {stats.article_count} {stats.article_count === 1 ? 'story' : 'stories'}
                       </span>
                     )}
                   </div>
-                  <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
+                  <h1 className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-foreground/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
+                    <p className="text-white/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
                   )}
                 </motion.div>
               )}
@@ -237,7 +236,7 @@ export const BetaCountryHub = () => {
               className="flex flex-wrap gap-2 mt-12"
             >
               {investmentHighlights.map(h => (
-                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-foreground/80 bg-foreground/10 border border-foreground/20 px-4 py-2 rounded-full backdrop-blur-md">
+                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-white/80 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
                   {h}
                 </span>
               ))}
@@ -276,7 +275,7 @@ export const BetaCountryHub = () => {
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-accent text-card font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                  className="bg-accent text-navy font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(201,168,76,0.3)]"
                 >
                   Become a Founding Member
                 </a>
@@ -380,7 +379,7 @@ export const BetaCountryHub = () => {
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(201,168,76,0.05)]">
               <div className="absolute top-0 right-0 p-8 opacity-10">
                  <Globe size={120} />
               </div>
@@ -491,7 +490,7 @@ export const BetaCountryHub = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-accent text-card font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+              className="inline-block bg-accent text-navy font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
               Become a Founding Member
             </a>

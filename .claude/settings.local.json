@@ -21,7 +21,20 @@
       "Bash(Select-Object -First 40)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\corte\\\\Documents\\\\GitHub\\\\Best-of-Africa-Platform-\\\\frontend\\\\src\" -Directory)",
       "Bash(Select-Object Name)",
-      "Bash(xargs grep -l \"from.*beta\\\\|from '.*beta\")"
+      "Bash(xargs grep -l \"from.*beta\\\\|from '.*beta\")",
+      "Bash(gh pr create --title 'Combined navy + white + gold design system' --body ' *)",
+      "Bash(git submodule *)",
+      "Bash(git ls-tree *)",
+      "Bash(timeout 25 git submodule update --init --recursive)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(python -c \"import yaml; d=yaml.safe_load\\(open\\('.github/workflows/deploy.yml',encoding='utf-8'\\)\\); steps=[s.get\\('name'\\) for s in d['jobs']['deploy-frontend']['steps']]; print\\('YAML OK'\\); print\\('\\\\n'.join\\('- '+str\\(x\\) for x in steps\\)\\)\")",
+      "Bash(git rm *)",
+      "Bash(git config *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(git add *)",
+      "Bash(git commit -q -m ' *)",
+      "Bash(git push *)",
+      "Bash(perl -pi -e 's/bg-background text-primary hover:bg-accent/bg-accent text-navy hover:bg-gold-italic/g' BetaTravel.tsx BetaEvents.tsx BetaConcierge.tsx)"
     ]
   }
 }

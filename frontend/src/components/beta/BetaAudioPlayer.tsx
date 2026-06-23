@@ -117,7 +117,7 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
       <div className="flex items-center gap-4">
         <button 
           onClick={handlePlayClick}
-          className="w-10 h-10 rounded-full bg-accent text-card flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
+          className="w-10 h-10 rounded-full bg-accent text-navy flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
           aria-label={isThisTrackPlaying && isPlaying ? 'Pause' : 'Play'}
         >
           {isThisTrackPlaying && isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}

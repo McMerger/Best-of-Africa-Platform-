@@ -43,7 +43,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+            className="bg-accent text-navy font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
           >
             Inquire About Access
           </a>

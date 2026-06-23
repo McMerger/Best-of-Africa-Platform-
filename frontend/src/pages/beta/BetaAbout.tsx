@@ -87,14 +87,14 @@ export const BetaAbout = () => {
             What this actually is
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(212,175,55,0.1)] transition-all">
+            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(201,168,76,0.1)] transition-all">
               <span className="text-4xl block mb-8 drop-shadow-sm">✍️</span>
               <h3 className="font-serif text-[2rem] mb-4 text-foreground">Real Stories</h3>
               <p className="text-foreground/60 text-[1.125rem] leading-[1.8]">
                 A living digital platform built to surface real, grounded stories about African lives, cities, creators, and everyday opportunity.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(212,175,55,0.1)] transition-all">
+            <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(201,168,76,0.1)] transition-all">
               <span className="text-4xl block mb-8 drop-shadow-sm">🚫</span>
               <h3 className="font-serif text-[2rem] mb-4 text-foreground">Narrative Correction</h3>
               <p className="text-foreground/60 text-[1.125rem] leading-[1.8]">

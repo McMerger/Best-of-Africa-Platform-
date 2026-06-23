@@ -164,7 +164,7 @@ export const BetaMemberAccess = () => {
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all mb-6"
+              className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all mb-6"
             >
               Re-enter member email
             </button>
@@ -206,23 +206,22 @@ export const BetaMemberAccess = () => {
           
           {/* Left Side Cover */}
           <div className="hidden lg:block lg:w-1/2 relative">
-            <div className="absolute inset-0 bg-background/40 mix-blend-multiply z-10" />
-            <div className="gradient-overlay-light z-20" />
-            <img 
-              src="/images/v2_editorial_1.png" 
-              alt="Premium Access" 
-              className="absolute inset-0 w-full h-full object-cover object-center"
+            <img
+              src="/images/v2_editorial_1.png"
+              alt="Premium Access"
+              className="absolute inset-0 w-full h-full object-cover object-center opacity-40"
             />
+            <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
             <div className="absolute inset-0 z-30 flex flex-col justify-end p-20 pb-32">
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                     <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
                         <Lock size={14} />
                         Founding Members
                     </div>
-                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-foreground drop-shadow-2xl">
+                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl">
                         Unrestricted <br/><span className="text-accent italic">Intelligence.</span>
                     </h1>
-                    <p className="text-[1.125rem] font-light text-foreground/70 max-w-md leading-[1.8] drop-shadow-md">
+                    <p className="text-[1.125rem] font-light text-white/70 max-w-md leading-[1.8] drop-shadow-md">
                         Log in to access your curated briefings, market analytics, and VIP concierge portal.
                     </p>
                 </motion.div>
@@ -269,7 +268,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || otp.length < 6}
-                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(212,175,55,0.2)]"
+                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(201,168,76,0.2)]"
                     >
                       Verify Code
                     </button>
@@ -331,7 +330,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                      className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(201,168,76,0.3)]"
                     >
                       {isSubmitting ? (
                         <>Verifying...</>

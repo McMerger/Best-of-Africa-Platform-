@@ -44,7 +44,7 @@ export const BetaLibrary: React.FC = () => {
                         <Input
                             type="search"
                             placeholder="Search saved items..."
-                            className="dark h-12 w-full rounded-full border-border/50 bg-card text-card-foreground pl-10 pr-4 text-sm shadow-sm"
+                            className="h-12 w-full rounded-full border-border bg-white text-ink placeholder:text-ink-mute pl-10 pr-4 text-sm shadow-sm focus-visible:ring-accent"
                         />
                     </div>
                 </div>
@@ -54,7 +54,7 @@ export const BetaLibrary: React.FC = () => {
                 {isLoading ? (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="h-[400px] rounded-xl dark bg-card text-card-foreground border border-border/50 animate-pulse" />
+                            <div key={i} className="h-[400px] rounded-xl bg-white border border-border animate-pulse" />
                         ))}
                     </div>
                 ) : bookmarks.length === 0 ? (
@@ -68,7 +68,7 @@ export const BetaLibrary: React.FC = () => {
                         </p>
                         <Link 
                             to="/feed" 
-                            className="inline-flex items-center justify-center rounded-full bg-background px-6 py-3 text-sm font-bold text-foreground shadow transition-colors hover:bg-background/90"
+                            className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-bold text-navy shadow transition-colors hover:bg-gold-italic"
                         >
                             Explore Daily Briefing
                         </Link>
@@ -86,7 +86,7 @@ export const BetaLibrary: React.FC = () => {
                                 }} />
                                 <button
                                     onClick={() => removeBookmarkMutation.mutate(bookmark.id)}
-                                    className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur text-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-foreground"
+                                    className="absolute top-3 right-3 p-2 bg-navy/70 backdrop-blur text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white"
                                     title="Remove from saved"
                                 >
                                     <BookmarkIcon className="w-4 h-4 fill-current" />

@@ -62,7 +62,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
           href={KO_FI_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+          className="bg-accent text-navy font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
         >
           Support on Ko-fi
         </a>
@@ -117,7 +117,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
             <li key={sector.name} className="flex items-center justify-between">
               <span className="text-sm font-medium text-primary capitalize flex items-center gap-2">
                 {sector.name}
-                <Link to={`/sectors/${sector.id}/trends`} className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold hover:bg-accent hover:text-card transition-colors">
+                <Link to={`/sectors/${sector.id}/trends`} className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold hover:bg-accent hover:text-navy transition-colors">
                   View Trends
                 </Link>
               </span>
@@ -272,7 +272,7 @@ export const BetaMarketIntel = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+            className="inline-flex items-center gap-2 bg-accent text-navy font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
           >
             Buy me a coffee <ArrowRight size={14} />
           </a>
@@ -287,7 +287,7 @@ export const BetaMarketIntel = () => {
           </p>
           <Link
             to="/posts"
-            className="inline-flex items-center gap-2 bg-accent text-card font-semibold px-8 py-4 rounded-xl hover:brightness-110 transition-all hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 bg-accent text-navy font-semibold px-8 py-4 rounded-xl hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
             Browse all stories <ArrowRight size={15} />
           </Link>

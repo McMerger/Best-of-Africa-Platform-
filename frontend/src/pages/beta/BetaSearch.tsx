@@ -165,7 +165,7 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Quick Answer Card */}
                 {analystAnswer && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card text-foreground p-8 md:p-10 rounded-3xl mb-12 border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.1)] relative overflow-hidden">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card text-foreground p-8 md:p-10 rounded-3xl mb-12 border border-accent/20 shadow-[0_0_40px_rgba(201,168,76,0.1)] relative overflow-hidden">
                         <div className="absolute inset-0 bg-accent/5 pointer-events-none" />
                         <div className="flex items-center gap-4 mb-6 relative z-10">
                             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center border border-accent/30">
@@ -188,7 +188,7 @@ export const BetaSearch: React.FC = () => {
                                 onClick={() => setActiveFilter(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${
                                     activeFilter === tab.id
-                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(212,175,55,0.3)]'
+                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(201,168,76,0.3)]'
                                         : 'bg-card text-foreground/50 hover:text-foreground border border-foreground/5 hover:border-foreground/20'
                                 }`}
                             >
@@ -227,7 +227,7 @@ export const BetaSearch: React.FC = () => {
                                     >
                                         <Link
                                             to={`/posts/${slug}`}
-                                            className="group block bg-card rounded-3xl border border-foreground/10 p-8 hover:border-accent/40 hover:bg-foreground/5 transition-all shadow-xl hover:shadow-[0_0_30px_rgba(212,175,55,0.1)]"
+                                            className="group block bg-card rounded-3xl border border-foreground/10 p-8 hover:border-accent/40 hover:bg-foreground/5 transition-all shadow-xl hover:shadow-[0_0_30px_rgba(201,168,76,0.1)]"
                                         >
                                             <div className="flex items-start justify-between gap-6">
                                                 <div className="flex-1 min-w-0">

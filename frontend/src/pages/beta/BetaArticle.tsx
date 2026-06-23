@@ -460,7 +460,7 @@ export const BetaArticle = () => {
                   href={KO_FI_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block bg-accent text-card font-semibold font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-sm transition-transform hover:-translate-y-0.5"
+                  className="inline-block bg-accent text-navy font-semibold font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-sm transition-transform hover:-translate-y-0.5"
                 >
                   Buy me a coffee
                 </a>
@@ -478,7 +478,7 @@ export const BetaArticle = () => {
                 href={KO_FI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-accent text-card font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+                className="inline-block bg-accent text-navy font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
               >
                 Support on Ko-fi
               </a>

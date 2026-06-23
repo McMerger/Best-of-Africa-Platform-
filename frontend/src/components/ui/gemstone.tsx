@@ -21,7 +21,7 @@ const GEM_CONFIG = {
         label: '◆',
     },
     corporate: {
-        gradient: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 20%, #d1d5db 40%, #9ca3af 60%, #D4AF37 100%)',
+        gradient: 'linear-gradient(135deg, #ffffff 0%, #e5e7eb 20%, #d1d5db 40%, #9ca3af 60%, #C9A84C 100%)',
         glow: 'rgba(212, 175, 55, 0.3)',
         clipPath: 'polygon(50% 0%, 80% 10%, 100% 40%, 95% 70%, 70% 100%, 30% 100%, 5% 70%, 0% 40%, 20% 10%)', // Complex gem
         shadow: '0 8px 32px rgba(212, 175, 55, 0.25)',

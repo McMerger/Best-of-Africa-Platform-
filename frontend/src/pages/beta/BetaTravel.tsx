@@ -45,30 +45,29 @@ export const BetaTravel: React.FC = () => {
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
-                  <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-light z-20" />
-                  <img 
-                    src="/images/v2_travel_concrete_1780371206765.png" 
-                    alt="Luxury African Eco-Lodge" 
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+                  <img
+                    src="/images/v2_travel_concrete_1780371206765.png"
+                    alt="Luxury African Eco-Lodge"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
                   />
+                  <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
                 </motion.div>
 
-                <div className="max-w-5xl mx-auto w-full relative z-30 text-center">
+                <div className="max-w-5xl mx-auto w-full relative z-30 text-center text-white">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
                         <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
                             <PlaneIcon size={14} />
                             Business Travel Guide
                         </div>
-                        <h1 className="text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
+                        <h1 className="text-white text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Travel with <br className="hidden md:block"/><span className="text-accent italic">Confidence.</span>
                         </h1>
-                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">
+                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">
                             We've negotiated direct VIP partnerships with the continent's finest business hotels to ensure your stays are secure, productive, and exceptionally comfortable.
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center gap-4">
                             <Link to="/request-consultation">
-                                <Button className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-widest text-[11px] px-10 py-6 bg-accent text-card hover:brightness-110 shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all">
+                                <Button className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-widest text-[11px] px-10 py-6 bg-accent text-navy hover:brightness-110 shadow-[0_0_30px_rgba(201,168,76,0.3)] transition-all">
                                     Request Custom Itinerary
                                 </Button>
                             </Link>
@@ -155,7 +154,7 @@ export const BetaTravel: React.FC = () => {
                                         *Benefits applied automatically
                                     </span>
                                     <Link to="/request-consultation">
-                                        <Button className="w-full sm:w-auto rounded-xl gap-3 bg-background text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]">
+                                        <Button className="w-full sm:w-auto rounded-xl gap-3 bg-accent text-navy hover:bg-gold-italic px-8 py-6 font-bold uppercase tracking-widest text-[11px]">
                                             Book with VIP Benefits <ArrowRightIcon size={16} />
                                         </Button>
                                     </Link>

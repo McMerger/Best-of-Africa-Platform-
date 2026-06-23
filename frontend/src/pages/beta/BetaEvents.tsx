@@ -72,25 +72,24 @@ export const BetaEvents: React.FC = () => {
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
-                  <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-light z-20" />
-                  <img 
-                    src="/images/v2_events_concrete_1780371229306.png" 
-                    alt="African Executive Summit" 
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+                  <img
+                    src="/images/v2_events_concrete_1780371229306.png"
+                    alt="African Executive Summit"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
                   />
+                  <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
                 </motion.div>
 
-                <div className="max-w-6xl mx-auto w-full relative z-30">
+                <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
                         <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
                             <UsersIcon size={14} />
                             Private Network
                         </div>
-                        <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
+                        <h1 className="text-white text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Summits & <br className="hidden md:block"/>Executive Forums
                         </h1>
-                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
                             Connect with industry leaders, investors, and policymakers shaping the future of African markets at our curated events.
                         </p>
                     </motion.div>
@@ -164,7 +163,7 @@ export const BetaEvents: React.FC = () => {
                                         <Button 
                                             onClick={() => handleRegisterClick(event)}
                                             disabled={event.status !== 'Open' && event.status !== 'Upcoming'}
-                                            className="w-full sm:w-auto rounded-xl gap-3 bg-background text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
+                                            className="w-full sm:w-auto rounded-xl gap-3 bg-accent text-navy hover:bg-gold-italic px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
                                         >
                                             Register Interest <ArrowRightIcon size={16} />
                                         </Button>
@@ -196,7 +195,7 @@ export const BetaEvents: React.FC = () => {
                                 Our team will be in touch shortly with your confirmation and attendance details.
                             </p>
                             <Button 
-                                className="w-full rounded-xl px-8 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px]"
+                                className="w-full rounded-xl px-8 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px]"
                                 onClick={() => setIsDialogOpen(false)}
                             >
                                 Close
@@ -251,7 +250,7 @@ export const BetaEvents: React.FC = () => {
                             <DialogFooter className="pt-6">
                                 <Button 
                                     type="submit" 
-                                    className="w-full rounded-xl gap-3 px-8 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all"
+                                    className="w-full rounded-xl gap-3 px-8 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(201,168,76,0.2)] transition-all"
                                     disabled={registerMutation.isPending}
                                 >
                                     {registerMutation.isPending ? 'Submitting...' : 'Complete Registration'}

@@ -61,25 +61,24 @@ export const BetaConcierge: React.FC = () => {
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
-                  <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-light z-20" />
-                  <img 
-                    src="/images/v2_concierge_concrete_1780371218016.png" 
-                    alt="African Luxury Concierge Desk" 
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+                  <img
+                    src="/images/v2_concierge_concrete_1780371218016.png"
+                    alt="African Luxury Concierge Desk"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
                   />
+                  <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
                 </motion.div>
 
-                <div className="max-w-6xl mx-auto w-full relative z-30">
+                <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
                         <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
                             <BriefcaseIcon size={14} />
                             Private Client Services
                         </div>
-                        <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
+                        <h1 className="text-white text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Concierge & <br className="hidden md:block"/>Corporate Services
                         </h1>
-                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
                             We facilitate seamless market entry, executive travel, and complex site visits across the continent. Flawless execution.
                         </p>
                     </motion.div>
@@ -141,7 +140,7 @@ export const BetaConcierge: React.FC = () => {
                                     Our concierge team will review your requirements and reach out within 24 hours to begin orchestrating your engagement.
                                 </p>
                                 <Button 
-                                    className="rounded-xl px-10 py-6 bg-background text-primary hover:bg-accent font-bold uppercase tracking-widest text-[11px]"
+                                    className="rounded-xl px-10 py-6 bg-accent text-navy hover:bg-gold-italic font-bold uppercase tracking-widest text-[11px]"
                                     onClick={() => setIsSuccess(false)}
                                 >
                                     Submit Another Request
@@ -231,7 +230,7 @@ export const BetaConcierge: React.FC = () => {
                                     <div className="pt-6">
                                         <Button 
                                             type="submit" 
-                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all"
+                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(201,168,76,0.2)] transition-all"
                                             disabled={bookingMutation.isPending}
                                         >
                                             {bookingMutation.isPending ? 'Submitting...' : 'Submit Inquiry'} <ArrowRightIcon size={16} />

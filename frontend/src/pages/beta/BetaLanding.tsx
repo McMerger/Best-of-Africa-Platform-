@@ -217,7 +217,7 @@ export const BetaLanding = () => {
           >
             <MagneticButton>
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
-                <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)]">
+                <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
                   Become a Founding Member
                 </GoldButton>
               </a>
@@ -251,7 +251,7 @@ export const BetaLanding = () => {
                   whileInView={{ width: '38%' }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(212,175,55,0.5)]"
+                  className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(201,168,76,0.5)]"
                 >
                   <div className="absolute inset-0 bg-foreground/20 animate-pulse" />
                 </motion.div>
@@ -523,7 +523,7 @@ export const BetaLanding = () => {
            >
              <MagneticButton>
                <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
-                 <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)]">
+                 <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
                    Support on Ko-fi
                  </GoldButton>
                </a>

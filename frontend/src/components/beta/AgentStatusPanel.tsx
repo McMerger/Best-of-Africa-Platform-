@@ -219,7 +219,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
           <button
             onClick={save}
             disabled={loading}
-            className="flex-1 bg-accent text-card font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
+            className="flex-1 bg-accent text-navy font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
           >
             {loading ? 'Saving…' : 'Connect Provider'}
           </button>
