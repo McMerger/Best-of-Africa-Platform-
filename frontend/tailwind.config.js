@@ -73,7 +73,6 @@ export default {
                     italic: '#B8942A',  /* gold italic type ("Properly.") + hover */
                     deep: '#9E7B1F',    /* active state */
                     light: '#E5D5A3',   /* disabled */
-                    glow: '#F5EDD0',    /* pale gold icon-circle bg */
                 },
                 page: '#F5F7FA',        /* main content section bg */
                 surface: '#EFF2F6',     /* alternate light section bg */

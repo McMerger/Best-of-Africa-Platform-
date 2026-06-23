@@ -28,7 +28,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
         
         <div className="relative z-30 max-w-lg bg-card p-12 rounded-3xl border border-foreground/10 shadow-2xl backdrop-blur-xl">
-          <div className="w-20 h-20 bg-gold-glow rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/40">
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/40">
             <Globe className="w-10 h-10 text-accent" />
           </div>
           <h1 className="font-serif text-[2.5rem] text-foreground mb-6 leading-none">Continental Dashboard</h1>
