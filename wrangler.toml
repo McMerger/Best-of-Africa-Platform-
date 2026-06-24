@@ -3,6 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Cloudflare Email Sending — native transactional email binding (env.EMAIL).
+# Requires onboarding the FROM domain once: `wrangler email sending enable <domain>`.
+send_email = [
+  { name = "EMAIL" }
+]
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # D1 DATABASE - Articles, Users, Countries, Analytics
 # ═══════════════════════════════════════════════════════════════════════════════

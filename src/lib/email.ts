@@ -9,9 +9,30 @@ export interface EmailParams {
 
 // Only the email-relevant env fields are needed here.
 export interface EmailEnv {
+    // Cloudflare Email Sending binding (preferred). Requires the FROM domain to be
+    // onboarded via `wrangler email sending enable <domain>`.
+    EMAIL?: {
+        send: (message: {
+            to: string;
+            from: { email: string; name?: string };
+            subject: string;
+            html: string;
+            text?: string;
+        }) => Promise<unknown>;
+    };
     RESEND_API_KEY?: string;
     EMAIL_FROM?: string;       // e.g. "members@yourdomain.com" (must be on a verified domain)
     EMAIL_FROM_NAME?: string;  // e.g. "BOA-Story"
+}
+
+// Minimal HTML → plain-text for the email text/plain part (improves deliverability).
+function htmlToText(html: string): string {
+    return html
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 /**
@@ -32,7 +53,24 @@ export async function sendEmail(
     const from = fromEmail || env?.EMAIL_FROM || 'members@bestofafrica.com';
     const fromDisplay = fromName || env?.EMAIL_FROM_NAME || 'BOA-Story';
 
-    // 1. Resend (preferred)
+    // 1. Cloudflare Email Sending (preferred — native binding, no API key)
+    if (env?.EMAIL?.send) {
+        try {
+            await env.EMAIL.send({
+                to,
+                from: { email: from, name: fromDisplay },
+                subject,
+                html,
+                text: htmlToText(html),
+            });
+            return true;
+        } catch (err) {
+            console.error('[Cloudflare Email Sending Error]', err);
+            // fall through to other providers
+        }
+    }
+
+    // 2. Resend
     if (env?.RESEND_API_KEY) {
         try {
             const res = await fetch('https://api.resend.com/emails', {
@@ -56,7 +94,7 @@ export async function sendEmail(
         }
     }
 
-    // 2. MailChannels (legacy fallback)
+    // 3. MailChannels (legacy fallback)
     try {
         const payload = {
             personalizations: [{ to: [{ email: to, name: toName || to }] }],
