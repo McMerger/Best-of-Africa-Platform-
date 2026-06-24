@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
 
 export const BetaIntelligence = () => {
@@ -32,10 +32,6 @@ export const BetaIntelligence = () => {
     staleTime: 5 * 60 * 1000,
     enabled: isMember,
   });
-
-  if (!isMember) {
-    return <Navigate to="/posts" replace />;
-  }
 
   const isLoading = isLoadingOpp || isLoadingSent || isLoadingAnalytics;
 
@@ -87,8 +83,9 @@ export const BetaIntelligence = () => {
         </div>
       </div>
 
+      {isMember ? (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 space-y-20">
-        
+
         {/* Platform Analytics Summary */}
         <section>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -292,6 +289,33 @@ export const BetaIntelligence = () => {
 
         </div>
       </div>
+      ) : (
+        <div className="max-w-2xl mx-auto px-6 py-20 md:py-28">
+          <div className="rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-12 text-center">
+            <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
+              <ShieldAlert size={14} /> Members only
+            </span>
+            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4">
+              Market Intelligence is a member feature
+            </h2>
+            <p className="text-white/70 mb-8 max-w-md mx-auto leading-relaxed">
+              Strategic opportunities, sentiment divergence, and the live continental
+              sentiment map are part of BOA-Story membership.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/membership" className="bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all">
+                Become a member
+              </Link>
+              <Link to="/login" className="border border-accent/40 text-white font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-accent/10 transition-all">
+                Sign in
+              </Link>
+            </div>
+            <Link to="/posts" className="block mt-6 text-white/60 text-sm hover:text-accent transition-colors">
+              Or browse free stories →
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
