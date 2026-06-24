@@ -9,6 +9,7 @@ import { GoldButton,
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { SafeImage } from '../../components/SafeImage';
+import { WorldCupFeature } from '../../components/beta/WorldCupFeature';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
@@ -222,6 +223,9 @@ export const BetaLanding = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* TEMPORARY: World Cup feature band (config/worldCup.ts) */}
+      <WorldCupFeature />
 
       {/* 2. KO-FI FUNDING STATUS */}
       <section className="bg-background/95 py-24 border-b border-foreground/5 relative z-20 overflow-hidden">
