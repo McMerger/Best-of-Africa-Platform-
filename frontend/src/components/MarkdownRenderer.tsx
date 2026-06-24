@@ -38,7 +38,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
             .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>')
 
             // 5. Italic (Single Asterisk)
-            .replace(/\*(.*?)\*/g, '<em class="italic text-muted-foreground">$1</em>')
+            .replace(/\*(.*?)\*/g, '<em class="italic text-foreground">$1</em>')
 
             // 6. Lists (Unordered)
             .replace(/^\s*-\s+(.*$)/gm, '<li class="ml-4 list-disc pl-1 mb-1">$1</li>')

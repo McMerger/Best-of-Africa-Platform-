@@ -378,7 +378,7 @@ export const BetaArticle = () => {
           )}
 
           {/* Byline row */}
-          <div className="flex items-center justify-between text-sm font-medium text-primary/60 border-y border-primary/10 py-4 gap-4">
+          <div className="flex items-center justify-between text-sm font-medium text-primary/75 border-y border-primary/10 py-4 gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-wrap">
               <span className="uppercase tracking-wider text-xs whitespace-nowrap">By {authorName}</span>
               <span className="text-primary/20">·</span>
@@ -386,7 +386,7 @@ export const BetaArticle = () => {
               {article.published_at && (
                 <>
                   <span className="text-primary/20">·</span>
-                  <time dateTime={article.published_at} className="whitespace-nowrap text-primary/40">
+                  <time dateTime={article.published_at} className="whitespace-nowrap text-ink-blue">
                     {new Date(article.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </time>
                 </>
