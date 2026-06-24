@@ -14,7 +14,7 @@ export const WorldCupBanner = () => {
   const [dismissed, setDismissed] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem(DISMISS_KEY) === '1'
   );
-  const teams = useWorldCupTeams();
+  const { teams } = useWorldCupTeams();
 
   if (!WORLD_CUP.enabled || teams.length === 0 || dismissed) return null;
 

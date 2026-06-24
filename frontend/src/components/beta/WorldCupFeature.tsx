@@ -8,8 +8,18 @@ import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
  * On-brand (navy + gold), CSS-light (no heavy animation — respects reduced-motion
  * via the global media query). Gated by WORLD_CUP.enabled (config/worldCup.ts).
  */
+const relativeTime = (iso: string): string => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.round(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+};
+
 export const WorldCupFeature = () => {
-  const teams = useWorldCupTeams();
+  const { teams, updatedAt } = useWorldCupTeams();
   if (!WORLD_CUP.enabled || teams.length === 0) return null;
 
   return (
@@ -55,6 +65,12 @@ export const WorldCupFeature = () => {
         >
           Follow the coverage →
         </Link>
+
+        {updatedAt && (
+          <p className="mt-6 text-[11px] uppercase tracking-widest text-white/40">
+            Teams updated {relativeTime(updatedAt)}
+          </p>
+        )}
       </div>
     </section>
   );

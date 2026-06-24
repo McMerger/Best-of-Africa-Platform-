@@ -7,7 +7,7 @@ import { WORLD_CUP, type WorldCupTeam } from '../config/worldCup';
  * backend (which refreshes from a live sports feed). Falls back to the curated
  * list in config/worldCup.ts if the request fails, so the UI never breaks.
  */
-export function useWorldCupTeams(): WorldCupTeam[] {
+export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null } {
   const { data } = useQuery({
     queryKey: ['world-cup-teams'],
     queryFn: api.getWorldCupTeams,
@@ -16,5 +16,6 @@ export function useWorldCupTeams(): WorldCupTeam[] {
   });
 
   const live = data?.teams;
-  return live && live.length > 0 ? live : WORLD_CUP.teams;
+  if (live && live.length > 0) return { teams: live, updatedAt: data?.updated_at ?? null };
+  return { teams: WORLD_CUP.teams, updatedAt: null };
 }
