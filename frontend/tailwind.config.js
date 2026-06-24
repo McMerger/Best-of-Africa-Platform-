@@ -74,8 +74,8 @@ export default {
                     deep: '#9E7B1F',    /* active state */
                     light: '#E5D5A3',   /* disabled */
                 },
-                page: '#F5F7FA',        /* main content section bg */
-                surface: '#EFF2F6',     /* alternate light section bg */
+                page: '#FFFFFF',        /* main content section bg — pure white */
+                surface: '#FFFFFF',     /* alternate light section bg — pure white */
                 ink: {
                     DEFAULT: '#0F1F3D', /* text-primary */
                     soft: '#374151',    /* legal body copy */

@@ -3,8 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 
@@ -125,65 +123,34 @@ const ArticleSkeleton = () => (
 );
 
 // ─── Markdown prose component with the BoA design system applied ──────────────
+// Lightweight markdown → styled HTML (replaces react-markdown + remark-gfm, which
+// were the article page's heaviest bundle and tanked LCP). Raw < > are encoded
+// first, so only the known tags we inject below are emitted (XSS-safe for our
+// AI-generated content).
+function renderArticleHtml(md: string): string {
+  if (!md) return '';
+  let s = md.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  s = s.replace(/^###\s+(.*)$/gm, '<h3 class="font-serif text-[1.75rem] md:text-[2.25rem] text-foreground/90 mt-12 mb-6 leading-snug">$1</h3>');
+  s = s.replace(/^##\s+(.*)$/gm, '<h2 class="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">$1</h2>');
+  s = s.replace(/^#\s+(.*)$/gm, '<h2 class="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">$1</h2>');
+  s = s.replace(/^---$/gm, '<hr class="my-10 border-primary/10"/>');
+  s = s.replace(/^>\s+(.*)$/gm, '<blockquote class="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/60 font-serif italic text-[1.5rem] leading-[1.6]">$1</blockquote>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-accent font-semibold">$1</strong>');
+  s = s.replace(/\*(.+?)\*/g, '<em class="italic text-foreground">$1</em>');
+  s = s.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-accent underline hover:text-gold-italic" target="_blank" rel="noopener noreferrer">$1</a>');
+  s = s.replace(/^\s*[-*]\s+(.*)$/gm, '<li class="text-foreground/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3"><span class="text-accent mt-1 shrink-0">→</span><span>$1</span></li>');
+  s = s.split(/\n\n+/).map(b => {
+    const t = b.trim();
+    if (!t) return '';
+    if (/^<(h\d|li|blockquote|hr|ul)/.test(t)) return t;
+    return '<p class="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">' + t.replace(/\n/g, '<br/>') + '</p>';
+  }).join('\n');
+  s = s.replace(/((?:<li[\s\S]*?<\/li>\s*)+)/g, '<ul class="my-6 space-y-2 list-none">$1</ul>');
+  return s;
+}
+
 function ArticleMarkdown({ content }: { content: string }) {
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        h2: ({ children }) => (
-          <h2 className="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">{children}</h2>
-        ),
-        h3: ({ children }) => (
-          <h3 className="font-serif text-[1.75rem] md:text-[2.25rem] text-foreground/90 mt-12 mb-6 leading-snug">{children}</h3>
-        ),
-        p: ({ children }) => (
-          <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">{children}</p>
-        ),
-        strong: ({ children }) => (
-          <strong className="text-accent font-semibold">{children}</strong>
-        ),
-        em: ({ children }) => (
-          <em className="italic text-primary/70">{children}</em>
-        ),
-        ul: ({ children }) => (
-          <ul className="my-4 space-y-2 ml-4">{children}</ul>
-        ),
-        ol: ({ children }) => (
-          <ol className="my-4 space-y-2 ml-4 list-decimal">{children}</ol>
-        ),
-        li: ({ children, node }) => {
-          // react-markdown passes `node` which has parent information
-          // Check if the parent is an 'ol' (ordered list)
-          // @ts-expect-error node type varies by remark version but usually has parent or is nested inside an ol
-          const isOrdered = node?.parent?.tagName === 'ol' || node?.parent?.type === 'list' && node?.parent?.ordered;
-          
-          if (isOrdered) {
-            return (
-              <li className="text-primary/80 text-[16px] leading-relaxed list-decimal ml-5">
-                {children}
-              </li>
-            );
-          }
-          return (
-            <li className="text-foreground/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3">
-              <span className="text-accent mt-1 shrink-0">→</span>
-              <span>{children}</span>
-            </li>
-          );
-        },
-        blockquote: ({ children }) => (
-          <blockquote className="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/60 font-serif italic text-[1.5rem] leading-[1.6]">
-            {children}
-          </blockquote>
-        ),
-        code: ({ children }) => (
-          <code className="bg-foreground/5 text-accent text-sm px-2 py-1 rounded font-mono">{children}</code>
-        ),
-        hr: () => <hr className="my-10 border-primary/10" /> }}
-    >
-      {content}
-    </ReactMarkdown>
-  );
+  return <div dangerouslySetInnerHTML={{ __html: renderArticleHtml(content) }} />;
 }
 
 export const BetaArticle = () => {
@@ -436,55 +403,74 @@ export const BetaArticle = () => {
             <ArticleMarkdown content={activeContent} />
           </div>
 
-          {/* Paywall */}
+          {/* Paywall — premium, value-forward membership prompt */}
           {isPaywalled && (
             <div className="relative mt-2">
-              {/* Visual hint that more content follows — server already stripped the real text */}
-              <div className="opacity-10 select-none pointer-events-none blur-sm" aria-hidden="true">
-                <p className="text-primary/60 leading-relaxed mb-4">
-                  Unlock full access to continue reading exclusive narratives and insights on the continent…
+              {/* Faded teaser so the story visibly continues beneath the prompt */}
+              <div className="opacity-30 select-none pointer-events-none blur-[5px]" aria-hidden="true">
+                <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-6 font-light">
+                  The story goes deeper here — the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.
                 </p>
-                <p className="text-primary/40 leading-relaxed">
-                  Our reporting goes deeper into the data, interviews, and on-the-ground context that matters.
+                <p className="text-foreground/70 text-[1.125rem] leading-[1.8] mb-6 font-light">
+                  It continues with the interviews and detail that make this more than a summary, and there is much more still to read below.
+                </p>
+                <p className="text-foreground/60 text-[1.125rem] leading-[1.8] font-light">
+                  Become a founding member to keep reading every story in full.
                 </p>
               </div>
 
-              {/* Lock overlay */}
-              <div className="absolute inset-x-0 top-0 h-full flex flex-col items-center justify-center bg-gradient-to-b from-background/0 via-background/90 to-background pt-8 pb-16 px-6 text-center">
-                <div className="bg-background p-4 rounded-full border border-primary/10 shadow-sm mb-6">
-                  <span className="text-3xl">☕</span>
+              {/* Gradient fade into the membership card */}
+              <div className="absolute inset-x-0 -top-16 bottom-0 flex flex-col items-center justify-end bg-gradient-to-b from-transparent via-white/85 to-white px-4 pb-4">
+                <div className="w-full max-w-lg rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-8 md:p-10 text-center">
+                  <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Members only
+                  </span>
+                  <h3 className="font-serif text-white text-[1.75rem] md:text-[2.125rem] leading-tight mb-3">
+                    Keep reading the full story
+                  </h3>
+                  <p className="text-white/70 mb-7 max-w-sm mx-auto leading-relaxed">
+                    Back independent African journalism and unlock every story in full — from the people who make it possible.
+                  </p>
+                  <ul className="text-left space-y-2.5 mb-8 max-w-xs mx-auto text-[15px] text-white/85">
+                    {['Full access to every story & report', 'Vote on the next story topic', 'Behind-the-scenes founder updates'].map(b => (
+                      <li key={b} className="flex items-start gap-3">
+                        <span className="text-accent mt-0.5 shrink-0">✓</span>{b}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href={KO_FI_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(201,168,76,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
+                  >
+                    Become a Founding Member
+                  </a>
+                  <Link to="/membership" className="block mt-4 text-white/70 text-sm hover:text-accent transition-colors">
+                    See membership options →
+                  </Link>
+                  <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">Cancel anytime · Secure checkout</p>
                 </div>
-                <h3 className="font-serif text-[28px] text-primary mb-3">
-                  Fund the rest of the story
-                </h3>
-                <p className="text-primary/70 mb-8 max-w-md">
-                  BOA-Story is a self-funded, independent project built to correct the narrative. Support me on Ko-fi to unlock full access to all stories and keep this platform alive.
-                </p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-accent text-navy font-semibold font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-sm transition-transform hover:-translate-y-0.5"
-                >
-                  Buy me a coffee
-                </a>
               </div>
             </div>
           )}
 
-          {/* Short article — soft support nudge after reading (only for non-members) */}
+          {/* Post-read nudge for non-members — a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
-            <div className="mt-12 p-8 bg-background border border-primary/10 rounded-xl text-center">
-              <span className="text-3xl mb-4 block">☕</span>
-              <p className="text-primary/80 mb-2 font-serif text-xl">Enjoyed this story?</p>
-              <p className="text-primary/60 text-sm mb-6 max-w-sm mx-auto">This project is completely independent. If you want to see more narrative-correcting stories, consider buying me a coffee.</p>
+            <div className="mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
+              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">— Independent journalism</span>
+              <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">Enjoyed this story?</p>
+              <p className="text-white/70 text-[15px] mb-7 max-w-md mx-auto leading-relaxed">
+                BOA-Story is reader-funded and independent. Founding members keep these stories coming — and help decide what we cover next.
+              </p>
               <a
                 href={KO_FI_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-accent text-navy font-medium font-sans px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
+                className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all hover:-translate-y-0.5"
               >
-                Support on Ko-fi
+                Become a Founding Member
               </a>
             </div>
           )}

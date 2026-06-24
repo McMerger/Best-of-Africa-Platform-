@@ -6,7 +6,7 @@
   /* ── Combined light-first navy system (Combination of both.md §1) ──
      Page bg is light grey; cards/navbar are pure white; navy is reserved
      for hero bands, footer, login, admin via the explicit `navy*` colours. */
-  --background: 210 25% 97%;   /* #F5F7FA page bg */
+  --background: 0 0% 100%;     /* pure white page bg */
   --foreground: 219 60% 15%;   /* #0F1F3D navy text-primary */
 
   --primary: 219 60% 15%;      /* #0F1F3D navy — high-contrast elements */

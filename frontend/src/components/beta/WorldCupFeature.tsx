@@ -42,20 +42,23 @@ export const WorldCupFeature = () => {
           We're following every African story at the tournament — the cities, the fans, and the everyday energy beyond the scoreline.
         </p>
 
-        {/* Flags of the nations still flying the flag */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 mb-10">
+        {/* The African nations competing — bold, country-forward cards */}
+        <p className="text-accent/90 text-[11px] font-bold uppercase tracking-[0.2em] mb-5">
+          {teams.length} African nation{teams.length !== 1 ? 's' : ''} flying the flag
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-10 max-w-3xl mx-auto">
           {teams.map((t, i) => (
-            <motion.span
+            <motion.div
               key={t.code}
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.92 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: Math.min(i * 0.05, 0.4), duration: 0.4 }}
-              className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-white/5 px-4 py-2 text-sm font-medium hover:border-accent/80 hover:bg-white/10 transition-colors"
+              transition={{ delay: Math.min(i * 0.04, 0.4), duration: 0.35 }}
+              className="flex flex-col items-center gap-2 rounded-2xl border border-accent/30 bg-white/[0.06] px-3 py-5 hover:border-accent hover:bg-white/[0.12] hover:-translate-y-1 transition-all"
             >
-              <span className="text-lg leading-none" aria-hidden="true">{t.flag}</span>
-              {t.name}
-            </motion.span>
+              <span className="text-4xl md:text-5xl leading-none drop-shadow-lg" aria-hidden="true">{t.flag}</span>
+              <span className="text-[12px] font-semibold text-white/90 text-center leading-tight">{t.name}</span>
+            </motion.div>
           ))}
         </div>
 

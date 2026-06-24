@@ -285,7 +285,7 @@ export const BetaStories = () => {
             onChange={e => setSearchInput(e.target.value)}
             placeholder="Search stories, countries, sectors…"
             aria-label="Search stories"
-            className="w-full md:max-w-lg bg-[#F9FAFB] border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+            className="w-full md:max-w-lg bg-white border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
           />
           {searchInput && (
             <button
@@ -387,14 +387,15 @@ export const BetaStories = () => {
                           5 min read
                         </div>
                       </div>
-                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl border border-primary/8">
-                        <div className="absolute inset-0 backdrop-blur-[5px] bg-background/65 transition-opacity duration-300" />
+                      <div className="absolute inset-0 z-20 overflow-hidden rounded-xl">
+                        <div className="absolute inset-0 backdrop-blur-[5px] bg-gradient-to-t from-navy via-navy/90 to-navy/75 transition-opacity duration-300" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
-                          <div className="bg-background p-4 rounded-full border border-accent/30 shadow-2xl mb-4 group-hover:scale-110 group-hover:bg-accent/10 transition-all duration-300">
-                            <Lock className="w-6 h-6 text-accent" />
+                          <div className="bg-navy-card p-3.5 rounded-full border border-accent/40 mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <Lock className="w-5 h-5 text-accent" />
                           </div>
-                          <span className="font-serif text-lg text-foreground font-medium mb-1">Founding Members Only</span>
-                          <span className="text-xs text-accent uppercase tracking-widest font-semibold group-hover:underline">Unlock access →</span>
+                          <span className="font-serif text-lg text-white mb-1.5">A members' story</span>
+                          <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">Join founding members to read this — and every story — in full.</span>
+                          <span className="inline-block bg-accent text-navy text-[11px] font-bold uppercase tracking-[0.1em] px-5 py-2 rounded-full group-hover:bg-gold-italic transition-colors">Unlock access</span>
                         </div>
                       </div>
                       </Link>
