@@ -114,7 +114,7 @@ export const LoginPage: React.FC = () => {
                             {step === 'SUCCESS' ? (
                                 <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">
                                     <div className="mb-2 text-base font-bold tracking-widest text-accent">LOGIN SUCCESSFUL</div>
-                                    <p className="mb-8 text-sm text-muted-foreground">Redirecting to Intelligence Feed...</p>
+                                    <p className="mb-8 text-sm text-white/60">Redirecting to Intelligence Feed...</p>
                                     <UpdateIcon className="mx-auto h-10 w-10 animate-spin text-accent" />
                                 </div>
                             ) : step === 'EMAIL' ? (
@@ -229,7 +229,7 @@ export const LoginPage: React.FC = () => {
 
                     {/* System Footer */}
                     <div className="absolute -bottom-20 left-0 right-0 text-center opacity-50">
-                        <div className="font-mono text-[10px] text-muted-foreground">SECURE CONNECTION: TLS 1.3 / OTP AUTH</div>
+                        <div className="font-mono text-[10px] text-white/70">SECURE CONNECTION: TLS 1.3 / OTP AUTH</div>
                     </div>
 
                 </div>
