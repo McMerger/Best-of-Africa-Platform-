@@ -15,6 +15,33 @@ interface RSSItem {
     pubDate: string;
 }
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Africa relevance gate — only ingest stories clearly about Africa.
+// Discovery (Google News) and broad feeds occasionally surface non-African items
+// (e.g. Ukraine/Crimea, Cyprus); requiring an explicit African keyword filters them
+// out before they ever reach generation, and is why such items had a null country.
+// ───────────────────────────────────────────────────────────────────────────────
+const AFRICA_KEYWORDS = [
+    'africa', 'african', 'sub-saharan', 'afrique', 'afrika',
+    'algeria', 'egypt', 'libya', 'morocco', 'tunisia', 'mauritania', 'western sahara',
+    'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
+    'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
+    'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
+    'benin', 'burkina faso', 'cape verde', 'cabo verde', "cote d'ivoire", 'ivory coast',
+    'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
+    'senegal', 'sierra leone', 'togo',
+    'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
+    'democratic republic of congo', 'equatorial guinea', 'gabon', 'sao tome',
+    'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
+    'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
+    'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar',
+];
+
+function isAfricanContent(title: string, content = ''): boolean {
+    const text = `${title} ${content}`.toLowerCase();
+    return AFRICA_KEYWORDS.some(kw => text.includes(kw));
+}
+
 async function parseRSS(url: string): Promise<RSSItem[]> {
     try {
         const response = await fetch(url, {
@@ -233,32 +260,9 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
                         if (existing) continue;
 
-                        // COMPREHENSIVE AFRICA KEYWORDS - All 54 Countries + Key Terms
-                        const africaKeywords = [
-                            // Pan-African Terms
-                            'africa', 'african', 'sub-saharan', 'afrique', 'afrika',
-                            // Northern Africa
-                            'algeria', 'egypt', 'libya', 'morocco', 'tunisia', 'mauritania', 'western sahara',
-                            // Eastern Africa
-                            'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
-                            'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
-                            'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
-                            // Western Africa
-                            'benin', 'burkina faso', 'cape verde', 'cabo verde', 'cote d\'ivoire', 'ivory coast',
-                            'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
-                            'senegal', 'sierra leone', 'togo',
-                            // Central Africa
-                            'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
-                            'democratic republic of congo', 'equatorial guinea', 'gabon', 'sao tome',
-                            // Southern Africa
-                            'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
-                            // Major Cities (high signal)
-                            'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
-                            'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar'
-                        ];
-                        const isAfrican = africaKeywords.some(kw => item.title.toLowerCase().includes(kw) || item.content.toLowerCase().includes(kw));
-
-                        if (!isAfrican && !s.country_code) continue;
+                        // Strict Africa relevance gate (applies even to country-coded
+                        // sources — a regional outlet can still run off-topic wire stories).
+                        if (!isAfricanContent(item.title, item.content)) continue;
 
                         processed++;
                         itemBudget--;
@@ -340,6 +344,8 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
 
                     for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
                         if (itemBudget <= 0) break;
+                        // Discovery results can drift off-topic — enforce the same Africa gate.
+                        if (!isAfricanContent(item.title, item.description || '')) continue;
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ?`).bind(item.link).first();
                         if (existing) continue;
 
