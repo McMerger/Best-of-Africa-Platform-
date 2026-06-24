@@ -49,6 +49,11 @@ export interface Article {
     published_at: string;
     is_sponsored: boolean;
     // Optional fields populated by the API depending on context / member status
+    // The single-article endpoint JOINs country + sector and merges these in.
+    country_name?: string;
+    flag_emoji?: string;
+    sector_name?: string;
+    sector_icon?: string;
     author_name?: string;
     paywall?: boolean;
     meta_title?: string;

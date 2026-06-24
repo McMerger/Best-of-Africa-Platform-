@@ -210,9 +210,12 @@ export const BetaArticle = () => {
   }
 
   const { article, country } = data;
-  const flag = country?.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
-  const categoryLabel = article.tags?.[0] || '';
-  const countryLabel = country?.name || article.country_code;
+  const flag = country?.flag_emoji || article.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
+  // Category = the sector ("Energy & Mining"), NOT tags[0] which is the country name.
+  const countryLabel = country?.name || article.country_name || article.country_code;
+  const categoryLabel = article.sector_name
+    || (article.tags || []).find(t => t.toLowerCase() !== countryLabel.toLowerCase())
+    || '';
   const authorName = article.author_name || 'Mailles Cortes';
 
   // ── Paywall: trust the API's server-side decision ─────────────────────────
@@ -495,7 +498,12 @@ export const BetaArticle = () => {
                     className="group bg-background rounded-xl overflow-hidden border border-primary/10 hover:border-accent/40 transition-colors"
                   >
                     <div className="p-6">
-                      <span className="text-2xl mb-4 block">{a.country_flag || FLAG_MAP[a.country_code] || '🌍'}</span>
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-2xl">{a.country_flag || FLAG_MAP[a.country_code] || '🌍'}</span>
+                        {a.sector_name && (
+                          <span className="text-[11px] font-semibold tracking-widest text-accent uppercase">{a.sector_name}</span>
+                        )}
+                      </div>
                       <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{a.title}</h4>
                       <p className="text-sm text-primary/50">{a.reading_time_minutes} min read</p>
                     </div>

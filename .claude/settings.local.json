@@ -52,7 +52,13 @@
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/world-cup/teams)",
       "Bash(curl -s \"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4429\")",
       "Bash(curl -s \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026\")",
-      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=12)"
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=12)",
+      "Bash(curl -s \"https://api.best-of-africa.workers.dev/api/v1/articles?limit=3\")",
+      "Bash(curl -s \"https://best-of-africa.pages.dev/api/v1/articles?limit=3\")",
+      "Bash(curl -s __TRACKED_VAR__/articles?limit=4)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(a.get\\('title'\\),'|',a.get\\('country_code'\\),'|',a.get\\('reading_time_minutes'\\),'min |',a.get\\('tags'\\),'| hero:',bool\\(a.get\\('hero_image_url'\\)\\),'| sum_len:',len\\(a.get\\('summary'\\) or ''\\)\\) for a in d.get\\('data',[]\\)]\")",
+      "Bash(python -c ' *)",
+      "Bash(curl -s __TRACKED_VAR__/articles?limit=40)"
     ]
   }
 }
