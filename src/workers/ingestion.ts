@@ -43,6 +43,10 @@ const AFRICA_KEYWORDS = [
     'windhoek', 'kumasi', 'zanzibar', 'arusha', 'dodoma', 'freetown', 'monrovia', 'bamako',
     'maghreb', 'sahel', 'horn of africa', 'east africa', 'west africa', 'southern africa',
     'north africa', 'central africa', 'east african', 'west african',
+    // African subnational regions/provinces & more cities (further reduce false-negatives)
+    'tshwane', 'niassa', 'kwazulu', 'mpumalanga', 'western cape', 'eastern cape', 'free state',
+    'oromia', 'tigray', 'amhara', 'zanzibar', 'kaduna', 'enugu', 'ogun', 'rivers state',
+    'lubumbashi', 'kisangani', 'mwanza', 'oran', 'sfax', 'kumasi', 'mombasa', 'nampula',
 ];
 
 function isAfricanContent(title: string, content = ''): boolean {
