@@ -104,7 +104,7 @@ export async function generateArticleFromQueue(
         }
 
         const articleId = crypto.randomUUID();
-        const readingTime = Math.ceil(generated.content.split(/\\s+/).length / 200);
+        const readingTime = Math.max(1, Math.ceil(generated.content.split(/\s+/).length / 200));
         const slug = generateSlug(generated.title);
 
         await env.DB.prepare(`
@@ -143,13 +143,13 @@ export async function generateArticleFromQueue(
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
         try {
-            const imagePrompt = `African editorial photography: \${generated.title}. Photojournalistic, high quality.`;
+            const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (imageBuffer) {
-                const imageKey = `articles/\${articleId}/hero.png`;
+                const imageKey = `articles/${articleId}/hero.png`;
                 const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
                 if (imageUrl) {
-                    await env.DB.prepare('UPDATE articles SET ai_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();
+                    await env.DB.prepare('UPDATE articles SET hero_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();
                 }
             }
         } catch (err) { console.error('Image gen failed:', err); }
@@ -293,7 +293,7 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
                     if (imageUrl) {
                         await env.DB.prepare(
-                            'UPDATE articles SET ai_image_url = ? WHERE id = ?'
+                            'UPDATE articles SET hero_image_url = ? WHERE id = ?'
                         ).bind(imageUrl, articleId).run();
                     }
                 } else {

@@ -500,7 +500,9 @@ Requirements:
 - Do NOT frame this as an investment pitch or tourism guide.
 - Do NOT use hedging language: no "might", "could", "potentially", "may".
 - Do NOT use corporate, NGO, or financial intelligence jargon.
-- Honest, grounded tone. 400-600 words.
+- Honest, grounded tone. Aim for 700-1000 words organised under 3-5 descriptive
+  subheadings (### in markdown) — enough depth to genuinely inform the reader,
+  with concrete detail and context, not a brief.
 
 CRITICAL FORMATTING RULE: Do NOT use markdown bolding (**), italics, or quotes in the TITLE, SUBTITLE, SUMMARY, or TAGS fields. Plain text only for those fields.
 

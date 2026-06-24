@@ -47,7 +47,8 @@
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles/lagos-storage-revolution-how-ai-is-changing-the-game-8k9j)",
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=15)",
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=50)",
-      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=200)"
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=200)",
+      "Bash(grep -nE '\\\\\\\\\\\\\\\\s\\\\+|\\\\\\\\\\\\$\\\\{|ai_image_url' src/workers/generator.ts)"
     ]
   }
 }
