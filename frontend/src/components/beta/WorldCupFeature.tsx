@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { WORLD_CUP } from '@/config/worldCup';
+import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
 
 /**
  * TEMPORARY landing feature band celebrating African nations at the World Cup.
@@ -8,7 +9,8 @@ import { WORLD_CUP } from '@/config/worldCup';
  * via the global media query). Gated by WORLD_CUP.enabled (config/worldCup.ts).
  */
 export const WorldCupFeature = () => {
-  if (!WORLD_CUP.enabled || WORLD_CUP.teams.length === 0) return null;
+  const teams = useWorldCupTeams();
+  if (!WORLD_CUP.enabled || teams.length === 0) return null;
 
   return (
     <section className="relative overflow-hidden bg-navy text-white border-y border-accent/30 py-20 md:py-24 px-6">
@@ -32,7 +34,7 @@ export const WorldCupFeature = () => {
 
         {/* Flags of the nations still flying the flag */}
         <div className="flex flex-wrap items-center justify-center gap-2.5 mb-10">
-          {WORLD_CUP.teams.map((t, i) => (
+          {teams.map((t, i) => (
             <motion.span
               key={t.code}
               initial={{ opacity: 0, y: 8 }}

@@ -18,6 +18,8 @@ import {
     bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
     newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter, geminiOAuthRouter
 } from './routes';
+import worldCupRouter from './routes/worldcup';
+import { refreshWorldCupTeams } from './lib/worldcup';
 import { LiveCounter } from './durable-objects/live-counter';
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -199,6 +201,7 @@ api.route('/agent/gemini/oauth', geminiOAuthRouter);
 api.route('/members', membersRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
+api.route('/world-cup', worldCupRouter);
 api.route('/', systemRouter);
 api.route('/docs', openapiRouter);
 
@@ -279,6 +282,11 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));
         await safe('stale-task-recovery', () => runStaleTaskRecovery(env));
+    }
+
+    // World Cup: refresh African teams still in the tournament every 30 minutes.
+    if (minutes % 30 === 0) {
+        await safe('world-cup-refresh', () => refreshWorldCupTeams(env));
     }
 
     // 3. Reporting: Daily at 5am UTC

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { WORLD_CUP } from '@/config/worldCup';
+import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
 
 const DISMISS_KEY = 'boa_wc_banner_dismissed_2026';
 
@@ -13,8 +14,9 @@ export const WorldCupBanner = () => {
   const [dismissed, setDismissed] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem(DISMISS_KEY) === '1'
   );
+  const teams = useWorldCupTeams();
 
-  if (!WORLD_CUP.enabled || WORLD_CUP.teams.length === 0 || dismissed) return null;
+  if (!WORLD_CUP.enabled || teams.length === 0 || dismissed) return null;
 
   const dismiss = () => {
     try { localStorage.setItem(DISMISS_KEY, '1'); } catch { /* ignore */ }
@@ -31,9 +33,9 @@ export const WorldCupBanner = () => {
         <div className="flex-1 min-w-0 overflow-hidden">
           <p className="truncate text-[13px] text-white/85">
             <span className="font-semibold text-white">Backing Africa</span>{' '}
-            <span aria-hidden="true">{WORLD_CUP.teams.map(t => t.flag).join(' ')}</span>
+            <span aria-hidden="true">{teams.map(t => t.flag).join(' ')}</span>
             <span className="hidden md:inline text-white/60">
-              {' '}— {WORLD_CUP.teams.map(t => t.name).join(' · ')}
+              {' '}— {teams.map(t => t.name).join(' · ')}
             </span>
           </p>
         </div>
