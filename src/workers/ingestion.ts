@@ -35,6 +35,14 @@ const AFRICA_KEYWORDS = [
     'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
     'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
     'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar',
+    // Additional high-signal African cities / regions (avoid false-negatives)
+    'cape town', 'durban', 'pretoria', 'soweto', 'gauteng', 'limpopo', 'stellenbosch',
+    'marrakech', 'marrakesh', 'rabat', 'tangier', 'fez', 'tunis', 'alexandria', 'giza',
+    'ibadan', 'kano', 'port harcourt', 'abidjan', 'khartoum', 'douala', 'yaounde',
+    'mombasa', 'kisumu', 'kampala', 'lusaka', 'harare', 'bulawayo', 'maputo', 'gaborone',
+    'windhoek', 'kumasi', 'zanzibar', 'arusha', 'dodoma', 'freetown', 'monrovia', 'bamako',
+    'maghreb', 'sahel', 'horn of africa', 'east africa', 'west africa', 'southern africa',
+    'north africa', 'central africa', 'east african', 'west african',
 ];
 
 function isAfricanContent(title: string, content = ''): boolean {
