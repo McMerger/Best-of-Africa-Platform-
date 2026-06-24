@@ -58,7 +58,16 @@
       "Bash(curl -s __TRACKED_VAR__/articles?limit=4)",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(a.get\\('title'\\),'|',a.get\\('country_code'\\),'|',a.get\\('reading_time_minutes'\\),'min |',a.get\\('tags'\\),'| hero:',bool\\(a.get\\('hero_image_url'\\)\\),'| sum_len:',len\\(a.get\\('summary'\\) or ''\\)\\) for a in d.get\\('data',[]\\)]\")",
       "Bash(python -c ' *)",
-      "Bash(curl -s __TRACKED_VAR__/articles?limit=40)"
+      "Bash(curl -s __TRACKED_VAR__/articles?limit=40)",
+      "Bash(python -c \"import sys,json; r=[l for l in sys.stdin if l.strip\\(\\).startswith\\('['\\)]; print\\(json.loads\\(r[0]\\)[0]['results'] if r else 'no-json'\\)\")",
+      "Bash(npx wrangler *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(python -c \"import json;[print\\('--',repr\\(r['title']\\),'| sum:',repr\\(r['sum']\\),'| clen:',r['clen'],'\\\\n   body:',repr\\(r['body']\\)\\) for r in json.load\\(open\\('/tmp/bad.json'\\)\\)[0]['results']]\")",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_titles.py\")",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_titles.py\" apply)",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_labels.py\")",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_labels.py\" apply)",
+      "Bash(python -)"
     ]
   }
 }
