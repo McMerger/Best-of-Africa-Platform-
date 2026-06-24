@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES } from '../types';
+import { TRANSLATIONS } from '../i18n/dict';
 export { SUPPORTED_LANGUAGES };
 
 interface LanguageContextType {
@@ -37,6 +38,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     };
 
     const dir = SUPPORTED_LANGUAGES.find((l: { code: string }) => l.code === language)?.dir || 'ltr';
+
+    // Apply text direction + lang on mount and whenever the language changes, so a
+    // persisted RTL choice (e.g. Arabic) is honoured on reload, not only on switch.
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.dir = dir;
+            document.documentElement.lang = language;
+        }
+    }, [language, dir]);
 
     // UI Translation Dictionary
     const translations: Record<LanguageCode, Record<string, string>> = {
@@ -334,9 +344,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    // Translation helper
+    // Translation helper. Resolution order: shared chrome dict (current lang) →
+    // legacy inline dict (current lang) → shared chrome dict (English) → fallback → key.
     const t = (key: string, fallback?: string) => {
-        return translations[language]?.[key] || fallback || key;
+        return (
+            TRANSLATIONS[language]?.[key] ??
+            translations[language]?.[key] ??
+            TRANSLATIONS.en?.[key] ??
+            fallback ??
+            key
+        );
     };
 
     return (

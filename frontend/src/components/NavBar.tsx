@@ -35,34 +35,34 @@ export const NavBar: React.FC = () => {
     // Full mobile menu — every primary page is reachable here, grouped by section.
     const mobileSections: { heading: string; links: { href: string; label: string }[] }[] = [
         {
-            heading: t("nav.read", "Read"),
+            heading: t("group.read", "Read"),
             links: [
                 { href: "/", label: t("nav.home", "Home") },
-                { href: "/posts", label: t("nav.reports", "Stories") },
-                { href: "/feed", label: t("nav.feed", "Daily Briefing") },
+                { href: "/posts", label: t("nav.stories", "Stories") },
+                { href: "/feed", label: t("nav.briefing", "Daily Briefing") },
                 { href: "/countries", label: t("nav.countries", "Countries") },
                 { href: "/gallery", label: t("nav.gallery", "Gallery") },
                 { href: "/supporter-feed", label: t("nav.supporter", "Supporter Feed") },
             ],
         },
         {
-            heading: t("nav.intel", "Intelligence"),
+            heading: t("group.intelligence", "Intelligence"),
             links: [
                 { href: "/intelligence", label: t("nav.intelligence", "Market Intelligence") },
-                { href: "/dashboards/overview", label: t("nav.dashboards", "Continental Dashboard") },
+                { href: "/dashboards/overview", label: t("nav.dashboard", "Continental Dashboard") },
                 { href: "/library", label: t("nav.library", "Saved Library") },
             ],
         },
         {
-            heading: t("nav.services", "Services"),
+            heading: t("group.services", "Services"),
             links: [
-                { href: "/events", label: t("nav.summits", "Summits & Events") },
+                { href: "/events", label: t("nav.events", "Summits & Events") },
                 { href: "/request-consultation", label: t("nav.concierge", "Concierge") },
                 { href: "/travel", label: t("nav.travel", "Business Travel") },
             ],
         },
         {
-            heading: t("nav.account", "Membership & Account"),
+            heading: t("group.account", "Membership & Account"),
             links: [
                 { href: "/membership", label: t("nav.membership", "Membership") },
                 { href: "/newsletter", label: t("nav.newsletter", "Newsletter") },
@@ -95,12 +95,12 @@ export const NavBar: React.FC = () => {
                 {/* CENTER: Desktop Nav */}
                 <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
                     {[
-                        { path: '/posts', label: 'Stories' },
-                        { path: '/countries', label: 'Countries' },
-                        { path: '/feed', label: 'Briefing' },
-                        { path: '/intelligence', label: 'Intelligence' },
-                        { path: '/membership', label: 'Membership' },
-                        { path: '/about', label: 'About' },
+                        { path: '/posts', label: t('nav.stories', 'Stories') },
+                        { path: '/countries', label: t('nav.countries', 'Countries') },
+                        { path: '/feed', label: t('nav.briefing_short', 'Briefing') },
+                        { path: '/intelligence', label: t('nav.intelligence_short', 'Intelligence') },
+                        { path: '/membership', label: t('nav.membership', 'Membership') },
+                        { path: '/about', label: t('nav.about', 'About') },
                     ].map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
@@ -129,7 +129,7 @@ export const NavBar: React.FC = () => {
                         <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
-                                <span className="sr-only">Search</span>
+                                <span className="sr-only">{t('nav.search', 'Search')}</span>
                             </Link>
                         </Button>
                         {isAuthenticated && <NotificationBell />}
@@ -154,7 +154,7 @@ export const NavBar: React.FC = () => {
                     <div className="hidden xl:block w-px h-6 bg-border mx-2" />
 
                     <Button size="sm" asChild className="hidden xl:flex rounded-full font-bold px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
-                        <Link to="/login">{isAuthenticated ? 'Account' : 'Sign In'}</Link>
+                        <Link to="/login">{isAuthenticated ? t('nav.account', 'Account') : t('nav.signin', 'Sign In')}</Link>
                     </Button>
 
                     {/* Mobile: compact Sign In + Hamburger */}
