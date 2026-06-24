@@ -51,7 +51,8 @@
       "Bash(grep -nE '\\\\\\\\\\\\\\\\s\\\\+|\\\\\\\\\\\\$\\\\{|ai_image_url' src/workers/generator.ts)",
       "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/world-cup/teams)",
       "Bash(curl -s \"https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=4429\")",
-      "Bash(curl -s \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026\")"
+      "Bash(curl -s \"https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=4429&s=2026\")",
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles?limit=12)"
     ]
   }
 }

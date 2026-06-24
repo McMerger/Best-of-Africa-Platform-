@@ -51,7 +51,13 @@ const AFRICA_KEYWORDS = [
 
 function isAfricanContent(title: string, content = ''): boolean {
     const text = `${title} ${content}`.toLowerCase();
-    return AFRICA_KEYWORDS.some(kw => text.includes(kw));
+    // Word-boundary on the leading edge (so "mali" doesn't match "normalize"),
+    // but allow trailing letters so adjectives/demonyms still match
+    // ("nigeria"→"nigerian", "morocco"→"moroccan", "benin"→"beninese").
+    return AFRICA_KEYWORDS.some(kw => {
+        const re = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        return re.test(text);
+    });
 }
 
 async function parseRSS(url: string): Promise<RSSItem[]> {
