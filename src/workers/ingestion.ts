@@ -182,16 +182,28 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     let processed = 0;
     let queued = 0;
 
-    // Get active sources
+    // Rotate through sources least-recently-fetched first, processing only a
+    // bounded subset per invocation. Running every minute, this cycles full
+    // coverage over a few minutes while keeping each run well under the Worker
+    // subrequest / binding-call limits (which previously failed with
+    // "Too many subrequests" when all ~82 sources were fetched at once).
+    const SOURCES_PER_RUN = 6;
     const sourcesResult = await env.DB.prepare(`
     SELECT id, name, type, url, country_code, sector_id
     FROM sources
     WHERE is_active = 1
-  `).all();
+    ORDER BY last_fetched_at ASC
+    LIMIT ?
+  `).bind(SOURCES_PER_RUN).all();
 
-    // Shuffle sources to ensure coverage equality
-    const sources = (sourcesResult.results || []).sort(() => 0.5 - Math.random());
-    const BATCH_SIZE = 10; // Process more in parallel
+    const sources = sourcesResult.results || [];
+    const BATCH_SIZE = 6; // Process in parallel within the run
+
+    // Per-invocation budgets (shared across fixed-source + discovery tasks) to
+    // cap total fetches/DB writes and stay within Worker limits.
+    const MAX_ITEMS_PER_SOURCE = 6;
+    let scrapeBudget = 8;   // full-content scrapes (each is an extra fetch)
+    let itemBudget = 20;    // new items ingested + queued per run
 
     // Define the Fixed Sources Task
     const fixedSourcesTask = async () => {
@@ -215,7 +227,9 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         }));
                     }
 
-                    for (const item of items) {
+                    // Cap items examined per source to bound DB/dedup calls.
+                    for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
+                        if (itemBudget <= 0) break;
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
                         if (existing) continue;
 
@@ -247,9 +261,11 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         if (!isAfrican && !s.country_code) continue;
 
                         processed++;
+                        itemBudget--;
 
                         let fullContent = item.content;
-                        if (fullContent.length < 500 && item.url) {
+                        if (fullContent.length < 500 && item.url && scrapeBudget > 0) {
+                            scrapeBudget--;
                             try {
                                 const scraped = await scrapeFullContent(item.url);
                                 if (scraped) fullContent = scraped;
@@ -303,9 +319,9 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
 
             // PRIORITY: 10 most underserved countries + 5 random for diversity
             const underservedCountries = (underservedQuery.results || []).map((c: any) => c.name);
-            const targetCountries = underservedCountries.slice(0, 10);
+            const targetCountries = underservedCountries.slice(0, 4);
             const sectorList = (sectors.results || []).map((s: any) => s.name);
-            const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 5);
+            const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 2);
 
             console.log(`PRIORITY COUNTRIES (underserved): ${targetCountries.join(', ')}`);
 
@@ -322,10 +338,12 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                     const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
                     const items = await parseRSS(googleNewsUrl);
 
-                    for (const item of items) {
+                    for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
+                        if (itemBudget <= 0) break;
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ?`).bind(item.link).first();
                         if (existing) continue;
 
+                        itemBudget--;
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
                             INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
