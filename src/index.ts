@@ -256,37 +256,42 @@ app.onError((err, c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     console.log('Running master cron worker...');
-    
-    // 1. Ingestion: every minute
-    console.log('Running ingestion worker...');
-    await runIngestion(env);
+
+    // Isolate each job: a failure in one step (e.g. ingestion when NEWS_API_KEY
+    // is unset or Workers AI is over quota) must not block the others —
+    // especially the daily reporting and newsletter dispatch below.
+    const safe = async (label: string, fn: () => Promise<unknown>) => {
+        try {
+            await fn();
+        } catch (e) {
+            console.error(`[cron] ${label} failed:`, e);
+        }
+    };
 
     const date = new Date(event.scheduledTime || Date.now());
     const minutes = date.getUTCMinutes();
     const hours = date.getUTCHours();
 
+    // 1. Ingestion: every minute
+    await safe('ingestion', () => runIngestion(env));
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
-        console.log('Running optimization worker...');
-        await runOptimization(env);
-        await runStaleTaskRecovery(env);
+        await safe('optimization', () => runOptimization(env));
+        await safe('stale-task-recovery', () => runStaleTaskRecovery(env));
     }
 
     // 3. Reporting: Daily at 5am UTC
     if (hours === 5 && minutes === 0) {
-        console.log('Running daily reporting worker...');
-        await runDailyReporting(env);
+        await safe('daily-reporting', () => runDailyReporting(env));
     }
 
     // 4. Newsletter Dispatch: Daily & Weekly at 6am UTC
     if (hours === 6 && minutes === 0) {
-        console.log('Running daily newsletter dispatch...');
-        await runNewsletterDispatch(env, 'daily');
-        
+        await safe('newsletter-daily', () => runNewsletterDispatch(env, 'daily'));
         // Sunday is 0
         if (date.getUTCDay() === 0) {
-            console.log('Running weekly newsletter dispatch...');
-            await runNewsletterDispatch(env, 'weekly');
+            await safe('newsletter-weekly', () => runNewsletterDispatch(env, 'weekly'));
         }
     }
 }
