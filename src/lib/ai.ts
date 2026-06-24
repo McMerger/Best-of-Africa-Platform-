@@ -533,12 +533,25 @@ function parseArticleResponse(text: string): {
     const summaryMatch = text.match(/SUMMARY:\s*(.+?)(?=\n|TAGS:)/s);
     const tagsMatch = text.match(/TAGS:\s*(.+?)$/s);
 
+    // The model frequently ignores the "no markdown" instruction and wraps these
+    // fields in ** ** / quotes, or re-prints the "TITLE:" label. Strip that junk so
+    // it never reaches the reader (titles render as raw text in <h1> and cards).
+    const stripInline = (s?: string): string =>
+        (s || '')
+            .replace(/^\s*(?:title|subtitle|content|body)\s*:?\s*/i, '')
+            .replace(/^[\s*_#>"'“”]+/, '')
+            .replace(/[\s*_"'“”]+$/, '')
+            .trim();
+    // Remove any leading TITLE/SUBTITLE/CONTENT label lines that leaked into the body.
+    const stripLeadingLabels = (s: string): string =>
+        s.replace(/^(?:\s*\*{0,2}\s*(?:TITLE|SUBTITLE|CONTENT|BODY)\b[^\n]*\n+)+/i, '').trim();
+
     return {
-        title: titleMatch?.[1]?.trim() || 'Untitled Article',
-        subtitle: subtitleMatch?.[1]?.trim() || '',
-        content: contentMatch?.[1]?.trim() || text,
-        summary: summaryMatch?.[1]?.trim() || '',
-        tags: tagsMatch?.[1]?.split(',').map(t => t.trim()).filter(Boolean) || [],
+        title: stripInline(titleMatch?.[1]) || 'Untitled Article',
+        subtitle: stripInline(subtitleMatch?.[1]),
+        content: stripLeadingLabels(contentMatch?.[1]?.trim() || text),
+        summary: stripInline(summaryMatch?.[1]),
+        tags: tagsMatch?.[1]?.split(',').map(t => stripInline(t)).filter(Boolean) || [],
     };
 }
 
