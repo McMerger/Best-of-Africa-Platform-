@@ -37,7 +37,17 @@
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Static above-the-fold hero: paints instantly from HTML (no JS), improving
+         FCP/LCP. React's createRoot replaces #root's contents on mount. The inline
+         script below removes it on non-landing deep links to avoid a wrong-page flash. -->
+    <div id="boa-hero" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0F1F3D;color:#fff;padding:6rem 1.5rem;box-sizing:border-box;font-family:'Playfair Display',Georgia,serif;">
+      <div style="font-family:Inter,system-ui,sans-serif;color:#C9A84C;font-weight:600;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.5rem;">— Early Access</div>
+      <h1 style="font-size:clamp(4rem,9vw,8rem);line-height:.95;letter-spacing:-.04em;font-weight:900;margin:0 0 2rem;max-width:64rem;">Africa without the filter.</h1>
+      <p style="font-family:Inter,system-ui,sans-serif;font-weight:300;font-size:clamp(1.125rem,2vw,1.5rem);line-height:1.6;max-width:42rem;color:rgba(255,255,255,.8);margin:0;">A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.</p>
+    </div>
+  </div>
+  <script>if(location.pathname!=='/'){var _h=document.getElementById('boa-hero');if(_h)_h.remove();}</script>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <script>
     if ('serviceWorker' in navigator) {
