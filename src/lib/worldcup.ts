@@ -79,22 +79,39 @@ export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[
  */
 export async function refreshWorldCupTeams(env: Env): Promise<void> {
   try {
-    const leagueId = (env as Record<string, any>).WC_LEAGUE_ID || WC_LEAGUE_ID;
-    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`, {
-      headers: { 'User-Agent': 'BestOfAfrica/1.0' },
-    });
-    if (!res.ok) return;
-    const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string }> | null };
-    if (!data.events || data.events.length === 0) return; // keep last known list
-
     const found = new Map<string, WorldCupTeam>();
-    for (const ev of data.events) {
-      for (const name of [ev.strHomeTeam, ev.strAwayTeam]) {
-        const t = name ? matchAfrican(name) : null;
-        if (t) found.set(t.code, t);
+    const add = (name?: string | null) => { const t = name ? matchAfrican(name) : null; if (t) found.set(t.code, t); };
+
+    const token = (env as Record<string, any>).FOOTBALL_DATA_TOKEN as string | undefined;
+
+    if (token) {
+      // Preferred: football-data.org (complete WC coverage). Scheduled matches =
+      // teams still in. Free tier requires only a token.
+      const r = await fetch('https://api.football-data.org/v4/competitions/WC/matches?status=SCHEDULED', {
+        headers: { 'X-Auth-Token': token },
+      });
+      if (r.ok) {
+        const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string } }> };
+        for (const m of d.matches || []) { add(m.homeTeam?.name); add(m.awayTeam?.name); }
       }
     }
-    if (found.size === 0) return; // no African teams in upcoming fixtures — don't wipe
+
+    // Fallback: TheSportsDB (keyless, but sparse) — full-season fixtures still ahead.
+    if (found.size === 0) {
+      const leagueId = (env as Record<string, any>).WC_LEAGUE_ID || WC_LEAGUE_ID;
+      const today = new Date().toISOString().slice(0, 10);
+      const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=${leagueId}&s=2026`, {
+        headers: { 'User-Agent': 'BestOfAfrica/1.0' },
+      });
+      if (res.ok) {
+        const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string; dateEvent?: string }> | null };
+        for (const ev of data.events || []) {
+          if ((ev.dateEvent || '') >= today) { add(ev.strHomeTeam); add(ev.strAwayTeam); }
+        }
+      }
+    }
+
+    if (found.size === 0) return; // nothing reliable — keep last cache / seed, don't wipe
 
     const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString() });
     await env.CACHE.put(KV_KEY, payload, { expirationTtl: 7 * 24 * 3600 });
