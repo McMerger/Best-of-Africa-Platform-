@@ -21,7 +21,7 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
   };
 
   return (
-    <motion.h2
+    <motion.h1
       ref={ref}
       // Colour is supplied by the caller via className (e.g. text-white on the navy hero band).
       className={className}
@@ -34,6 +34,6 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
           {word}
         </motion.span>
       ))}
-    </motion.h2>
+    </motion.h1>
   );
 };

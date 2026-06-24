@@ -367,7 +367,7 @@ export const BetaLanding = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
             <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">Fund the platform</h2>
-            <p className="text-foreground/60 text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
+            <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
               This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.
             </p>
           </div>
@@ -381,7 +381,7 @@ export const BetaLanding = () => {
         <div className="text-center mb-16 relative z-10 px-6">
           <SectionLabel text="Platform Experience" />
           <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">A Premium Interface</h2>
-          <p className="text-foreground/60 text-[1.25rem] font-light max-w-2xl mx-auto">
+          <p className="text-ink-blue text-[1.25rem] font-light max-w-2xl mx-auto">
             Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.
           </p>
         </div>
@@ -401,7 +401,7 @@ export const BetaLanding = () => {
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
               <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
-                <img src={src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
+                <img src={src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
@@ -418,7 +418,7 @@ export const BetaLanding = () => {
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
               <div key={`dup-${idx}`} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
-                <img src={src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
+                <img src={src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
@@ -440,6 +440,8 @@ export const BetaLanding = () => {
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
             src="/images/v2_real_background.png"
             alt="Real African Street Night"
+            loading="lazy"
+            decoding="async"
             className="w-full h-[120%] object-cover opacity-25 absolute top-[-10%]"
           />
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/80" />
@@ -513,7 +515,7 @@ export const BetaLanding = () => {
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 1, delay: 0.2 }}
-             className="text-foreground/60 mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
+             className="text-ink-blue mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
            >
              Your support at this quiet, early stage is what turns an idea into reality.
            </motion.p>

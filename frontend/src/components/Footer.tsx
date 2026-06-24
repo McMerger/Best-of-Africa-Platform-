@@ -47,7 +47,7 @@ export const Footer: React.FC = () => {
 
                     {/* Read */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story</h4>
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story</h3>
                         <ul className="space-y-4 text-[13px] font-medium text-white/60">
                             <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Stories</Link></li>
                             <li><Link to="/feed" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Daily Briefing</Link></li>
@@ -59,7 +59,7 @@ export const Footer: React.FC = () => {
 
                     {/* Intelligence */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Intelligence</h4>
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Intelligence</h3>
                         <ul className="space-y-4 text-[13px] font-medium text-white/60">
                             <li><Link to="/intelligence" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Market Intelligence</Link></li>
                             <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Continental Dashboard</Link></li>
@@ -69,7 +69,7 @@ export const Footer: React.FC = () => {
 
                     {/* Services */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Services</h4>
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Services</h3>
                         <ul className="space-y-4 text-[13px] font-medium text-white/60">
                             <li><Link to="/events" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Summits & Events</Link></li>
                             <li><Link to="/request-consultation" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Concierge</Link></li>
@@ -79,7 +79,7 @@ export const Footer: React.FC = () => {
 
                     {/* Membership & Account */}
                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Membership & Account</h4>
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Membership & Account</h3>
                         <ul className="space-y-4 text-[13px] font-medium text-white/60">
                             <li><Link to="/membership" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Membership</Link></li>
                             <li><Link to="/newsletter" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Newsletter</Link></li>
