@@ -67,7 +67,10 @@
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_titles.py\" apply)",
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_labels.py\")",
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/fix_labels.py\" apply)",
-      "Bash(python -)"
+      "Bash(python -)",
+      "Bash(curl -s -I \"https://best-of-africa.pages.dev/\")",
+      "Bash(grep -vE \"^/\\(about|admin|contact|countries|dashboards/overview|events|feed|gallery|intel|intelligence|library|login|member-access|membership|newsletter|posts|privacy|request-consultation|search|settings|supporter-feed|terms|travel|sponsor/dashboard\\)$\")",
+      "Bash(grep -v \"^/$\")"
     ]
   }
 }

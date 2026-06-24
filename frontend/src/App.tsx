@@ -6,37 +6,64 @@ import { Toaster } from "@/components/ui/sonner";
 import { CommandMenu } from '@/components/CommandMenu';
 import { Layout } from './components/Layout';
 
+// Resilient lazy import. After a redeploy, an already-open tab still references the
+// previous build's chunk hashes; navigating to a lazy route then 404s on a chunk
+// that no longer exists and the dynamic import rejects ("Failed to fetch
+// dynamically imported module"). Instead of crashing into the error boundary, we
+// reload once to pull the fresh index.html + new chunk names. The sessionStorage
+// guard (cleared on any successful load) prevents reload loops for genuine errors.
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) {
+  return React.lazy(async () => {
+    const KEY = 'boa-chunk-reloaded';
+    try {
+      const mod = await factory();
+      sessionStorage.removeItem(KEY);
+      return mod;
+    } catch (err) {
+      if (!sessionStorage.getItem(KEY)) {
+        sessionStorage.setItem(KEY, '1');
+        window.location.reload();
+        // Hold render until the reload swaps in the fresh document.
+        return await new Promise<{ default: T }>(() => {});
+      }
+      throw err;
+    }
+  });
+}
+
 // ── BOA-Story pages ───────────────────────────────────────────────────────────
-const BetaLanding     = React.lazy(() => import('./pages/beta/BetaLanding').then(m => ({ default: m.BetaLanding })));
-const BetaMembership  = React.lazy(() => import('./pages/beta/BetaMembership').then(m => ({ default: m.BetaMembership })));
-const BetaIntelligence = React.lazy(() => import('./pages/beta/BetaIntelligence').then(m => ({ default: m.BetaIntelligence })));
-const BetaStories     = React.lazy(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
-const BetaLibrary     = React.lazy(() => import('./pages/beta/BetaLibrary').then(m => ({ default: m.BetaLibrary })));
-const BetaArticle     = React.lazy(() => import('./pages/beta/BetaArticle').then(m => ({ default: m.BetaArticle })));
-const BetaCountryTeaser = React.lazy(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
-const BetaCountryHub  = React.lazy(() => import('./pages/beta/BetaCountryHub').then(m => ({ default: m.BetaCountryHub })));
-const BetaMarketIntel = React.lazy(() => import('./pages/beta/BetaMarketIntel').then(m => ({ default: m.BetaMarketIntel })));
-const BetaGallery     = React.lazy(() => import('./pages/beta/BetaGallery').then(m => ({ default: m.BetaGallery })));
-const BetaAbout       = React.lazy(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
-const BetaNewsletter  = React.lazy(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
-const BetaMemberAccess = React.lazy(() => import('./pages/beta/BetaMemberAccess').then(m => ({ default: m.BetaMemberAccess })));
-const BetaEvents      = React.lazy(() => import('./pages/beta/BetaEvents').then(m => ({ default: m.BetaEvents })));
-const BetaConcierge   = React.lazy(() => import('./pages/beta/BetaConcierge').then(m => ({ default: m.BetaConcierge })));
-const BetaTravel      = React.lazy(() => import('./pages/beta/BetaTravel').then(m => ({ default: m.BetaTravel })));
-const BetaSearch      = React.lazy(() => import('./pages/beta/BetaSearch').then(m => ({ default: m.BetaSearch })));
-const BetaFeed        = React.lazy(() => import('./pages/beta/BetaFeed').then(m => ({ default: m.BetaFeed })));
-const BetaContinentalOverview = React.lazy(() => import('./pages/beta/BetaContinentalOverview').then(m => ({ default: m.BetaContinentalOverview })));
-const BetaSponsorDashboard = React.lazy(() => import('./pages/beta/BetaSponsorDashboard').then(m => ({ default: m.BetaSponsorDashboard })));
-const BetaNarrativeToolkit = React.lazy(() => import('./pages/beta/BetaNarrativeToolkit').then(m => ({ default: m.BetaNarrativeToolkit })));
+const BetaLanding     = lazyWithRetry(() => import('./pages/beta/BetaLanding').then(m => ({ default: m.BetaLanding })));
+const BetaMembership  = lazyWithRetry(() => import('./pages/beta/BetaMembership').then(m => ({ default: m.BetaMembership })));
+const BetaIntelligence = lazyWithRetry(() => import('./pages/beta/BetaIntelligence').then(m => ({ default: m.BetaIntelligence })));
+const BetaStories     = lazyWithRetry(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
+const BetaLibrary     = lazyWithRetry(() => import('./pages/beta/BetaLibrary').then(m => ({ default: m.BetaLibrary })));
+const BetaArticle     = lazyWithRetry(() => import('./pages/beta/BetaArticle').then(m => ({ default: m.BetaArticle })));
+const BetaCountryTeaser = lazyWithRetry(() => import('./pages/beta/BetaCountryTeaser').then(m => ({ default: m.BetaCountryTeaser })));
+const BetaCountryHub  = lazyWithRetry(() => import('./pages/beta/BetaCountryHub').then(m => ({ default: m.BetaCountryHub })));
+const BetaMarketIntel = lazyWithRetry(() => import('./pages/beta/BetaMarketIntel').then(m => ({ default: m.BetaMarketIntel })));
+const BetaGallery     = lazyWithRetry(() => import('./pages/beta/BetaGallery').then(m => ({ default: m.BetaGallery })));
+const BetaAbout       = lazyWithRetry(() => import('./pages/beta/BetaAbout').then(m => ({ default: m.BetaAbout })));
+const BetaNewsletter  = lazyWithRetry(() => import('./pages/beta/BetaNewsletter').then(m => ({ default: m.BetaNewsletter })));
+const BetaMemberAccess = lazyWithRetry(() => import('./pages/beta/BetaMemberAccess').then(m => ({ default: m.BetaMemberAccess })));
+const BetaEvents      = lazyWithRetry(() => import('./pages/beta/BetaEvents').then(m => ({ default: m.BetaEvents })));
+const BetaConcierge   = lazyWithRetry(() => import('./pages/beta/BetaConcierge').then(m => ({ default: m.BetaConcierge })));
+const BetaTravel      = lazyWithRetry(() => import('./pages/beta/BetaTravel').then(m => ({ default: m.BetaTravel })));
+const BetaSearch      = lazyWithRetry(() => import('./pages/beta/BetaSearch').then(m => ({ default: m.BetaSearch })));
+const BetaFeed        = lazyWithRetry(() => import('./pages/beta/BetaFeed').then(m => ({ default: m.BetaFeed })));
+const BetaContinentalOverview = lazyWithRetry(() => import('./pages/beta/BetaContinentalOverview').then(m => ({ default: m.BetaContinentalOverview })));
+const BetaSponsorDashboard = lazyWithRetry(() => import('./pages/beta/BetaSponsorDashboard').then(m => ({ default: m.BetaSponsorDashboard })));
+const BetaNarrativeToolkit = lazyWithRetry(() => import('./pages/beta/BetaNarrativeToolkit').then(m => ({ default: m.BetaNarrativeToolkit })));
 
 // ── Utility / Account pages ───────────────────────────────────────────────────
-const SettingsPage = React.lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const PremiumSectorTrends = React.lazy(() => import('./pages/beta/PremiumSectorTrends').then(m => ({ default: m.PremiumSectorTrends })));
-const LoginPage    = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const AdminPage    = React.lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
-const PrivacyPage  = React.lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
-const TermsPage    = React.lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
-const ContactPage  = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const PremiumSectorTrends = lazyWithRetry(() => import('./pages/beta/PremiumSectorTrends').then(m => ({ default: m.PremiumSectorTrends })));
+const LoginPage    = lazyWithRetry(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const AdminPage    = lazyWithRetry(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
+const PrivacyPage  = lazyWithRetry(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const TermsPage    = lazyWithRetry(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
+const ContactPage  = lazyWithRetry(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
