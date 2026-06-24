@@ -3,7 +3,6 @@ import { ChevronDown, ChevronUp, Lock, Globe, Wrench, PenLine, Coffee } from 'lu
 import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { GoldButton,
-  AnimatedHeadline,
   SectionLabel,
   CardReveal,
   MembershipTiersGrid
@@ -194,26 +193,23 @@ export const BetaLanding = () => {
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
           <SectionLabel text="Early Access" />
 
-          <AnimatedHeadline
-            text="Africa without the filter."
-            className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
-          />
+          {/* Static (non-animated) hero headline — this is the LCP element, so it
+              must paint on first render rather than fading in from opacity:0. */}
+          <h1 className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
+            Africa without the filter.
+          </h1>
 
           <RotatingSubheadline />
 
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            initial={false}
             className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
           >
             A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+            initial={false}
             className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20"
           >
             <MagneticButton>
