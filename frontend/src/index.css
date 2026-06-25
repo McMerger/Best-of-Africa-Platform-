@@ -202,6 +202,19 @@ body {
     text-wrap: balance;
   }
 
+  /* ── Hero band treatment (use on EVERY full-bleed hero) ───────────────────────
+     Keeps the background photo clearly visible while text stays legible. Apply
+     `hero-photo` to the <img> and `hero-scrim` to the overlay <div>. Tweak these
+     two rules to re-grade every hero at once. The scrim is darkest at the bottom
+     (where most hero headlines sit) and lightest in the middle (so the photo
+     reads); headlines should still carry drop-shadow for safety. */
+  .hero-photo {
+    @apply opacity-90;
+  }
+  .hero-scrim {
+    @apply bg-gradient-to-t from-navy/85 via-navy/40 to-navy/55;
+  }
+
   /* Force High Contrast Prose for Reading */
   .prose p {
     @apply text-foreground font-medium text-base leading-relaxed;

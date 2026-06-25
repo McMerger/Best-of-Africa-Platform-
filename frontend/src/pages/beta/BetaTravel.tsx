@@ -48,9 +48,9 @@ export const BetaTravel: React.FC = () => {
                   <img
                     src="/images/v2_travel_concrete_1780371206765.png"
                     alt="Luxury African Eco-Lodge"
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
                   />
-                  <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+                  <div className="absolute inset-0 z-10 hero-scrim" />
                 </motion.div>
 
                 <div className="max-w-5xl mx-auto w-full relative z-30 text-center text-white">

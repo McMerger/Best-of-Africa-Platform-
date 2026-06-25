@@ -160,9 +160,9 @@ export const BetaStories = () => {
           <img
             src="/images/v2_editorial_2.png"
             alt="Stories from the Continent"
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+          <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
         <div className="container mx-auto max-w-7xl relative z-30">

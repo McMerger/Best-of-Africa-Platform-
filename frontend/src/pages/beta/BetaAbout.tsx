@@ -29,9 +29,9 @@ export const BetaAbout = () => {
           <img
             src="/images/v2_about_hero.png"
             alt="African Visionary"
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-30"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+          <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
         <div className="max-w-4xl mx-auto text-center text-white relative z-30">

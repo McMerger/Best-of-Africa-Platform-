@@ -191,10 +191,10 @@ export const BetaLanding = () => {
           <img
             src="/images/v2_hero_kigali.webp"
             alt="Modern African Metropolis"
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-90"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />
           {/* Navy wash keeps the band on-brand and the white headline legible */}
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy/85 via-navy/40 to-navy/55" />
+          <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
         <ParallaxOrbs scrollY={scrollY} />
@@ -450,9 +450,9 @@ export const BetaLanding = () => {
             alt="Real African Street Night"
             loading="lazy"
             decoding="async"
-            className="w-full h-[120%] object-cover opacity-25 absolute top-[-10%]"
+            className="w-full h-[120%] object-cover opacity-60 absolute top-[-10%]"
           />
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/80" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy/90 via-navy/65 to-navy/75" />
         </div>
         <div className="container mx-auto max-w-4xl relative z-20">
           <motion.div

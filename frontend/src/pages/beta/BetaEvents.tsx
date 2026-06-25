@@ -75,9 +75,9 @@ export const BetaEvents: React.FC = () => {
                   <img
                     src="/images/v2_events_concrete_1780371229306.png"
                     alt="African Executive Summit"
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
                   />
-                  <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+                  <div className="absolute inset-0 z-10 hero-scrim" />
                 </motion.div>
 
                 <div className="max-w-6xl mx-auto w-full relative z-30 text-white">

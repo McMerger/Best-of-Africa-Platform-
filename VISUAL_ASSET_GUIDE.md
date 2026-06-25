@@ -31,16 +31,21 @@ World), dignified people, modern skylines, markets, makers, light.
 **Type:** Playfair Display (serif headlines), Inter (sans body). Images sit
 *behind* serif headlines, so leave calm negative space for text.
 
-**Universal hero treatment (important for consistency):** hero photos are placed
-under a navy gradient and dimmed. The recurring recipe in code is:
+**Universal hero treatment (important for consistency):** every full‑bleed hero
+now uses two shared utility classes defined in `index.css` — change them once to
+re‑grade all heroes at once:
 
-- image `opacity: 0.3–0.4`, `object-cover`, scaled `1.05` with slow parallax
-- overlay: `bg-gradient-to-t from-navy via-navy/85 to-navy/70`
-- a gold flag/eyebrow + white serif headline sits on top, bottom‑left or centered
+- the `<img>` gets **`hero-photo`** = `opacity: 0.9` (photo is clearly visible)
+- the overlay `<div>` gets **`hero-scrim`** = `bg-gradient-to-t from-navy/85
+  via-navy/40 to-navy/55` (darkest at the bottom where headlines sit, lightest in
+  the middle so the photo reads)
+- image is `object-cover`, scaled `1.05` with slow parallax; a gold eyebrow +
+  white serif headline (with `drop-shadow`) sits on top.
 
-So: **choose images that still read at 30–40% opacity under deep navy.** High
-contrast, clear focal subject, warm/golden light works best; busy or pale images
-disappear. Provide the raw full‑colour image — the app applies the wash.
+So: **the photo is meant to show through** — pick a clear focal subject with warm/
+golden light and a calmer band where the headline goes. Provide the raw
+full‑colour image; the app applies the scrim. (The text‑heavy mission band on the
+Landing page intentionally uses a slightly darker scrim + ~0.6 image opacity.)
 
 **Formats & delivery:**
 - Photos: `.webp` preferred (fallback `.png`), sRGB, quality ~80.

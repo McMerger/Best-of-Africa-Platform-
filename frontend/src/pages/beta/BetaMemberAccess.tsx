@@ -209,9 +209,9 @@ export const BetaMemberAccess = () => {
             <img
               src="/images/v2_editorial_1.png"
               alt="Premium Access"
-              className="absolute inset-0 w-full h-full object-cover object-center opacity-40"
+              className="absolute inset-0 w-full h-full object-cover object-center hero-photo"
             />
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+            <div className="absolute inset-0 z-10 hero-scrim" />
             <div className="absolute inset-0 z-30 flex flex-col justify-end p-20 pb-32">
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                     <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">

@@ -9,7 +9,7 @@
     "colorspace": "sRGB",
     "maxKBHero": 400,
     "maxKBCard": 200,
-    "treatmentNote": "Heroes are placed UNDER a navy gradient (bg-gradient-to-t from-navy via-navy/85 to-navy/70) at 30-40% image opacity. Deliver full-colour, dark/high-contrast images with calm negative space where the headline sits. The app applies the wash; do not pre-darken or add text.",
+    "treatmentNote": "Heroes use shared CSS utilities: the <img> gets `hero-photo` (opacity 0.9) and the overlay gets `hero-scrim` (bg-gradient-to-t from-navy/85 via-navy/40 to-navy/55 - darkest at bottom, lightest in middle). The photo is MEANT to show through. Deliver full-colour images with a clear focal subject and a calmer band where the headline sits; do not pre-darken or add text. Edit .hero-photo/.hero-scrim in index.css to re-grade all heroes at once. (Per-asset imageOpacity values below are legacy hints; the live value is 0.9 via hero-photo, except the Landing mission band at ~0.6.)",
     "antiPatterns": ["text", "logos", "flags", "maps", "poverty/charity cliches", "generic safari", "pale/low-contrast images that vanish under the navy wash"]
   },
   "palette": {
