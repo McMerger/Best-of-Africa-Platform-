@@ -496,7 +496,7 @@ export const BetaCountryHub = () => {
         {!isMember && (
           <ScrollReveal className="block text-center py-8" intensity={0.9}>
             <p className="text-primary/40 text-sm mb-5">
-              {t('hub.unlock_pre', 'Unlock the full')} {countryName}{t('hub.unlock_post', ' hub — scores, narratives, sector trends, and more.')}
+              {t('hub.unlock_pre', 'Unlock the full')} {countryName}{t('hub.unlock_post', ' hub, scores, narratives, sector trends, and more.')}
             </p>
             <a
               href={KO_FI_URL}

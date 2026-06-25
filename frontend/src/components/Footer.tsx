@@ -34,7 +34,7 @@ export const Footer: React.FC = () => {
                             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">{t('footer.brand_line', 'BOA-Story · Intelligence Platform')}</span>
                         </div>
                         <p className="mb-8 max-w-[400px] text-[1.125rem] font-serif font-light italic leading-[1.8] text-white/70">
-                            "{config?.['footer_mission_statement'] || t('footer.tagline', 'Real stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.')}"
+                            "{config?.['footer_mission_statement'] || t('footer.tagline', 'Real stories about African lives, cities, and ideas, beyond charity ads and disaster headlines.')}"
                         </p>
                         <a
                             href={KO_FI_URL}

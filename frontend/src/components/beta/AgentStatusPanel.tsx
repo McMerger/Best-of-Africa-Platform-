@@ -221,7 +221,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
             disabled={loading}
             className="flex-1 bg-accent text-navy font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
           >
-            {loading ? 'Saving…' : 'Connect Provider'}
+            {loading ? 'Saving...' : 'Connect Provider'}
           </button>
         </div>
       </div>
@@ -249,7 +249,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   // Only activate SSE + polling once the panel scrolls into view (saves network on page load)
   const { ref: panelRef, inView } = useInView({ triggerOnce: true, rootMargin: '100px' });
 
-  // Poll agent status every 30s — only when panel is visible
+  // Poll agent status every 30s, only when panel is visible
   const { data: status, isLoading: isStatusLoading, refetch } = useQuery<AgentStatus>({
     queryKey: ['agent-status'],
     queryFn: () => request<AgentStatus>('/agent/status'),
@@ -274,7 +274,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
       es.removeEventListener('agent_status', handleAgentStatus);
       es.close();
       eventSourceRef.current = null;
-      // Exponential backoff: 2s, 4s, 8s — give up after 3 retries
+      // Exponential backoff: 2s, 4s, 8s, give up after 3 retries
       if (sseRetryCount.current < 3) {
         const delay = Math.pow(2, sseRetryCount.current + 1) * 1000;
         sseRetryCount.current += 1;
@@ -386,11 +386,11 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-foreground/5">
           {[
-            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-foreground/50' },
-            { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-accent' },
-            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-accent' },
-            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-destructive' },
-            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-foreground/20' },
+            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '-', icon: Clock,        color: 'text-foreground/50' },
+            { label: 'Running',    value: live?.tasks_24h.processing  ?? '-', icon: Zap,          color: 'text-accent' },
+            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '-', icon: CheckCircle,  color: 'text-accent' },
+            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '-', icon: AlertCircle,  color: 'text-destructive' },
+            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '-', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-foreground/20' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex flex-col items-center justify-center py-4 px-2 gap-1">
               <Icon size={14} className={color} />
@@ -525,7 +525,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                       <td className="py-1.5 pr-3 text-right">
                         <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-foreground/20'}>{row.tasks_failed}</span>
                       </td>
-                      <td className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
+                      <td className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

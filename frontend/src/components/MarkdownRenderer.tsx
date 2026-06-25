@@ -14,7 +14,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
             // Step 1: HTML-encode ALL raw < and > characters first.
             // This ensures any HTML that may exist in the raw content is neutralised
             // before our controlled replacements below re-introduce only safe, known tags.
-            // dangerouslySetInnerHTML is therefore safe here — we are the only source of HTML.
+            // dangerouslySetInnerHTML is therefore safe here, we are the only source of HTML.
             .replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
             // 2. Headers with IDs
@@ -65,8 +65,8 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
         }).join('\n');
 
         // Wrap consecutive <li> elements in a single <ul>.
-        // The regex matches one or more adjacent <li>…</li> blocks (including newlines) and
-        // wraps the entire run — avoids creating multiple nested or sibling <ul> tags.
+        // The regex matches one or more adjacent <li>...</li> blocks (including newlines) and
+        // wraps the entire run, avoids creating multiple nested or sibling <ul> tags.
         processed = processed.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\s*)+)/g, '<ul class="my-4 space-y-2 list-none pl-4">$1</ul>');
 
         return processed;

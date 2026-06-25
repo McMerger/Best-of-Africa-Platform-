@@ -110,7 +110,7 @@ const AnimatedRoutes = () => {
           <Route path="/countries/:code" element={<PageTransition><BetaCountryHub /></PageTransition>} />
           <Route path="/countries/:code/narratives" element={<PageTransition><BetaNarrativeToolkit /></PageTransition>} />
           <Route path="/intelligence"    element={<PageTransition><BetaIntelligence /></PageTransition>} />
-          {/* /intel is a legacy alias — canonical intelligence page is /intelligence.
+          {/* /intel is a legacy alias, canonical intelligence page is /intelligence.
               (Supporter Feed lives at /supporter-feed.) Redirect avoids a duplicate route. */}
           <Route path="/intel" element={<Navigate to="/intelligence" replace />} />
           <Route path="/sectors/:id/trends" element={<PageTransition><PremiumSectorTrends /></PageTransition>} />

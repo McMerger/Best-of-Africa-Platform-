@@ -136,7 +136,7 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
       {audioData?.url.includes('best-of-africa-media.r2.dev/audio/tts') && (
         <div className="flex items-center gap-2 mt-1 px-1">
           <AlertCircle size={10} className="text-accent/50" />
-          <span className="text-[10px] text-foreground/30 italic">TTS mode — Premium integration pending.</span>
+          <span className="text-[10px] text-foreground/30 italic">TTS mode, Premium integration pending.</span>
         </div>
       )}
     </div>

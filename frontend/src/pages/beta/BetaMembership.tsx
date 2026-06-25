@@ -44,7 +44,7 @@ export const BetaMembership = () => {
 
   const faqItems = [
     { q: t('landing.faq1_q', 'Is this finished?'), a: t('landing.faq1_a', 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.') },
-    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods.') },
+    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard, no lock-in periods.') },
     { q: t('landing.faq3_q', 'Why now?'), a: t('landing.faq3_a', 'Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.') },
   ];
 

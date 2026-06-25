@@ -8,7 +8,7 @@
 //    <WorldCupBanner/> usage in Layout.tsx).
 //
 // As African teams are eliminated, trim the `teams` list to reflect who is
-// "still involved" — the banner renders straight from this array.
+// "still involved", the banner renders straight from this array.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface WorldCupTeam {
@@ -20,7 +20,7 @@ export interface WorldCupTeam {
 export const WORLD_CUP: { enabled: boolean; label: string; teams: WorldCupTeam[] } = {
   enabled: true,
   label: 'FIFA World Cup 2026',
-  // African nations still in the tournament — EDIT as the bracket changes.
+  // African nations still in the tournament, EDIT as the bracket changes.
   teams: [
     { name: 'Morocco', flag: '🇲🇦', code: 'MA' },
     { name: 'Senegal', flag: '🇸🇳', code: 'SN' },

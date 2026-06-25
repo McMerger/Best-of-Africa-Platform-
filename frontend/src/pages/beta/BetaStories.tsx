@@ -71,7 +71,7 @@ export const BetaStories = () => {
       return api.getArticles({ page: page.toString(), limit: itemsPerPage.toString() });
     },
     staleTime: 5 * 60 * 1000,
-    // M2 FIX: Keep previous data visible while next page is fetching — no more loading flash
+    // M2 FIX: Keep previous data visible while next page is fetching, no more loading flash
     placeholderData: keepPreviousData });
 
   // Track all loaded articles across pages
@@ -181,7 +181,7 @@ export const BetaStories = () => {
                 {t('stories.title_1', 'Stories from')}<br/>{t('stories.title_2', 'the Continent.')}
               </h1>
               <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">
-                {t('stories.subtitle', "Real, grounded accounts from across the continent — the kind of story you won't find in a headline.")}
+                {t('stories.subtitle', "Real, grounded accounts from across the continent, the kind of story you won't find in a headline.")}
               </p>
             </div>
             
@@ -286,7 +286,7 @@ export const BetaStories = () => {
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            placeholder={t('stories.search_placeholder', 'Search stories, countries, sectors…')}
+            placeholder={t('stories.search_placeholder', 'Search stories, countries, sectors...')}
             aria-label={t('stories.search_aria', 'Search stories')}
             className="w-full md:max-w-lg bg-white border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
           />
@@ -311,7 +311,7 @@ export const BetaStories = () => {
           </div>
         )}
 
-        {/* Category Filter Tabs — hidden in search mode */}
+        {/* Category Filter Tabs, hidden in search mode */}
         {!isSearchMode && !isLoading && sectors.length > 1 && (
           <div className="flex gap-2 flex-wrap mb-10">
             {sectors.map(sector => (
@@ -384,7 +384,7 @@ export const BetaStories = () => {
                           {t('stories.waiting', 'This story is waiting for you.')}
                         </h3>
                         <p className="text-primary/65 text-sm leading-relaxed line-clamp-3 blur-[4px] select-none opacity-60">
-                          {t('stories.waiting_desc', "A real, grounded account from across the continent — the kind of story you won't find in a headline.")}
+                          {t('stories.waiting_desc', "A real, grounded account from across the continent, the kind of story you won't find in a headline.")}
                         </p>
                         <div className="mt-4 text-xs font-medium text-primary/40 border-t border-primary/8 pt-4 blur-[4px] select-none opacity-60">
                           5 min read
@@ -397,7 +397,7 @@ export const BetaStories = () => {
                             <Lock className="w-5 h-5 text-accent" />
                           </div>
                           <span className="font-serif text-lg text-white mb-1.5">{t('stories.members_story', "A members' story")}</span>
-                          <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">{t('stories.members_story_desc', 'Join founding members to read this — and every story — in full.')}</span>
+                          <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">{t('stories.members_story_desc', 'Join founding members to read this, and every story, in full.')}</span>
                           <span className="inline-block bg-accent text-navy text-[11px] font-bold uppercase tracking-[0.1em] px-5 py-2 rounded-full group-hover:bg-gold-italic transition-colors">{t('stories.unlock', 'Unlock access')}</span>
                         </ScrollReveal>
                       </div>

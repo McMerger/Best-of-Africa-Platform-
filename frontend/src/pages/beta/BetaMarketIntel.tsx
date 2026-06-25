@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPORTER FEED
-// A transparent, editorial look at what we're building — for Ko-fi backers.
+// A transparent, editorial look at what we're building, for Ko-fi backers.
 // Route: /intel
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
         </div>
         <p className="font-serif text-xl font-semibold text-primary mb-2">Coverage Breakdown</p>
         <p className="text-sm text-primary/50 mb-6 max-w-sm">
-          Backers see exactly which countries and topics are getting research attention — updated as new stories are added.
+          Backers see exactly which countries and topics are getting research attention, updated as new stories are added.
         </p>
         <a
           href={KO_FI_URL}
@@ -151,7 +151,7 @@ export const BetaMarketIntel = () => {
     <div className="pb-24">
       <SEO
         title="Supporter Feed | BOA-Story"
-        description="A behind-the-scenes look at what we're building — for Ko-fi backers."
+        description="A behind-the-scenes look at what we're building, for Ko-fi backers."
       />
       
 
@@ -179,10 +179,10 @@ export const BetaMarketIntel = () => {
           <section>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { value: stats.total_articles?.toLocaleString() ?? '—', label: 'Stories published' },
-                { value: stats.total_countries ?? '—', label: 'Countries covered' },
-                { value: stats.regions ?? '—', label: 'African regions' },
-                { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '—', label: 'Total reads' },
+                { value: stats.total_articles?.toLocaleString() ?? '-', label: 'Stories published' },
+                { value: stats.total_countries ?? '-', label: 'Countries covered' },
+                { value: stats.regions ?? '-', label: 'African regions' },
+                { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '-', label: 'Total reads' },
               ].map(({ value, label }) => (
                 <div key={label} className="bg-white rounded-xl border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 text-center">
                   <p className="font-serif text-[2rem] font-bold text-accent leading-none mb-1">{value}</p>
@@ -241,7 +241,7 @@ export const BetaMarketIntel = () => {
             <MapPin size={18} className="text-accent" />
             <h2 className="font-serif text-2xl text-primary">Where we're reporting</h2>
             {!isMember && (
-              <span className="text-[11px] text-primary/40 font-medium">— backers only</span>
+              <span className="text-[11px] text-primary/40 font-medium">backers only</span>
             )}
           </div>
           <CoverageBlock isMember={isMember} />

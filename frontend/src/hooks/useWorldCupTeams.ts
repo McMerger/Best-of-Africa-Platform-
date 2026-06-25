@@ -11,7 +11,7 @@ export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string |
   const { data } = useQuery({
     queryKey: ['world-cup-teams'],
     queryFn: api.getWorldCupTeams,
-    staleTime: 30 * 60 * 1000, // 30 min — matches the backend refresh cadence
+    staleTime: 30 * 60 * 1000, // 30 min, matches the backend refresh cadence
     enabled: WORLD_CUP.enabled,
   });
 

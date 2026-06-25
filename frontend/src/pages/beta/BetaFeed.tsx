@@ -145,7 +145,7 @@ export const BetaFeed: React.FC = () => {
         <div className="min-h-screen bg-background pb-24">
             <SEO
                 title="Daily Briefing | BOA-Story"
-                description="Your curated daily Africa intelligence briefing — the continent's most important stories, every morning."
+                description="Your curated daily Africa intelligence briefing, the continent's most important stories, every morning."
             />
 
             {/* Masthead */}
@@ -249,7 +249,7 @@ export const BetaFeed: React.FC = () => {
                         <Sparkles className="w-10 h-10 text-accent mx-auto mb-4" />
                         <h3 className="font-serif text-2xl font-bold mb-3 text-foreground">Proprietary Briefing</h3>
                         <p className="text-foreground/70 mb-8 max-w-xl mx-auto leading-relaxed">
-                            Founding Members receive an editor-curated briefing tailored to their exact markets and sectors — every single day.
+                            Founding Members receive an editor-curated briefing tailored to their exact markets and sectors, every single day.
                         </p>
                         <Link to="/membership" className="inline-block bg-accent text-primary font-bold px-8 py-3 rounded-full hover:brightness-110 transition-all">
                             Become a Founding Member

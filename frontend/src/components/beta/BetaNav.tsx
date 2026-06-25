@@ -1,5 +1,5 @@
-// DEPRECATED — superseded by NavBar.tsx. Safe to delete.
-// DEPRECATED — superseded by NavBar.tsx and Footer.tsx. Safe to delete.
+// DEPRECATED, superseded by NavBar.tsx. Safe to delete.
+// DEPRECATED, superseded by NavBar.tsx and Footer.tsx. Safe to delete.
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';

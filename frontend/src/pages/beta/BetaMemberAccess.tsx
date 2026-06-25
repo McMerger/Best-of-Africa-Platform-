@@ -134,7 +134,7 @@ export const BetaMemberAccess = () => {
     }
   };
 
-  // ── Checking state — validating existing token ─────────────────────────────
+  // ── Checking state, validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -276,7 +276,7 @@ export const BetaMemberAccess = () => {
 
                   <div className="flex flex-col gap-4">
                     {resendSuccess && (
-                      <p className="text-[13px] text-accent text-center bg-accent/10 p-3 rounded-lg border border-accent/20 font-bold tracking-wide" role="status">New code sent — check your inbox.</p>
+                      <p className="text-[13px] text-accent text-center bg-accent/10 p-3 rounded-lg border border-accent/20 font-bold tracking-wide" role="status">New code sent, check your inbox.</p>
                     )}
                     <button
                       type="button"
@@ -284,7 +284,7 @@ export const BetaMemberAccess = () => {
                       disabled={isSubmitting || resendCooldown > 0}
                       className="text-[11px] text-foreground/50 hover:text-foreground uppercase tracking-widest font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-center"
                     >
-                      {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                      {isSubmitting ? 'Resending...' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
                     </button>
                     <button
                       type="button"

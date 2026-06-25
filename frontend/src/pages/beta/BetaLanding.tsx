@@ -149,7 +149,7 @@ export const BetaLanding = () => {
 
   const faqItems = [
     { q: t('landing.faq1_q', 'Is this finished?'), a: t('landing.faq1_a', 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.') },
-    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods.') },
+    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard, no lock-in periods.') },
     { q: t('landing.faq3_q', 'Why now?'), a: t('landing.faq3_a', 'Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.') },
   ];
 
@@ -181,7 +181,7 @@ export const BetaLanding = () => {
       />
       
 
-      {/* 1. HERO SECTION — full navy band (spec §2.2) */}
+      {/* 1. HERO SECTION, full navy band (spec §2.2) */}
       <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-white/10 bg-navy text-white">
         {/* Parallax Background */}
         <motion.div
@@ -202,7 +202,7 @@ export const BetaLanding = () => {
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
           <SectionLabel text={t('landing.early_access', 'Early Access')} />
 
-          {/* Static (non-animated) hero headline — this is the LCP element, so it
+          {/* Static (non-animated) hero headline, this is the LCP element, so it
               must paint on first render rather than fading in from opacity:0. */}
           <h1 className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
             {t('landing.hero_title', 'Africa without the filter.')}
@@ -214,7 +214,7 @@ export const BetaLanding = () => {
             initial={false}
             className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
           >
-            {t('landing.hero_sub', 'A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.')}
+            {t('landing.hero_sub', 'A digital home for real, thoughtful stories about African lives, cities, and ideas, beyond charity ads and disaster headlines.')}
           </motion.p>
 
           <motion.div
@@ -252,7 +252,7 @@ export const BetaLanding = () => {
 
             <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
               <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
-                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span> {t('landing.funding_detail', '— 38% of $800 goal funded, 62 coffees received')}
+                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {t('landing.funding_detail', '38% of $800 goal funded, 62 coffees received')}
               </p>
               <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
                 <motion.div 
@@ -310,7 +310,7 @@ export const BetaLanding = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/20" />
                     </div>
 
-                    {/* FREE READ badge on the first (unlocked) card — spec §2.4 */}
+                    {/* FREE READ badge on the first (unlocked) card, spec §2.4 */}
                     {isFeatured && (
                       <span className="absolute top-6 right-6 z-30 text-[10px] font-bold tracking-[0.2em] uppercase text-navy bg-accent px-4 py-2 rounded-full shadow-lg">
                         {t('landing.free_read', 'Free Read')}
@@ -341,7 +341,7 @@ export const BetaLanding = () => {
                         )}
                       </div>
                     </div>
-                    {/* PAYWALL OVERLAY — only on gated (non-featured) cards */}
+                    {/* PAYWALL OVERLAY, only on gated (non-featured) cards */}
                     {!isFeatured && (
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-navy/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                         <div className="bg-navy-card/90 border border-accent/30 p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100">
@@ -364,7 +364,7 @@ export const BetaLanding = () => {
             })
           ) : (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
-              <div className="animate-pulse text-2xl font-serif">{t('landing.curating', 'Curating stories…')}</div>
+              <div className="animate-pulse text-2xl font-serif">{t('landing.curating', 'Curating stories...')}</div>
             </div>
           )}
         </div>
@@ -441,7 +441,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 6. MISSION BLOCK — full navy band, gold italic "Properly." (spec §2.7) */}
+      {/* 6. MISSION BLOCK, full navy band, gold italic "Properly." (spec §2.7) */}
       <section className="py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
         <div className="absolute inset-0 z-0">
           <motion.img
@@ -466,13 +466,13 @@ export const BetaLanding = () => {
               {t('landing.mission_title', "We're building Africa's story.")} <span className="italic text-accent">{t('landing.mission_properly', 'Properly.')}</span>
             </h2>
             <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
-              {t('landing.mission_note', 'The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.')}
+              {t('landing.mission_note', 'The continent deserves better than headlines about crisis and chaos. The real day-to-day energy, the businesses being built, the cultures thriving, deserves a platform built for it.')}
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* 7. TRANSPARENCY SECTION — gold SVG icons on navy circles (spec §2.8) */}
+      {/* 7. TRANSPARENCY SECTION, gold SVG icons on navy circles (spec §2.8) */}
       <section className="py-32 px-6 container mx-auto max-w-6xl text-center">
         <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">

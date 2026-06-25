@@ -53,7 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </h1>
 
             <p className="text-foreground/60 mb-8 leading-relaxed">
-              This page didn’t load properly. Reloading usually fixes it — you might
+              This page didn't load properly. Reloading usually fixes it, you might
               just be on an older version of the site.
             </p>
 

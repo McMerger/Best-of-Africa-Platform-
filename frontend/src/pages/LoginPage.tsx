@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
         <>
             <SEO title="Member Portal" description="Sign in to your Best of Africa membership with a one-click email login link." />
             <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-navy text-white px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-white/10 shadow-2xl">
-                {/* Background decorative elements — amber/gold radial glow */}
+                {/* Background decorative elements, amber/gold radial glow */}
                 <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl" />
                 <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] pointer-events-none" />

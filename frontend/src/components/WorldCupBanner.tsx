@@ -35,7 +35,7 @@ export const WorldCupBanner = () => {
             <span className="font-semibold text-white">Backing Africa</span>{' '}
             <span aria-hidden="true">{teams.map(t => t.flag).join(' ')}</span>
             <span className="hidden md:inline text-white/60">
-              {' '}— {teams.map(t => t.name).join(' · ')}
+              {': '}{teams.map(t => t.name).join(', ')}
             </span>
           </p>
         </div>

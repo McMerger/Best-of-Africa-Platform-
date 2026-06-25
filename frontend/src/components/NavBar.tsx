@@ -32,7 +32,7 @@ export const NavBar: React.FC = () => {
     const { t } = useLanguage();
     const { isAuthenticated } = useAuth();
 
-    // Full mobile menu — every primary page is reachable here, grouped by section.
+    // Full mobile menu, every primary page is reachable here, grouped by section.
     const mobileSections: { heading: string; links: { href: string; label: string }[] }[] = [
         {
             heading: t("group.read", "Read"),
@@ -74,7 +74,7 @@ export const NavBar: React.FC = () => {
 
     return (
         <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-2xl border-b border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300">
-            {/* Pre-header Utilities — lens / feed-mode controls only for signed-in users */}
+            {/* Pre-header Utilities, lens / feed-mode controls only for signed-in users */}
             <div className="hidden xl:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
                 <LanguageSelector />
                 {isAuthenticated && <MissionControl />}
@@ -82,7 +82,7 @@ export const NavBar: React.FC = () => {
             </div>
 
             <div className="flex h-16 items-center justify-between px-4 lg:px-8 max-w-[1400px] mx-auto">
-                {/* LEFT: Logo — "B BOA." lockup */}
+                {/* LEFT: Logo, "B BOA." lockup */}
                 <div className="flex items-center min-w-0 shrink-0 z-10">
                     <Link to="/" className="flex items-center gap-2 group shrink-0">
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy font-serif font-black text-white text-lg leading-none shadow-sm">B</span>
@@ -124,7 +124,7 @@ export const NavBar: React.FC = () => {
 
                 {/* RIGHT: Actions + Sign In */}
                 <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
-                    {/* Icon Actions — Settings/Admin/Notifications only when signed in */}
+                    {/* Icon Actions, Settings/Admin/Notifications only when signed in */}
                     <div className="hidden xl:flex items-center gap-1 mr-2">
                         <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
                             <Link to="/search">

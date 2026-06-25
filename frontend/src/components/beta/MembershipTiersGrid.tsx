@@ -27,7 +27,7 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
       return (
         <CardReveal key={tier.id} delay={i * 0.15}>
           {tier.recommended ? (
-            // Featured / recommended card — elevated with gold border
+            // Featured / recommended card, elevated with gold border
             <div className="bg-navy text-white border-t-4 border-accent rounded-2xl p-8 md:p-10 relative flex flex-col h-full md:-translate-y-4 shadow-[0_20px_50px_rgba(15,31,61,0.25)] z-10 hover:shadow-[0_24px_60px_rgba(201,168,76,0.22)] hover:-translate-y-5 transition-all duration-300">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-navy text-[10px] font-bold uppercase tracking-widest py-1 px-5 rounded-full shadow-lg whitespace-nowrap">
                 Recommended

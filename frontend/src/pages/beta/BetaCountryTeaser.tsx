@@ -20,7 +20,7 @@ interface CountriesApiResponse {
   by_region: Record<string, RegionData>;
 }
 
-// No hardcoded fallback — countries are always fetched from the API.
+// No hardcoded fallback, countries are always fetched from the API.
 
 const REGIONS = ['All', 'North', 'West', 'East', 'Central', 'Southern'] as const;
 type Region = typeof REGIONS[number];
@@ -142,7 +142,7 @@ export const BetaCountryTeaser = () => {
             {t('countries.title', 'One Continent. Every Story.')}
           </h1>
           <p className="text-lg text-primary/60 max-w-2xl mx-auto leading-relaxed">
-            {t('countries.subtitle', 'From the Atlantic to the Indian Ocean — narrative deep-dives for every African nation, coming to Founding Members.')}
+            {t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
 
@@ -151,7 +151,7 @@ export const BetaCountryTeaser = () => {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
           <input
             type="text"
-            placeholder={t('countries.search_ph', 'Search countries or sectors…')}
+            placeholder={t('countries.search_ph', 'Search countries or sectors...')}
             aria-label={t('countries.search_aria', 'Search countries or sectors')}
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -236,7 +236,7 @@ export const BetaCountryTeaser = () => {
             rel="noopener noreferrer"
             className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
-            {t('countries.cta_btn', 'Unlock All 54 Country Hubs — Join as a Founding Member')}
+            {t('countries.cta_btn', 'Unlock All 54 Country Hubs, Join as a Founding Member')}
           </a>
         </div>
       </div>

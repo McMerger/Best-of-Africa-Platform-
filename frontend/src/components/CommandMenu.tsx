@@ -96,7 +96,7 @@ export const CommandMenu = () => {
                     <MagnifyingGlassIcon className="mr-2 h-5 w-5 shrink-0 opacity-50" />
                     <Input
                         className="flex h-12 w-full rouned-md bg-transparent py-3 text-lg outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 shadow-none text-foreground"
-                        placeholder="Search stories, countries, topics…"
+                        placeholder="Search stories, countries, topics..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}

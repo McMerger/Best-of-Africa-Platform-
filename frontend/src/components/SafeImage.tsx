@@ -11,7 +11,7 @@ interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 /**
  * Drop-in <img> replacement that renders a branded "B BOA." navy placeholder
  * instead of a broken-image box when the source fails to load (spec §2.4/§3.6).
- * Pass the same className you'd give the <img> — it's applied to both the image
+ * Pass the same className you'd give the <img>, it's applied to both the image
  * and the fallback so layout/positioning is preserved.
  */
 export const SafeImage: React.FC<SafeImageProps> = ({ caption, location, className, alt, ...props }) => {

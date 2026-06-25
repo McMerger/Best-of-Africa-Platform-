@@ -167,7 +167,7 @@ export const BetaTravel: React.FC = () => {
                 {/* Affiliate Disclosure */}
                 <div className="mt-24 p-8 bg-card rounded-2xl border border-foreground/5 text-center text-foreground/40 font-light max-w-4xl mx-auto">
                     <p className="text-[13px] leading-[1.8]">
-                        <strong className="text-foreground/60">Editorial Disclosure:</strong> We earn revenue through affiliate links when you book hotels, flights, or services through our links. This helps keep our intelligence platform running. Our editorial recommendations are never influenced by affiliate partnerships—we only recommend properties and services we genuinely believe will benefit business travelers in Africa.
+                        <strong className="text-foreground/60">Editorial Disclosure:</strong> We earn revenue through affiliate links when you book hotels, flights, or services through our links. This helps keep our intelligence platform running. Our editorial recommendations are never influenced by affiliate partnerships, and we only recommend properties and services we genuinely believe will benefit business travelers in Africa.
                     </p>
                 </div>
             </div>

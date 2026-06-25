@@ -77,7 +77,7 @@ export const BetaNewsletter = () => {
     <div className="flex flex-col selection:bg-accent selection:text-navy">
       <SEO 
         title="Newsletter | BOA-Story" 
-        description="Weekly dispatches on African business, culture, and emerging stories — no noise, no filter."
+        description="Weekly dispatches on African business, culture, and emerging stories, no noise, no filter."
       />
       
 
@@ -89,7 +89,7 @@ export const BetaNewsletter = () => {
               Stay close to Africa's <span className="italic text-accent">story.</span>
             </h1>
             <p className="text-lg text-ink-blue max-w-sm mx-auto leading-relaxed">
-              Free weekly dispatches — cities, founders, opportunities. No noise. Unsubscribe anytime.
+              Free weekly dispatches, cities, founders, opportunities. No noise. Unsubscribe anytime.
             </p>
           </div>
 
@@ -115,11 +115,11 @@ export const BetaNewsletter = () => {
               disabled={status === 'loading'}
               className="w-full bg-accent text-accent-foreground font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              {status === 'loading' ? 'Subscribing…' : 'Get the weekly dispatch'}
+              {status === 'loading' ? 'Subscribing...' : 'Get the weekly dispatch'}
             </button>
           </form>
 
-          {/* Sample dispatch preview — shows readers exactly what they'll get (spec §3.9) */}
+          {/* Sample dispatch preview, shows readers exactly what they'll get (spec §3.9) */}
           <div className="bg-white rounded-xl border border-border p-8 md:p-10 mb-12 shadow-[0_1px_6px_rgba(0,0,0,0.08)] w-full text-left">
             <div className="flex items-center justify-between mb-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Sample Dispatch</span>

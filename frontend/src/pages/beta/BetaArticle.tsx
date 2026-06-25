@@ -45,7 +45,7 @@ function useReadingProgress(targetId: string) {
   return progress;
 }
 
-// Inline share buttons — copy link, Twitter/X, LinkedIn
+// Inline share buttons, copy link, Twitter/X, LinkedIn
 function ShareButtons({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = useState(false);
   const { t } = useLanguage();
@@ -143,7 +143,7 @@ function renderArticleHtml(md: string): string {
   s = s.replace(/\*(.+?)\*/g, '<em class="italic text-foreground">$1</em>');
   s = s.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-accent underline hover:text-gold-italic" target="_blank" rel="noopener noreferrer">$1</a>');
   // Use [ \t]* (not \s*) so the blank-line separator between a paragraph and a
-  // list isn't swallowed into the first item — that merges the list into the
+  // list isn't swallowed into the first item, that merges the list into the
   // preceding <p> and breaks <ul>/<ol> grouping.
   s = s.replace(/^[ \t]*[-*][ \t]+(.*)$/gm, '<li class="ul-item text-foreground/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3"><span class="text-accent mt-1 shrink-0">→</span><span>$1</span></li>');
   s = s.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gm, '<li class="ol-item text-foreground/80 text-[1.125rem] leading-[1.8] font-light tracking-wide mb-3 pl-1">$1</li>');
@@ -233,7 +233,7 @@ export const BetaArticle = () => {
   // The backend already truncated content for non-members and set paywall:true
   const isPaywalled = !!article.paywall;
 
-  // Content is whatever the API returned — full for members, truncated for guests
+  // Content is whatever the API returned, full for members, truncated for guests
   const articleContent = article.content || '';
 
   const activeContent = lens === 'original' ? articleContent : (reframedContent[lens] || articleContent);
@@ -278,7 +278,7 @@ export const BetaArticle = () => {
         publishedTime={article.published_at || undefined}
         author={authorName}
       />
-      {/* Reading progress bar — fixed gold line at the very top */}
+      {/* Reading progress bar, fixed gold line at the very top */}
       <div
         className="fixed top-0 left-0 z-[45] h-[2px] bg-accent transition-[width] duration-100 ease-linear pointer-events-none"
         style={{ width: `${readingProgress}%` }}
@@ -351,7 +351,7 @@ export const BetaArticle = () => {
             {article.title}
           </h1>
 
-          {/* Lede / standfirst — rendered from article.summary */}
+          {/* Lede / standfirst, rendered from article.summary */}
           {article.summary && (
             <p className="font-serif text-[1.5rem] md:text-[2rem] leading-[1.4] text-foreground/70 italic mb-10 border-l-2 border-accent pl-6 py-2">
               {article.summary}
@@ -417,13 +417,13 @@ export const BetaArticle = () => {
             <ArticleMarkdown content={activeContent} />
           </div>
 
-          {/* Paywall — premium, value-forward membership prompt */}
+          {/* Paywall, premium, value-forward membership prompt */}
           {isPaywalled && (
             <div className="relative mt-2">
               {/* Faded teaser so the story visibly continues beneath the prompt */}
               <div className="opacity-30 select-none pointer-events-none blur-[5px]" aria-hidden="true">
                 <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-6 font-light">
-                  {t('article.teaser1', 'The story goes deeper here — the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.')}
+                  {t('article.teaser1', 'The story goes deeper here, the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.')}
                 </p>
                 <p className="text-foreground/70 text-[1.125rem] leading-[1.8] mb-6 font-light">
                   {t('article.teaser2', 'It continues with the interviews and detail that make this more than a summary, and there is much more still to read below.')}
@@ -445,7 +445,7 @@ export const BetaArticle = () => {
                     {t('article.keep_reading', 'Keep reading the full story')}
                   </h3>
                   <p className="text-white/70 mb-7 max-w-sm mx-auto leading-relaxed">
-                    {t('article.paywall_desc', 'Back independent African journalism and unlock every story in full — from the people who make it possible.')}
+                    {t('article.paywall_desc', 'Back independent African journalism and unlock every story in full, from the people who make it possible.')}
                   </p>
                   <ul className="text-left space-y-2.5 mb-8 max-w-xs mx-auto text-[15px] text-white/85">
                     {[t('article.bullet_full', 'Full access to every story & report'), t('article.bullet_vote', 'Vote on the next story topic'), t('article.bullet_bts', 'Behind-the-scenes founder updates')].map(b => (
@@ -472,13 +472,13 @@ export const BetaArticle = () => {
             </div>
           )}
 
-          {/* Post-read nudge for non-members — a calm, confident invitation (not a hard wall) */}
+          {/* Post-read nudge for non-members, a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
             <ScrollReveal className="block mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
-              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', '— Independent journalism')}</span>
+              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', 'Independent journalism')}</span>
               <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">{t('article.enjoyed', 'Enjoyed this story?')}</p>
               <p className="text-white/70 text-[15px] mb-7 max-w-md mx-auto leading-relaxed">
-                {t('article.enjoyed_desc', 'BOA-Story is reader-funded and independent. Founding members keep these stories coming — and help decide what we cover next.')}
+                {t('article.enjoyed_desc', 'BOA-Story is reader-funded and independent. Founding members keep these stories coming, and help decide what we cover next.')}
               </p>
               <a
                 href={KO_FI_URL}

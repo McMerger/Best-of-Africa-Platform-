@@ -5,7 +5,7 @@ import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
 
 /**
  * TEMPORARY landing feature band celebrating African nations at the World Cup.
- * On-brand (navy + gold), CSS-light (no heavy animation — respects reduced-motion
+ * On-brand (navy + gold), CSS-light (no heavy animation, respects reduced-motion
  * via the global media query). Gated by WORLD_CUP.enabled (config/worldCup.ts).
  */
 const relativeTime = (iso: string): string => {
@@ -39,10 +39,10 @@ export const WorldCupFeature = () => {
         </h2>
 
         <p className="text-white/75 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-light leading-relaxed">
-          We're following every African story at the tournament — the cities, the fans, and the everyday energy beyond the scoreline.
+          We're following every African story at the tournament, the cities, the fans, and the everyday energy beyond the scoreline.
         </p>
 
-        {/* The African nations competing — bold, country-forward cards */}
+        {/* The African nations competing, bold, country-forward cards */}
         <p className="text-accent/90 text-[11px] font-bold uppercase tracking-[0.2em] mb-5">
           {teams.length} African nation{teams.length !== 1 ? 's' : ''} flying the flag
         </p>

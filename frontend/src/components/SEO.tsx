@@ -38,7 +38,7 @@ export const SEO: React.FC<SEOProps> = ({
             const rssLink = document.createElement('link');
             rssLink.setAttribute('rel', 'alternate');
             rssLink.setAttribute('type', 'application/rss+xml');
-            rssLink.setAttribute('title', 'BOA-Story — Africa Intelligence RSS Feed');
+            rssLink.setAttribute('title', 'BOA-Story, Africa Intelligence RSS Feed');
             rssLink.setAttribute('href', '/rss.xml');
             document.head.appendChild(rssLink);
         }

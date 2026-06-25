@@ -520,6 +520,27 @@ SUMMARY: [2-3 sentence grounded human-focused summary]
 TAGS: [comma-separated list of 3-5 relevant tags]`;
 }
 
+// Strip characters that read as machine-generated (the em/en dash being the most
+// obvious tell), so published copy reads like a person wrote it:
+//  - smart quotes  → straight quotes
+//  - ellipsis char → three dots
+//  - en/em dash between digits → hyphen (number ranges)
+//  - en/em dash used as punctuation → comma
+export function humanizeText(s?: string): string {
+    if (!s) return '';
+    return s
+        .replace(/[“”]/g, '"')        // “ ”
+        .replace(/[‘’]/g, "'")        // ‘ ’
+        .replace(/…/g, '...')              // …
+        .replace(/(\d)\s*[–—]\s*(\d)/g, '$1-$2') // 2010–2020 → 2010-2020 (range)
+        .replace(/\s+[–—]\s+/g, ', ')            // spaced dash (parenthetical) → comma
+        .replace(/(\w)[–](\w)/g, '$1-$2')        // Israel–Palestine → Israel-Palestine
+        .replace(/\s*[–—]\s*/g, ', ')            // any remaining dash → comma
+        .replace(/ ,/g, ',')
+        .replace(/,\s*,+/g, ',')
+        .trim();
+}
+
 function parseArticleResponse(text: string): {
     title: string;
     subtitle: string;
@@ -547,11 +568,11 @@ function parseArticleResponse(text: string): {
         s.replace(/^(?:\s*\*{0,2}\s*(?:TITLE|SUBTITLE|CONTENT|BODY)\b[^\n]*\n+)+/i, '').trim();
 
     return {
-        title: stripInline(titleMatch?.[1]) || 'Untitled Article',
-        subtitle: stripInline(subtitleMatch?.[1]),
-        content: stripLeadingLabels(contentMatch?.[1]?.trim() || text),
-        summary: stripInline(summaryMatch?.[1]),
-        tags: tagsMatch?.[1]?.split(',').map(t => stripInline(t)).filter(Boolean) || [],
+        title: humanizeText(stripInline(titleMatch?.[1])) || 'Untitled Article',
+        subtitle: humanizeText(stripInline(subtitleMatch?.[1])),
+        content: humanizeText(stripLeadingLabels(contentMatch?.[1]?.trim() || text)),
+        summary: humanizeText(stripInline(summaryMatch?.[1])),
+        tags: tagsMatch?.[1]?.split(',').map(t => humanizeText(stripInline(t))).filter(Boolean) || [],
     };
 }
 

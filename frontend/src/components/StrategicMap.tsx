@@ -90,7 +90,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                             : `linear-gradient(135deg, ${region.color}40, ${region.color}20)`,
                                     }}
                                 >
-                                    <span className="text-xs font-black text-foreground/90">{count || '—'}</span>
+                                    <span className="text-xs font-black text-foreground/90">{count || '-'}</span>
                                 </div>
 
                                 {/* Region label */}

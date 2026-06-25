@@ -78,7 +78,7 @@ export const BetaSearch: React.FC = () => {
                 description="Search thousands of African business intelligence briefings, country profiles, and sector analysis."
             />
 
-            {/* Search Header — navy band (spec §3.1) */}
+            {/* Search Header, navy band (spec §3.1) */}
             <div className="bg-navy text-white pt-32 pb-16 px-6 border-b border-white/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
                 <div className="max-w-4xl mx-auto relative z-10">
@@ -89,7 +89,7 @@ export const BetaSearch: React.FC = () => {
                         <h1 className="font-serif text-white text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-12">
                             What are you <br className="hidden md:block"/><span className="text-accent italic">researching?</span>
                         </h1>
-                        {/* Search Input — dark navy field with gold border */}
+                        {/* Search Input, dark navy field with gold border */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowSuggestions(false); }}>
                             <div className="flex items-center gap-4 bg-navy-card border border-accent/50 rounded-[2rem] px-8 py-6 focus-within:border-accent focus-within:shadow-[0_0_40px_rgba(201,168,76,0.2)] transition-all group">
                                 <SearchIcon className="w-6 h-6 text-white/40 group-focus-within:text-accent shrink-0 transition-colors" />

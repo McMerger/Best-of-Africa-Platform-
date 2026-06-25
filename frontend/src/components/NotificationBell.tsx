@@ -27,7 +27,7 @@ export const NotificationBell: React.FC = () => {
                 setUnread(res.data.filter((n: Notification) => !n.is_read).length);
             }
         } catch {
-            // Notifications may not be available yet — fail silently
+            // Notifications may not be available yet, fail silently
         }
     };
 

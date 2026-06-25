@@ -123,7 +123,7 @@ export const SettingsPage: React.FC = () => {
         }
     };
 
-    // AUTH GATE — no settings form is shown to unauthenticated visitors (spec §3.10)
+    // AUTH GATE, no settings form is shown to unauthenticated visitors (spec §3.10)
     if (!isAuthenticated) {
         return (
             <div className="container py-20 max-w-4xl">

@@ -1,6 +1,6 @@
 /**
  * Shared constants for the beta section of the platform.
- * Single source of truth — import from here rather than duplicating inline.
+ * Single source of truth, import from here rather than duplicating inline.
  */
 
 import type { ArticleListItem } from '../types';
@@ -29,7 +29,7 @@ export const FLAG_MAP: Record<string, string> = {
   BW: '🇧🇼', SZ: '🇸🇿', LS: '🇱🇸', NA: '🇳🇦', ZA: '🇿🇦', ZM: '🇿🇲', ZW: '🇿🇼',
 };
 
-// ─── Membership tiers (canonical source — used in BetaLanding + BetaMembership) ──
+// ─── Membership tiers (canonical source, used in BetaLanding + BetaMembership) ──
 
 export interface MembershipTier {
   id: string;

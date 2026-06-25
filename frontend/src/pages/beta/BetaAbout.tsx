@@ -17,10 +17,10 @@ export const BetaAbout = () => {
     <div className="selection:bg-accent selection:text-primary bg-background text-foreground min-h-screen">
       <SEO 
         title="About | BOA-Story" 
-        description="A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."
+        description="A digital home for real, thoughtful stories about African lives, cities, and ideas, beyond charity ads and disaster headlines."
       />
       
-      {/* 1. HERO — full navy band (spec §3.7) */}
+      {/* 1. HERO, full navy band (spec §3.7) */}
       <section className="relative min-h-[80vh] flex flex-col justify-center pt-24 pb-24 px-6 border-b border-white/10 overflow-hidden bg-navy">
         <motion.div
           className="absolute inset-0 z-0"
@@ -44,7 +44,7 @@ export const BetaAbout = () => {
         </div>
       </section>
 
-      {/* 1b. Live platform stats strip — proof, not aspiration */}
+      {/* 1b. Live platform stats strip, proof, not aspiration */}
       {stats && (
         <section className="border-b border-foreground/10 bg-card/50 relative z-30 backdrop-blur-md">
           <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -75,7 +75,7 @@ export const BetaAbout = () => {
               {t('about.founder1', "I'm a student and independent writer trying to close the gap between the Africa you see in headlines and the Africa I hear about from friends, founders, and family. Here I'm building BOA-Story, a small, self-funded project to surface grounded stories about African cities, creators, and everyday opportunity.")}
             </p>
             <p className="text-foreground/70">
-              {t('about.founder2a', "We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving, the cities changing — deserves a platform built for it. Your support at this quiet, early stage is what turns")} <span className="text-accent italic">"{t('about.founder2_q1', 'someone should build this')}"</span> {t('about.founder2_mid', 'into')} <span className="text-accent italic">"{t('about.founder2_q2', "we're actually building it.")}"</span>
+              {t('about.founder2a', "We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy, the businesses being built, the cultures thriving, the cities changing, deserves a platform built for it. Your support at this quiet, early stage is what turns")} <span className="text-accent italic">"{t('about.founder2_q1', 'someone should build this')}"</span> {t('about.founder2_mid', 'into')} <span className="text-accent italic">"{t('about.founder2_q2', "we're actually building it.")}"</span>
             </p>
           </motion.div>
         </section>
