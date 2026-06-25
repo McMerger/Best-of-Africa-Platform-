@@ -275,6 +275,16 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     const minutes = date.getUTCMinutes();
     const hours = date.getUTCHours();
 
+    // 0. Recover stranded 'pending' items FIRST — it is cheap (one query + a few
+    // queue sends) and must not be starved by the heavier steps below, which can
+    // exhaust the per-invocation subrequest budget. The actual generation happens
+    // in the separate queue consumer (one item per invocation), so this only
+    // re-feeds the backlog; it does not generate inline.
+    await safe('recover-pending', async () => {
+        const { recoverPendingItems } = await import('./workers/generator');
+        await recoverPendingItems(env, 25);
+    });
+
     // 1. Ingestion: every minute
     await safe('ingestion', () => runIngestion(env));
 
@@ -345,11 +355,8 @@ async function runStaleTaskRecovery(env: Env) {
     // Implemented in workers/generator.ts
     // Internal fallback: claims generate_article tasks that ZeroClaw hasn't
     // picked up after 15 minutes and runs the full generation pipeline locally.
-    const { processStaleArticleTasks, recoverPendingItems } = await import('./workers/generator');
+    const { processStaleArticleTasks } = await import('./workers/generator');
     await processStaleArticleTasks(env);
-    // Re-enqueue ingested items stranded at 'pending' (e.g. after an AI outage),
-    // so the backlog drains automatically once generation capacity returns.
-    await recoverPendingItems(env, 10);
 }
 
 async function processContentGeneration(data: Record<string, unknown>, env: Env) {

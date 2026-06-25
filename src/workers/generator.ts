@@ -191,6 +191,17 @@ export const generateArticle = generateArticleFromQueue;
 // backlog drains automatically once generation capacity returns.
 // ───────────────────────────────────────────────────────────────────────────────
 export async function recoverPendingItems(env: Env, limit = 10): Promise<number> {
+    // Don't flood the queue while text generation is down (breaker OPEN) — there's
+    // no point re-enqueuing into a failing AI. Resumes automatically once the
+    // breaker closes (AI capacity restored).
+    try {
+        const cb = await env.CACHE.get('cb:ai-text-gen', 'json') as { state?: string } | null;
+        if (cb?.state === 'OPEN') {
+            console.log('[generator] Skipping recovery: ai-text-gen breaker is OPEN.');
+            return 0;
+        }
+    } catch { /* KV unavailable — proceed */ }
+
     const stranded = await env.DB.prepare(`
         SELECT id, source_id
         FROM ingested_items
