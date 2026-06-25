@@ -3,9 +3,11 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
+import { useLanguage } from '@/context/LanguageContext';
 
 export const BetaAbout = () => {
   const { scrollY } = useScroll();
+  const { t } = useLanguage();
   const { data: stats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
@@ -37,7 +39,7 @@ export const BetaAbout = () => {
             initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}
             className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
           >
-            We're building Africa's story.<br /><span className="text-accent italic">Properly.</span>
+            {t('landing.mission_title', "We're building Africa's story.")}<br /><span className="text-accent italic">{t('landing.mission_properly', 'Properly.')}</span>
           </motion.h1>
         </div>
       </section>
@@ -47,10 +49,10 @@ export const BetaAbout = () => {
         <section className="border-b border-foreground/10 bg-card/50 relative z-30 backdrop-blur-md">
           <div className="max-w-5xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: stats.total_articles.toLocaleString(), label: 'Stories Published' },
-              { value: stats.total_countries, label: 'Countries Covered' },
-              { value: stats.regions, label: 'African Regions' },
-              { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: 'Total Reads' },
+              { value: stats.total_articles.toLocaleString(), label: t('about.stat_published', 'Stories Published') },
+              { value: stats.total_countries, label: t('about.stat_countries', 'Countries Covered') },
+              { value: stats.regions, label: t('about.stat_regions', 'African Regions') },
+              { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: t('about.stat_reads', 'Total Reads') },
             ].map(({ value, label }, i) => (
               <motion.div key={label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                 <p className="font-serif text-[3rem] font-bold text-accent leading-none mb-2">{value}</p>
@@ -70,10 +72,10 @@ export const BetaAbout = () => {
             className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[2rem] prose-p:md:text-[3rem] prose-p:leading-[1.4] prose-p:text-foreground/90 prose-p:tracking-tight"
           >
             <p className="mb-12">
-              I'm a student and independent writer trying to close the gap between the Africa you see in headlines and the Africa I hear about from friends, founders, and family. Here I'm building BOA-Story, a small, self-funded project to surface grounded stories about African cities, creators, and everyday opportunity.
+              {t('about.founder1', "I'm a student and independent writer trying to close the gap between the Africa you see in headlines and the Africa I hear about from friends, founders, and family. Here I'm building BOA-Story, a small, self-funded project to surface grounded stories about African cities, creators, and everyday opportunity.")}
             </p>
             <p className="text-foreground/70">
-              We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving, the cities changing — deserves a platform built for it. Your support at this quiet, early stage is what turns <span className="text-accent italic">"someone should build this"</span> into <span className="text-accent italic">"we're actually building it."</span>
+              {t('about.founder2a', "We're building this because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving, the cities changing — deserves a platform built for it. Your support at this quiet, early stage is what turns")} <span className="text-accent italic">"{t('about.founder2_q1', 'someone should build this')}"</span> {t('about.founder2_mid', 'into')} <span className="text-accent italic">"{t('about.founder2_q2', "we're actually building it.")}"</span>
             </p>
           </motion.div>
         </section>
@@ -84,21 +86,21 @@ export const BetaAbout = () => {
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} 
             className="font-serif text-[3rem] md:text-[4rem] mb-16 text-center md:text-left text-foreground leading-none"
           >
-            What this actually is
+            {t('about.what_title', 'What this actually is')}
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(201,168,76,0.1)] transition-all">
               <span className="text-4xl block mb-8 drop-shadow-sm">✍️</span>
-              <h3 className="font-serif text-[2rem] mb-4 text-foreground">Real Stories</h3>
+              <h3 className="font-serif text-[2rem] mb-4 text-foreground">{t('about.real_title', 'Real Stories')}</h3>
               <p className="text-foreground/60 text-[1.125rem] leading-[1.8]">
-                A living digital platform built to surface real, grounded stories about African lives, cities, creators, and everyday opportunity.
+                {t('about.real_desc', 'A living digital platform built to surface real, grounded stories about African lives, cities, creators, and everyday opportunity.')}
               </p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="bg-card p-10 rounded-3xl border border-foreground/10 hover:border-accent/50 hover:shadow-[0_10px_40px_rgba(201,168,76,0.1)] transition-all">
               <span className="text-4xl block mb-8 drop-shadow-sm">🚫</span>
-              <h3 className="font-serif text-[2rem] mb-4 text-foreground">Narrative Correction</h3>
+              <h3 className="font-serif text-[2rem] mb-4 text-foreground">{t('about.narr_title', 'Narrative Correction')}</h3>
               <p className="text-foreground/60 text-[1.125rem] leading-[1.8]">
-                Explicitly positioned against the dominant media framing of Africa as a place of crisis, charity, and disaster. Not a news outlet, not a charity, and not a personal blog.
+                {t('about.narr_desc', 'Explicitly positioned against the dominant media framing of Africa as a place of crisis, charity, and disaster. Not a news outlet, not a charity, and not a personal blog.')}
               </p>
             </motion.div>
           </div>
@@ -110,14 +112,14 @@ export const BetaAbout = () => {
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="font-serif text-[3rem] md:text-[4rem] mb-12 text-center md:text-left text-foreground leading-none"
           >
-            Why Ko-fi?
+            {t('about.why_title', 'Why Ko-fi?')}
           </motion.h2>
           <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="prose max-w-4xl prose-p:text-[1.25rem] prose-p:leading-[1.8] text-foreground/70 font-light">
             <p className="mb-8">
-              The platform is currently in prototype and pre-launch stage. I chose Ko-fi because this is an independent, community-backed project.
+              {t('about.why1', 'The platform is currently in prototype and pre-launch stage. I chose Ko-fi because this is an independent, community-backed project.')}
             </p>
             <p>
-              This isn't backed by venture capital or a media conglomerate. The Ko-fi page is the primary mechanism for converting early believers into financial backers who make the full launch possible.
+              {t('about.why2', "This isn't backed by venture capital or a media conglomerate. The Ko-fi page is the primary mechanism for converting early believers into financial backers who make the full launch possible.")}
             </p>
           </motion.div>
         </section>
@@ -127,7 +129,7 @@ export const BetaAbout = () => {
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
             <span className="text-5xl mb-8 block drop-shadow-2xl">☕</span>
             <h2 className="font-serif text-[3rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-12 text-foreground drop-shadow-xl">
-              Help me launch <br />BOA-Story.
+              {t('about.cta_title_1', 'Help me launch')} <br />{t('about.cta_title_2', 'BOA-Story.')}
             </h2>
             <a 
               href="https://ko-fi.com/maillescortes"
@@ -135,7 +137,7 @@ export const BetaAbout = () => {
               rel="noopener noreferrer"
               className="inline-block bg-accent text-navy font-bold uppercase tracking-widest px-12 py-5 rounded-2xl shadow-[0_4px_24px_rgba(201,168,76,0.4)] hover:bg-gold-italic transition-all hover:-translate-y-1 text-sm"
             >
-              Buy me a coffee on Ko-fi
+              {t('about.cta_btn', 'Buy me a coffee on Ko-fi')}
             </a>
           </motion.div>
         </section>

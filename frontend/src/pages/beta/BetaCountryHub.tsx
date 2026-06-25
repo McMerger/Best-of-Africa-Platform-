@@ -13,6 +13,7 @@ import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { SafeImage } from '../../components/SafeImage';
 import type { ArticleListItem } from '../../types';
@@ -57,7 +58,9 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
   </div>
 );
 
-const ArticleCard = ({ article }: { article: ArticleListItem }) => (
+const ArticleCard = ({ article }: { article: ArticleListItem }) => {
+  const { t } = useLanguage();
+  return (
   <Link
     to={`/posts/${article.slug}`}
     className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
@@ -84,10 +87,11 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
       {article.summary && (
         <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
       )}
-      <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} min read</p>
+      <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} {t('article.min_read', 'min read')}</p>
     </div>
   </Link>
-);
+  );
+};
 
 const SkeletonCard = () => (
   <div className="bg-card rounded-2xl border border-foreground/10 overflow-hidden animate-pulse">
@@ -105,6 +109,7 @@ const SkeletonCard = () => (
 export const BetaCountryHub = () => {
   const { code } = useParams<{ code: string }>();
   const { isMember } = useMember();
+  const { t } = useLanguage();
   const upperCode = (code || '').toUpperCase();
 
   const [countryQuery, outlookQuery, narrativeQuery, articlesQuery] = useQueries({
@@ -147,10 +152,10 @@ export const BetaCountryHub = () => {
         
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
           <Globe size={48} className="text-primary/20 mb-6" />
-          <h1 className="font-serif text-3xl text-primary mb-3">Country not found</h1>
-          <p className="text-primary/50 mb-8">We couldn't find coverage data for "{upperCode}".</p>
+          <h1 className="font-serif text-3xl text-primary mb-3">{t('hub.not_found', 'Country not found')}</h1>
+          <p className="text-primary/50 mb-8">{t('hub.not_found_desc', "We couldn't find coverage data for")} "{upperCode}".</p>
           <Link to="/countries" className="text-accent font-semibold hover:opacity-80 transition-opacity flex items-center gap-2">
-            <ArrowLeft size={14} /> Back to all countries
+            <ArrowLeft size={14} /> {t('hub.back_all', 'Back to all countries')}
           </Link>
         </div>
         
@@ -195,7 +200,7 @@ export const BetaCountryHub = () => {
             className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            All 54 Countries
+            {t('hub.all_54', 'All 54 Countries')}
           </Link>
 
           <div className="flex flex-col md:flex-row items-start md:items-end gap-8">
@@ -218,7 +223,7 @@ export const BetaCountryHub = () => {
                     </span>
                     {stats?.article_count != null && (
                       <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 bg-white/10 border border-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
-                        {stats.article_count} {stats.article_count === 1 ? 'story' : 'stories'}
+                        {stats.article_count} {stats.article_count === 1 ? t('hub.story', 'story') : t('hub.stories', 'stories')}
                       </span>
                     )}
                   </div>
@@ -256,22 +261,22 @@ export const BetaCountryHub = () => {
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
-            <h2 className="font-serif text-[2rem] text-foreground leading-none">Sentiment Scores</h2>
+            <h2 className="font-serif text-[2rem] text-foreground leading-none">{t('hub.sentiment', 'Sentiment Scores')}</h2>
           </div>
 
           {!isMember ? (
             <div className="relative bg-card rounded-2xl border border-foreground/5 p-8 overflow-hidden">
               {/* blurred placeholder preview */}
               <div className="space-y-6 blur-md pointer-events-none select-none opacity-40" aria-hidden="true">
-                {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
+                {[t('hub.score_investment', 'Investment Readiness'), t('hub.score_narrative', 'Narrative Strength'), t('hub.score_media', 'Media Presence'), t('hub.score_engagement', 'Engagement Level')].map((l, i) => (
                   <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
                 ))}
               </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
                 <Lock size={32} className="text-accent mb-4" />
-                  <p className="font-serif text-3xl font-semibold text-foreground mb-2">Backer-Only Data</p>
+                  <p className="font-serif text-3xl font-semibold text-foreground mb-2">{t('hub.backer_only', 'Backer-Only Data')}</p>
                   <p className="text-lg text-foreground/50 mb-8 max-w-sm text-center">
-                    Full sentiment scores, perception gaps, and sector signals.
+                    {t('hub.backer_desc', 'Full sentiment scores, perception gaps, and sector signals.')}
                   </p>
                 <a
                   href={KO_FI_URL}
@@ -279,7 +284,7 @@ export const BetaCountryHub = () => {
                   rel="noopener noreferrer"
                   className="bg-accent text-navy font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(201,168,76,0.3)]"
                 >
-                  Become a Founding Member
+                  {t('article.become_member', 'Become a Founding Member')}
                 </a>
               </div>
             </div>
@@ -297,14 +302,14 @@ export const BetaCountryHub = () => {
             </div>
           ) : outlook ? (
             <div className="space-y-6">
-              <ScoreBar label="Investment Readiness" value={outlook.investment_readiness} delay={0} />
-              <ScoreBar label="Narrative Strength" value={outlook.narrative_strength} delay={0.1} />
-              <ScoreBar label="Media Presence" value={outlook.media_presence} delay={0.2} />
-              <ScoreBar label="Engagement Level" value={outlook.engagement_level} delay={0.3} />
+              <ScoreBar label={t('hub.score_investment', 'Investment Readiness')} value={outlook.investment_readiness} delay={0} />
+              <ScoreBar label={t('hub.score_narrative', 'Narrative Strength')} value={outlook.narrative_strength} delay={0.1} />
+              <ScoreBar label={t('hub.score_media', 'Media Presence')} value={outlook.media_presence} delay={0.2} />
+              <ScoreBar label={t('hub.score_engagement', 'Engagement Level')} value={outlook.engagement_level} delay={0.3} />
             </div>
           ) : (
             <div className="text-center text-foreground/40 text-lg">
-              Outlook data unavailable for this country.
+              {t('hub.outlook_unavailable', 'Outlook data unavailable for this country.')}
             </div>
           )}
         </motion.section>
@@ -314,7 +319,7 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <TrendingUp size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Sector Activity</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.sector_activity', 'Sector Activity')}</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-6">
               {(sectorOpportunities.length > 0 ? sectorOpportunities : sectorCoverage.map(s => ({
@@ -330,12 +335,12 @@ export const BetaCountryHub = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-serif text-foreground text-[1.25rem]">{sector.name}</span>
                     <span className="text-[11px] text-accent font-bold tracking-widest bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase">
-                      {sector.articles} {sector.articles === 1 ? 'story' : 'stories'}
+                      {sector.articles} {sector.articles === 1 ? t('hub.story', 'story') : t('hub.stories', 'stories')}
                     </span>
                   </div>
                   {sector.avg_engagement > 0 && (
                     <p className="text-sm text-foreground/40">
-                      Avg. engagement: {sector.avg_engagement.toFixed(1)}
+                      {t('hub.avg_engagement', 'Avg. engagement:')} {sector.avg_engagement.toFixed(1)}
                     </p>
                   )}
                 </motion.div>
@@ -349,7 +354,7 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <Globe size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Key Narratives</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.key_narratives', 'Key Narratives')}</h2>
             </div>
             <div className="space-y-6">
               {narratives.slice(0, 4).map((n, i) => (
@@ -386,7 +391,7 @@ export const BetaCountryHub = () => {
                  <Globe size={120} />
               </div>
               <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
-                Situation Report
+                {t('hub.situation_report', 'Situation Report')}
               </div>
               <p className="text-foreground/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
             </div>
@@ -398,31 +403,31 @@ export const BetaCountryHub = () => {
           <section>
             <div className="flex items-center gap-3 mb-6">
               <ExternalLink size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Official Resources</h2>
+              <h2 className="font-serif text-2xl text-primary">{t('hub.official_resources', 'Official Resources')}</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               {country.business_portal_url && (
                 <a href={country.business_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Business Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.business_portal', 'Business Portal')}
                 </a>
               )}
               {country.visa_portal_url && (
                 <a href={country.visa_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Visa Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.visa_portal', 'Visa Portal')}
                 </a>
               )}
               {country.tourism_portal_url && (
                 <a href={country.tourism_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Tourism Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.tourism_portal', 'Tourism Portal')}
                 </a>
               )}
               {isMember && (
                 <Link to={`/countries/${upperCode}/narratives`}
                   className="inline-flex items-center gap-2 bg-background/5 border border-primary/10 hover:border-accent/40 hover:bg-background px-4 py-2.5 rounded-xl text-sm font-bold text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Narrative Diplomacy Toolkit (Gov)
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.narrative_toolkit', 'Narrative Diplomacy Toolkit (Gov)')}
                 </Link>
               )}
             </div>
@@ -434,14 +439,14 @@ export const BetaCountryHub = () => {
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">
               <FileText size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Stories from {countryName}</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.stories_from', 'Stories from')} {countryName}</h2>
             </div>
             {articles.length > 0 && (
               <Link
                 to={`/posts?country=${upperCode}`}
                 className="text-[13px] text-accent font-bold uppercase tracking-widest hover:text-foreground transition-colors"
               >
-                View all →
+                {t('hub.view_all', 'View all →')}
               </Link>
             )}
           </div>
@@ -462,7 +467,7 @@ export const BetaCountryHub = () => {
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 rounded-2xl z-10">
                       <Lock size={24} className="text-accent mb-3" />
                       <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
-                        Founding Members Only
+                        {t('landing.members_only', 'Founding Members Only')}
                       </p>
                     </div>
                   </div>
@@ -476,8 +481,8 @@ export const BetaCountryHub = () => {
           ) : (
             <div className="bg-card rounded-3xl border border-foreground/10 p-16 text-center shadow-xl">
               <Globe size={48} className="text-foreground/20 mx-auto mb-6" />
-              <p className="text-foreground/60 font-serif text-[1.5rem]">No stories published for {countryName} yet.</p>
-              <p className="text-foreground/30 text-lg mt-2">We are monitoring this market continuously.</p>
+              <p className="text-foreground/60 font-serif text-[1.5rem]">{t('hub.no_stories_pre', 'No stories published for')} {countryName}{t('hub.no_stories_post', ' yet.')}</p>
+              <p className="text-foreground/30 text-lg mt-2">{t('hub.monitoring', 'We are monitoring this market continuously.')}</p>
             </div>
           )}
         </motion.section>
@@ -486,7 +491,7 @@ export const BetaCountryHub = () => {
         {!isMember && (
           <section className="text-center py-8">
             <p className="text-primary/40 text-sm mb-5">
-              Unlock the full {countryName} hub — scores, narratives, sector trends, and more.
+              {t('hub.unlock_pre', 'Unlock the full')} {countryName}{t('hub.unlock_post', ' hub — scores, narratives, sector trends, and more.')}
             </p>
             <a
               href={KO_FI_URL}

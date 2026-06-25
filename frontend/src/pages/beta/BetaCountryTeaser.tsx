@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
+import { useLanguage } from '@/context/LanguageContext';
 import type { Country } from '../../types';
 
 // ─── Countries API response shape ────────────────────────────────────────────
@@ -82,6 +83,7 @@ const CountryCardSkeleton = () => (
 export const BetaCountryTeaser = () => {
   const [activeRegion, setActiveRegion] = useState<Region>('All');
   const [search, setSearch] = useState('');
+  const { t } = useLanguage();
 
   const { data, isLoading } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
@@ -134,13 +136,13 @@ export const BetaCountryTeaser = () => {
         <header className="mb-14 text-center">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
-            54 African Nations
+            {t('countries.badge', '54 African Nations')}
           </div>
           <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
-            One Continent. Every Story.
+            {t('countries.title', 'One Continent. Every Story.')}
           </h1>
           <p className="text-lg text-primary/60 max-w-2xl mx-auto leading-relaxed">
-            From the Atlantic to the Indian Ocean — narrative deep-dives for every African nation, coming to Founding Members.
+            {t('countries.subtitle', 'From the Atlantic to the Indian Ocean — narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
 
@@ -149,8 +151,8 @@ export const BetaCountryTeaser = () => {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search countries or sectors…"
-            aria-label="Search countries or sectors"
+            placeholder={t('countries.search_ph', 'Search countries or sectors…')}
+            aria-label={t('countries.search_aria', 'Search countries or sectors')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-white border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
@@ -159,7 +161,7 @@ export const BetaCountryTeaser = () => {
             <button
               onClick={() => setSearch('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary/70 transition-colors p-1"
-              aria-label="Clear search"
+              aria-label={t('countries.clear', 'Clear search')}
             >
               {/* m9 FIX: use lucide X icon instead of literal × string */}
               <X size={14} />
@@ -180,7 +182,7 @@ export const BetaCountryTeaser = () => {
                     : 'bg-background/5 text-primary/60 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
-                {region}
+                {t('countries.region_' + region.toLowerCase(), region)}
                 <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy/70' : 'text-primary/30'}`}>
                   {regionCounts[region]}
                 </span>
@@ -192,7 +194,7 @@ export const BetaCountryTeaser = () => {
         {/* Search result count */}
         {search.length >= 2 && (
           <p className="text-center text-primary/40 text-sm mb-8">
-            {filtered.length} {filtered.length === 1 ? 'country' : 'countries'} matching "{search}"
+            {filtered.length} {filtered.length === 1 ? t('countries.country', 'country') : t('countries.countries', 'countries')} {t('countries.matching', 'matching')} "{search}"
           </p>
         )}
 
@@ -218,7 +220,7 @@ export const BetaCountryTeaser = () => {
                     className="col-span-full text-center py-20 text-primary/40"
                   >
                     <Globe size={40} className="mx-auto mb-4 opacity-30" />
-                    <p className="text-lg">No countries found for "{search}"</p>
+                    <p className="text-lg">{t('countries.none_found', 'No countries found for')} "{search}"</p>
                   </motion.div>
                 )
             }
@@ -227,14 +229,14 @@ export const BetaCountryTeaser = () => {
 
         {/* Bottom CTA */}
         <div className="text-center">
-          <p className="text-primary/40 text-sm mb-5">Full country story hubs unlock for Founding Members</p>
+          <p className="text-primary/40 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
-            Unlock All 54 Country Hubs — Join as a Founding Member
+            {t('countries.cta_btn', 'Unlock All 54 Country Hubs — Join as a Founding Member')}
           </a>
         </div>
       </div>
