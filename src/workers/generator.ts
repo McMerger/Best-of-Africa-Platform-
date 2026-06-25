@@ -181,6 +181,37 @@ export async function generateArticleFromQueue(
 export const generateArticle = generateArticleFromQueue;
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Pending-item Recovery (Cron)
+//
+// Items are inserted as 'pending' and immediately enqueued to CONTENT_QUEUE. If
+// the generation step is down (e.g. Workers AI quota exhausted → circuit breaker
+// OPEN), those queue messages fail and dead-letter, leaving the ingested_item
+// stranded at 'pending' forever — and dedup stops re-ingestion from re-queuing it.
+// This re-enqueues the oldest stranded items in a small bounded batch so the
+// backlog drains automatically once generation capacity returns.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function recoverPendingItems(env: Env, limit = 10): Promise<number> {
+    const stranded = await env.DB.prepare(`
+        SELECT id, source_id
+        FROM ingested_items
+        WHERE status = 'pending'
+          AND article_id IS NULL
+          AND created_at < datetime('now', '-15 minutes')
+        ORDER BY created_at ASC
+        LIMIT ?
+    `).bind(limit).all<{ id: string; source_id: string }>();
+
+    const rows = stranded.results || [];
+    for (const r of rows) {
+        await env.CONTENT_QUEUE.send({
+            type: 'generate_article', ingested_item_id: r.id, source_id: r.source_id, priority: 'normal',
+        });
+    }
+    if (rows.length) console.log(`[generator] Re-enqueued ${rows.length} stranded pending item(s).`);
+    return rows.length;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Stale Task Fallback (Cron — every 2 minutes)
 //
 // ZeroClaw is an external that polls //tasks/pending. If it goes

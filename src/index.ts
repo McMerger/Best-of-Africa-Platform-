@@ -345,8 +345,11 @@ async function runStaleTaskRecovery(env: Env) {
     // Implemented in workers/generator.ts
     // Internal fallback: claims generate_article tasks that ZeroClaw hasn't
     // picked up after 15 minutes and runs the full generation pipeline locally.
-    const { processStaleArticleTasks } = await import('./workers/generator');
+    const { processStaleArticleTasks, recoverPendingItems } = await import('./workers/generator');
     await processStaleArticleTasks(env);
+    // Re-enqueue ingested items stranded at 'pending' (e.g. after an AI outage),
+    // so the backlog drains automatically once generation capacity returns.
+    await recoverPendingItems(env, 10);
 }
 
 async function processContentGeneration(data: Record<string, unknown>, env: Env) {
