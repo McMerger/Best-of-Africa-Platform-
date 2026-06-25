@@ -77,7 +77,12 @@
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase.py\")",
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase.py\" apply)",
       "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase2.py\")",
-      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase2.py\" apply)"
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase2.py\" apply)",
+      "Bash(python -c \"import json;d=json.load\\(open\\('images.manifest.json',encoding='utf-8'\\)\\);print\\('valid JSON; assets:',len\\(d['assets']\\)\\);print\\('priority-3 \\(make first\\):',[a['id'] for a in d['assets'] if a.get\\('priority'\\)==3]\\)\")",
+      "Bash(awk '{print \"size_bytes:\",$5}')",
+      "Bash(python -c \"import PIL,sys;print\\('Pillow OK', PIL.__version__\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\(r'Gemini_Generated_Image_dks9wsdks9wsdks9.png'\\); print\\('dims:', im.size, 'mode:', im.mode\\)\")",
+      "Bash(awk '{print \"in dist:\",$5,\"bytes\"}')"
     ]
   }
 }

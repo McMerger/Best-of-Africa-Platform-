@@ -191,10 +191,10 @@ export const BetaLanding = () => {
           <img
             src="/images/v2_hero_kigali.webp"
             alt="Modern African Metropolis"
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-90"
           />
           {/* Navy wash keeps the band on-brand and the white headline legible */}
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy via-navy/85 to-navy/70" />
+          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy/85 via-navy/40 to-navy/55" />
         </motion.div>
 
         <ParallaxOrbs scrollY={scrollY} />
