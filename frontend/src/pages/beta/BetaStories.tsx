@@ -10,6 +10,7 @@ import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
+import { useLanguage } from '@/context/LanguageContext';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
 
@@ -51,6 +52,7 @@ export const BetaStories = () => {
   const itemsPerPage = 6;
   const { isMember } = useMember();
   const { playTrack } = useAudio();
+  const { t } = useLanguage();
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -172,13 +174,13 @@ export const BetaStories = () => {
             <div>
               <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-6 backdrop-blur-md">
                 <Sparkles size={14} />
-                Original Reporting
+                {t('landing.original_reporting', 'Original Reporting')}
               </div>
               <h1 className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
-                Stories from<br/>the Continent.
+                {t('stories.title_1', 'Stories from')}<br/>{t('stories.title_2', 'the Continent.')}
               </h1>
               <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">
-                Real, grounded accounts from across the continent — the kind of story you won't find in a headline.
+                {t('stories.subtitle', "Real, grounded accounts from across the continent — the kind of story you won't find in a headline.")}
               </p>
             </div>
             
@@ -199,13 +201,13 @@ export const BetaStories = () => {
                 }
               }}
               disabled={!displayArticles.some(a => a.audio_url)}
-              title={displayArticles.some(a => a.audio_url) ? 'Play the latest audio briefings' : 'Audio briefings coming soon'}
+              title={displayArticles.some(a => a.audio_url) ? t('stories.play_title', 'Play the latest audio briefings') : t('stories.audio_soon', 'Audio briefings coming soon')}
               className="group flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-navy hover:border-accent text-accent font-medium transition-all shadow-[0_0_30px_rgba(201,168,76,0.2)] backdrop-blur-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-accent/10 disabled:hover:text-accent disabled:hover:border-accent/20"
             >
               <div className="w-10 h-10 rounded-full bg-accent text-navy group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
               </div>
-              <span className="uppercase tracking-widest text-xs font-bold">Listen to Daily Pulse</span>
+              <span className="uppercase tracking-widest text-xs font-bold">{t('stories.listen_pulse', 'Listen to Daily Pulse')}</span>
             </button>
           </motion.div>
         </div>
@@ -217,7 +219,7 @@ export const BetaStories = () => {
         {usingFallback && !isLoading && feedMode === 'latest' && (
           <div className="mb-6 px-4 py-2.5 rounded-lg bg-background/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
             <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
-            Live content is currently unavailable. Please check back shortly.
+            {t('stories.unavailable', 'Live content is currently unavailable. Please check back shortly.')}
           </div>
         )}
 
@@ -233,7 +235,7 @@ export const BetaStories = () => {
                     : 'text-primary/50 hover:text-primary'
                 }`}
               >
-                Latest
+                {t('stories.latest', 'Latest')}
               </button>
               <button
                 onClick={() => setFeedMode('foryou')}
@@ -244,7 +246,7 @@ export const BetaStories = () => {
                 }`}
               >
                 <Sparkles size={14} />
-                For You
+                {t('stories.foryou', 'For You')}
               </button>
             </div>
           </div>
@@ -256,15 +258,15 @@ export const BetaStories = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-6">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
-            <h2 className="font-serif text-[28px] text-primary mb-3">Your Personalized Feed</h2>
+            <h2 className="font-serif text-[28px] text-primary mb-3">{t('stories.personalized', 'Your Personalized Feed')}</h2>
             <p className="text-primary/60 mb-8 max-w-md mx-auto">
-              Set your country and sector interests to unlock a custom feed curated just for you.
+              {t('stories.personalized_desc', 'Set your country and sector interests to unlock a custom feed curated just for you.')}
             </p>
-            <Link 
+            <Link
               to="/settings"
               className="inline-block bg-accent text-navy font-medium px-8 py-3 rounded-lg hover:brightness-110 transition-transform hover:-translate-y-0.5"
             >
-              Set Preferences
+              {t('stories.set_prefs', 'Set Preferences')}
             </Link>
           </div>
         )}
@@ -283,8 +285,8 @@ export const BetaStories = () => {
             type="text"
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            placeholder="Search stories, countries, sectors…"
-            aria-label="Search stories"
+            placeholder={t('stories.search_placeholder', 'Search stories, countries, sectors…')}
+            aria-label={t('stories.search_aria', 'Search stories')}
             className="w-full md:max-w-lg bg-white border border-border rounded-lg pl-10 pr-10 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
           />
           {searchInput && (
@@ -302,7 +304,7 @@ export const BetaStories = () => {
           <div className="mb-8 bg-accent/8 border border-accent/25 rounded-xl p-5 flex gap-3">
             <Sparkles size={16} className="text-accent shrink-0 mt-0.5" />
             <div>
-              <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">Summary</span>
+              <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">{t('stories.summary', 'Summary')}</span>
               <p className="text-sm text-primary/80 leading-relaxed">{searchData.ai_answer}</p>
             </div>
           </div>
@@ -321,7 +323,7 @@ export const BetaStories = () => {
                     : 'border-primary/10 text-primary/65 hover:border-primary/30 hover:text-primary'
                 }`}
               >
-                {sector}
+                {sector === 'All' ? t('stories.all', 'All') : sector}
               </button>
             ))}
           </div>
@@ -331,8 +333,8 @@ export const BetaStories = () => {
         {isSearchMode && !isSearching && (
           <p className="text-sm text-primary/40 mb-6">
             {searchArticles.length > 0
-              ? `${searchArticles.length} result${searchArticles.length !== 1 ? 's' : ''} for "${debouncedQuery}"`
-              : `No results found for "${debouncedQuery}"`}
+              ? `${searchArticles.length} ${t('stories.results_for', 'results for')} "${debouncedQuery}"`
+              : `${t('stories.no_results_for', 'No results found for')} "${debouncedQuery}"`}
           </p>
         )}
 
@@ -378,10 +380,10 @@ export const BetaStories = () => {
                           <span className="text-xs font-semibold tracking-wider text-primary/50 uppercase">{article.sector_name}</span>
                         </div>
                         <h3 className="font-serif text-[22px] leading-snug mb-3 text-primary blur-[4px] select-none opacity-60">
-                          This story is waiting for you.
+                          {t('stories.waiting', 'This story is waiting for you.')}
                         </h3>
                         <p className="text-primary/65 text-sm leading-relaxed line-clamp-3 blur-[4px] select-none opacity-60">
-                          A real, grounded account from across the continent — the kind of story you won't find in a headline.
+                          {t('stories.waiting_desc', "A real, grounded account from across the continent — the kind of story you won't find in a headline.")}
                         </p>
                         <div className="mt-4 text-xs font-medium text-primary/40 border-t border-primary/8 pt-4 blur-[4px] select-none opacity-60">
                           5 min read
@@ -393,9 +395,9 @@ export const BetaStories = () => {
                           <div className="bg-navy-card p-3.5 rounded-full border border-accent/40 mb-4 group-hover:scale-110 transition-transform duration-300">
                             <Lock className="w-5 h-5 text-accent" />
                           </div>
-                          <span className="font-serif text-lg text-white mb-1.5">A members' story</span>
-                          <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">Join founding members to read this — and every story — in full.</span>
-                          <span className="inline-block bg-accent text-navy text-[11px] font-bold uppercase tracking-[0.1em] px-5 py-2 rounded-full group-hover:bg-gold-italic transition-colors">Unlock access</span>
+                          <span className="font-serif text-lg text-white mb-1.5">{t('stories.members_story', "A members' story")}</span>
+                          <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">{t('stories.members_story_desc', 'Join founding members to read this — and every story — in full.')}</span>
+                          <span className="inline-block bg-accent text-navy text-[11px] font-bold uppercase tracking-[0.1em] px-5 py-2 rounded-full group-hover:bg-gold-italic transition-colors">{t('stories.unlock', 'Unlock access')}</span>
                         </div>
                       </div>
                       </Link>
@@ -418,7 +420,7 @@ export const BetaStories = () => {
                     >
                       {/* FREE READ badge on the first story (spec §3.4) */}
                       {index === 0 && !isSearchMode && (
-                        <span className="absolute top-4 right-4 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">Free Read</span>
+                        <span className="absolute top-4 right-4 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">{t('stories.free_read', 'Free Read')}</span>
                       )}
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
@@ -492,10 +494,10 @@ export const BetaStories = () => {
                               className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-accent/10 text-accent hover:bg-accent hover:text-navy transition-colors shadow-sm"
                             >
                               <Headphones size={12} />
-                              <span className="font-semibold text-[10px] uppercase tracking-wider">Listen</span>
+                              <span className="font-semibold text-[10px] uppercase tracking-wider">{t('stories.listen', 'Listen')}</span>
                             </button>
                           )}
-                          <span className="text-accent group-hover:translate-x-1 transition-transform">Read →</span>
+                          <span className="text-accent group-hover:translate-x-1 transition-transform">{t('stories.read', 'Read →')}</span>
                         </div>
                       </div>
                     </div>
@@ -517,9 +519,9 @@ export const BetaStories = () => {
               {isPlaceholderData ? (
                 <>
                   <div className="w-4 h-4 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
-                  Loading...
+                  {t('stories.loading', 'Loading...')}
                 </>
-              ) : 'Load More'}
+              ) : t('stories.load_more', 'Load More')}
             </button>
           </div>
         )}
@@ -528,8 +530,8 @@ export const BetaStories = () => {
           <div className="text-center py-16">
             {isSearchMode ? (
               <>
-                <p className="text-primary/50 mb-4">That story isn't published yet.</p>
-                <p className="text-primary/30 text-sm mb-6">Try a country name, city, or sector:</p>
+                <p className="text-primary/50 mb-4">{t('stories.no_results_pre', "That story isn't published yet.")}</p>
+                <p className="text-primary/30 text-sm mb-6">{t('stories.try', 'Try a country name, city, or sector:')}</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {['Lagos', 'Kigali', 'Nairobi', 'Technology', 'Energy', 'Ghana'].map(s => (
                     <button
@@ -543,7 +545,7 @@ export const BetaStories = () => {
                 </div>
               </>
             ) : (
-              <p className="text-primary/50">No stories in this category yet.</p>
+              <p className="text-primary/50">{t('stories.no_category', 'No stories in this category yet.')}</p>
             )}
           </div>
         )}
@@ -553,7 +555,7 @@ export const BetaStories = () => {
             to="/membership"
             className="inline-block bg-accent text-navy font-medium font-sans px-8 py-4 rounded-lg shadow-sm hover:brightness-110 transition-transform hover:-translate-y-0.5"
           >
-            Unlock all stories on Ko-fi
+            {t('stories.unlock_all', 'Unlock all stories on Ko-fi')}
           </Link>
         </div>
 

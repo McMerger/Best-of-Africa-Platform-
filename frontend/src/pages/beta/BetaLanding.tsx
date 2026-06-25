@@ -13,6 +13,7 @@ import { WorldCupFeature } from '../../components/beta/WorldCupFeature';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
+import { useLanguage } from '@/context/LanguageContext';
 import React from 'react';
 
 const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
@@ -76,15 +77,20 @@ const stripMarkdown = (text: string): string => {
   return t.trim();
 };
 
-const SUBHEADLINES = ['Cities.', 'Creators.', 'Culture.', 'Stories.'];
-
 function RotatingSubheadline() {
+  const { t } = useLanguage();
+  const SUBHEADLINES = [
+    t('landing.sub_cities', 'Cities.'),
+    t('landing.sub_creators', 'Creators.'),
+    t('landing.sub_culture', 'Culture.'),
+    t('landing.sub_stories', 'Stories.'),
+  ];
   const [index, setIndex] = useState(0);
   useEffect(() => {
     // Spec §2.2: slow rotation to 2.5s per word
-    const t = setInterval(() => setIndex(i => (i + 1) % SUBHEADLINES.length), 2500);
-    return () => clearInterval(t);
-  }, []);
+    const id = setInterval(() => setIndex(i => (i + 1) % SUBHEADLINES.length), 2500);
+    return () => clearInterval(id);
+  }, [SUBHEADLINES.length]);
 
   return (
     <div className="h-9 flex items-center justify-center mb-4 overflow-hidden">
@@ -103,18 +109,6 @@ function RotatingSubheadline() {
     </div>
   );
 }
-
-const FAQ_ITEMS = [
-  {
-    q: 'Is this finished?',
-    a: 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.' },
-  {
-    q: 'Can I cancel?',
-    a: "Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods." },
-  {
-    q: 'Why now?',
-    a: "Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic." },
-];
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -151,6 +145,20 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 export const BetaLanding = () => {
   const prefersReducedMotion = useReducedMotion();
   const { scrollY } = useScroll();
+  const { t } = useLanguage();
+
+  const faqItems = [
+    { q: t('landing.faq1_q', 'Is this finished?'), a: t('landing.faq1_a', 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.') },
+    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard — no lock-in periods.') },
+    { q: t('landing.faq3_q', 'Why now?'), a: t('landing.faq3_a', 'Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.') },
+  ];
+
+  const transparencyItems = [
+    { Icon: Globe, label: t('landing.t_domain', 'Domain & Hosting'), desc: t('landing.t_domain_d', 'Keeping the platform live and performant globally.') },
+    { Icon: Wrench, label: t('landing.t_tools', 'Platform Tools'), desc: t('landing.t_tools_d', 'Building independently without VC funding constraints.') },
+    { Icon: PenLine, label: t('landing.t_research', 'Research Time'), desc: t('landing.t_research_d', 'Funding deep dives into underreported markets.') },
+    { Icon: Coffee, label: t('landing.t_fuel', 'Founder Fuel'), desc: t('landing.t_fuel_d', 'Direct support for an independent African creator.') },
+  ];
 
   useEffect(() => {
     // Optional: Add scroll listeners if needed in future
@@ -192,12 +200,12 @@ export const BetaLanding = () => {
         <ParallaxOrbs scrollY={scrollY} />
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
-          <SectionLabel text="Early Access" />
+          <SectionLabel text={t('landing.early_access', 'Early Access')} />
 
           {/* Static (non-animated) hero headline — this is the LCP element, so it
               must paint on first render rather than fading in from opacity:0. */}
           <h1 className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
-            Africa without the filter.
+            {t('landing.hero_title', 'Africa without the filter.')}
           </h1>
 
           <RotatingSubheadline />
@@ -206,7 +214,7 @@ export const BetaLanding = () => {
             initial={false}
             className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
           >
-            A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.
+            {t('landing.hero_sub', 'A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.')}
           </motion.p>
 
           <motion.div
@@ -216,7 +224,7 @@ export const BetaLanding = () => {
             <MagneticButton>
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
                 <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
-                  Become a Founding Member
+                  {t('landing.cta_founding', 'Become a Founding Member')}
                 </GoldButton>
               </a>
             </MagneticButton>
@@ -239,12 +247,12 @@ export const BetaLanding = () => {
             className="glass-panel p-10 rounded-3xl border border-accent/20 flex flex-col items-center"
           >
             <h3 className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-8 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> Live Funding Progress
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> {t('landing.funding_label', 'Live Funding Progress')}
             </h3>
-            
+
             <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
               <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
-                Page Status: <span className="text-accent italic font-medium">Active</span> — 38% of $800 goal funded, 62 coffees received
+                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span> {t('landing.funding_detail', '— 38% of $800 goal funded, 62 coffees received')}
               </p>
               <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
                 <motion.div 
@@ -260,7 +268,7 @@ export const BetaLanding = () => {
             </div>
             
             <p className="mt-8 text-[1.125rem] font-light text-foreground/50 max-w-xl leading-relaxed">
-              BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.
+              {t('landing.funding_note', 'BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.')}
             </p>
           </motion.div>
         </div>
@@ -269,8 +277,8 @@ export const BetaLanding = () => {
       {/* 3. CONTENT PREVIEW */}
       <section className="py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center mb-16">
-          <SectionLabel text="Original Reporting" />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">Stories from the ground</h2>
+          <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
+          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -305,7 +313,7 @@ export const BetaLanding = () => {
                     {/* FREE READ badge on the first (unlocked) card — spec §2.4 */}
                     {isFeatured && (
                       <span className="absolute top-6 right-6 z-30 text-[10px] font-bold tracking-[0.2em] uppercase text-navy bg-accent px-4 py-2 rounded-full shadow-lg">
-                        Free Read
+                        {t('landing.free_read', 'Free Read')}
                       </span>
                     )}
 
@@ -328,7 +336,7 @@ export const BetaLanding = () => {
                         </p>
                         {isFeatured && (
                           <a href={`/posts/${article.slug}`} className="inline-flex items-center gap-2 mt-8 text-accent font-semibold uppercase tracking-[0.12em] text-sm hover:gap-3 transition-all">
-                            Read story →
+                            {t('landing.read_story', 'Read story →')}
                           </a>
                         )}
                       </div>
@@ -338,12 +346,12 @@ export const BetaLanding = () => {
                       <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-navy/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                         <div className="bg-navy-card/90 border border-accent/30 p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100">
                           <Lock className="text-accent mb-6" size={40} />
-                          <h4 className="font-serif text-2xl mb-3 text-white">Founding Members Only</h4>
-                          <p className="text-[1.125rem] font-light text-white/70 mb-8 leading-relaxed">Support the project on Ko-fi to unlock the full narrative feed.</p>
+                          <h4 className="font-serif text-2xl mb-3 text-white">{t('landing.members_only', 'Founding Members Only')}</h4>
+                          <p className="text-[1.125rem] font-light text-white/70 mb-8 leading-relaxed">{t('landing.unlock_note', 'Support the project on Ko-fi to unlock the full narrative feed.')}</p>
                           <MagneticButton className="w-full">
                             <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
                               <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(201,168,76,0.3)]">
-                                Unlock Access
+                                {t('landing.unlock_access', 'Unlock Access')}
                               </GoldButton>
                             </a>
                           </MagneticButton>
@@ -356,7 +364,7 @@ export const BetaLanding = () => {
             })
           ) : (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
-              <div className="animate-pulse text-2xl font-serif">Curating stories&hellip;</div>
+              <div className="animate-pulse text-2xl font-serif">{t('landing.curating', 'Curating stories…')}</div>
             </div>
           )}
         </div>
@@ -366,9 +374,9 @@ export const BetaLanding = () => {
       <section className="py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
-            <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">Fund the platform</h2>
+            <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
             <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
-              This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.
+              {t('landing.fund_note', 'This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.')}
             </p>
           </div>
           <MembershipTiersGrid />
@@ -379,10 +387,10 @@ export const BetaLanding = () => {
       <section className="py-32 bg-background overflow-hidden border-b border-foreground/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="text-center mb-16 relative z-10 px-6">
-          <SectionLabel text="Platform Experience" />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">A Premium Interface</h2>
+          <SectionLabel text={t('landing.platform_experience', 'Platform Experience')} />
+          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">{t('landing.premium_interface', 'A Premium Interface')}</h2>
           <p className="text-ink-blue text-[1.25rem] font-light max-w-2xl mx-auto">
-            Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.
+            {t('landing.premium_note', 'Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.')}
           </p>
         </div>
         
@@ -405,7 +413,7 @@ export const BetaLanding = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-white">{t('landing.cinematic', 'Cinematic Intelligence')}</div>
                 </div>
               </div>
             ))}
@@ -422,7 +430,7 @@ export const BetaLanding = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
                 <div className="absolute bottom-8 left-8 right-8">
                   <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">Cinematic Intelligence</div>
+                  <div className="font-serif text-2xl text-white">{t('landing.cinematic', 'Cinematic Intelligence')}</div>
                 </div>
               </div>
             ))}
@@ -455,10 +463,10 @@ export const BetaLanding = () => {
           >
             <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
             <h2 className="font-serif text-white text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">
-              We're building Africa's story. <span className="italic text-accent">Properly.</span>
+              {t('landing.mission_title', "We're building Africa's story.")} <span className="italic text-accent">{t('landing.mission_properly', 'Properly.')}</span>
             </h2>
             <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
-              The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.
+              {t('landing.mission_note', 'The continent deserves better than headlines about crisis and chaos. The real day-to-day energy — the businesses being built, the cultures thriving — deserves a platform built for it.')}
             </p>
           </motion.div>
         </div>
@@ -466,14 +474,9 @@ export const BetaLanding = () => {
 
       {/* 7. TRANSPARENCY SECTION — gold SVG icons on navy circles (spec §2.8) */}
       <section className="py-32 px-6 container mx-auto max-w-6xl text-center">
-        <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">Where your money goes</h3>
+        <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { Icon: Globe, label: 'Domain & Hosting', desc: 'Keeping the platform live and performant globally.' },
-            { Icon: Wrench, label: 'Platform Tools', desc: 'Building independently without VC funding constraints.' },
-            { Icon: PenLine, label: 'Research Time', desc: 'Funding deep dives into underreported markets.' },
-            { Icon: Coffee, label: 'Founder Fuel', desc: 'Direct support for an independent African creator.' },
-          ].map((item, i) => (
+          {transparencyItems.map((item, i) => (
             <CardReveal key={item.label} delay={i * 0.1}>
               <div className="bg-white rounded-3xl h-full p-8 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-shadow">
                 <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-navy">
@@ -491,9 +494,9 @@ export const BetaLanding = () => {
       <section className="py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="font-serif text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">Frequently Asked Questions</h2>
+          <h2 className="font-serif text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">{t('landing.faq_title', 'Frequently Asked Questions')}</h2>
           <div className="glass-panel rounded-3xl border border-foreground/10 px-8 md:px-10 shadow-2xl">
-            {FAQ_ITEMS.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
+            {faqItems.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
           </div>
         </div>
       </section>
@@ -508,7 +511,7 @@ export const BetaLanding = () => {
              transition={{ duration: 1 }}
              className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-foreground"
            >
-             Join before the <br/>official launch.
+             {t('landing.join_title_1', 'Join before the')} <br/>{t('landing.join_title_2', 'official launch.')}
            </motion.h2>
            <motion.p 
              initial={{ opacity: 0, y: 30 }}
@@ -517,7 +520,7 @@ export const BetaLanding = () => {
              transition={{ duration: 1, delay: 0.2 }}
              className="text-ink-blue mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
            >
-             Your support at this quiet, early stage is what turns an idea into reality.
+             {t('landing.join_note', 'Your support at this quiet, early stage is what turns an idea into reality.')}
            </motion.p>
            <motion.div
              initial={{ opacity: 0, scale: 0.95 }}
@@ -528,7 +531,7 @@ export const BetaLanding = () => {
              <MagneticButton>
                <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
                  <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
-                   Support on Ko-fi
+                   {t('landing.support_kofi', 'Support on Ko-fi')}
                  </GoldButton>
                </a>
              </MagneticButton>
