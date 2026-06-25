@@ -7,6 +7,7 @@ import { BetaAudioPlayer } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 
 import { useMember } from '../../context/MemberContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { api } from '../../services/api';
 import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
 import type { Article, ArticleListItem, Country } from '../../types';
@@ -46,6 +47,7 @@ function useReadingProgress(targetId: string) {
 // Inline share buttons — copy link, Twitter/X, LinkedIn
 function ShareButtons({ title, url }: { title: string; url: string }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
 
   const copyLink = () => {
     navigator.clipboard.writeText(url).catch(() => {});
@@ -76,12 +78,12 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-primary/30 uppercase tracking-widest font-semibold hidden sm:block">Share</span>
+      <span className="text-[10px] text-primary/30 uppercase tracking-widest font-semibold hidden sm:block">{t('article.share', 'Share')}</span>
       <a
         href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Share on X / Twitter"
+        aria-label={t('article.share_x', 'Share on X / Twitter')}
         className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Twitter size={13} />
@@ -90,14 +92,14 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Share on LinkedIn"
+        aria-label={t('article.share_li', 'Share on LinkedIn')}
         className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Linkedin size={13} />
       </a>
       <button
         onClick={hasShare ? handleNativeShare : copyLink}
-        aria-label={hasShare ? "Share story" : "Copy link"}
+        aria-label={hasShare ? t('article.share_story', 'Share story') : t('article.copy_link', 'Copy link')}
         className="p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all"
       >
         {copied ? <Check size={13} className="text-accent" /> : <Link2 size={13} />}
@@ -164,6 +166,7 @@ export const BetaArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const readingProgress = useReadingProgress('article-root');
   const { isMember } = useMember();
+  const { t } = useLanguage();
 
   const [lens, setLens] = useState<'original' | 'investor' | 'government' | 'explorer'>('original');
   const [isReframing, setIsReframing] = useState(false);
@@ -201,15 +204,15 @@ export const BetaArticle = () => {
         
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
           <span className="text-6xl mb-6">📰</span>
-          <h2 className="font-serif text-3xl mb-3">Story not found</h2>
+          <h2 className="font-serif text-3xl mb-3">{t('article.not_found', 'Story not found')}</h2>
           <p className="text-primary/60 mb-8 max-w-sm">
-            This story may have moved or been updated. Browse all our coverage below.
+            {t('article.not_found_desc', 'This story may have moved or been updated. Browse all our coverage below.')}
           </p>
           <Link
             to="/posts"
             className="inline-flex items-center gap-2 text-accent font-semibold hover:opacity-80 transition-opacity"
           >
-            <ArrowLeft size={16} /> Browse all stories
+            <ArrowLeft size={16} /> {t('article.browse_all', 'Browse all stories')}
           </Link>
         </div>
       </div>
@@ -290,7 +293,7 @@ export const BetaArticle = () => {
           className="inline-flex items-center gap-1.5 text-sm text-primary/40 hover:text-primary/70 transition-colors group"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-          All Stories
+          {t('article.all_stories', 'All Stories')}
         </Link>
       </div>
 
@@ -357,9 +360,9 @@ export const BetaArticle = () => {
           {/* Byline row */}
           <div className="flex items-center justify-between text-sm font-medium text-primary/75 border-y border-primary/10 py-4 gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-wrap">
-              <span className="uppercase tracking-wider text-xs whitespace-nowrap">By {authorName}</span>
+              <span className="uppercase tracking-wider text-xs whitespace-nowrap">{t('article.by', 'By')} {authorName}</span>
               <span className="text-primary/20">·</span>
-              <span className="whitespace-nowrap">{article.reading_time_minutes} min read</span>
+              <span className="whitespace-nowrap">{article.reading_time_minutes} {t('article.min_read', 'min read')}</span>
               {article.published_at && (
                 <>
                   <span className="text-primary/20">·</span>
@@ -389,7 +392,7 @@ export const BetaArticle = () => {
           {/* Lens Switcher for Members */}
           {isMember && !isPaywalled && articleContent.length > 0 && (
             <div className="mb-8 flex items-center gap-2 p-1.5 bg-secondary border border-primary/10 rounded-full w-fit">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40 pl-3 pr-2">Read as:</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40 pl-3 pr-2">{t('article.read_as', 'Read as:')}</span>
               {(['original', 'investor', 'government', 'explorer'] as const).map(l => (
                 <button
                   key={l}
@@ -402,7 +405,7 @@ export const BetaArticle = () => {
                   }`}
                 >
                   {isReframing && lens === l && <Loader2 size={12} className="animate-spin" />}
-                  {l}
+                  {t('article.lens_' + l, l)}
                 </button>
               ))}
             </div>
@@ -419,13 +422,13 @@ export const BetaArticle = () => {
               {/* Faded teaser so the story visibly continues beneath the prompt */}
               <div className="opacity-30 select-none pointer-events-none blur-[5px]" aria-hidden="true">
                 <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-6 font-light">
-                  The story goes deeper here — the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.
+                  {t('article.teaser1', 'The story goes deeper here — the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.')}
                 </p>
                 <p className="text-foreground/70 text-[1.125rem] leading-[1.8] mb-6 font-light">
-                  It continues with the interviews and detail that make this more than a summary, and there is much more still to read below.
+                  {t('article.teaser2', 'It continues with the interviews and detail that make this more than a summary, and there is much more still to read below.')}
                 </p>
                 <p className="text-foreground/60 text-[1.125rem] leading-[1.8] font-light">
-                  Become a founding member to keep reading every story in full.
+                  {t('article.teaser3', 'Become a founding member to keep reading every story in full.')}
                 </p>
               </div>
 
@@ -434,16 +437,16 @@ export const BetaArticle = () => {
                 <div className="w-full max-w-lg rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-8 md:p-10 text-center">
                   <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    Members only
+                    {t('article.members_only', 'Members only')}
                   </span>
                   <h3 className="font-serif text-white text-[1.75rem] md:text-[2.125rem] leading-tight mb-3">
-                    Keep reading the full story
+                    {t('article.keep_reading', 'Keep reading the full story')}
                   </h3>
                   <p className="text-white/70 mb-7 max-w-sm mx-auto leading-relaxed">
-                    Back independent African journalism and unlock every story in full — from the people who make it possible.
+                    {t('article.paywall_desc', 'Back independent African journalism and unlock every story in full — from the people who make it possible.')}
                   </p>
                   <ul className="text-left space-y-2.5 mb-8 max-w-xs mx-auto text-[15px] text-white/85">
-                    {['Full access to every story & report', 'Vote on the next story topic', 'Behind-the-scenes founder updates'].map(b => (
+                    {[t('article.bullet_full', 'Full access to every story & report'), t('article.bullet_vote', 'Vote on the next story topic'), t('article.bullet_bts', 'Behind-the-scenes founder updates')].map(b => (
                       <li key={b} className="flex items-start gap-3">
                         <span className="text-accent mt-0.5 shrink-0">✓</span>{b}
                       </li>
@@ -455,12 +458,12 @@ export const BetaArticle = () => {
                     rel="noopener noreferrer"
                     className="block w-full bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(201,168,76,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
                   >
-                    Become a Founding Member
+                    {t('article.become_member', 'Become a Founding Member')}
                   </a>
                   <Link to="/membership" className="block mt-4 text-white/70 text-sm hover:text-accent transition-colors">
-                    See membership options →
+                    {t('article.see_options', 'See membership options →')}
                   </Link>
-                  <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">Cancel anytime · Secure checkout</p>
+                  <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">{t('article.cancel_anytime', 'Cancel anytime · Secure checkout')}</p>
                 </div>
               </div>
             </div>
@@ -469,10 +472,10 @@ export const BetaArticle = () => {
           {/* Post-read nudge for non-members — a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
             <div className="mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
-              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">— Independent journalism</span>
-              <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">Enjoyed this story?</p>
+              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', '— Independent journalism')}</span>
+              <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">{t('article.enjoyed', 'Enjoyed this story?')}</p>
               <p className="text-white/70 text-[15px] mb-7 max-w-md mx-auto leading-relaxed">
-                BOA-Story is reader-funded and independent. Founding members keep these stories coming — and help decide what we cover next.
+                {t('article.enjoyed_desc', 'BOA-Story is reader-funded and independent. Founding members keep these stories coming — and help decide what we cover next.')}
               </p>
               <a
                 href={KO_FI_URL}
@@ -480,7 +483,7 @@ export const BetaArticle = () => {
                 rel="noopener noreferrer"
                 className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all hover:-translate-y-0.5"
               >
-                Become a Founding Member
+                {t('article.become_member', 'Become a Founding Member')}
               </a>
             </div>
           )}
@@ -491,9 +494,9 @@ export const BetaArticle = () => {
       <aside className="bg-secondary border-t border-primary/8 py-24 px-6 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
-            <h2 className="font-serif text-[32px] text-primary">More Stories</h2>
+            <h2 className="font-serif text-[32px] text-primary">{t('article.more_stories', 'More Stories')}</h2>
             <Link to="/posts" className="text-accent font-semibold text-sm tracking-wider uppercase hover:text-primary transition-colors">
-              View All →
+              {t('article.view_all', 'View All →')}
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -512,18 +515,18 @@ export const BetaArticle = () => {
                         )}
                       </div>
                       <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{a.title}</h4>
-                      <p className="text-sm text-primary/50">{a.reading_time_minutes} min read</p>
+                      <p className="text-sm text-primary/50">{a.reading_time_minutes} {t('article.min_read', 'min read')}</p>
                     </div>
                   </Link>
                 ))
               : (
                   <div className="col-span-1 md:col-span-3 text-center py-12">
-                    <p className="text-primary/40 mb-4">Explore the full archive for more stories from the continent.</p>
+                    <p className="text-primary/40 mb-4">{t('article.archive_note', 'Explore the full archive for more stories from the continent.')}</p>
                     <Link
                       to="/posts"
                       className="inline-flex items-center gap-2 text-accent font-semibold text-sm hover:opacity-80 transition-opacity"
                     >
-                      Browse all stories →
+                      {t('article.browse_arrow', 'Browse all stories →')}
                     </Link>
                   </div>
                 )
