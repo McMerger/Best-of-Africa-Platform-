@@ -537,9 +537,14 @@ TAGS: [comma-separated list of 3-5 relevant tags]`;
 export function humanizeText(s?: string): string {
     if (!s) return '';
     return s
+        .replace(/ /g, ' ')           // non-breaking space → normal space
+        .replace(/​/g, '')            // zero-width space → remove
+        .replace(/™/g, '')            // ™ → remove
         .replace(/[“”]/g, '"')        // “ ”
         .replace(/[‘’]/g, "'")        // ‘ ’
         .replace(/…/g, '...')              // …
+        .replace(/−/g, '-')           // − minus sign → hyphen
+        .replace(/^[ \t]*[•·]\s+/gm, '- ') // • / · used as a bullet → markdown hyphen
         .replace(/(\d)\s*[–—]\s*(\d)/g, '$1-$2') // 2010–2020 → 2010-2020 (range)
         .replace(/\s+[–—]\s+/g, ', ')            // spaced dash (parenthetical) → comma
         .replace(/(\w)[–](\w)/g, '$1-$2')        // Israel–Palestine → Israel-Palestine
