@@ -73,7 +73,9 @@
       "Bash(grep -v \"^/$\")",
       "Bash(grep -nE \">[A-Z][a-zA-Z'’ ]{3,}<|placeholder=\\\\\"|text=\\\\\"|aria-label=\\\\\"|title=\\\\\"[A-Z]\" frontend/src/pages/beta/BetaStories.tsx)",
       "Bash(grep -nE \">[A-Z][a-zA-Z'’ &?]{3,}<|placeholder=\\\\\"|aria-label=\\\\\"|>\\\\{[\\\\\"'][A-Z]\" frontend/src/pages/beta/BetaCountryHub.tsx)",
-      "Bash(grep -nE \">[A-Za-z][a-zA-Z'’ &?.,—]{4,}<|placeholder=|aria-label=|min read|Read →|Unlock|Member\" frontend/src/pages/beta/BetaCountryHub.tsx)"
+      "Bash(grep -nE \">[A-Za-z][a-zA-Z'’ &?.,—]{4,}<|placeholder=|aria-label=|min read|Read →|Unlock|Member\" frontend/src/pages/beta/BetaCountryHub.tsx)",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase.py\")",
+      "Bash(python \"C:/Users/corte/AppData/Local/Temp/claude/C--Users-corte-Documents-GitHub-Best-of-Africa-Platform-/f807ebc7-ded7-4166-b7d3-d3d6ad2f0a25/scratchpad/dephrase.py\" apply)"
     ]
   }
 }

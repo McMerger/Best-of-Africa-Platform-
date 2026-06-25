@@ -500,6 +500,14 @@ Requirements:
 - Do NOT frame this as an investment pitch or tourism guide.
 - Do NOT use hedging language: no "might", "could", "potentially", "may".
 - Do NOT use corporate, NGO, or financial intelligence jargon.
+- Punctuation: do NOT use em-dashes (—) or en-dashes (–). Use commas, periods, or simple hyphens.
+- Write plainly, like a person, NOT like an AI. Ban these clichés outright:
+  "delve", "tapestry", "a testament to", "stands as a testament", "beacon",
+  "boasts", "nestled", "in the realm of", "ever-evolving", "ever-changing",
+  "navigating the", "underscores", "a myriad of", "plays a crucial/pivotal role",
+  "in today's fast-paced world", "when it comes to", "rich cultural heritage",
+  "it's important to note", "in conclusion", "moreover", "furthermore". Prefer
+  concrete nouns and verbs over these.
 - Honest, grounded tone. Aim for 700-1000 words organised under 3-5 descriptive
   subheadings (### in markdown) — enough depth to genuinely inform the reader,
   with concrete detail and context, not a brief.
