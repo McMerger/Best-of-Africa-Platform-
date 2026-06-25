@@ -506,7 +506,10 @@ Requirements:
   "boasts", "nestled", "in the realm of", "ever-evolving", "ever-changing",
   "navigating the", "underscores", "a myriad of", "plays a crucial/pivotal role",
   "in today's fast-paced world", "when it comes to", "rich cultural heritage",
-  "it's important to note", "in conclusion", "moreover", "furthermore". Prefer
+  "it's important to note", "in conclusion", "moreover", "furthermore",
+  "vibrant", "bustling", "at the heart of", "a stark reminder", "shed light on",
+  "pave the way", "melting pot", "treasure trove", "game-changer", "microcosm",
+  "the fabric of", "lasting legacy", "speaks volumes", "in essence". Prefer
   concrete nouns and verbs over these.
 - Honest, grounded tone. Aim for 700-1000 words organised under 3-5 descriptive
   subheadings (### in markdown) — enough depth to genuinely inform the reader,
