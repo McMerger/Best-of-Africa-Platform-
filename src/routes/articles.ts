@@ -124,7 +124,7 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     LEFT JOIN countries c ON a.country_code = c.code
     LEFT JOIN sectors s ON a.sector_id = s.id
     ${whereClause}
-    ORDER BY a.is_sponsored DESC, ${sortCol} ${sortOrder}
+    ORDER BY a.is_sponsored DESC, ${sortCol} ${sortOrder}, a.id DESC
     LIMIT ? OFFSET ?
   `).bind(...params, limitNum, offset).all<ArticleListItem>();
 
@@ -182,7 +182,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                 LEFT JOIN countries c ON a.country_code = c.code
                 LEFT JOIN sectors s ON a.sector_id = s.id
                 WHERE a.status = 'published' ${lensWhereClause}
-                ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC, a.published_at DESC
+                ORDER BY ((a.engagement_score + 3.0) / pow((julianday('now') - julianday(a.published_at)) + 2, 1.3)) DESC, a.published_at DESC, a.id DESC
                 LIMIT ?
             `).bind(...lensParams, limitNum).all();
             return result.results || [];
@@ -426,7 +426,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
                 WHERE status = 'published'
                   AND id != ?
                   AND (country_code = ? OR sector_id = ?)
-                ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
+                ORDER BY ((engagement_score + 3.0) / pow((julianday('now') - julianday(published_at)) + 2, 1.3)) DESC, published_at DESC
                 LIMIT 4
             `).bind(article.id, article.country_code, article.sector_id).all();
             return result.results || [];
