@@ -189,7 +189,7 @@ export const BetaLanding = () => {
           style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
         >
           <img
-            src="/images/v2_hero_kigali.png"
+            src="/images/v2_hero_kigali.webp"
             alt="Modern African Metropolis"
             className="w-full h-[120%] object-cover object-center absolute top-[-10%] opacity-40"
           />
@@ -405,7 +405,7 @@ export const BetaLanding = () => {
               "/images/v2_concierge_concrete_1780371218016.png",
               "/images/v2_events_concrete_1780371229306.png",
               "/images/v2_travel_concrete_1780371206765.png",
-              "/images/v2_hero_kigali.png",
+              "/images/v2_hero_kigali.webp",
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
               <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
@@ -422,7 +422,7 @@ export const BetaLanding = () => {
               "/images/v2_concierge_concrete_1780371218016.png",
               "/images/v2_events_concrete_1780371229306.png",
               "/images/v2_travel_concrete_1780371206765.png",
-              "/images/v2_hero_kigali.png",
+              "/images/v2_hero_kigali.webp",
               "/images/v2_intel_bg_1780355630845.png"
             ].map((src, idx) => (
               <div key={`dup-${idx}`} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
