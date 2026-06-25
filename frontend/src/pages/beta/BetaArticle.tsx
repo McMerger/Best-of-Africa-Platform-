@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { BetaAudioPlayer } from '../../components/beta';
+import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import { SEO } from '../../components/SEO';
 
 import { useMember } from '../../context/MemberContext';
@@ -434,7 +435,8 @@ export const BetaArticle = () => {
 
               {/* Gradient fade into the membership card */}
               <div className="absolute inset-x-0 -top-16 bottom-0 flex flex-col items-center justify-end bg-gradient-to-b from-transparent via-white/85 to-white px-4 pb-4">
-                <div className="w-full max-w-lg rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-8 md:p-10 text-center">
+                <ScrollReveal className="w-full max-w-lg" intensity={1.15}>
+                <div className="w-full rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-8 md:p-10 text-center">
                   <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                     {t('article.members_only', 'Members only')}
@@ -465,13 +467,14 @@ export const BetaArticle = () => {
                   </Link>
                   <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">{t('article.cancel_anytime', 'Cancel anytime · Secure checkout')}</p>
                 </div>
+                </ScrollReveal>
               </div>
             </div>
           )}
 
           {/* Post-read nudge for non-members — a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
-            <div className="mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
+            <ScrollReveal className="block mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
               <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', '— Independent journalism')}</span>
               <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">{t('article.enjoyed', 'Enjoyed this story?')}</p>
               <p className="text-white/70 text-[15px] mb-7 max-w-md mx-auto leading-relaxed">
@@ -485,7 +488,7 @@ export const BetaArticle = () => {
               >
                 {t('article.become_member', 'Become a Founding Member')}
               </a>
-            </div>
+            </ScrollReveal>
           )}
         </article>
       </motion.main>

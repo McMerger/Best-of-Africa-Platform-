@@ -16,6 +16,7 @@ import { useMember } from '../../context/MemberContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { SafeImage } from '../../components/SafeImage';
+import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { ArticleListItem } from '../../types';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -273,6 +274,7 @@ export const BetaCountryHub = () => {
                 ))}
               </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
+                <ScrollReveal className="flex flex-col items-center" intensity={0.7}>
                 <Lock size={32} className="text-accent mb-4" />
                   <p className="font-serif text-3xl font-semibold text-foreground mb-2">{t('hub.backer_only', 'Backer-Only Data')}</p>
                   <p className="text-lg text-foreground/50 mb-8 max-w-sm text-center">
@@ -286,6 +288,7 @@ export const BetaCountryHub = () => {
                 >
                   {t('article.become_member', 'Become a Founding Member')}
                 </a>
+                </ScrollReveal>
               </div>
             </div>
           ) : outlookQuery.isLoading ? (
@@ -465,10 +468,12 @@ export const BetaCountryHub = () => {
                       <ArticleCard article={article} />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 rounded-2xl z-10">
-                      <Lock size={24} className="text-accent mb-3" />
-                      <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
-                        {t('landing.members_only', 'Founding Members Only')}
-                      </p>
+                      <ScrollReveal className="flex flex-col items-center" intensity={0.6}>
+                        <Lock size={24} className="text-accent mb-3" />
+                        <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
+                          {t('landing.members_only', 'Founding Members Only')}
+                        </p>
+                      </ScrollReveal>
                     </div>
                   </div>
                 ) : (
@@ -489,7 +494,7 @@ export const BetaCountryHub = () => {
 
         {/* ── Member CTA (non-members) ───────────────────────────────────────── */}
         {!isMember && (
-          <section className="text-center py-8">
+          <ScrollReveal className="block text-center py-8" intensity={0.9}>
             <p className="text-primary/40 text-sm mb-5">
               {t('hub.unlock_pre', 'Unlock the full')} {countryName}{t('hub.unlock_post', ' hub — scores, narratives, sector trends, and more.')}
             </p>
@@ -499,9 +504,9 @@ export const BetaCountryHub = () => {
               rel="noopener noreferrer"
               className="inline-block bg-accent text-navy font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
-              Become a Founding Member
+              {t('article.become_member', 'Become a Founding Member')}
             </a>
-          </section>
+          </ScrollReveal>
         )}
 
       </div>

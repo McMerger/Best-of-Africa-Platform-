@@ -11,6 +11,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
 
@@ -391,14 +392,14 @@ export const BetaStories = () => {
                       </div>
                       <div className="absolute inset-0 z-20 overflow-hidden rounded-xl">
                         <div className="absolute inset-0 backdrop-blur-[5px] bg-gradient-to-t from-navy via-navy/90 to-navy/75 transition-opacity duration-300" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center transition-transform duration-300 group-hover:-translate-y-1">
+                        <ScrollReveal className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center" intensity={0.6}>
                           <div className="bg-navy-card p-3.5 rounded-full border border-accent/40 mb-4 group-hover:scale-110 transition-transform duration-300">
                             <Lock className="w-5 h-5 text-accent" />
                           </div>
                           <span className="font-serif text-lg text-white mb-1.5">{t('stories.members_story', "A members' story")}</span>
                           <span className="text-[13px] text-white/60 mb-5 max-w-[13rem] leading-relaxed">{t('stories.members_story_desc', 'Join founding members to read this — and every story — in full.')}</span>
                           <span className="inline-block bg-accent text-navy text-[11px] font-bold uppercase tracking-[0.1em] px-5 py-2 rounded-full group-hover:bg-gold-italic transition-colors">{t('stories.unlock', 'Unlock access')}</span>
-                        </div>
+                        </ScrollReveal>
                       </div>
                       </Link>
                     </motion.div>
