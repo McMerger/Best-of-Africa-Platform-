@@ -145,7 +145,7 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Empty State */}
                 {!debouncedQ && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 text-foreground/40">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-14 md:py-24 text-foreground/40">
                         <div className="w-24 h-24 rounded-full bg-card border border-foreground/5 mx-auto mb-8 flex items-center justify-center">
                             <SearchIcon className="w-10 h-10 text-foreground/20" />
                         </div>
@@ -204,7 +204,7 @@ export const BetaSearch: React.FC = () => {
                 {!isLoading && debouncedQ && (
                     <div className="space-y-6">
                         {filtered.length === 0 && !isError ? (
-                            <div className="py-24 text-center text-foreground/40">
+                            <div className="py-14 md:py-24 text-center text-foreground/40">
                                 <p className="text-[1.5rem] font-serif text-foreground mb-2">No results for "{debouncedQ}"</p>
                                 <p className="text-[1.125rem] font-light">Try different keywords or a broader search term</p>
                             </div>
@@ -268,7 +268,7 @@ export const BetaSearch: React.FC = () => {
                 )}
 
                 {isError && (
-                    <div className="py-24 text-center text-destructive/80">
+                    <div className="py-14 md:py-24 text-center text-destructive/80">
                         <p className="text-[1.125rem]">Search is temporarily unavailable. Please try again.</p>
                     </div>
                 )}

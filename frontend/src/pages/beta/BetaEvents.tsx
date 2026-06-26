@@ -105,7 +105,7 @@ export const BetaEvents: React.FC = () => {
                         ))}
                     </div>
                 ) : events.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 text-foreground/40 bg-card rounded-3xl border border-foreground/10 shadow-2xl">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 md:py-32 text-foreground/40 bg-card rounded-3xl border border-foreground/10 shadow-2xl">
                         <CalendarIcon className="w-16 h-16 mx-auto mb-6 opacity-50" />
                         <h2 className="text-[2rem] font-serif mb-4">No upcoming events</h2>
                         <p className="text-[1.125rem] font-light">Check back later for newly scheduled summits.</p>

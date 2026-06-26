@@ -151,7 +151,7 @@ export const BetaCountryHub = () => {
     return (
       <div className="flex flex-col">
         
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 md:py-32">
           <Globe size={48} className="text-primary/20 mb-6" />
           <h1 className="font-serif text-3xl text-primary mb-3">{t('hub.not_found', 'Country not found')}</h1>
           <p className="text-primary/50 mb-8">{t('hub.not_found_desc', "We couldn't find coverage data for")} "{upperCode}".</p>

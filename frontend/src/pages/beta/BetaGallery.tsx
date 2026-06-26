@@ -70,7 +70,7 @@ export const BetaGallery = () => {
         description="A visual journal of African cities, creators, and everyday opportunity."
       />
 
-      <div className="max-w-7xl mx-auto px-6 py-24">
+      <div className="max-w-7xl mx-auto px-6 py-14 md:py-24">
         <header className="mb-12 text-center md:text-left">
           <SectionLabel text="Visual Journal" />
           <h1 className="font-serif text-ink text-[40px] md:text-[56px] leading-tight mb-4">

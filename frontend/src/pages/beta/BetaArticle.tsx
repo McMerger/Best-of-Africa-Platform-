@@ -494,7 +494,7 @@ export const BetaArticle = () => {
       </motion.main>
 
       {/* More Stories */}
-      <aside className="bg-secondary border-t border-primary/8 py-24 px-6 relative z-20">
+      <aside className="bg-secondary border-t border-primary/8 py-14 md:py-24 px-6 relative z-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
             <h2 className="font-serif text-[32px] text-primary">{t('article.more_stories', 'More Stories')}</h2>

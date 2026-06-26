@@ -100,7 +100,7 @@ export const BetaTravel: React.FC = () => {
             </div>
 
             {/* Featured Partners */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-24">
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
                     <h2 className="text-[3rem] font-serif mb-6 text-foreground leading-none">Tier 1 VIP Partners</h2>
                     <p className="text-foreground/60 max-w-2xl mx-auto text-[1.125rem] font-light leading-relaxed">

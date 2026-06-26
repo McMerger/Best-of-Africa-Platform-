@@ -66,7 +66,7 @@ export const BetaAbout = () => {
       <main className="max-w-4xl mx-auto px-6">
         
         {/* 2. THE FOUNDER & MISSION */}
-        <section className="py-32 border-b border-foreground/10">
+        <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.div 
             initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 1 }}
             className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[2rem] prose-p:md:text-[3rem] prose-p:leading-[1.4] prose-p:text-foreground/90 prose-p:tracking-tight"
@@ -81,7 +81,7 @@ export const BetaAbout = () => {
         </section>
 
         {/* 3. WHAT WE'RE BUILDING */}
-        <section className="py-32 border-b border-foreground/10">
+        <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} 
             className="font-serif text-[3rem] md:text-[4rem] mb-16 text-center md:text-left text-foreground leading-none"
@@ -107,7 +107,7 @@ export const BetaAbout = () => {
         </section>
 
         {/* 4. WHY NOW */}
-        <section className="py-32 border-b border-foreground/10">
+        <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             className="font-serif text-[3rem] md:text-[4rem] mb-12 text-center md:text-left text-foreground leading-none"
@@ -125,7 +125,7 @@ export const BetaAbout = () => {
         </section>
 
         {/* 6. CTA */}
-        <section className="py-40 text-center relative z-10">
+        <section className="py-14 md:py-24 md:py-40 text-center relative z-10">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
             <span className="text-5xl mb-8 block drop-shadow-2xl">☕</span>
             <h2 className="font-serif text-[3rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-12 text-foreground drop-shadow-xl">

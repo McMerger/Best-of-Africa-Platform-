@@ -236,7 +236,7 @@ export const BetaLanding = () => {
       <WorldCupFeature />
 
       {/* 2. KO-FI FUNDING STATUS */}
-      <section className="bg-background/95 py-24 border-b border-foreground/5 relative z-20 overflow-hidden">
+      <section className="bg-background/95 py-14 md:py-24 border-b border-foreground/5 relative z-20 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent opacity-50" />
         <div className="container mx-auto px-6 max-w-4xl text-center relative z-10">
           <motion.div 
@@ -275,7 +275,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 3. CONTENT PREVIEW */}
-      <section className="py-32 px-6 container mx-auto max-w-7xl">
+      <section className="py-20 md:py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
           <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
@@ -363,7 +363,7 @@ export const BetaLanding = () => {
               );
             })
           ) : (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20 md:py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
               <div className="animate-pulse text-2xl font-serif">{t('landing.curating', 'Curating stories...')}</div>
             </div>
           )}
@@ -371,7 +371,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 4. TIERS */}
-      <section className="py-32 bg-background border-y border-foreground/10 px-6">
+      <section className="py-20 md:py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
             <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
@@ -384,7 +384,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 5. IMMERSIVE VISUAL MARQUEE (Replacing Static Previews) */}
-      <section className="py-32 bg-background overflow-hidden border-b border-foreground/10 relative">
+      <section className="py-20 md:py-32 bg-background overflow-hidden border-b border-foreground/10 relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="text-center mb-16 relative z-10 px-6">
           <SectionLabel text={t('landing.platform_experience', 'Platform Experience')} />
@@ -442,7 +442,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 6. MISSION BLOCK, full navy band, gold italic "Properly." (spec §2.7) */}
-      <section className="py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
+      <section className="py-14 md:py-24 md:py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
         <div className="absolute inset-0 z-0">
           <motion.img
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
@@ -473,7 +473,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 7. TRANSPARENCY SECTION, gold SVG icons on navy circles (spec §2.8) */}
-      <section className="py-32 px-6 container mx-auto max-w-6xl text-center">
+      <section className="py-20 md:py-32 px-6 container mx-auto max-w-6xl text-center">
         <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {transparencyItems.map((item, i) => (
@@ -491,7 +491,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 8. FAQ */}
-      <section className="py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
+      <section className="py-20 md:py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
           <h2 className="font-serif text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">{t('landing.faq_title', 'Frequently Asked Questions')}</h2>
@@ -502,7 +502,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 9. FOOTER CTA */}
-      <section className="py-40 px-6 text-center bg-background relative overflow-hidden">
+      <section className="py-14 md:py-24 md:py-40 px-6 text-center bg-background relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
            <motion.h2 
              initial={{ opacity: 0, y: 30 }}
