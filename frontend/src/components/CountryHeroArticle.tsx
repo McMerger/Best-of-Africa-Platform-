@@ -46,7 +46,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                     </Badge>
                 </div>
 
-                <Link to={`/articles/${article.slug}`} className="block">
+                <Link to={`/posts/${article.slug}`} className="block">
                     <h2 className="text-3xl md:text-5xl font-black text-foreground leading-[1.1] mb-4 tracking-tight group-hover:text-primary transition-colors drop-shadow-xl font-serif">
                         {cleanText(article.title)}
                     </h2>

@@ -56,7 +56,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                 </div>
 
                 <h3 className={`mb-3 font-serif font-bold leading-tight tracking-tight text-foreground ${featured ? 'text-2xl' : 'text-xl'}`}>
-                    <Link to={`/articles/${article.slug}`} className="hover:text-primary">
+                    <Link to={`/posts/${article.slug}`} className="hover:text-primary">
                         {cleanText(article.title || 'Untitled Article')}
                     </Link>
                 </h3>
