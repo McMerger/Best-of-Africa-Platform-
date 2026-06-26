@@ -57,6 +57,32 @@ export const SettingsPage: React.FC = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Option lists for the preference pickers, sourced live so EVERY sector (8)
+    // and country (54) is offered, not a hardcoded subset. Falls back to the
+    // constants if the API is unavailable. Stored value: sector id / country name.
+    const [sectorOptions, setSectorOptions] = useState<{ id: string; name: string }[]>(
+        AVAILABLE_SECTORS.map(s => ({ id: s, name: s })));
+    const [countryOptions, setCountryOptions] = useState<string[]>(AVAILABLE_COUNTRIES);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const s = await (api as any).getSectors();
+                if (s?.data?.length) setSectorOptions(s.data.map((x: any) => ({ id: x.id, name: x.name })));
+            } catch { /* keep fallback */ }
+            try {
+                const c = await (api as any).getCountries();
+                if (c?.by_region) {
+                    const names = Object.values(c.by_region)
+                        .flatMap((r: any) => (r.countries || []).map((x: any) => x.name))
+                        .filter(Boolean)
+                        .sort((a: string, b: string) => a.localeCompare(b));
+                    if (names.length) setCountryOptions(names);
+                }
+            } catch { /* keep fallback */ }
+        })();
+    }, []);
+
     useEffect(() => {
         const fetchPrefs = async () => {
             try {
@@ -242,7 +268,7 @@ export const SettingsPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <Label>Tracked Countries</Label>
                                     <div className="flex flex-wrap gap-2">
-                                        {AVAILABLE_COUNTRIES.map(country => {
+                                        {countryOptions.map(country => {
                                             const isActive = preferences.countries_of_interest.includes(country);
                                             return (
                                                 <Badge
@@ -265,20 +291,20 @@ export const SettingsPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <Label>Tracked Sectors</Label>
                                     <div className="flex flex-wrap gap-2">
-                                        {AVAILABLE_SECTORS.map(sector => {
-                                            const isActive = preferences.sectors_of_interest.includes(sector);
+                                        {sectorOptions.map(sector => {
+                                            const isActive = preferences.sectors_of_interest.includes(sector.id);
                                             return (
                                                 <Badge
-                                                    key={sector}
+                                                    key={sector.id}
                                                     variant={isActive ? "default" : "outline"}
                                                     className={cn(
                                                         "px-3 py-1 cursor-pointer transition-colors capitalize",
                                                         !isEditing && "opacity-70 cursor-not-allowed",
                                                         isActive ? "bg-accent text-primary" : "hover:bg-accent/10 hover:text-accent"
                                                     )}
-                                                    onClick={() => toggleArrayItem('sectors_of_interest', sector)}
+                                                    onClick={() => toggleArrayItem('sectors_of_interest', sector.id)}
                                                 >
-                                                    {sector}
+                                                    {sector.name}
                                                 </Badge>
                                             );
                                         })}
