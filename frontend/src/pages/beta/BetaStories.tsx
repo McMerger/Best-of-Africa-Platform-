@@ -65,17 +65,31 @@ export const BetaStories = () => {
   // Detect 2-letter uppercase country code pattern (e.g. "KE", "NG", "ZA")
   const isCountryCode = /^[A-Z]{2}$/.test(debouncedQuery);
 
+  // Full list of economic sectors (all of them) for the filter tabs — sourced
+  // from the API, NOT inferred from the loaded page, so every sector shows.
+  const { data: sectorsData } = useQuery({
+    queryKey: ['sectors-list'],
+    queryFn: api.getSectors,
+    staleTime: 24 * 60 * 60 * 1000 });
+
   const { data, isLoading, isError, isPlaceholderData } = useQuery({
-    queryKey: ['all-articles', page, itemsPerPage],
-    queryFn: () => {
-      return api.getArticles({ page: page.toString(), limit: itemsPerPage.toString() });
-    },
+    queryKey: ['all-articles', page, itemsPerPage, activeFilter],
+    queryFn: () => api.getArticles({
+      page: page.toString(),
+      limit: itemsPerPage.toString(),
+      // Filter server-side by sector id so a selected sector returns ALL its
+      // articles (paginated), not just whatever was on the first page.
+      ...(activeFilter !== 'All' ? { sector: activeFilter } : {}),
+    }),
     staleTime: 5 * 60 * 1000,
     // M2 FIX: Keep previous data visible while next page is fetching, no more loading flash
     placeholderData: keepPreviousData });
 
   // Track all loaded articles across pages
   const [allArticles, setAllArticles] = useState<ArticleListItem[]>([]);
+
+  // Reset pagination + accumulation whenever the sector filter changes.
+  useEffect(() => { setPage(1); setAllArticles([]); }, [activeFilter]);
 
   useEffect(() => {
     if (data?.data && !isError) {
@@ -127,16 +141,17 @@ export const BetaStories = () => {
         ...r.article,
         id: r.article.id || r.article.slug }));
 
-  // Collect unique sector names for filter tabs
-  const sectors = ['All', ...Array.from(new Set(articles.map(a => a.sector_name).filter(Boolean)))];
+  // Filter tabs: 'All' + every sector from the API (id + display name).
+  const sectorTabs: { id: string; name: string }[] = [
+    { id: 'All', name: t('stories.all', 'All') },
+    ...((sectorsData?.data as { id: string; name: string }[] | undefined) || []).map(s => ({ id: s.id, name: s.name })),
+  ];
 
-  const filtered = activeFilter === 'All'
-    ? articles
-    : articles.filter(a => a.sector_name === activeFilter);
-
-  const displayArticles = isSearchMode 
-    ? searchArticles 
-    : (feedMode === 'foryou' && curatedData?.data ? curatedData.data : filtered);
+  // Filtering is now server-side (the query keys off activeFilter), so the loaded
+  // articles are already scoped to the selected sector.
+  const displayArticles = isSearchMode
+    ? searchArticles
+    : (feedMode === 'foryou' && curatedData?.data ? curatedData.data : articles);
     
   const showLoading = isSearchMode ? (isSearching || isCountrySearching) : (feedMode === 'foryou' ? isLoadingCurated : isLoading);
 
@@ -312,19 +327,19 @@ export const BetaStories = () => {
         )}
 
         {/* Category Filter Tabs, hidden in search mode */}
-        {!isSearchMode && !isLoading && sectors.length > 1 && (
+        {!isSearchMode && sectorTabs.length > 1 && (
           <div className="flex gap-2 flex-wrap mb-10">
-            {sectors.map(sector => (
+            {sectorTabs.map(tab => (
               <button
-                key={sector}
-                onClick={() => { setActiveFilter(sector); setPage(1); }}
+                key={tab.id}
+                onClick={() => setActiveFilter(tab.id)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                  activeFilter === sector
+                  activeFilter === tab.id
                     ? 'bg-accent text-navy border-accent'
                     : 'border-primary/10 text-primary/65 hover:border-primary/30 hover:text-primary'
                 }`}
               >
-                {sector === 'All' ? t('stories.all', 'All') : sector}
+                {tab.name}
               </button>
             ))}
           </div>
@@ -510,7 +525,7 @@ export const BetaStories = () => {
         </motion.div>
 
         {/* Load More Button (Only outside search mode, if activeFilter is all, and there is more data) */}
-        {!showLoading && !isSearchMode && activeFilter === 'All' && (data as any)?.pagination && (data as any).pagination.page < (data as any).pagination.total_pages && (
+        {!showLoading && !isSearchMode && feedMode !== 'foryou' && (data as any)?.pagination && (data as any).pagination.page < (data as any).pagination.total_pages && (
           <div className="flex justify-center mb-20 text-center">
             <button
               onClick={() => setPage(p => p + 1)}
