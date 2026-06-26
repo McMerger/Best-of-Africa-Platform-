@@ -182,7 +182,7 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-foreground/10">
+      <div className="relative min-h-[55vh] md:min-h-[60vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-16 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
@@ -208,7 +208,7 @@ export const BetaCountryHub = () => {
             {isLoading ? (
               <div className="w-24 h-24 bg-foreground/10 rounded-3xl animate-pulse" />
             ) : (
-              <span className="text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
+              <span className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
             )}
             <div className="flex-1 pb-2">
               {isLoading ? (

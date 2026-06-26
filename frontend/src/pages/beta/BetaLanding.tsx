@@ -275,8 +275,8 @@ export const BetaLanding = () => {
       </section>
 
       {/* 3. CONTENT PREVIEW */}
-      <section className="py-20 md:py-32 px-6 container mx-auto max-w-7xl">
-        <div className="text-center mb-16">
+      <section className="py-14 md:py-20 lg:py-32 px-6 container mx-auto max-w-7xl">
+        <div className="text-center mb-10 md:mb-16">
           <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
           <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
         </div>
@@ -297,7 +297,7 @@ export const BetaLanding = () => {
                 >
                   <motion.div
                     whileHover={{ scale: 1.02, y: -8 }}
-                    className={`group block bg-navy rounded-[2rem] border border-white/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(201,168,76,0.25)] transition-all duration-500 ${isFeatured ? 'h-[500px] md:h-[650px]' : 'h-[500px]'}`}
+                    className={`group block bg-navy rounded-[2rem] border border-white/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(201,168,76,0.25)] transition-all duration-500 ${isFeatured ? 'h-[400px] md:h-[500px] lg:h-[650px]' : 'h-[360px] sm:h-[440px] md:h-[500px]'}`}
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
@@ -371,9 +371,9 @@ export const BetaLanding = () => {
       </section>
 
       {/* 4. TIERS */}
-      <section className="py-20 md:py-32 bg-background border-y border-foreground/10 px-6">
+      <section className="py-14 md:py-20 lg:py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-20">
+          <div className="text-center mb-12 md:mb-20">
             <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
             <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
               {t('landing.fund_note', 'This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.')}
@@ -442,7 +442,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 6. MISSION BLOCK, full navy band, gold italic "Properly." (spec §2.7) */}
-      <section className="py-14 md:py-24 md:py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
+      <section className="py-14 md:py-24 lg:py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
         <div className="absolute inset-0 z-0">
           <motion.img
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
@@ -502,7 +502,7 @@ export const BetaLanding = () => {
       </section>
 
       {/* 9. FOOTER CTA */}
-      <section className="py-14 md:py-24 md:py-40 px-6 text-center bg-background relative overflow-hidden">
+      <section className="py-14 md:py-24 lg:py-40 px-6 text-center bg-background relative overflow-hidden">
         <div className="max-w-4xl mx-auto relative z-10">
            <motion.h2 
              initial={{ opacity: 0, y: 30 }}

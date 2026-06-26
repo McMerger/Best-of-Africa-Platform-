@@ -165,7 +165,7 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative h-[60vh] min-h-[500px] w-full flex flex-col justify-end pb-16 px-6 overflow-hidden border-b border-foreground/10">
+      <section className="relative h-[55vh] min-h-[380px] md:min-h-[500px] w-full flex flex-col justify-end pb-10 md:pb-16 px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
           initial={{ scale: 1.1 }}
@@ -229,7 +229,7 @@ export const BetaStories = () => {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (
@@ -460,7 +460,7 @@ export const BetaStories = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
                       </div>
                     )}
-                    <div className="p-8 pb-4 flex-grow relative z-10 bg-card">
+                    <div className="p-6 md:p-8 pb-4 flex-grow relative z-10 bg-card">
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-2xl">{article.country_flag}</span>
                         <span className="text-xs font-semibold tracking-widest text-accent uppercase">{article.sector_name}</span>
@@ -481,7 +481,7 @@ export const BetaStories = () => {
                         <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
                       )}
                     </div>
-                    <div className="p-6 pt-0 bg-background">
+                    <div className="p-4 md:p-6 pt-0 bg-background">
                       <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read

@@ -40,7 +40,7 @@ export const BetaTravel: React.FC = () => {
             />
             
             {/* Hero Section */}
-            <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-24 px-6 overflow-hidden border-b border-foreground/10">
+            <div className="relative min-h-[45vh] md:min-h-[60vh] flex flex-col justify-end pt-20 md:pt-32 pb-14 md:pb-24 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
                 <motion.div 
                   className="absolute inset-0 z-0"
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}

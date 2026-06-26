@@ -149,7 +149,7 @@ export const BetaFeed: React.FC = () => {
             />
 
             {/* Masthead */}
-            <div className="bg-background text-foreground pt-20 pb-16 px-6">
+            <div className="bg-background text-foreground pt-14 md:pt-20 pb-10 md:pb-16 px-4 sm:px-6">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
@@ -161,7 +161,7 @@ export const BetaFeed: React.FC = () => {
                             {today}
                         </div>
                     </div>
-                    <h1 className="font-serif text-5xl md:text-6xl font-black leading-tight mb-4">
+                    <h1 className="font-serif text-[2.25rem] sm:text-5xl md:text-6xl font-black leading-tight mb-4">
                         The Africa<br />Intelligence Brief
                     </h1>
                     <p className="text-foreground/60 text-lg max-w-xl">
@@ -170,7 +170,7 @@ export const BetaFeed: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-3xl mx-auto px-6">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
                 {/* Editorial Curated section (members only) */}
                 {isMember && (

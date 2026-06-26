@@ -43,7 +43,7 @@ export const BetaIntelligence = () => {
       />
 
       {/* Header */}
-      <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-foreground/10">
+      <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-10 md:pb-16 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}

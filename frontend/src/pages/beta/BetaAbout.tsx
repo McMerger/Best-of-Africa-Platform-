@@ -69,7 +69,7 @@ export const BetaAbout = () => {
         <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.div 
             initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 1 }}
-            className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[2rem] prose-p:md:text-[3rem] prose-p:leading-[1.4] prose-p:text-foreground/90 prose-p:tracking-tight"
+            className="prose prose-lg max-w-none prose-p:font-serif prose-p:text-[1.5rem] prose-p:md:text-[2rem] prose-p:lg:text-[3rem] prose-p:leading-[1.4] prose-p:text-foreground/90 prose-p:tracking-tight"
           >
             <p className="mb-12">
               {t('about.founder1', "I'm a student and independent writer trying to close the gap between the Africa you see in headlines and the Africa I hear about from friends, founders, and family. Here I'm building BOA-Story, a small, self-funded project to surface grounded stories about African cities, creators, and everyday opportunity.")}

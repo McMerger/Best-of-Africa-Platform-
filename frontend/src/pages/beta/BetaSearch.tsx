@@ -79,19 +79,19 @@ export const BetaSearch: React.FC = () => {
             />
 
             {/* Search Header, navy band (spec §3.1) */}
-            <div className="bg-navy text-white pt-32 pb-16 px-6 border-b border-white/10 relative overflow-hidden">
+            <div className="bg-navy text-white pt-20 md:pt-32 pb-10 md:pb-16 px-4 sm:px-6 border-b border-white/10 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">
                             <SparklesIcon size={14} /> Intelligence Search
                         </p>
-                        <h1 className="font-serif text-white text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-12">
+                        <h1 className="font-serif text-white text-[2.75rem] sm:text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-8 md:mb-12">
                             What are you <br className="hidden md:block"/><span className="text-accent italic">researching?</span>
                         </h1>
                         {/* Search Input, dark navy field with gold border */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowSuggestions(false); }}>
-                            <div className="flex items-center gap-4 bg-navy-card border border-accent/50 rounded-[2rem] px-8 py-6 focus-within:border-accent focus-within:shadow-[0_0_40px_rgba(201,168,76,0.2)] transition-all group">
+                            <div className="flex items-center gap-3 bg-navy-card border border-accent/50 rounded-[1.5rem] md:rounded-[2rem] px-5 md:px-8 py-4 md:py-6 focus-within:border-accent focus-within:shadow-[0_0_40px_rgba(201,168,76,0.2)] transition-all group">
                                 <SearchIcon className="w-6 h-6 text-white/40 group-focus-within:text-accent shrink-0 transition-colors" />
                                 <input
                                     ref={inputRef}

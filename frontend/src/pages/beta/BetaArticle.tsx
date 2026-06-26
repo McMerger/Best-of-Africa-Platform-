@@ -339,9 +339,9 @@ export const BetaArticle = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
-        className="max-w-4xl mx-auto px-6 py-12 md:py-24"
+        className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-24"
       >
-        <header className="mb-16">
+        <header className="mb-10 md:mb-16">
           {(categoryLabel || countryLabel) && (
             <span className="text-accent text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
@@ -353,7 +353,7 @@ export const BetaArticle = () => {
 
           {/* Lede / standfirst, rendered from article.summary */}
           {article.summary && (
-            <p className="font-serif text-[1.5rem] md:text-[2rem] leading-[1.4] text-foreground/70 italic mb-10 border-l-2 border-accent pl-6 py-2">
+            <p className="font-serif text-[1.25rem] md:text-[1.5rem] lg:text-[2rem] leading-[1.4] text-foreground/70 italic mb-8 md:mb-10 border-l-2 border-accent pl-5 md:pl-6 py-2">
               {article.summary}
             </p>
           )}
