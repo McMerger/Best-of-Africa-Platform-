@@ -192,7 +192,7 @@ export const BetaStories = () => {
                 <Sparkles size={14} />
                 {t('landing.original_reporting', 'Original Reporting')}
               </div>
-              <h1 className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
+              <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
                 {t('stories.title_1', 'Stories from')}<br/>{t('stories.title_2', 'the Continent.')}
               </h1>
               <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">

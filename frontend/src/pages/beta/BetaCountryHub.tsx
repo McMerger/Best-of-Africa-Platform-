@@ -228,7 +228,7 @@ export const BetaCountryHub = () => {
                       </span>
                     )}
                   </div>
-                  <h1 className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
+                  <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
                   {country?.description && (
                     <p className="text-white/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
                   )}

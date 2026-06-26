@@ -37,7 +37,7 @@ export const BetaAbout = () => {
         <div className="max-w-4xl mx-auto text-center text-white relative z-30">
           <motion.h1
             initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: "easeOut" }}
-            className="font-serif text-white text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
+            className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl"
           >
             {t('landing.mission_title', "We're building Africa's story.")}<br /><span className="text-accent italic">{t('landing.mission_properly', 'Properly.')}</span>
           </motion.h1>
@@ -84,7 +84,7 @@ export const BetaAbout = () => {
         <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} 
-            className="font-serif text-[3rem] md:text-[4rem] mb-16 text-center md:text-left text-foreground leading-none"
+            className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] mb-16 text-center md:text-left text-foreground leading-none"
           >
             {t('about.what_title', 'What this actually is')}
           </motion.h2>
@@ -110,7 +110,7 @@ export const BetaAbout = () => {
         <section className="py-20 md:py-32 border-b border-foreground/10">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="font-serif text-[3rem] md:text-[4rem] mb-12 text-center md:text-left text-foreground leading-none"
+            className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] mb-12 text-center md:text-left text-foreground leading-none"
           >
             {t('about.why_title', 'Why Ko-fi?')}
           </motion.h2>

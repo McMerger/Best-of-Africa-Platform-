@@ -59,7 +59,7 @@ export const BetaTravel: React.FC = () => {
                             <PlaneIcon size={14} />
                             Business Travel Guide
                         </div>
-                        <h1 className="text-white text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
+                        <h1 className="text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
                             Travel with <br className="hidden md:block"/><span className="text-accent italic">Confidence.</span>
                         </h1>
                         <p className="text-[1.125rem] font-light text-white/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">

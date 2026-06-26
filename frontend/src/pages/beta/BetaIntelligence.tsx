@@ -65,7 +65,7 @@ export const BetaIntelligence = () => {
                   Live Data
                 </span>
               </div>
-              <h1 className="font-serif text-white text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
+              <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
               <p className="text-white/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
                 Algorithmic insights tracking strategic opportunities, sentiment divergence, and sector velocity across 54 African nations.
               </p>

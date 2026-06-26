@@ -278,7 +278,7 @@ export const BetaLanding = () => {
       <section className="py-20 md:py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center mb-16">
           <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
+          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -374,7 +374,7 @@ export const BetaLanding = () => {
       <section className="py-20 md:py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-20">
-            <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
+            <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
             <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
               {t('landing.fund_note', 'This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.')}
             </p>
@@ -388,7 +388,7 @@ export const BetaLanding = () => {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="text-center mb-16 relative z-10 px-6">
           <SectionLabel text={t('landing.platform_experience', 'Platform Experience')} />
-          <h2 className="font-serif text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">{t('landing.premium_interface', 'A Premium Interface')}</h2>
+          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">{t('landing.premium_interface', 'A Premium Interface')}</h2>
           <p className="text-ink-blue text-[1.25rem] font-light max-w-2xl mx-auto">
             {t('landing.premium_note', 'Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.')}
           </p>
@@ -462,7 +462,7 @@ export const BetaLanding = () => {
             transition={{ duration: 1 }}
           >
             <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
-            <h2 className="font-serif text-white text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">
+            <h2 className="font-serif text-white text-[2.5rem] sm:text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">
               {t('landing.mission_title', "We're building Africa's story.")} <span className="italic text-accent">{t('landing.mission_properly', 'Properly.')}</span>
             </h2>
             <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
@@ -494,7 +494,7 @@ export const BetaLanding = () => {
       <section className="py-20 md:py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
         <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="font-serif text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">{t('landing.faq_title', 'Frequently Asked Questions')}</h2>
+          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">{t('landing.faq_title', 'Frequently Asked Questions')}</h2>
           <div className="glass-panel rounded-3xl border border-foreground/10 px-8 md:px-10 shadow-2xl">
             {faqItems.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
           </div>
@@ -509,7 +509,7 @@ export const BetaLanding = () => {
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 1 }}
-             className="font-serif text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-foreground"
+             className="font-serif text-[2.5rem] sm:text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-foreground"
            >
              {t('landing.join_title_1', 'Join before the')} <br/>{t('landing.join_title_2', 'official launch.')}
            </motion.h2>
