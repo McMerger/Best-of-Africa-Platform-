@@ -75,7 +75,7 @@ export const NavBar: React.FC = () => {
     return (
         <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-2xl border-b border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300">
             {/* Pre-header Utilities, lens / feed-mode controls only for signed-in users */}
-            <div className="hidden xl:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
+            <div className="hidden lg:flex items-center justify-end gap-3 px-6 lg:px-8 py-2 bg-page border-b border-border text-[11px] font-medium tracking-wide text-ink-blue">
                 <LanguageSelector />
                 {isAuthenticated && <MissionControl />}
                 {isAuthenticated && <DensityToggle />}
@@ -93,7 +93,7 @@ export const NavBar: React.FC = () => {
                 </div>
 
                 {/* CENTER: Desktop Nav */}
-                <nav className="hidden xl:flex items-center justify-center gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 ml-8 relative">
+                <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
                     {[
                         { path: '/posts', label: t('nav.stories', 'Stories') },
                         { path: '/countries', label: t('nav.countries', 'Countries') },
@@ -107,7 +107,7 @@ export const NavBar: React.FC = () => {
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={cn("relative px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-navy" : "hover:text-accent")}
+                                className={cn("relative px-2.5 xl:px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-navy" : "hover:text-accent")}
                             >
                                 {isActive && (
                                     <motion.div
@@ -123,9 +123,9 @@ export const NavBar: React.FC = () => {
                 </nav>
 
                 {/* RIGHT: Actions + Sign In */}
-                <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 xl:flex-none">
+                <div className="flex items-center justify-end gap-1 shrink-0 z-10 flex-1 lg:flex-none">
                     {/* Icon Actions, Settings/Admin/Notifications only when signed in */}
-                    <div className="hidden xl:flex items-center gap-1 mr-2">
+                    <div className="hidden lg:flex items-center gap-1 mr-2">
                         <Button variant="ghost" size="icon" className="w-10 h-10 rounded-full text-navy/50 hover:text-accent hover:bg-accent/10 transition-colors" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
@@ -151,14 +151,14 @@ export const NavBar: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="hidden xl:block w-px h-6 bg-border mx-2" />
+                    <div className="hidden lg:block w-px h-6 bg-border mx-2" />
 
-                    <Button size="sm" asChild className="hidden xl:flex rounded-full font-bold px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
+                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-5 xl:px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
                         <Link to="/login">{isAuthenticated ? t('nav.account', 'Account') : t('nav.signin', 'Sign In')}</Link>
                     </Button>
 
                     {/* Mobile: compact Sign In + Hamburger */}
-                    <div className="flex xl:hidden items-center gap-2">
+                    <div className="flex lg:hidden items-center gap-2">
                         <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full text-muted-foreground" asChild>
                             <Link to="/search">
                                 <MagnifyingGlassIcon className="h-5 w-5" />
