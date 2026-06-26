@@ -557,6 +557,26 @@ export function humanizeText(s?: string): string {
         .trim();
 }
 
+// When the model omits the TITLE: label (it sometimes puts the headline as the
+// first bold line or an "###" heading, or just opens with prose), derive a real
+// title from the content so we never publish a literal "Untitled Article".
+function deriveTitleFromContent(content: string): string {
+    if (!content) return '';
+    const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+    const first = lines[0] || '';
+    let t = '';
+    let m = first.match(/^\*\*(.+?)\*\*/);          // **Bold headline**
+    if (m) t = m[1];
+    if (!t) { m = first.match(/^#{1,4}\s+(.+)/); if (m) t = m[1]; } // ### Heading
+    if (!t) {
+        const para = content.split(/\n\n+/).map(p => p.trim()).find(p => p && !/^[#*>]/.test(p)) || first;
+        const fs = para.replace(/[*#`>]/g, '').split(/(?<=[.!?])\s/)[0].trim();
+        t = fs.length <= 95 ? fs : fs.slice(0, 80).replace(/\s+\S*$/, '') + '…';
+    }
+    t = t.replace(/[*#`_]/g, '').replace(/^["'“”]+|["'“”]+$/g, '').trim();
+    return t.length >= 8 ? t : '';
+}
+
 function parseArticleResponse(text: string): {
     title: string;
     subtitle: string;
@@ -583,10 +603,14 @@ function parseArticleResponse(text: string): {
     const stripLeadingLabels = (s: string): string =>
         s.replace(/^(?:\s*\*{0,2}\s*(?:TITLE|SUBTITLE|CONTENT|BODY)\b[^\n]*\n+)+/i, '').trim();
 
+    const content = humanizeText(stripLeadingLabels(contentMatch?.[1]?.trim() || text));
+    let title = humanizeText(stripInline(titleMatch?.[1]));
+    if (!title) title = deriveTitleFromContent(content) || 'Untitled Article';
+
     return {
-        title: humanizeText(stripInline(titleMatch?.[1])) || 'Untitled Article',
+        title,
         subtitle: humanizeText(stripInline(subtitleMatch?.[1])),
-        content: humanizeText(stripLeadingLabels(contentMatch?.[1]?.trim() || text)),
+        content,
         summary: humanizeText(stripInline(summaryMatch?.[1])),
         tags: tagsMatch?.[1]?.split(',').map(t => humanizeText(stripInline(t))).filter(Boolean) || [],
     };
