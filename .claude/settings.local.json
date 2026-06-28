@@ -134,7 +134,9 @@
       "Bash(mkdir -p geo)",
       "Bash(curl -s \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/africa.geojson\" -o geo/africa.geojson)",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('kpi_dash.png'\\); print\\(im.size\\); im.crop\\(\\(0,560,1440,820\\)\\).save\\('kpi_dash_c.png'\\); print\\('done'\\)\")",
-      "Bash(python -c \"from PIL import Image; im=Image.open\\('supp.png'\\); im.crop\\(\\(0,330,1440,560\\)\\).save\\('supp_c.png'\\)\")"
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('supp.png'\\); im.crop\\(\\(0,330,1440,560\\)\\).save\\('supp_c.png'\\)\")",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800')",
+      "Bash(echo \"unsplash test: $\\(curl -s -o /dev/null -w '%{http_code}' 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800'\\)\")"
     ]
   }
 }

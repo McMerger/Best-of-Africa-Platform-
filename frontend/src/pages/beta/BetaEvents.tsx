@@ -11,6 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
 
+// Local fallback imagery rotated by index so events without a hero_image_url
+// don't all share one (previously external, washed-out) photo.
+const EVENT_FALLBACKS = [
+  '/images/v2_events.webp',
+  '/images/v2_concierge.webp',
+  '/images/v2_hero_kigali.webp',
+  '/images/v2_real_background.webp',
+];
+
 export const BetaEvents: React.FC = () => {
     const { data: eventsData, isLoading } = useQuery({
         queryKey: ['events'],
@@ -124,7 +133,7 @@ export const BetaEvents: React.FC = () => {
                                 <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
                                     <div 
                                         className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-1000"
-                                        style={{ backgroundImage: `url(${event.hero_image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800'})` }}
+                                        style={{ backgroundImage: `url(${event.hero_image_url || EVENT_FALLBACKS[index % EVENT_FALLBACKS.length]})` }}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent md:hidden" />
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card hidden md:block" />
