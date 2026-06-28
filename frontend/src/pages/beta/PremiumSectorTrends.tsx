@@ -22,7 +22,7 @@ export const PremiumSectorTrends: React.FC = () => {
   if (isLoading) {
     return (
       <>
-        <div className="max-w-5xl mx-auto px-6 py-12 animate-pulse">
+        <div className="max-w-6xl mx-auto px-6 py-12 animate-pulse">
           <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             {[1, 2, 3, 4].map(i => (
@@ -71,8 +71,8 @@ export const PremiumSectorTrends: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20">
-          <div className="max-w-5xl mx-auto">
+        <div className="bg-background text-foreground pt-16 pb-20 px-4 sm:px-6 border-b border-accent/20">
+          <div className="max-w-6xl mx-auto">
             <Link to="/intel" className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm mb-8 transition-colors">
               <ArrowLeft size={16} />
               Market Intelligence
@@ -92,7 +92,7 @@ export const PremiumSectorTrends: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-10">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">

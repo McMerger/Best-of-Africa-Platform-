@@ -96,7 +96,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-40">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-40">
 
         {/* Free-preview banner */}
         {!isMember && (
