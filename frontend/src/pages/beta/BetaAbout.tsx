@@ -125,7 +125,7 @@ export const BetaAbout = () => {
         </section>
 
         {/* 6. CTA */}
-        <section className="py-14 md:py-24 md:py-40 text-center relative z-10">
+        <section className="py-14 md:py-24 lg:py-40 text-center relative z-10">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
             <span className="text-5xl mb-8 block drop-shadow-2xl">☕</span>
             <h2 className="font-serif text-[3rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-12 text-foreground drop-shadow-xl">
