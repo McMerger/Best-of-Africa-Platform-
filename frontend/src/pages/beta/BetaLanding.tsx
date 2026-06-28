@@ -173,6 +173,16 @@ export const BetaLanding = () => {
 
   const previewArticles: ArticleListItem[] = featuredData?.data?.slice(0, 3) || FALLBACK_ARTICLES.slice(0, 3);
 
+  // Showcase cards for the "Platform Experience" marquee. Each premium image
+  // gets a distinct label instead of the old repeated "Cinematic Intelligence".
+  const platformPreviews = [
+    { src: '/images/v2_concierge.webp', eyebrow: t('landing.pv_concierge_k', 'Concierge'), label: t('landing.pv_concierge_v', 'White-glove access') },
+    { src: '/images/v2_events.webp', eyebrow: t('landing.pv_events_k', 'Summits & Events'), label: t('landing.pv_events_v', 'Where Africa connects') },
+    { src: '/images/v2_travel.webp', eyebrow: t('landing.pv_travel_k', 'Business Travel'), label: t('landing.pv_travel_v', 'Beyond the boardroom') },
+    { src: '/images/v2_hero_kigali.webp', eyebrow: t('landing.pv_hubs_k', 'Country Hubs'), label: t('landing.pv_hubs_v', 'Every nation, in depth') },
+    { src: '/images/v2_intel.webp', eyebrow: t('landing.pv_intel_k', 'Market Intelligence'), label: t('landing.pv_intel_v', 'Data with real context') },
+  ];
+
   return (
     <div className="selection:bg-accent selection:text-primary overflow-x-hidden">
       <SEO 
@@ -302,12 +312,12 @@ export const BetaLanding = () => {
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
                       <SafeImage
-                        src={article.hero_image_url || `/images/v2_editorial_${(index % 2) + 1}.png`}
+                        src={article.hero_image_url || `/images/v2_editorial_${(index % 2) + 1}.webp`}
                         alt={article.title}
                         caption={stripMarkdown(article.title)}
-                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-70"
+                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-90"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/90 to-navy/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/55 to-navy/10" />
                     </div>
 
                     {/* FREE READ badge on the first (unlocked) card, spec §2.4 */}
@@ -401,36 +411,16 @@ export const BetaLanding = () => {
             animate={prefersReducedMotion ? undefined : { x: ["0%", "-50%"] }}
             transition={prefersReducedMotion ? undefined : { ease: "linear", duration: 40, repeat: Infinity }}
           >
-            {[
-              "/images/v2_concierge_concrete_1780371218016.png",
-              "/images/v2_events_concrete_1780371229306.png",
-              "/images/v2_travel_concrete_1780371206765.png",
-              "/images/v2_hero_kigali.webp",
-              "/images/v2_intel_bg_1780355630845.png"
-            ].map((src, idx) => (
-              <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
-                <img src={src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
-                <div className="absolute bottom-8 left-8 right-8">
-                  <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">{t('landing.cinematic', 'Cinematic Intelligence')}</div>
+            {[...platformPreviews, ...platformPreviews].map((item, idx) => (
+              <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_24px_60px_-20px_rgba(15,31,61,0.5)] flex-shrink-0 group">
+                <img src={item.src} loading={idx < 5 ? 'eager' : 'lazy'} decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1200ms]" alt={item.label} />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
+                <div className="absolute top-6 left-6">
+                  <div className="w-9 h-9 rounded-full bg-navy/40 backdrop-blur-md border border-accent/40 flex items-center justify-center text-accent"><Lock size={14}/></div>
                 </div>
-              </div>
-            ))}
-            {/* Duplicate for infinite effect */}
-            {[
-              "/images/v2_concierge_concrete_1780371218016.png",
-              "/images/v2_events_concrete_1780371229306.png",
-              "/images/v2_travel_concrete_1780371206765.png",
-              "/images/v2_hero_kigali.webp",
-              "/images/v2_intel_bg_1780355630845.png"
-            ].map((src, idx) => (
-              <div key={`dup-${idx}`} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-foreground/10 shadow-2xl flex-shrink-0 group">
-                <img src={src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt="Platform preview" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
-                <div className="absolute bottom-8 left-8 right-8">
-                  <div className="w-10 h-10 rounded-full bg-accent/20 backdrop-blur-md border border-accent/40 flex items-center justify-center mb-4 text-accent"><Lock size={16}/></div>
-                  <div className="font-serif text-2xl text-white">{t('landing.cinematic', 'Cinematic Intelligence')}</div>
+                <div className="absolute bottom-7 left-7 right-7">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">{item.eyebrow}</span>
+                  <div className="font-serif text-2xl md:text-[1.9rem] leading-tight text-white mt-1.5">{item.label}</div>
                 </div>
               </div>
             ))}
@@ -446,7 +436,7 @@ export const BetaLanding = () => {
         <div className="absolute inset-0 z-0">
           <motion.img
             style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
-            src="/images/v2_real_background.png"
+            src="/images/v2_real_background.webp"
             alt="Real African Street Night"
             loading="lazy"
             decoding="async"

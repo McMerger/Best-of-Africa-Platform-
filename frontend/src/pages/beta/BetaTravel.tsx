@@ -46,7 +46,7 @@ export const BetaTravel: React.FC = () => {
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
                   <img
-                    src="/images/v2_travel_concrete_1780371206765.png"
+                    src="/images/v2_travel.webp"
                     alt="Luxury African Eco-Lodge"
                     className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
                   />

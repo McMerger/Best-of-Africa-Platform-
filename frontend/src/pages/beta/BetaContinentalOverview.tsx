@@ -24,7 +24,7 @@ export const BetaContinentalOverview: React.FC = () => {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-background/80 mix-blend-multiply z-10" />
           <div className="gradient-overlay-light z-20" />
-          <img src="/images/v2_intel_bg.png" alt="Intelligence" className="w-full h-full object-cover object-center" />
+          <img src="/images/v2_intel.webp" alt="Intelligence" className="w-full h-full object-cover object-center" />
         </div>
         
         <div className="relative z-30 max-w-lg bg-card p-12 rounded-3xl border border-foreground/10 shadow-2xl backdrop-blur-xl">
@@ -103,7 +103,7 @@ export const BetaContinentalOverview: React.FC = () => {
           <div className="absolute inset-0 bg-background/80 mix-blend-multiply z-10" />
           <div className="gradient-overlay-light z-20" />
           <img 
-            src="/images/v2_intel_bg.png" 
+            src="/images/v2_intel.webp" 
             alt="Continental Intelligence Data" 
             className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
           />

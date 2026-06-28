@@ -27,7 +27,7 @@ export const BetaAbout = () => {
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
         >
           <img
-            src="/images/v2_about_hero.png"
+            src="/images/v2_about_hero.webp"
             alt="African Visionary"
             className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />

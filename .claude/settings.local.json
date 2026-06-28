@@ -102,7 +102,18 @@
       "Bash(MSYS_NO_PATHCONV=1 node capfooter.mjs)",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('d_landing_full.png'\\); print\\(im.size\\); im.thumbnail\\(\\(420,4000\\)\\); im.save\\('d_landing_thumb.png'\\); print\\('thumb done'\\)\")",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('d_stories_full.png'\\); im.crop\\(\\(0,560,1440,1900\\)\\).save\\('ds_grid_new.png'\\); print\\('done'\\)\")",
-      "Bash(python -c \"from PIL import Image; im=Image.open\\('d_stories_full.png'\\); print\\(im.size\\); im.crop\\(\\(0,1800,1440,2900\\)\\).save\\('ds_grid2.png'\\); print\\('done'\\)\")"
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('d_stories_full.png'\\); print\\(im.size\\); im.crop\\(\\(0,1800,1440,2900\\)\\).save\\('ds_grid2.png'\\); print\\('done'\\)\")",
+      "Bash(MSYS_NO_PATHCONV=1 node capart.mjs)",
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/articles/abiy-ahmed-s-precarious-balance-2iyn\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); a=d.get\\('data',d\\); print\\('sector_name:',repr\\(a.get\\('sector_name'\\)\\)\\); print\\('status:',repr\\(a.get\\('status'\\)\\)\\); print\\('country_name:',repr\\(a.get\\('country_name'\\)\\)\\); print\\('tags:',repr\\(a.get\\('tags'\\)\\)[:120]\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); a=d.get\\('data',d\\); print\\(list\\(a.keys\\(\\)\\)\\); print\\('--- candidates ---'\\); [print\\(k,'=',repr\\(a[k]\\)[:80]\\) for k in a if any\\(s in k.lower\\(\\) for s in ['sector','tag','categor','status','country','region']\\)]\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); a=d['data']['article']; [print\\(k,'=',repr\\(a[k]\\)[:90]\\) for k in a if any\\(s in k.lower\\(\\) for s in ['sector','tag','categor','status','country','region']\\)]\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); a=d['article']; [print\\(k,'=',repr\\(a[k]\\)[:90]\\) for k in a if any\\(s in k.lower\\(\\) for s in ['sector','tag','categor','status','country','region']\\)]\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('art_desk_fold.png'\\); print\\(im.size\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('art_desk_fold.png'\\); im.crop\\(\\(280,610,900,700\\)\\).resize\\(\\(1240,180\\)\\).save\\('art_label.png'\\); print\\('done'\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('d_countries_full.png'\\); print\\(im.size\\); im.thumbnail\\(\\(430,3500\\)\\); im.save\\('d_countries_thumb.png'\\); print\\('done'\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('d_landing_full.png'\\); print\\(im.size\\); im.crop\\(\\(0,2600,1440,3900\\)\\).save\\('new_stories.png'\\); im.crop\\(\\(0,5200,1440,6500\\)\\).save\\('new_premium.png'\\); print\\('done'\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('d_landing_full.png'\\); print\\(im.size\\); im.crop\\(\\(0,2600,1440,3900\\)\\).save\\('new_stories2.png'\\); im.crop\\(\\(0,5150,1440,6450\\)\\).save\\('new_premium2.png'\\); print\\('done'\\)\")"
     ]
   }
 }

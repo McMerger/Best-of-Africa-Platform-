@@ -188,7 +188,7 @@ export const BetaCountryHub = () => {
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
         >
           <img
-            src="/images/v2_country_hero.png"
+            src="/images/v2_country_hero.webp"
             alt="Country Landscape"
             className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />

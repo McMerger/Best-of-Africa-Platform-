@@ -207,7 +207,7 @@ export const BetaMemberAccess = () => {
           {/* Left Side Cover */}
           <div className="hidden lg:block lg:w-1/2 relative">
             <img
-              src="/images/v2_editorial_1.png"
+              src="/images/v2_editorial_1.webp"
               alt="Premium Access"
               className="absolute inset-0 w-full h-full object-cover object-center hero-photo"
             />

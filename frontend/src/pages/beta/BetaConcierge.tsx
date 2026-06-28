@@ -62,7 +62,7 @@ export const BetaConcierge: React.FC = () => {
                   style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
                 >
                   <img
-                    src="/images/v2_concierge_concrete_1780371218016.png"
+                    src="/images/v2_concierge.webp"
                     alt="African Luxury Concierge Desk"
                     className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
                   />
