@@ -1,9 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, Calendar, Globe, BookOpen, ArrowRight, Headphones } from 'lucide-react';
+import { Sparkles, Zap, Calendar, BookOpen, ArrowRight, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
+import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
@@ -55,8 +56,8 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                 {(article.country_name || article.sector_name) && (
                     <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 ${isHighlighted ? 'text-accent' : 'text-primary/40'}`}>
                         {article.country_name && (
-                            <span className="flex items-center gap-1">
-                                <Globe className="w-3 h-3" /> {article.country_name}
+                            <span className="flex items-center gap-1.5">
+                                <CountryFlag code={article.country_code} title={article.country_name} size={16} /> {article.country_name}
                             </span>
                         )}
                         {article.country_name && article.sector_name && <span>·</span>}

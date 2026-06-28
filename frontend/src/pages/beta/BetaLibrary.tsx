@@ -59,8 +59,8 @@ export const BetaLibrary: React.FC = () => {
                     </div>
                 ) : bookmarks.length === 0 ? (
                     <div className="flex flex-col items-center justify-center text-center py-20 px-4">
-                        <div className="w-20 h-20 bg-background/5 rounded-full flex items-center justify-center mb-6">
-                            <BookmarkIcon className="w-10 h-10 text-primary/30" />
+                        <div className="w-20 h-20 bg-accent/10 border border-accent/20 rounded-2xl flex items-center justify-center mb-6">
+                            <BookmarkIcon className="w-9 h-9 text-accent" />
                         </div>
                         <h2 className="text-2xl font-serif font-bold text-foreground mb-3">Your library is empty</h2>
                         <p className="text-muted-foreground max-w-md mb-8">
