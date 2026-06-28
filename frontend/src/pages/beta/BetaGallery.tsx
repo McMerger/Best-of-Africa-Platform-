@@ -3,41 +3,49 @@ import { motion } from 'framer-motion';
 import { SectionLabel, CardReveal } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 
+// Curated from the bundled, optimized local imagery so every tile loads
+// reliably (the previous Unsplash URLs had started 404-ing to the fallback).
 const GALLERY_IMAGES = [
   {
-    url: 'https://images.unsplash.com/photo-1517036662991-88f58b09b30b?auto=format&fit=crop&q=80',
+    url: '/images/v2_events.webp',
     caption: 'Lagos after dark',
     location: 'Lagos, Nigeria',
     category: 'Cities'
   },
   {
-    url: 'https://images.unsplash.com/photo-1547444342-990e72bd1600?auto=format&fit=crop&q=80',
-    caption: 'Kigali on a Tuesday',
-    location: 'Kigali, Rwanda',
-    category: 'People'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1498623116066-23bd5266fea5?auto=format&fit=crop&q=80',
-    caption: 'Nairobi market',
-    location: 'Nairobi, Kenya',
-    category: 'People'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1504198458649-3128b932f49e?auto=format&fit=crop&q=80',
-    caption: 'Accra creators',
-    location: 'Accra, Ghana',
-    category: 'Culture'
-  },
-  {
-    url: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?auto=format&fit=crop&q=80',
-    caption: 'The Dakar waterfront',
-    location: 'Dakar, Senegal',
+    url: '/images/v2_editorial_2.webp',
+    caption: 'City lights',
+    location: 'Lagos, Nigeria',
     category: 'Cities'
   },
   {
-    url: 'https://images.unsplash.com/photo-1627885408544-24ed0d0f4d3c?auto=format&fit=crop&q=80',
-    caption: 'Making something',
+    url: '/images/v2_hero_kigali.webp',
+    caption: 'Kigali rising',
+    location: 'Kigali, Rwanda',
+    category: 'Cities'
+  },
+  {
+    url: '/images/v2_editorial_1.webp',
+    caption: 'Made to be seen',
+    location: 'Lagos, Nigeria',
+    category: 'People'
+  },
+  {
+    url: '/images/v2_concierge.webp',
+    caption: 'Service, elevated',
+    location: 'Lagos, Nigeria',
+    category: 'People'
+  },
+  {
+    url: '/images/v2_real_background.webp',
+    caption: 'Night market',
     location: 'Across the continent',
+    category: 'Culture'
+  },
+  {
+    url: '/images/v2_travel.webp',
+    caption: 'Where the wild meets luxury',
+    location: 'Serengeti, Tanzania',
     category: 'Culture'
   }
 ];
