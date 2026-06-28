@@ -10,7 +10,8 @@ import { SEO } from '../../components/SEO';
 import { useMember } from '../../context/MemberContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { api } from '../../services/api';
-import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
+import { KO_FI_URL } from '../../constants/beta';
+import { CountryFlag } from '../../components/CountryFlag';
 import type { Article, ArticleListItem, Country } from '../../types';
 
 interface ArticleResponse {
@@ -221,7 +222,6 @@ export const BetaArticle = () => {
   }
 
   const { article, country } = data;
-  const flag = country?.flag_emoji || article.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
   // Category = the sector ("Energy & Mining"), NOT tags[0] which is the country name.
   const countryLabel = country?.name || article.country_name || article.country_code;
   // tags may arrive as a JSON string ('["a","b"]'), an array, or be absent —
@@ -322,7 +322,7 @@ export const BetaArticle = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
           <div className="absolute bottom-6 left-6 md:left-12 z-10">
-            <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
+            <CountryFlag code={article.country_code} title={countryLabel} size={56} className="!rounded-lg shadow-lg" />
           </div>
         </div>
       ) : (
@@ -337,7 +337,7 @@ export const BetaArticle = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-navy/90 via-navy/60 to-transparent mix-blend-multiply" />
           <div className="absolute bottom-6 left-6 md:left-12 z-10">
-            <span className="text-4xl md:text-5xl drop-shadow-lg">{flag}</span>
+            <CountryFlag code={article.country_code} title={countryLabel} size={56} className="!rounded-lg shadow-lg" />
           </div>
         </div>
       )}
@@ -519,7 +519,7 @@ export const BetaArticle = () => {
                   >
                     <div className="p-6">
                       <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl">{a.country_flag || FLAG_MAP[a.country_code] || '🌍'}</span>
+                        <CountryFlag code={a.country_code} title={a.country_name} size={24} />
                         {a.sector_name && (
                           <span className="text-[11px] font-semibold tracking-widest text-accent uppercase">{a.sector_name}</span>
                         )}

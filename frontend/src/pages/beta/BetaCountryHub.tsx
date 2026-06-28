@@ -16,6 +16,7 @@ import { useMember } from '../../context/MemberContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { SafeImage } from '../../components/SafeImage';
+import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { ArticleListItem } from '../../types';
 
@@ -165,7 +166,6 @@ export const BetaCountryHub = () => {
   }
 
   const countryName = country?.name ?? upperCode;
-  const flagEmoji = country?.flag_emoji ?? '🌍';
   const region = country?.region ?? '';
   const investmentHighlights: string[] = Array.isArray(country?.investment_highlights)
     ? country!.investment_highlights
@@ -208,7 +208,7 @@ export const BetaCountryHub = () => {
             {isLoading ? (
               <div className="w-24 h-24 bg-foreground/10 rounded-3xl animate-pulse" />
             ) : (
-              <span className="text-[3.5rem] sm:text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
+              <CountryFlag code={upperCode} title={countryName} size={104} className="!rounded-2xl shadow-2xl ring-white/20" />
             )}
             <div className="flex-1 pb-2">
               {isLoading ? (

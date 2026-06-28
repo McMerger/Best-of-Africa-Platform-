@@ -6,6 +6,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { SafeImage } from '../../components/SafeImage';
+import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
@@ -402,7 +403,7 @@ export const BetaStories = () => {
                       >
                       <div className="p-6 pb-2 border-b border-primary/8 relative z-10 bg-background" aria-hidden="true">
                         <div className="flex justify-between items-center mb-4">
-                          <span className="text-2xl">{article.country_flag}</span>
+                          <CountryFlag code={article.country_code} title={article.country_name} size={26} />
                           <span className="text-xs font-semibold tracking-wider text-primary/50 uppercase">{article.sector_name}</span>
                         </div>
                         <h3 className="font-serif text-[22px] leading-snug mb-3 text-primary blur-[4px] select-none opacity-60">
@@ -473,7 +474,7 @@ export const BetaStories = () => {
                     <div className={`flex flex-col flex-1 ${isFeatured ? 'md:justify-center' : ''}`}>
                     <div className={`flex-grow relative z-10 bg-card ${isFeatured ? 'p-7 md:p-10 lg:p-12 pb-4' : 'p-6 md:p-7 pb-4'}`}>
                       <div className="flex justify-between items-center mb-4">
-                        <span className="text-2xl">{article.country_flag}</span>
+                        <CountryFlag code={article.country_code} title={article.country_name} size={26} />
                         <span className="text-[11px] font-semibold tracking-[0.16em] text-accent uppercase">{article.sector_name}</span>
                       </div>
                       <h3 className={`font-serif leading-[1.08] mb-4 text-foreground group-hover:text-accent transition-colors ${isFeatured ? 'text-[2.25rem] md:text-[3rem] lg:text-[3.5rem]' : 'text-[1.5rem] md:text-[1.6rem]'}`}>

@@ -7,7 +7,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
-import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
+import { CountryFlag } from '../../components/CountryFlag';
+import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
@@ -180,7 +181,7 @@ export const BetaContinentalOverview: React.FC = () => {
               {top_countries.map((c) => (
                 <li key={c.code} className="flex items-center justify-between group">
                   <Link to={`/countries/${c.code}`} className="flex items-center gap-4">
-                    <span className="text-[2rem] w-10 text-center drop-shadow-md">{c.flag_emoji || FLAG_MAP[c.code] || '🌍'}</span>
+                    <CountryFlag code={c.code} title={c.name} size={34} />
                     <span className="text-[1.125rem] font-light text-foreground group-hover:text-accent transition-colors">
                       {c.name}
                     </span>

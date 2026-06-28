@@ -7,6 +7,7 @@ import { } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { useLanguage } from '@/context/LanguageContext';
+import { CountryFlag } from '../../components/CountryFlag';
 import type { Country } from '../../types';
 
 // ─── Countries API response shape ────────────────────────────────────────────
@@ -51,7 +52,7 @@ const CountryCard = ({
         className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-[0_1px_6px_rgba(0,0,0,0.06)] flex flex-col text-left transition-all duration-200 hover:border-accent/60 hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-5 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
+          <CountryFlag code={country.code} title={country.name} size={36} />
           <span className="text-[9px] font-bold uppercase tracking-widest text-accent/70 bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
             {country.region}
           </span>

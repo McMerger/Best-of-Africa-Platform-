@@ -9,6 +9,7 @@ import { GoldButton,
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { SafeImage } from '../../components/SafeImage';
+import { CountryFlag } from '../../components/CountryFlag';
 import { WorldCupFeature } from '../../components/beta/WorldCupFeature';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
@@ -331,7 +332,7 @@ export const BetaLanding = () => {
                       <div className="mt-auto">
                         <div className="flex justify-between items-center mb-6">
                           <div>
-                            <span className="text-5xl drop-shadow-lg">{article.country_flag || '🌍'}</span>
+                            <CountryFlag code={article.country_code} title={article.country_name} size={48} className="!rounded-lg shadow-lg" />
                             {article.country_name && (
                               <p className="text-[11px] text-accent font-bold uppercase tracking-widest mt-3 drop-shadow-md">{article.country_name}</p>
                             )}
