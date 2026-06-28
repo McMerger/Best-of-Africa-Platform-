@@ -302,7 +302,7 @@ export const BetaLanding = () => {
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
                       <SafeImage
-                        src={article.hero_image_url || `/images/v2_editorial_${index + 1}.png`}
+                        src={article.hero_image_url || `/images/v2_editorial_${(index % 2) + 1}.png`}
                         alt={article.title}
                         caption={stripMarkdown(article.title)}
                         className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-70"

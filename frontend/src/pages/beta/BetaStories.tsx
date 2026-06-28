@@ -15,6 +15,15 @@ import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
 
+/** Editorial fallback images, rotated by card index, for stories with no hero_image_url. */
+const STORY_FALLBACKS = [
+  '/images/v2_editorial_1.png',
+  '/images/fallback_business.png',
+  '/images/v2_editorial_2.png',
+  '/images/fallback_culture.png',
+  '/images/fallback_tech.png',
+];
+
 /** Strip Markdown bold markers (**) and surrounding quote wrapping from a string. */
 const stripMarkdown = (text: string): string => {
   if (!text) return text;
@@ -452,7 +461,7 @@ export const BetaStories = () => {
                     ) : (
                       <div className={`overflow-hidden shrink-0 relative ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
                         <img
-                          src={`/images/v2_editorial_${(index % 2) + 1}.png`}
+                          src={STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
                           alt={stripMarkdown(article.title)}
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
