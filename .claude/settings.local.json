@@ -140,7 +140,9 @@
       "Bash(MSYS_NO_PATHCONV=1 node capcards.mjs)",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('hub_cards.png'\\); im.crop\\(\\(220,30,1230,430\\)\\).save\\('hub_cards_c.png'\\)\")",
       "Bash(MSYS_NO_PATHCONV=1 node capcards2.mjs)",
-      "Bash(python -c \"from PIL import Image; im=Image.open\\('hub_cards2.png'\\); im.crop\\(\\(220,30,1230,440\\)\\).save\\('hub_final.png'\\)\")"
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('hub_cards2.png'\\); im.crop\\(\\(220,30,1230,440\\)\\).save\\('hub_final.png'\\)\")",
+      "Bash(MSYS_NO_PATHCONV=1 node capfree.mjs)",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('free_intel.png'\\); im.crop\\(\\(0,1900,1440,2750\\)\\).save\\('intel_grid.png'\\); print\\('done'\\)\")"
     ]
   }
 }

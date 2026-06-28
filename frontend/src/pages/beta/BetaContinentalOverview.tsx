@@ -102,8 +102,8 @@ export const BetaContinentalOverview: React.FC = () => {
         {!isMember && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4 mb-10">
             <p className="text-sm text-foreground/70 leading-relaxed">
-              <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Free preview</span>
-              The continental snapshot, regional heatmap and trending nations are open to everyone, no account needed.
+              <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Open access</span>
+              The full continental dashboard — coverage, regional heatmap, trending nations, sectors and editor's highlights — is free for everyone.
             </p>
             <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-foreground transition-colors">
               Unlock the full dashboard →
@@ -193,8 +193,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Sectors in focus + editor's highlights, MEMBERS ONLY */}
-        {isMember ? (
+        {/* Sectors in focus + editor's highlights, free for everyone */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* List: Top Sectors */}
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl h-fit">
@@ -260,39 +259,31 @@ export const BetaContinentalOverview: React.FC = () => {
             </div>
           </div>
         </div>
-        ) : (
-        <div className="relative overflow-hidden rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-14">
-          <div aria-hidden="true" className="pointer-events-none select-none blur-[6px] opacity-40 grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="space-y-4">
-              <div className="font-serif text-xl mb-2">Sectors in Focus</div>
-              {[1,2,3,4,5].map(i => <div key={i} className="h-12 bg-white/10 rounded-xl" />)}
-            </div>
-            <div className="lg:col-span-2 space-y-6">
-              <div className="font-serif text-2xl mb-2">Editor's Highlights</div>
-              {[1,2,3].map(i => <div key={i} className="h-28 bg-white/10 rounded-2xl" />)}
-            </div>
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-t from-navy via-navy/90 to-navy/70">
-            <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
-              <BarChart3 size={14} /> Members only
+
+        {/* Membership CTA — the dashboard itself is fully free; this points to
+            the genuinely premium, member-only intelligence. */}
+        {!isMember && (
+          <div className="mt-14 rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-12 text-center">
+            <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">
+              <BarChart3 size={14} /> Founding Members
             </span>
-            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4 max-w-xl">
-              Sectors in focus & the editor's highlights
+            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4 max-w-2xl mx-auto">
+              Go deeper than the overview
             </h2>
-            <p className="text-white/70 mb-8 max-w-md leading-relaxed">
-              You're viewing the free continental snapshot. The curated sector breakdown and
-              editor's highlight reel are part of BOA-Story membership.
+            <p className="text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
+              The whole continental dashboard is free. Founding Members unlock per-country
+              situation reports, strategic opportunity scoring, and curated briefings tuned to
+              their exact markets.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all">
                 Become a Founding Member
               </a>
-              <Link to="/login" className="border border-accent/40 text-white font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-accent/10 transition-all">
-                Sign in
+              <Link to="/membership" className="border border-accent/40 text-white font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-accent/10 transition-all">
+                See membership
               </Link>
             </div>
           </div>
-        </div>
         )}
 
       </div>
