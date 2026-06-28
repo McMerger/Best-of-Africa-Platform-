@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
-import { SafeImage } from '../../components/SafeImage';
 import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES } from '../../constants/beta';
@@ -450,27 +449,15 @@ export const BetaStories = () => {
                         <span className="absolute top-5 right-5 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">{t('stories.free_read', 'Free Read')}</span>
                       )}
                       {/* Hero thumbnail */}
-                    {article.hero_image_url ? (
-                      <div className={`overflow-hidden shrink-0 ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
-                        <SafeImage
-                          src={article.hero_image_url}
-                          alt={stripMarkdown(article.title)}
-                          caption={stripMarkdown(article.title)}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
-                        />
-                      </div>
-                    ) : (
-                      <div className={`overflow-hidden shrink-0 relative ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
-                        <img
-                          src={STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
-                          alt={stripMarkdown(article.title)}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 opacity-70"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                      </div>
-                    )}
+                    <div className={`overflow-hidden shrink-0 relative bg-navy-card ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
+                      <img
+                        src={article.hero_image_url || STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
+                        alt={stripMarkdown(article.title)}
+                        loading="lazy"
+                        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = STORY_FALLBACKS[index % STORY_FALLBACKS.length]; } }}
+                        className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
+                      />
+                    </div>
                     <div className={`flex flex-col flex-1 ${isFeatured ? 'md:justify-center' : ''}`}>
                     <div className={`flex-grow relative z-10 bg-card ${isFeatured ? 'p-7 md:p-10 lg:p-12 pb-4' : 'p-6 md:p-7 pb-4'}`}>
                       <div className="flex justify-between items-center mb-4">

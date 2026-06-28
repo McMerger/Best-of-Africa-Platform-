@@ -15,7 +15,6 @@ import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { KO_FI_URL } from '../../constants/beta';
-import { SafeImage } from '../../components/SafeImage';
 import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { ArticleListItem } from '../../types';
@@ -60,22 +59,35 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
   </div>
 );
 
+// Deterministic local fallback so broken/missing article heroes show a real
+// editorial photo (not a flickering random pick or the branded "B" box).
+const HUB_FALLBACKS = [
+  '/images/v2_editorial_1.webp',
+  '/images/v2_editorial_2.webp',
+  '/images/fallback_business.png',
+  '/images/fallback_culture.png',
+  '/images/fallback_tech.png',
+];
+const hubFallback = (seed = '') =>
+  HUB_FALLBACKS[Math.abs([...seed].reduce((a, c) => a + c.charCodeAt(0), 0)) % HUB_FALLBACKS.length];
+
 const ArticleCard = ({ article }: { article: ArticleListItem }) => {
   const { t } = useLanguage();
+  const fb = hubFallback(article.slug || article.title);
   return (
   <Link
     to={`/posts/${article.slug}`}
     className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
-    <div className="aspect-[16/9] overflow-hidden bg-background/20 relative">
-      <SafeImage
-        src={article.hero_image_url || `/images/v2_editorial_${Math.floor(Math.random() * 2) + 1}.png`}
-        alt={article.title}
-        caption={stripMarkdown(article.title)}
+    <div className="aspect-[16/9] overflow-hidden bg-navy-card relative">
+      <img
+        src={article.hero_image_url || fb}
+        alt={stripMarkdown(article.title)}
         loading="lazy"
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = fb; } }}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
+      <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
     </div>
     <div className="p-6">
       {article.sector_name && (

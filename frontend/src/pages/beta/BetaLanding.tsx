@@ -8,7 +8,6 @@ import { GoldButton,
   MembershipTiersGrid
 } from '../../components/beta';
 import { SEO } from '../../components/SEO';
-import { SafeImage } from '../../components/SafeImage';
 import { CountryFlag } from '../../components/CountryFlag';
 import { WorldCupFeature } from '../../components/beta/WorldCupFeature';
 import { api } from '../../services/api';
@@ -312,10 +311,11 @@ export const BetaLanding = () => {
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
-                      <SafeImage
+                      <img
                         src={article.hero_image_url || `/images/v2_editorial_${(index % 2) + 1}.webp`}
                         alt={article.title}
-                        caption={stripMarkdown(article.title)}
+                        loading="lazy"
+                        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = `/images/v2_editorial_${(index % 2) + 1}.webp`; } }}
                         className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-90"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/55 to-navy/10" />
