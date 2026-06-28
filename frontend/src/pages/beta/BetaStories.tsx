@@ -381,9 +381,10 @@ export const BetaStories = () => {
                 // Free after first 4; lock remaining for non-members
                 const isLocked = !isMember && !isSearchMode && index >= 4;
 
-                // Asymmetrical Bento Layout Logic
-                // Every 5th item (0, 5, 10) takes up 2 columns.
-                const colSpanClass = (index % 5 === 0) ? "md:col-span-2 lg:col-span-2" : "col-span-1";
+                // Magazine layout: the lead story runs full-width as a
+                // side-by-side feature; every other story is a uniform card.
+                const isFeatured = index === 0 && !isSearchMode && !isLocked;
+                const colSpanClass = isFeatured ? "md:col-span-2 lg:col-span-3" : "col-span-1";
 
                 if (isLocked) {
                   return (
@@ -441,43 +442,44 @@ export const BetaStories = () => {
                   >
                     <Link
                       to={`/posts/${article.slug}`}
-                      className="group relative bg-card rounded-2xl overflow-hidden border border-foreground/10 flex flex-col transition-all duration-500 hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] block h-full"
+                      className={`group relative bg-card rounded-2xl overflow-hidden border border-foreground/10 flex transition-all duration-500 hover:border-accent/40 hover:shadow-[0_24px_60px_-20px_rgba(15,31,61,0.45)] hover:-translate-y-1 block h-full ${isFeatured ? 'flex-col md:flex-row' : 'flex-col'}`}
                     >
-                      {/* FREE READ badge on the first story (spec §3.4) */}
+                      {/* FREE READ badge on the lead story (spec §3.4) */}
                       {index === 0 && !isSearchMode && (
-                        <span className="absolute top-4 right-4 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">{t('stories.free_read', 'Free Read')}</span>
+                        <span className="absolute top-5 right-5 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">{t('stories.free_read', 'Free Read')}</span>
                       )}
                       {/* Hero thumbnail */}
                     {article.hero_image_url ? (
-                      <div className={`overflow-hidden shrink-0 ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
+                      <div className={`overflow-hidden shrink-0 ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
                         <SafeImage
                           src={article.hero_image_url}
                           alt={stripMarkdown(article.title)}
                           caption={stripMarkdown(article.title)}
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
                         />
                       </div>
                     ) : (
-                      <div className={`overflow-hidden shrink-0 relative ${index % 5 === 0 ? 'h-64' : 'h-48'}`}>
+                      <div className={`overflow-hidden shrink-0 relative ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
                         <img
                           src={STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
                           alt={stripMarkdown(article.title)}
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
+                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700 opacity-70"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                       </div>
                     )}
-                    <div className="p-6 md:p-8 pb-4 flex-grow relative z-10 bg-card">
+                    <div className={`flex flex-col flex-1 ${isFeatured ? 'md:justify-center' : ''}`}>
+                    <div className={`flex-grow relative z-10 bg-card ${isFeatured ? 'p-7 md:p-10 lg:p-12 pb-4' : 'p-6 md:p-7 pb-4'}`}>
                       <div className="flex justify-between items-center mb-4">
                         <span className="text-2xl">{article.country_flag}</span>
-                        <span className="text-xs font-semibold tracking-widest text-accent uppercase">{article.sector_name}</span>
+                        <span className="text-[11px] font-semibold tracking-[0.16em] text-accent uppercase">{article.sector_name}</span>
                       </div>
-                      <h3 className={`font-serif leading-[1.1] mb-4 text-foreground group-hover:text-accent transition-colors ${index % 5 === 0 ? 'text-[2rem] md:text-[2.5rem]' : 'text-[1.5rem] md:text-[1.75rem]'}`}>
+                      <h3 className={`font-serif leading-[1.08] mb-4 text-foreground group-hover:text-accent transition-colors ${isFeatured ? 'text-[2.25rem] md:text-[3rem] lg:text-[3.5rem]' : 'text-[1.5rem] md:text-[1.6rem]'}`}>
                         {stripMarkdown(article.title)}
                       </h3>
-                      
+
                       {/* Curation Relevance Note */}
                       {(article as any).ai_curation?.relevance_note ? (
                         <div className="bg-accent/5 border-l-2 border-accent pl-3 py-1 mb-3">
@@ -487,10 +489,10 @@ export const BetaStories = () => {
                           </p>
                         </div>
                       ) : (
-                        <p className="text-primary/75 text-sm leading-relaxed line-clamp-2">{stripMarkdown(article.summary)}</p>
+                        <p className={`text-primary/75 leading-relaxed ${isFeatured ? 'text-base md:text-lg line-clamp-3 max-w-xl' : 'text-sm line-clamp-2'}`}>{stripMarkdown(article.summary)}</p>
                       )}
                     </div>
-                    <div className="p-4 md:p-6 pt-0 bg-background">
+                    <div className={`pt-0 bg-card ${isFeatured ? 'px-7 md:px-10 lg:px-12 pb-6' : 'p-6 pt-0'}`}>
                       <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read
@@ -525,6 +527,7 @@ export const BetaStories = () => {
                           <span className="text-accent group-hover:translate-x-1 transition-transform">{t('stories.read', 'Read →')}</span>
                         </div>
                       </div>
+                    </div>
                     </div>
                   </Link>
                 </motion.div>
