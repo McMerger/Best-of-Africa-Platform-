@@ -122,7 +122,14 @@
       "Bash(python -c \"from PIL import Image; im=Image.open\\('loggedout_dash.png'\\); im.crop\\(\\(40,1180,960,1820\\)\\).save\\('dash_chart.png'\\); print\\('done'\\)\")",
       "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dashboards/continental/overview\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('by_region sample:',json.dumps\\(d['by_region'][:2]\\)\\); print\\('top_sectors sample:',json.dumps\\(d['top_sectors'][:1]\\)\\)\")",
-      "Bash(MSYS_NO_PATHCONV=1 node capdash1.mjs)"
+      "Bash(MSYS_NO_PATHCONV=1 node capdash1.mjs)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sector/finance/trends)",
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sector/finance/trends)",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('sector:',d.get\\('sector',{}\\).get\\('name'\\)\\);print\\('trends rows:',len\\(d.get\\('trends',[]\\)\\)\\);s=d.get\\('summary',{}\\);print\\('market_size:',s.get\\('current_market_size'\\),'growth:',s.get\\('current_growth_rate'\\),'companies:',len\\(d.get\\('top_companies',[]\\)\\)\\)\")",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('summary:',json.dumps\\(d['summary']\\)\\);print\\('trend[0]:',json.dumps\\(d['trends'][0]\\)\\);print\\('trend[-1]:',json.dumps\\(d['trends'][-1]\\)\\)\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart.png'\\); print\\('done'\\)\")",
+      "Bash(MSYS_NO_PATHCONV=1 node capsector.mjs)",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart2.png'\\); print\\('done'\\)\")"
     ]
   }
 }

@@ -16,32 +16,8 @@ export const PremiumSectorTrends: React.FC = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['sector-trends', id],
     queryFn: () => api.getSectorTrends(id!),
-    enabled: !!id && isMember,
+    enabled: !!id,
   });
-
-  if (!isMember) {
-    return (
-      <>
-        <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 bg-background">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-            <TrendingUp className="w-10 h-10 text-accent" />
-          </div>
-          <h1 className="font-serif text-4xl text-primary mb-4">Premium Sector Analytics</h1>
-          <p className="text-primary/60 max-w-md mb-8">
-            Detailed financial metrics, year-over-year market size analysis, and investment outlooks are exclusively available to Founding Members.
-          </p>
-          <a
-            href={KO_FI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-accent text-navy font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
-          >
-            Become a Founding Member
-          </a>
-        </div>
-      </>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -75,9 +51,13 @@ export const PremiumSectorTrends: React.FC = () => {
 
   const { sector, trends, top_companies, summary } = data;
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}B`;
-    return `$${value}M`;
+  // Values arrive as raw USD; format compactly (B/M/K).
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null) return 'N/A';
+    if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+    if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+    if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
+    return `$${value}`;
   };
 
   const isPositiveGrowth = summary.current_growth_rate && summary.current_growth_rate > 0;
@@ -144,6 +124,18 @@ export const PremiumSectorTrends: React.FC = () => {
             </motion.div>
           </div>
 
+          {!isMember && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4 mb-8">
+              <p className="text-sm text-primary/70 leading-relaxed">
+                <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Free preview</span>
+                The headline metrics and market-size trend are open to everyone, no account needed.
+              </p>
+              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-primary transition-colors">
+                Unlock full analytics →
+              </a>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Charts Section */}
             <div className="lg:col-span-2 space-y-8">
@@ -163,7 +155,7 @@ export const PremiumSectorTrends: React.FC = () => {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                       <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
                       <YAxis 
-                        tickFormatter={(val) => `$${val}M`} 
+                        tickFormatter={(val) => formatCurrency(val)}
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fontSize: 12, fill: '#64748b' }} 
@@ -171,14 +163,15 @@ export const PremiumSectorTrends: React.FC = () => {
                       />
                       <Tooltip 
                         contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`$${value}M`, 'Market Size']}
+                        formatter={(value: any) => [formatCurrency(value), 'Market Size']}
                       />
-                      <Area type="monotone" dataKey="market_size" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" />
+                      <Area type="monotone" dataKey="market_size" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
+              {isMember ? (
               <div className="bg-white rounded-2xl border border-border p-6 md:p-8 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
                 <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
                   <TrendingUp className="text-accent" /> Investment Volume Over Time
@@ -189,7 +182,7 @@ export const PremiumSectorTrends: React.FC = () => {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                       <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
                       <YAxis 
-                        tickFormatter={(val) => `$${val}M`} 
+                        tickFormatter={(val) => formatCurrency(val)}
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fontSize: 12, fill: '#64748b' }} 
@@ -197,17 +190,30 @@ export const PremiumSectorTrends: React.FC = () => {
                       />
                       <Tooltip 
                         contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`$${value}M`, 'Investment']}
+                        formatter={(value: any) => [formatCurrency(value), 'Investment']}
                         cursor={{ fill: '#f8fafc' }}
                       />
-                      <Bar dataKey="investment_volume" fill="#0A2540" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="investment_volume" fill="#0A2540" radius={[4, 4, 0, 0]} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
+              ) : (
+              <div className="relative overflow-hidden bg-navy text-white rounded-2xl border border-accent/30 p-8 md:p-10 text-center">
+                <TrendingUp className="w-8 h-8 text-accent mx-auto mb-4" />
+                <h3 className="font-serif text-2xl mb-2">Investment volume, outlook & key players</h3>
+                <p className="text-white/70 text-sm max-w-sm mx-auto mb-6">
+                  Year-by-year investment flow, the regulatory outlook and this sector's major players are part of BOA-Story membership.
+                </p>
+                <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-7 py-3.5 rounded-full hover:bg-gold-italic transition-all">
+                  Become a Founding Member
+                </a>
+              </div>
+              )}
             </div>
 
-            {/* Sidebar / Analysis */}
+            {/* Sidebar / Analysis, MEMBERS ONLY */}
+            {isMember && (
             <div className="space-y-8">
               {/* Regulatory Outlook */}
               <div className="bg-white rounded-2xl border border-border p-6 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
@@ -241,6 +247,7 @@ export const PremiumSectorTrends: React.FC = () => {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>
