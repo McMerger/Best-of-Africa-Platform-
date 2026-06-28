@@ -7,7 +7,8 @@ import {
 } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
 
-const geoUrl = "https://raw.githubusercontent.com/deldersveld/topojson/master/continents/africa.json";
+// Bundled locally — the previous external GitHub URL 404'd, leaving the map blank.
+const geoUrl = "/geo/africa.geojson";
 
 interface MapData {
     country_code: string;

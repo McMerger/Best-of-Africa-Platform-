@@ -129,7 +129,10 @@
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\('summary:',json.dumps\\(d['summary']\\)\\);print\\('trend[0]:',json.dumps\\(d['trends'][0]\\)\\);print\\('trend[-1]:',json.dumps\\(d['trends'][-1]\\)\\)\")",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart.png'\\); print\\('done'\\)\")",
       "Bash(MSYS_NO_PATHCONV=1 node capsector.mjs)",
-      "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart2.png'\\); print\\('done'\\)\")"
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart2.png'\\); print\\('done'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}  type=%{content_type}  size=%{size_download}\\\\n\" \"https://raw.githubusercontent.com/deldersveld/topojson/master/continents/africa.json\")",
+      "Bash(mkdir -p geo)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/africa.geojson\" -o geo/africa.geojson)"
     ]
   }
 }
