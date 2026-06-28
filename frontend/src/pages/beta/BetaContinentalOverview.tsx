@@ -113,35 +113,29 @@ export const BetaContinentalOverview: React.FC = () => {
 
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-foreground/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
-            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <Newspaper className="text-accent w-7 h-7" />
-            </div>
-            <div>
-              <div className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest mb-2">Articles (30D)</div>
-              <div className="text-[2.5rem] font-serif text-foreground leading-none">{overview.total_articles_30d}</div>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-foreground/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
-            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <Globe className="text-accent w-7 h-7" />
-            </div>
-            <div>
-              <div className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest mb-2">Countries Tracked</div>
-              <div className="text-[2.5rem] font-serif text-foreground leading-none">{overview.countries_covered}</div>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-foreground/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
-            <div className="w-16 h-16 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <MapPin className="text-accent w-7 h-7" />
-            </div>
-            <div>
-              <div className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest mb-2">Active Regions</div>
-              <div className="text-[2.5rem] font-serif text-foreground leading-none">{overview.regions}</div>
-            </div>
-          </motion.div>
+          {[
+            { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
+            { Icon: Globe, label: 'Countries Tracked', value: overview.countries_covered },
+            { Icon: MapPin, label: 'Active Regions', value: overview.regions },
+          ].map(({ Icon, label, value }, i) => (
+            <motion.div
+              key={label}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
+              className="group relative overflow-hidden bg-card rounded-3xl p-8 border border-foreground/10 shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] flex items-center gap-6 hover:-translate-y-1 hover:border-accent/40 transition-all duration-300"
+            >
+              <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />
+              <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-accent/15 transition-all">
+                <Icon className="text-accent w-7 h-7" />
+              </div>
+              <div className="relative">
+                <div className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest mb-2">{label}</div>
+                <div className="text-[2.75rem] font-serif text-foreground leading-none">{value}</div>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">

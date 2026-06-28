@@ -102,7 +102,8 @@ export const BetaIntelligence = () => {
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
             ) : analytics && (
               <>
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl relative overflow-hidden group hover:border-accent/30 transition-colors">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] relative overflow-hidden group hover:border-accent/40 hover:-translate-y-1 transition-all duration-300">
+                  <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-bl-full -mr-8 -mt-8 pointer-events-none group-hover:bg-accent/5 transition-colors" />
                   <div className="flex items-center gap-3 mb-6 text-foreground/50">
                     <TrendingUp size={20} />
@@ -112,7 +113,8 @@ export const BetaIntelligence = () => {
                   <div className="text-sm text-foreground/60 font-light">{analytics.stability_index}</div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl relative overflow-hidden group hover:border-accent/30 transition-colors">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] relative overflow-hidden group hover:border-accent/40 hover:-translate-y-1 transition-all duration-300">
+                  <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-bl-full -mr-8 -mt-8 pointer-events-none group-hover:bg-accent/5 transition-colors" />
                   <div className="flex items-center gap-3 mb-6 text-foreground/50">
                     <BarChart2 size={20} />
@@ -127,7 +129,7 @@ export const BetaIntelligence = () => {
                   <div className="text-sm text-foreground/60 font-light">Overall platform sentiment</div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="bg-accent rounded-3xl border border-accent/20 p-8 shadow-[0_0_40px_rgba(201,168,76,0.15)] relative overflow-hidden group">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="bg-accent rounded-3xl border border-accent/20 p-8 shadow-[0_0_40px_rgba(201,168,76,0.15)] relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-card/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
                   <div className="flex items-center gap-3 mb-6 text-navy/70">
                     <Activity size={20} />

@@ -132,7 +132,8 @@
       "Bash(python -c \"from PIL import Image; im=Image.open\\('sector_lo.png'\\); im.crop\\(\\(210,760,900,1180\\)\\).save\\('sector_chart2.png'\\); print\\('done'\\)\")",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}  type=%{content_type}  size=%{size_download}\\\\n\" \"https://raw.githubusercontent.com/deldersveld/topojson/master/continents/africa.json\")",
       "Bash(mkdir -p geo)",
-      "Bash(curl -s \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/africa.geojson\" -o geo/africa.geojson)"
+      "Bash(curl -s \"https://raw.githubusercontent.com/codeforgermany/click_that_hood/main/public/data/africa.geojson\" -o geo/africa.geojson)",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('kpi_dash.png'\\); print\\(im.size\\); im.crop\\(\\(0,560,1440,820\\)\\).save\\('kpi_dash_c.png'\\); print\\('done'\\)\")"
     ]
   }
 }

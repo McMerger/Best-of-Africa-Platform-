@@ -95,28 +95,28 @@ export const PremiumSectorTrends: React.FC = () => {
         <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-10">
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white rounded-xl p-6 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Market Size ({summary.latest_year})</div>
               <div className="text-3xl font-serif text-primary">
                 {summary.current_market_size ? formatCurrency(summary.current_market_size) : 'N/A'}
               </div>
             </motion.div>
             
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white rounded-xl p-6 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Growth Rate</div>
               <div className={`text-3xl font-serif ${isPositiveGrowth ? 'text-accent' : 'text-destructive'}`}>
                 {summary.current_growth_rate ? `${summary.current_growth_rate}%` : 'N/A'}
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white rounded-xl p-6 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">YoY Change</div>
               <div className="text-3xl font-serif text-primary">
                 {summary.yoy_change ? (summary.yoy_change > 0 ? `+${summary.yoy_change}%` : `${summary.yoy_change}%`) : 'N/A'}
               </div>
             </motion.div>
 
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-white rounded-xl p-6 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
               <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Investment Vol</div>
               <div className="text-3xl font-serif text-primary">
                 {trends.length > 0 ? formatCurrency(trends[trends.length - 1].investment_volume) : 'N/A'}
