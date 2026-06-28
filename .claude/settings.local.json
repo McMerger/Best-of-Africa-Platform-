@@ -85,7 +85,8 @@
       "Bash(awk '{print \"in dist:\",$5,\"bytes\"}')",
       "Bash(grep -rn \"to={\\\\`/articles/\\\\|to=\\\\\"/articles/\\\\|to={'/articles/\\\\|navigate\\(\\\\`/articles/\\\\|navigate\\('/articles/\\\\|href={\\\\`/articles/\" frontend/src)",
       "Bash(grep -rn \"to={\\\\`/article/\\\\|to=\\\\\"/article/\\\\|to={\\\\`/story/\\\\|to=\\\\\"/story\\\\|to={\\\\`/articles/\\\\|navigate\\(\\\\`/article\" frontend/src)",
-      "Bash(echo \"exit:$? \\(no output = none found\\)\")"
+      "Bash(echo \"exit:$? \\(no output = none found\\)\")",
+      "Bash(npx --no-install playwright --version)"
     ]
   }
 }

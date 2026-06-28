@@ -224,8 +224,15 @@ export const BetaArticle = () => {
   const flag = country?.flag_emoji || article.flag_emoji || FLAG_MAP[article.country_code] || '🌍';
   // Category = the sector ("Energy & Mining"), NOT tags[0] which is the country name.
   const countryLabel = country?.name || article.country_name || article.country_code;
+  // tags may arrive as a JSON string ('["a","b"]'), an array, or be absent —
+  // normalise to an array before using .find (a string has no .find → crash).
+  const tagList: string[] = Array.isArray(article.tags)
+    ? article.tags
+    : (typeof article.tags === 'string'
+        ? (() => { try { const p = JSON.parse(article.tags as unknown as string); return Array.isArray(p) ? p : []; } catch { return []; } })()
+        : []);
   const categoryLabel = article.sector_name
-    || (article.tags || []).find(t => t.toLowerCase() !== countryLabel.toLowerCase())
+    || tagList.find(t => typeof t === 'string' && t.toLowerCase() !== countryLabel.toLowerCase())
     || '';
   const authorName = article.author_name || 'Mailles Cortes';
 

@@ -204,7 +204,7 @@ export const BetaLanding = () => {
 
           {/* Static (non-animated) hero headline, this is the LCP element, so it
               must paint on first render rather than fading in from opacity:0. */}
-          <h1 className="font-serif text-white text-[clamp(4rem,9vw,8rem)] leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
+          <h1 className="font-serif text-white text-[clamp(2.5rem,10vw,8rem)] leading-[1.02] sm:leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
             {t('landing.hero_title', 'Africa without the filter.')}
           </h1>
 
