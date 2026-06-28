@@ -184,7 +184,7 @@ export const BetaMarketIntel = () => {
                 { value: stats.regions ?? '-', label: 'African regions' },
                 { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '-', label: 'Total reads' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-white rounded-xl border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 text-center">
+                <div key={label} className="group bg-white rounded-xl border border-border border-t-[3px] border-t-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 text-center hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
                   <p className="font-serif text-[2rem] font-bold text-accent leading-none mb-1">{value}</p>
                   <p className="text-[11px] text-ink-blue uppercase tracking-widest font-medium">{label}</p>
                 </div>
