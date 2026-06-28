@@ -11,53 +11,16 @@ import { FLAG_MAP, KO_FI_URL } from '../../constants/beta';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
+  const { scrollY } = useScroll();
+  // Hoisted so the hook runs on every render (the early loading/error returns
+  // would otherwise make this conditional and break the rules of hooks).
+  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['continental-overview'],
     queryFn: api.getContinentalOverview,
     staleTime: 5 * 60 * 1000,
   });
-
-  if (!isMember) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 bg-background text-foreground relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-background/80 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img src="/images/v2_intel.webp" alt="Intelligence" className="w-full h-full object-cover object-center" />
-        </div>
-        
-        <div className="relative z-30 max-w-lg bg-card p-12 rounded-3xl border border-foreground/10 shadow-2xl backdrop-blur-xl">
-          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-8 mx-auto border border-accent/40">
-            <Globe className="w-10 h-10 text-accent" />
-          </div>
-          <h1 className="font-serif text-[2.5rem] text-foreground mb-6 leading-none">Continental Dashboard</h1>
-          <p className="text-foreground/60 mb-8 text-[1.125rem] font-light leading-relaxed">
-            Access the high-level pan-African data, regional heatmaps, and executive insights reserved exclusively for Founding Members.
-          </p>
-
-          {/* Teaser of real data points behind the gate (spec §3.13) */}
-          <div className="space-y-2 mb-10 text-left">
-            {['West Africa GDP Growth Rate', 'Nigeria FDI Trends 2025', 'East Africa Trade Corridors'].map(label => (
-              <div key={label} className="flex items-center justify-between rounded-lg border border-border bg-page px-4 py-3">
-                <span className="text-sm font-medium text-ink">{label}</span>
-                <span className="text-xs font-bold uppercase tracking-widest text-ink-blue">🔒 Members only</span>
-              </div>
-            ))}
-          </div>
-
-          <a
-            href={KO_FI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] px-8 py-6 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:bg-gold-italic transition-all"
-          >
-            Become a Founding Member
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
@@ -85,7 +48,13 @@ export const BetaContinentalOverview: React.FC = () => {
   }
 
   const { overview, by_region, top_countries, top_sectors, highlights } = data;
-  const { scrollY } = useScroll();
+
+  // Express each region's coverage as a share of total story volume (0-100%),
+  // which reads more intuitively than raw counts on the heatmap axis.
+  const regionTotal = by_region.reduce((sum, r) => sum + (r.count || 0), 0) || 1;
+  const regionData = [...by_region]
+    .map(r => ({ region: r.region, count: r.count, pct: Math.round((r.count / regionTotal) * 1000) / 10 }))
+    .sort((a, b) => a.pct - b.pct);
 
   return (
     <div className="bg-background text-foreground min-h-screen pb-24">
@@ -98,7 +67,7 @@ export const BetaContinentalOverview: React.FC = () => {
       <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
-          style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+          style={{ y: heroY, scale: 1.05 }}
         >
           <div className="absolute inset-0 bg-background/80 mix-blend-multiply z-10" />
           <div className="gradient-overlay-light z-20" />
@@ -127,7 +96,20 @@ export const BetaContinentalOverview: React.FC = () => {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-40">
-        
+
+        {/* Free-preview banner */}
+        {!isMember && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4 mb-10">
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Free preview</span>
+              The continental snapshot, regional heatmap and trending nations are open to everyone, no account needed.
+            </p>
+            <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-foreground transition-colors">
+              Unlock the full dashboard →
+            </Link>
+          </div>
+        )}
+
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.6 }} className="bg-card rounded-3xl p-8 border border-foreground/10 shadow-2xl flex items-center gap-6 backdrop-blur-xl group hover:border-accent/30 transition-all">
@@ -169,23 +151,23 @@ export const BetaContinentalOverview: React.FC = () => {
             </h3>
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={by_region} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.4)' }} />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 13, fill: 'rgba(255,255,255,0.8)', fontWeight: 300 }} 
+                <BarChart data={regionData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(15,31,61,0.08)" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(15,31,61,0.5)' }} />
+                  <YAxis
+                    type="category"
+                    dataKey="region"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 13, fill: 'rgba(15,31,61,0.85)', fontWeight: 400 }}
                     width={140}
                   />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: '#050c14', color: '#fff' }}
-                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                    formatter={(value: any) => [`${value} Stories`, 'Volume']}
+                  <Tooltip
+                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(15,31,61,0.1)', backgroundColor: '#0F1F3D', color: '#fff' }}
+                    cursor={{ fill: 'rgba(15,31,61,0.04)' }}
+                    formatter={(value: any, _n: any, p: any) => [`${value}% of coverage (${p?.payload?.count ?? 0} stories)`, 'Share']}
                   />
-                  <Bar dataKey="count" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={24} />
+                  <Bar dataKey="pct" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -216,6 +198,8 @@ export const BetaContinentalOverview: React.FC = () => {
           </motion.div>
         </div>
 
+        {/* Sectors in focus + editor's highlights, MEMBERS ONLY */}
+        {isMember ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* List: Top Sectors */}
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl h-fit">
@@ -281,7 +265,41 @@ export const BetaContinentalOverview: React.FC = () => {
             </div>
           </div>
         </div>
-        
+        ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-14">
+          <div aria-hidden="true" className="pointer-events-none select-none blur-[6px] opacity-40 grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="space-y-4">
+              <div className="font-serif text-xl mb-2">Sectors in Focus</div>
+              {[1,2,3,4,5].map(i => <div key={i} className="h-12 bg-white/10 rounded-xl" />)}
+            </div>
+            <div className="lg:col-span-2 space-y-6">
+              <div className="font-serif text-2xl mb-2">Editor's Highlights</div>
+              {[1,2,3].map(i => <div key={i} className="h-28 bg-white/10 rounded-2xl" />)}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-t from-navy via-navy/90 to-navy/70">
+            <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
+              <BarChart3 size={14} /> Members only
+            </span>
+            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4 max-w-xl">
+              Sectors in focus & the editor's highlights
+            </h2>
+            <p className="text-white/70 mb-8 max-w-md leading-relaxed">
+              You're viewing the free continental snapshot. The curated sector breakdown and
+              editor's highlight reel are part of BOA-Story membership.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all">
+                Become a Founding Member
+              </a>
+              <Link to="/login" className="border border-accent/40 text-white font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-accent/10 transition-all">
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+        )}
+
       </div>
     </div>
   );

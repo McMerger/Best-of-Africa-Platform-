@@ -16,21 +16,18 @@ export const BetaIntelligence = () => {
     queryKey: ['strategic-opportunities'],
     queryFn: api.getStrategicOpportunities,
     staleTime: 5 * 60 * 1000,
-    enabled: isMember,
   });
 
   const { data: sentiment, isLoading: isLoadingSent } = useQuery({
     queryKey: ['sentiment-divergence'],
     queryFn: api.getSentimentDivergence,
     staleTime: 5 * 60 * 1000,
-    enabled: isMember,
   });
 
   const { data: analytics, isLoading: isLoadingAnalytics } = useQuery({
     queryKey: ['platform-analytics'],
     queryFn: () => api.getPlatformAnalytics(),
     staleTime: 5 * 60 * 1000,
-    enabled: isMember,
   });
 
   const isLoading = isLoadingOpp || isLoadingSent || isLoadingAnalytics;
@@ -83,10 +80,22 @@ export const BetaIntelligence = () => {
         </div>
       </div>
 
-      {isMember ? (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 space-y-20">
 
-        {/* Platform Analytics Summary */}
+        {/* Free-preview banner */}
+        {!isMember && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
+            <p className="text-sm text-foreground/70 leading-relaxed">
+              <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Free preview</span>
+              The live market snapshot and sentiment map are open to everyone, no account needed.
+            </p>
+            <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-foreground transition-colors">
+              Unlock full intelligence →
+            </Link>
+          </div>
+        )}
+
+        {/* Platform Analytics Summary, FREE */}
         <section>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {isLoading ? (
@@ -99,7 +108,7 @@ export const BetaIntelligence = () => {
                     <TrendingUp size={20} />
                     <span className="text-[11px] font-bold uppercase tracking-widest">Market Stability</span>
                   </div>
-                  <div className="text-[3rem] font-serif text-foreground mb-2 leading-none">{analytics.stability_score}<span className="text-xl text-foreground/30">/100</span></div>
+                  <div className="text-[3rem] font-serif text-foreground mb-2 leading-none">{Math.min(Math.round(analytics.stability_score), 100)}<span className="text-xl text-foreground/30">/100</span></div>
                   <div className="text-sm text-foreground/60 font-light">{analytics.stability_index}</div>
                 </motion.div>
 
@@ -170,8 +179,10 @@ export const BetaIntelligence = () => {
           </div>
         </motion.section>
 
+        {/* Deep analysis, MEMBERS ONLY */}
+        {isMember ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          
+
           {/* Strategic Opportunities */}
           <motion.section initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-4">
@@ -288,19 +299,30 @@ export const BetaIntelligence = () => {
           </motion.section>
 
         </div>
-      </div>
-      ) : (
-        <div className="max-w-2xl mx-auto px-6 py-20 md:py-28">
-          <div className="rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-12 text-center">
+        ) : (
+        <div className="relative overflow-hidden rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-14">
+          {/* Teaser: the two member-only modules, blurred behind a prompt */}
+          <div aria-hidden="true" className="pointer-events-none select-none blur-[6px] opacity-40 grid grid-cols-1 md:grid-cols-2 gap-8 mb-2">
+            <div>
+              <div className="flex items-center gap-3 mb-4"><TrendingUp size={20} className="text-accent" /><span className="font-serif text-xl">Strategic Opportunities</span></div>
+              {[1,2,3].map(i => <div key={i} className="h-20 bg-white/10 rounded-2xl mb-4" />)}
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-4"><ShieldAlert size={20} className="text-accent" /><span className="font-serif text-xl">Sentiment Divergence</span></div>
+              {[1,2,3,4].map(i => <div key={i} className="h-12 bg-white/10 rounded-xl mb-3" />)}
+            </div>
+          </div>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 bg-gradient-to-t from-navy via-navy/90 to-navy/70">
             <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-5">
               <ShieldAlert size={14} /> Members only
             </span>
-            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4">
-              Market Intelligence is a member feature
+            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4 max-w-xl">
+              Go deeper with strategic opportunities & sentiment divergence
             </h2>
-            <p className="text-white/70 mb-8 max-w-md mx-auto leading-relaxed">
-              Strategic opportunities, sentiment divergence, and the live continental
-              sentiment map are part of BOA-Story membership.
+            <p className="text-white/70 mb-8 max-w-md leading-relaxed">
+              You're seeing the free live snapshot. Algorithmic opportunity scoring and
+              the perception-vs-reality divergence table are part of BOA-Story membership.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/membership" className="bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all">
@@ -310,12 +332,10 @@ export const BetaIntelligence = () => {
                 Sign in
               </Link>
             </div>
-            <Link to="/posts" className="block mt-6 text-white/60 text-sm hover:text-accent transition-colors">
-              Or browse free stories →
-            </Link>
           </div>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

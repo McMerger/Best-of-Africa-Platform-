@@ -143,7 +143,7 @@ export const api = {
             countries_covered: number;
             regions: number;
         };
-        by_region: { name: string; count: number }[];
+        by_region: { region: string; count: number }[];
         top_countries: { code: string; name: string; flag_emoji: string; articles: number; views: number }[];
         top_sectors: { id: string; name: string; icon: string; count: number }[];
         highlights: ArticleListItem[];
