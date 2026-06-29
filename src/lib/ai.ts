@@ -314,22 +314,46 @@ export async function generateEmbedding(
 // ───────────────────────────────────────────────────────────────────────────────
 // Identify Topic/Sector from Content
 // ───────────────────────────────────────────────────────────────────────────────
+// Keyword terms per sector: [sector, term, weight]. Title matches count triple.
+// Deterministic classification avoids spending a 70B model call per article on
+// what is a simple 8-way bucketing.
+const SECTOR_TERMS: Array<[string, string, number]> = [
+    ['tourism', 'tourism', 3], ['tourism', 'tourist', 2], ['tourism', 'hospitality', 2], ['tourism', 'hotel', 2], ['tourism', 'resort', 2], ['tourism', 'safari', 2], ['tourism', 'destination', 1], ['tourism', 'travel', 1], ['tourism', 'visitor', 1],
+    ['energy', 'energy', 3], ['energy', 'oil', 2], ['energy', 'gas', 2], ['energy', 'petroleum', 3], ['energy', 'power', 1], ['energy', 'electricity', 2], ['energy', 'solar', 2], ['energy', 'renewable', 2], ['energy', 'fuel', 2], ['energy', 'refinery', 2], ['energy', 'grid', 1], ['energy', 'mining', 2],
+    ['agriculture', 'agriculture', 3], ['agriculture', 'agribusiness', 3], ['agriculture', 'farming', 2], ['agriculture', 'farmer', 2], ['agriculture', 'crop', 2], ['agriculture', 'livestock', 2], ['agriculture', 'harvest', 1], ['agriculture', 'cocoa', 2], ['agriculture', 'coffee', 2], ['agriculture', 'maize', 2], ['agriculture', 'food security', 2],
+    ['technology', 'technology', 3], ['technology', 'tech', 2], ['technology', 'digital', 2], ['technology', 'startup', 2], ['technology', 'software', 2], ['technology', 'fintech', 2], ['technology', 'internet', 2], ['technology', 'telecom', 2], ['technology', 'mobile', 1], ['technology', 'app', 1], ['technology', 'data', 1], ['technology', 'innovation', 1],
+    ['infrastructure', 'infrastructure', 3], ['infrastructure', 'construction', 3], ['infrastructure', 'railway', 2], ['infrastructure', 'rail', 1], ['infrastructure', 'port', 2], ['infrastructure', 'bridge', 2], ['infrastructure', 'housing', 2], ['infrastructure', 'road', 2], ['infrastructure', 'transport', 1], ['infrastructure', 'logistics', 2],
+    ['finance', 'finance', 3], ['finance', 'financial', 2], ['finance', 'bank', 2], ['finance', 'banking', 2], ['finance', 'investment', 2], ['finance', 'capital', 1], ['finance', 'currency', 2], ['finance', 'loan', 1], ['finance', 'stock', 2], ['finance', 'bond', 2], ['finance', 'fund', 1],
+    ['manufacturing', 'manufacturing', 3], ['manufacturing', 'factory', 2], ['manufacturing', 'industrial', 2], ['manufacturing', 'production', 1], ['manufacturing', 'textile', 2], ['manufacturing', 'automotive', 2], ['manufacturing', 'assembly', 2],
+    ['healthcare', 'healthcare', 3], ['healthcare', 'health', 2], ['healthcare', 'medical', 2], ['healthcare', 'hospital', 2], ['healthcare', 'pharma', 2], ['healthcare', 'pharmaceutical', 3], ['healthcare', 'vaccine', 2], ['healthcare', 'clinic', 2], ['healthcare', 'disease', 1], ['healthcare', 'medicine', 1],
+];
+
+export function matchSectorByKeywords(title: string, content: string): string | null {
+    const titleL = ` ${(title || '').toLowerCase()} `;
+    const bodyL = ` ${(content || '').toLowerCase()} `;
+    const scores: Record<string, number> = {};
+    for (const [sector, term, weight] of SECTOR_TERMS) {
+        const re = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+        const score = ((titleL.match(re) || []).length * 3 + (bodyL.match(re) || []).length) * weight;
+        if (score > 0) scores[sector] = (scores[sector] || 0) + score;
+    }
+    let best: string | null = null, bestScore = 0;
+    for (const [s, sc] of Object.entries(scores)) { if (sc > bestScore) { bestScore = sc; best = s; } }
+    return best;
+}
+
 export async function identifySector(
     env: Env,
     title: string,
     content: string
 ): Promise<string | null> {
-    const sectors = [
-        'tourism',
-        'energy',
-        'agriculture',
-        'technology',
-        'infrastructure',
-        'finance',
-        'manufacturing',
-        'healthcare',
-    ];
+    const sectors = ['tourism', 'energy', 'agriculture', 'technology', 'infrastructure', 'finance', 'manufacturing', 'healthcare'];
 
+    // 1) Deterministic keyword match — free, avoids a 70B call per article.
+    const matched = matchSectorByKeywords(title, content);
+    if (matched) return matched;
+
+    // 2) Fallback to the model only when keywords are inconclusive.
     const prompt = `Classify this article into exactly ONE of these sectors: ${sectors.join(', ')}
 
     Title: ${title}

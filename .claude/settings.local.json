@@ -155,7 +155,9 @@
       "Bash(curl -s -A facebookexternalhit/1.1 https://best-of-africa.pages.dev/posts/__TRACKED_VAR__)",
       "Bash(curl -s -X POST \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dev/retag-countries?dryRun=1&limit=1\" -H \"X-Dev-Secret: probe\")",
       "Bash(curl -s -X POST \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dev/retag-countries?dryRun=1&limit=1\" -H \"X-Dev-Secret: probe\" -H \"Origin: https://best-of-africa.pages.dev\")",
-      "Bash(python -c \"import json; d=json.load\\(open\\('retag_all.json',encoding='utf-8'\\)\\); r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results']; print\\('rows:',len\\(r\\)\\); print\\('sample:',{k:str\\(v\\)[:30] for k,v in r[0].items\\(\\)}\\)\")"
+      "Bash(python -c \"import json; d=json.load\\(open\\('retag_all.json',encoding='utf-8'\\)\\); r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results']; print\\('rows:',len\\(r\\)\\); print\\('sample:',{k:str\\(v\\)[:30] for k,v in r[0].items\\(\\)}\\)\")",
+      "Bash(awk '/export async function generateArticleImage/,/^}/' src/lib/ai.ts)",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(' ',x['created_at'],'-',x['title'][:40]\\) for x in r]\")"
     ]
   }
 }
