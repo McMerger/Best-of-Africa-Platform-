@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { Env } from '../types';
 import { generateCountryBrief, storeReport } from '../lib/reports';
+import { matchCountryByName } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -21,6 +22,52 @@ const devAuthGuard = async (c: any, next: () => Promise<void>) => {
 
     return next();
 };
+
+// Re-tag existing articles' country_code using the deterministic name matcher.
+// Batched (offset/limit) to stay within worker limits. Pass ?dryRun=1 to preview.
+// Only overwrites when a country name is confidently found AND differs from the
+// stored code — never nulls an existing value.
+router.post('/retag-countries', devAuthGuard, async (c) => {
+    const url = new URL(c.req.url);
+    const dryRun = url.searchParams.get('dryRun') === '1';
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '1000', 10) || 1000, 2000);
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10) || 0;
+
+    const res = await c.env.DB.prepare(
+        'SELECT id, title, summary, tags, country_code FROM articles ORDER BY rowid LIMIT ? OFFSET ?'
+    ).bind(limit, offset).all();
+
+    const items = (res.results || []) as Array<Record<string, any>>;
+    let changed = 0;
+    const samples: Array<Record<string, any>> = [];
+
+    for (const a of items) {
+        let tagText = '';
+        try {
+            const t = JSON.parse(a.tags || '[]');
+            if (Array.isArray(t)) tagText = t.join(' ');
+        } catch { /* ignore */ }
+
+        const matched = matchCountryByName(a.title || '', `${a.summary || ''} ${tagText}`);
+        if (matched && matched !== a.country_code) {
+            if (samples.length < 25) samples.push({ from: a.country_code, to: matched, title: String(a.title || '').slice(0, 50) });
+            if (!dryRun) {
+                await c.env.DB.prepare('UPDATE articles SET country_code = ? WHERE id = ?').bind(matched, a.id).run();
+            }
+            changed++;
+        }
+    }
+
+    return c.json({
+        dryRun,
+        offset,
+        scanned: items.length,
+        changed,
+        nextOffset: offset + items.length,
+        done: items.length < limit,
+        samples,
+    });
+});
 
 router.get('/generate-reports', devAuthGuard, async (c) => {
     const report = await generateCountryBrief(c.env, 'ZA');
