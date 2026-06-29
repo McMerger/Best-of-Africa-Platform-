@@ -48,7 +48,7 @@ export const BetaContinentalOverview: React.FC = () => {
     );
   }
 
-  const { overview, by_region, top_countries, top_sectors, highlights } = data;
+  const { overview, by_region, top_countries, top_sectors, highlights, underreported } = data;
 
   // Express each region's coverage as a share of total story volume (0-100%),
   // which reads more intuitively than raw counts on the heatmap axis.
@@ -192,6 +192,42 @@ export const BetaContinentalOverview: React.FC = () => {
             </Link>
           </motion.div>
         </div>
+
+        {/* Underreported nations — deliberately surfaced to counter the
+            big-economy bias and reflect the all-54-nations mission. */}
+        {underreported && underreported.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-16 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
+              <h3 className="font-serif text-[2rem] text-foreground flex items-center gap-4">
+                <MapPin className="text-accent" size={28} /> Underreported Africa
+              </h3>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-accent/80">Where coverage is thin</span>
+            </div>
+            <p className="text-foreground/55 font-light mb-8 max-w-2xl">
+              The headlines crowd around a handful of big economies. These nations are the least covered here — and exactly where we're working to even the story out.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {underreported.map((c) => (
+                <Link
+                  key={c.code}
+                  to={`/countries/${c.code}`}
+                  className="group flex items-center gap-3 rounded-2xl border border-foreground/10 bg-background/30 p-4 hover:border-accent/40 hover:-translate-y-0.5 transition-all"
+                >
+                  <CountryFlag code={c.code} title={c.name} size={32} />
+                  <div className="min-w-0">
+                    <div className="text-[15px] font-medium text-foreground truncate group-hover:text-accent transition-colors">{c.name}</div>
+                    <div className="text-[11px] text-foreground/40">{c.articles} {c.articles === 1 ? 'story' : 'stories'}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Sectors in focus + editor's highlights, free for everyone */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">

@@ -147,6 +147,7 @@ export const api = {
         top_countries: { code: string; name: string; flag_emoji: string; articles: number; views: number }[];
         top_sectors: { id: string; name: string; icon: string; count: number }[];
         highlights: ArticleListItem[];
+        underreported?: { code: string; name: string; flag_emoji: string; articles: number }[];
     }>('/dashboards/continental/overview'),
 
     // Search

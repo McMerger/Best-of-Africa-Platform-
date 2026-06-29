@@ -60,6 +60,30 @@ export async function generateArticleFromQueue(
             sectorId = await identifySector(env, itemData.title, itemData.content || '');
         }
 
+        // ── Fair-share guard ──────────────────────────────────────────────────
+        // The mission is balanced coverage of all 54 nations, but the news feed
+        // mirrors mainstream media's heavy Nigeria/South-Africa bias. Without a
+        // check, scarce AI budget keeps piling onto already-saturated countries
+        // while most of the continent stays under-covered. Probabilistically skip
+        // items for over-represented countries (more skew → higher skip rate, but
+        // always let ~15% through so genuine news still lands) BEFORE spending any
+        // generation budget, freeing it for under-covered nations.
+        if (countryCode) {
+            const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM articles WHERE country_code = ?').bind(countryCode).first();
+            const n = ((row as Record<string, any>)?.n as number) || 0;
+            const FAIR_SHARE = 600; // generous per-country ceiling before throttling kicks in
+            if (n > FAIR_SHARE) {
+                const skipProb = Math.min(0.85, 1 - FAIR_SHARE / n);
+                if (Math.random() < skipProb) {
+                    await env.DB.prepare(
+                        "UPDATE ingested_items SET status = 'rejected', rejection_reason = ? WHERE id = ?"
+                    ).bind(`fair-share skip: ${countryCode} already has ${n} articles`, message.ingested_item_id).run();
+                    console.log(`Fair-share skip: ${countryCode} (${n} articles) to keep pan-African coverage balanced`);
+                    return;
+                }
+            }
+        }
+
         // Get country and sector names for prompt
         let countryName = null;
         let sectorName = null;

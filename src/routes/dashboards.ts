@@ -157,6 +157,7 @@ router.get('/continental/overview', async (c) => {
         topCountries,
         topSectors,
         recentHighlights,
+        leastCovered,
     ] = await Promise.all([
         c.env.DB.prepare(`
             SELECT COUNT(*) as total FROM articles 
@@ -192,13 +193,24 @@ router.get('/continental/overview', async (c) => {
         `).all(),
 
         c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code, 
+            SELECT a.id, a.slug, a.title, a.summary, a.country_code,
                    c.name as country_name, c.flag_emoji, a.published_at
             FROM articles a
             JOIN countries c ON a.country_code = c.code
             WHERE a.status = 'published'
             ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT 5
+        `).all(),
+
+        // Least-covered nations — surfaced deliberately to counter the
+        // mainstream big-economy bias and reflect the all-54-nations mission.
+        c.env.DB.prepare(`
+            SELECT c.code, c.name, c.flag_emoji, COUNT(a.id) as articles
+            FROM countries c
+            LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+            GROUP BY c.code
+            ORDER BY articles ASC, c.name ASC
+            LIMIT 8
         `).all(),
     ]);
 
@@ -212,6 +224,7 @@ router.get('/continental/overview', async (c) => {
         top_countries: topCountries.results || [],
         top_sectors: topSectors.results || [],
         highlights: recentHighlights.results || [],
+        underreported: leastCovered.results || [],
     });
 });
 
