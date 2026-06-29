@@ -15,7 +15,9 @@ import { getProviderToken } from './provider-tokens';
 const MODELS = {
     TEXT_GENERATION: '@cf/meta/llama-3.1-70b-instruct',
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
-    IMAGE_GENERATION: '@cf/stabilityai/stable-diffusion-xl-base-1.0',
+    // Lightning is a few-step distilled SDXL — comparable quality at a fraction
+    // of the neuron cost vs base SDXL (20 steps), to stretch the daily AI budget.
+    IMAGE_GENERATION: '@cf/bytedance/stable-diffusion-xl-lightning',
 };
 
 // Bump this string whenever the article generation prompt changes.
@@ -1244,7 +1246,7 @@ export async function generateArticleImage(
             () => (env.AI as Record<string, any>).run(MODELS.IMAGE_GENERATION, {
                 prompt,
                 negative_prompt,
-                num_steps: 20, // Balance speed/quality
+                num_steps: 6, // Lightning sweet spot — sharp at far lower cost than base SDXL's 20
             })
         );
 
