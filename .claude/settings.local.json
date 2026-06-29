@@ -142,7 +142,11 @@
       "Bash(MSYS_NO_PATHCONV=1 node capcards2.mjs)",
       "Bash(python -c \"from PIL import Image; im=Image.open\\('hub_cards2.png'\\); im.crop\\(\\(220,30,1230,440\\)\\).save\\('hub_final.png'\\)\")",
       "Bash(MSYS_NO_PATHCONV=1 node capfree.mjs)",
-      "Bash(python -c \"from PIL import Image; im=Image.open\\('free_intel.png'\\); im.crop\\(\\(0,1900,1440,2750\\)\\).save\\('intel_grid.png'\\); print\\('done'\\)\")"
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('free_intel.png'\\); im.crop\\(\\(0,1900,1440,2750\\)\\).save\\('intel_grid.png'\\); print\\('done'\\)\")",
+      "Bash(curl -s -o /dev/null -w \"  %{http_code} %{content_type} %{size_download}b\\\\n\" \"https://best-of-africa-backend.cortesmailles01.workers.dev/assets/articles/7a3769c3-4e84-4dc1-9e94-9d0a11cdd400/hero.png\")",
+      "Bash(curl -s -o /dev/null -w \"  %{http_code} %{content_type}\\\\n\" \"https://best-of-africa-backend.cortesmailles01.workers.dev/assets/articles/does-not-exist/hero.png\")",
+      "Bash(python -c 'import sys,json; *)",
+      "Bash(git commit *)"
     ]
   }
 }

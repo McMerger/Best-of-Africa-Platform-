@@ -113,6 +113,23 @@ app.get('/health', (c) => {
     return c.json({ status: 'ok' });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// Media — serve uploaded assets (article hero images, etc.) from the R2 bucket.
+// Article hero_image_url values point here; without this route they 404.
+// ───────────────────────────────────────────────────────────────────────────────
+app.get('/assets/*', async (c) => {
+    const key = decodeURIComponent(c.req.path.replace(/^\/assets\//, ''));
+    if (!key) return c.notFound();
+    const obj = await c.env.MEDIA.get(key);
+    if (!obj) return c.notFound();
+    const headers = new Headers();
+    obj.writeHttpMetadata(headers);
+    headers.set('etag', obj.httpEtag);
+    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    headers.set('Access-Control-Allow-Origin', '*');
+    return new Response(obj.body, { headers });
+});
+
 // Public provider status — shows active model without exposing credentials
 app.get('/api/v1/ai-status', async (c) => {
     const env = c.env as any;

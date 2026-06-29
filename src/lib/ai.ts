@@ -354,11 +354,111 @@ Reply with ONLY the sector name, nothing else.`;
 // ───────────────────────────────────────────────────────────────────────────────
 // Identify Country from Content
 // ───────────────────────────────────────────────────────────────────────────────
+
+// Valid African ISO-2 codes.
+const VALID_COUNTRY_CODES = ['DZ', 'EG', 'LY', 'MA', 'SD', 'TN', 'BJ', 'BF', 'CV', 'CI', 'GM', 'GH', 'GN', 'GW', 'LR', 'ML', 'MR', 'NE', 'NG', 'SN', 'SL', 'TG', 'BI', 'KM', 'DJ', 'ER', 'ET', 'KE', 'MG', 'MU', 'RW', 'SC', 'SO', 'SS', 'TZ', 'UG', 'AO', 'CM', 'CF', 'TD', 'CG', 'CD', 'GQ', 'GA', 'ST', 'BW', 'SZ', 'LS', 'MW', 'MZ', 'NA', 'ZA', 'ZM', 'ZW'];
+
+// Search terms per country: [code, term, weight]. More specific/multi-word terms
+// carry higher weight so e.g. "South Sudan" beats a bare "Sudan" mention, and
+// demonyms ("Nigerian") catch articles that don't name the country directly.
+// Word-boundary matching means "Niger" won't match inside "Nigeria".
+const COUNTRY_TERMS: Array<[string, string, number]> = [
+    ['DZ', 'algeria', 2], ['DZ', 'algerian', 1],
+    ['EG', 'egypt', 2], ['EG', 'egyptian', 1], ['EG', 'cairo', 1],
+    ['LY', 'libya', 2], ['LY', 'libyan', 1],
+    ['MA', 'morocco', 2], ['MA', 'moroccan', 1], ['MA', 'casablanca', 1],
+    ['SD', 'sudan', 2], ['SD', 'sudanese', 1], ['SD', 'khartoum', 1],
+    ['TN', 'tunisia', 2], ['TN', 'tunisian', 1],
+    ['BJ', 'benin', 2],
+    ['BF', 'burkina faso', 3], ['BF', 'burkinabe', 1], ['BF', 'ouagadougou', 1],
+    ['CV', 'cape verde', 3], ['CV', 'cabo verde', 3],
+    ['CI', "cote d'ivoire", 3], ['CI', 'ivory coast', 3], ['CI', 'ivorian', 1], ['CI', 'abidjan', 1],
+    ['GM', 'gambia', 2], ['GM', 'gambian', 1],
+    ['GH', 'ghana', 2], ['GH', 'ghanaian', 1], ['GH', 'accra', 1],
+    ['GW', 'guinea-bissau', 3], ['GW', 'guinea bissau', 3], ['GW', 'bissau', 2],
+    ['GQ', 'equatorial guinea', 3],
+    ['GN', 'guinea', 2], ['GN', 'conakry', 1],
+    ['LR', 'liberia', 2], ['LR', 'liberian', 1], ['LR', 'monrovia', 1],
+    ['ML', 'mali', 2], ['ML', 'malian', 1], ['ML', 'bamako', 1],
+    ['MR', 'mauritania', 2], ['MR', 'mauritanian', 1],
+    ['NE', 'niger', 2], ['NE', 'nigerien', 1], ['NE', 'niamey', 1],
+    ['NG', 'nigeria', 2], ['NG', 'nigerian', 1], ['NG', 'lagos', 1], ['NG', 'abuja', 1],
+    ['SN', 'senegal', 2], ['SN', 'senegalese', 1], ['SN', 'dakar', 1],
+    ['SL', 'sierra leone', 3], ['SL', 'freetown', 1],
+    ['TG', 'togo', 2], ['TG', 'togolese', 1],
+    ['BI', 'burundi', 2], ['BI', 'burundian', 1],
+    ['KM', 'comoros', 2],
+    ['DJ', 'djibouti', 2], ['DJ', 'djiboutian', 1],
+    ['ER', 'eritrea', 2], ['ER', 'eritrean', 1],
+    ['ET', 'ethiopia', 2], ['ET', 'ethiopian', 1], ['ET', 'addis ababa', 2],
+    ['KE', 'kenya', 2], ['KE', 'kenyan', 1], ['KE', 'nairobi', 1],
+    ['MG', 'madagascar', 2], ['MG', 'malagasy', 1],
+    ['MU', 'mauritius', 2], ['MU', 'mauritian', 1],
+    ['RW', 'rwanda', 2], ['RW', 'rwandan', 1], ['RW', 'kigali', 1],
+    ['SC', 'seychelles', 2],
+    ['SO', 'somalia', 2], ['SO', 'somali', 1], ['SO', 'mogadishu', 1],
+    ['SS', 'south sudan', 3], ['SS', 'juba', 1],
+    ['TZ', 'tanzania', 2], ['TZ', 'tanzanian', 1], ['TZ', 'dar es salaam', 2],
+    ['UG', 'uganda', 2], ['UG', 'ugandan', 1], ['UG', 'kampala', 1],
+    ['AO', 'angola', 2], ['AO', 'angolan', 1], ['AO', 'luanda', 1],
+    ['CM', 'cameroon', 2], ['CM', 'cameroonian', 1],
+    ['CF', 'central african republic', 3],
+    ['TD', 'chad', 2], ['TD', 'chadian', 1],
+    ['CD', 'democratic republic of the congo', 4], ['CD', 'dr congo', 3], ['CD', 'drc', 3], ['CD', 'kinshasa', 2],
+    ['CG', 'republic of the congo', 4], ['CG', 'congo-brazzaville', 3], ['CG', 'brazzaville', 2],
+    ['CG', 'congo', 1],
+    ['GA', 'gabon', 2], ['GA', 'gabonese', 1],
+    ['ST', 'sao tome', 3], ['ST', 'são tomé', 3],
+    ['BW', 'botswana', 2], ['BW', 'gaborone', 1],
+    ['SZ', 'eswatini', 2], ['SZ', 'swaziland', 2],
+    ['LS', 'lesotho', 2],
+    ['MW', 'malawi', 2], ['MW', 'malawian', 1],
+    ['MZ', 'mozambique', 2], ['MZ', 'mozambican', 1], ['MZ', 'maputo', 1],
+    ['NA', 'namibia', 2], ['NA', 'namibian', 1], ['NA', 'windhoek', 1],
+    ['ZA', 'south africa', 3], ['ZA', 'south african', 2], ['ZA', 'johannesburg', 1], ['ZA', 'cape town', 1], ['ZA', 'pretoria', 1],
+    ['ZM', 'zambia', 2], ['ZM', 'zambian', 1], ['ZM', 'lusaka', 1],
+    ['ZW', 'zimbabwe', 2], ['ZW', 'zimbabwean', 1], ['ZW', 'harare', 1],
+];
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Deterministically identify the dominant African country by scanning the text
+ * for country names, major cities and demonyms. Title matches count triple.
+ * Returns null when nothing matches (caller falls back to the model).
+ */
+export function matchCountryByName(title: string, content: string): string | null {
+    const titleL = ` ${(title || '').toLowerCase()} `;
+    const bodyL = ` ${(content || '').toLowerCase()} `;
+    const scores: Record<string, number> = {};
+
+    for (const [code, term, weight] of COUNTRY_TERMS) {
+        const re = new RegExp(`\\b${escapeRegExp(term)}\\b`, 'g');
+        const titleHits = (titleL.match(re) || []).length;
+        const bodyHits = (bodyL.match(re) || []).length;
+        const score = (titleHits * 3 + bodyHits) * weight;
+        if (score > 0) scores[code] = (scores[code] || 0) + score;
+    }
+
+    let best: string | null = null;
+    let bestScore = 0;
+    for (const [code, score] of Object.entries(scores)) {
+        if (score > bestScore) { bestScore = score; best = code; }
+    }
+    return best;
+}
+
 export async function identifyCountry(
     env: Env,
     title: string,
     content: string
 ): Promise<string | null> {
+    // 1) Deterministic name/city/demonym match — reliable and free. This is the
+    //    primary path and avoids the small model mislabeling (e.g. Ethiopia→EG).
+    const matched = matchCountryByName(title, content);
+    if (matched) return matched;
+
+    // 2) Fallback: ask the model only when no country name is present in the text.
     const prompt = `Identify the primary African country this article is about.
 
         Title: ${title}
@@ -378,11 +478,7 @@ If no specific country, reply "NONE".`;
     );
 
     const code = ((response as Record<string, any>).response || '').trim().toUpperCase();
-
-    // Validate it's a real African country code
-    const validCodes = ['DZ', 'EG', 'LY', 'MA', 'SD', 'TN', 'BJ', 'BF', 'CV', 'CI', 'GM', 'GH', 'GN', 'GW', 'LR', 'ML', 'MR', 'NE', 'NG', 'SN', 'SL', 'TG', 'BI', 'KM', 'DJ', 'ER', 'ET', 'KE', 'MG', 'MU', 'RW', 'SC', 'SO', 'SS', 'TZ', 'UG', 'AO', 'CM', 'CF', 'TD', 'CG', 'CD', 'GQ', 'GA', 'ST', 'BW', 'SZ', 'LS', 'MW', 'MZ', 'NA', 'ZA', 'ZM', 'ZW'];
-
-    return validCodes.includes(code) ? code : null;
+    return VALID_COUNTRY_CODES.includes(code) ? code : null;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
