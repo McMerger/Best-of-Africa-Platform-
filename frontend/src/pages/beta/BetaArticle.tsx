@@ -454,23 +454,27 @@ export const BetaArticle = () => {
                   <p className="text-white/70 mb-7 max-w-sm mx-auto leading-relaxed">
                     {t('article.paywall_desc', 'Back independent African journalism and unlock every story in full, from the people who make it possible.')}
                   </p>
-                  <ul className="text-left space-y-2.5 mb-8 max-w-xs mx-auto text-[15px] text-white/85">
-                    {[t('article.bullet_full', 'Full access to every story & report'), t('article.bullet_vote', 'Vote on the next story topic'), t('article.bullet_bts', 'Behind-the-scenes founder updates')].map(b => (
+                  <ul className="text-left space-y-2.5 mb-7 max-w-xs mx-auto text-[15px] text-white/85">
+                    {[t('article.bullet_full', 'Every story & report, in full'), t('article.bullet_bts', 'Behind-the-scenes founder updates'), t('article.bullet_vote', 'Founding members vote on what we cover next')].map(b => (
                       <li key={b} className="flex items-start gap-3">
                         <span className="text-accent mt-0.5 shrink-0">✓</span>{b}
                       </li>
                     ))}
                   </ul>
+                  <div className="mb-5 flex items-baseline justify-center gap-2">
+                    <span className="font-serif text-[2.75rem] leading-none text-white">$5</span>
+                    <span className="text-white/60 text-sm">{t('article.per_month_start', '/month to start')}</span>
+                  </div>
                   <a
                     href={KO_FI_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(201,168,76,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
                   >
-                    {t('article.become_member', 'Become a Founding Member')}
+                    {t('article.unlock_now', 'Unlock every story')}
                   </a>
                   <Link to="/membership" className="block mt-4 text-white/70 text-sm hover:text-accent transition-colors">
-                    {t('article.see_options', 'See membership options →')}
+                    {t('article.compare_tiers', 'Compare membership tiers →')}
                   </Link>
                   <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">{t('article.cancel_anytime', 'Cancel anytime · Secure checkout')}</p>
                 </div>
@@ -495,6 +499,7 @@ export const BetaArticle = () => {
               >
                 {t('article.become_member', 'Become a Founding Member')}
               </a>
+              <p className="mt-4 text-[11px] text-white/40 uppercase tracking-widest">{t('article.from_5_cancel', 'From $5/month · cancel anytime')}</p>
             </ScrollReveal>
           )}
         </article>
