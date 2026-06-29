@@ -146,7 +146,13 @@
       "Bash(curl -s -o /dev/null -w \"  %{http_code} %{content_type} %{size_download}b\\\\n\" \"https://best-of-africa-backend.cortesmailles01.workers.dev/assets/articles/7a3769c3-4e84-4dc1-9e94-9d0a11cdd400/hero.png\")",
       "Bash(curl -s -o /dev/null -w \"  %{http_code} %{content_type}\\\\n\" \"https://best-of-africa-backend.cortesmailles01.workers.dev/assets/articles/does-not-exist/hero.png\")",
       "Bash(python -c 'import sys,json; *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(curl -s -A facebookexternalhit/1.1 https://best-of-africa.pages.dev/posts/abiy-ahmed-s-precarious-balance-2iyn)",
+      "Bash(ls -la functions _worker.js public/_worker.js public/_routes.json)",
+      "Bash(cat public/_redirects)",
+      "Bash(ls dist/_worker.js dist/_routes.json)",
+      "Bash(ls public/og-default.jpg)",
+      "Bash(curl -s -A facebookexternalhit/1.1 https://best-of-africa.pages.dev/posts/__TRACKED_VAR__)"
     ]
   }
 }
