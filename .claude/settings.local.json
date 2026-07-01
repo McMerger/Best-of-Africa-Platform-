@@ -169,7 +169,8 @@
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(' ',repr\\(x.get\\('location'\\)\\),x['n']\\) for x in r]\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\([x['name'] for x in \\(d[0] if isinstance\\(d,list\\) else d\\)['results']]\\)\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];now='2026-06-29';past=sum\\(1 for x in r if \\(x.get\\('date_start'\\) or ''\\)<now\\);print\\(f'total {len\\(r\\)}, past {past}, upcoming {len\\(r\\)-past}'\\);[print\\(' ',x.get\\('date_start'\\),x['title'][:34]\\) for x in r[:8]]\")",
-      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/services/events)"
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/services/events)",
+      "Bash(curl -s https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/services/events?limit=40)"
     ]
   }
 }
