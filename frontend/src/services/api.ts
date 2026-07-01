@@ -387,6 +387,7 @@ export const api = {
     pauseCampaign: (id: string) => request<{ success: boolean }>(`/campaigns/${id}/pause`, { method: 'POST' }),
     getCampaignAnalytics: (id: string) => request<{ data: CampaignAnalytics }>(`/campaigns/${id}/analytics`),
     getCampaignTimeseries: (id: string, days = 14) => request<{ data: { day: string; impressions: number; clicks: number }[] }>(`/campaigns/${id}/timeseries?days=${days}`),
+    trackSponsorImpression: (articleId: string) => request<{ success: boolean }>(`/campaigns/track-impression`, { method: 'POST', body: JSON.stringify({ article_id: articleId }) }),
 
     // Narratives
     getNarrativeStrategies: (params: Record<string, string> = {}) => {

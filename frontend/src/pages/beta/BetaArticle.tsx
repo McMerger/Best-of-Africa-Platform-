@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
@@ -196,6 +196,17 @@ export const BetaArticle = () => {
       limit: '6' }),
     enabled: !!articleCountryCode,
     staleTime: 10 * 60 * 1000 });
+
+  // Record a sponsored-article impression once per article view. The backend
+  // resolves the sponsor's active campaign and no-ops for non-sponsored articles.
+  const trackedImpressionFor = useRef<string | null>(null);
+  useEffect(() => {
+    const a = data?.article;
+    if (a?.is_sponsored && a.id && trackedImpressionFor.current !== a.id) {
+      trackedImpressionFor.current = a.id;
+      api.trackSponsorImpression(a.id).catch(() => { /* non-critical */ });
+    }
+  }, [data]);
 
   if (isLoading) return <ArticleSkeleton />;
 
