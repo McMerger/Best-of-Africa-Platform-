@@ -14,6 +14,7 @@ import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import React from 'react';
 
 const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
@@ -173,6 +174,13 @@ export const BetaLanding = () => {
 
   const previewArticles: ArticleListItem[] = featuredData?.data?.slice(0, 3) || FALLBACK_ARTICLES.slice(0, 3);
 
+  // Live funding progress (system_config, updated by the Ko-fi webhook).
+  const { data: sysConfig } = useSystemConfig();
+  const fundGoal = Number(sysConfig?.['funding_goal']) || 800;
+  const fundRaised = Number(sysConfig?.['funding_raised']) || 304;
+  const fundCoffees = Number(sysConfig?.['funding_coffees']) || 62;
+  const fundPct = Math.min(100, Math.round((fundRaised / fundGoal) * 100));
+
   // Showcase cards for the "Platform Experience" marquee. Each premium image
   // gets a distinct label instead of the old repeated "Cinematic Intelligence".
   const platformPreviews = [
@@ -262,12 +270,12 @@ export const BetaLanding = () => {
 
             <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
               <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
-                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {t('landing.funding_detail', '38% of $800 goal funded, 62 coffees received')}
+                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {fundPct}% of ${fundGoal.toLocaleString()} goal funded, {fundCoffees} coffees received
               </p>
               <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
-                  whileInView={{ width: '38%' }}
+                  whileInView={{ width: `${fundPct}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
                   className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(201,168,76,0.5)]"

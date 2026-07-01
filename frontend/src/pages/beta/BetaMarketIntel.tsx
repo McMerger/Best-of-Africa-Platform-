@@ -12,6 +12,7 @@ import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { KO_FI_URL } from '../../constants/beta';
 
 // Dynamic content fetched via API
@@ -137,6 +138,13 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
 export const BetaMarketIntel = () => {
   const { isMember } = useMember();
 
+  // Live funding progress from system_config (Ko-fi webhook keeps it current).
+  const { data: sysConfig } = useSystemConfig();
+  const fundGoal = Number(sysConfig?.['funding_goal']) || 800;
+  const fundRaised = Number(sysConfig?.['funding_raised']) || 304;
+  const fundCoffees = Number(sysConfig?.['funding_coffees']) || 62;
+  const fundPct = Math.min(100, Math.round((fundRaised / fundGoal) * 100));
+
   const { data: stats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
@@ -254,19 +262,19 @@ export const BetaMarketIntel = () => {
             <h2 className="font-serif text-xl text-primary">Ko-fi goal progress</h2>
           </div>
           <div className="mb-3 flex justify-between items-end">
-            <span className="font-serif text-3xl font-bold text-primary">38%</span>
-            <span className="text-sm text-primary/40">of $800 goal</span>
+            <span className="font-serif text-3xl font-bold text-primary">{fundPct}%</span>
+            <span className="text-sm text-primary/40">of ${fundGoal.toLocaleString()} goal</span>
           </div>
           <div className="w-full h-2.5 bg-background/8 rounded-full overflow-hidden mb-4">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: '38%' }}
+              animate={{ width: `${fundPct}%` }}
               transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
               className="h-full bg-accent rounded-full"
             />
           </div>
           <p className="text-sm text-primary/50 mb-6 leading-relaxed">
-            62 coffees received so far. Each one goes directly toward keeping the platform live and the reporting going. This is what independent, community-backed journalism looks like.
+            {fundCoffees} coffees received so far. Each one goes directly toward keeping the platform live and the reporting going. This is what independent, community-backed journalism looks like.
           </p>
           <a
             href={KO_FI_URL}

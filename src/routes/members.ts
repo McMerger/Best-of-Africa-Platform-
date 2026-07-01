@@ -98,6 +98,26 @@ router.post('/kofi-webhook', async (c) => {
         `).bind(clientId, name, email, tier, expiresAt, new Date().toISOString()).run();
     }
 
+    // Live funding progress: every public contribution increments the running
+    // total + coffee count in system_config, so the "Live Funding Progress"
+    // widgets reflect reality instead of a hardcoded snapshot. Best-effort.
+    try {
+        if (amount > 0) {
+            const upd = await c.env.DB.prepare(
+                "UPDATE system_config SET value = CAST(CAST(value AS REAL) + ? AS TEXT) WHERE key = 'funding_raised'"
+            ).bind(amount).run();
+            if (!(upd as Record<string, any>).meta?.changes) {
+                await c.env.DB.prepare("INSERT INTO system_config (key, value) VALUES ('funding_raised', ?)").bind(String(amount)).run();
+            }
+        }
+        const cUpd = await c.env.DB.prepare(
+            "UPDATE system_config SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'funding_coffees'"
+        ).run();
+        if (!(cUpd as Record<string, any>).meta?.changes) {
+            await c.env.DB.prepare("INSERT INTO system_config (key, value) VALUES ('funding_coffees', '1')").run();
+        }
+    } catch (e) { console.error('[kofi-webhook] funding progress update failed:', e); }
+
     // Issue a 30-day JWT for this member (they'll use it on the frontend)
     const token = await createJWT(clientId, c.env.JWT_SECRET, 30 * 86400);
 

@@ -183,7 +183,14 @@
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);[print\\(' ',c.get\\('country_name'\\)\\) for c in d.get\\('countries',[]\\)]\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(' ',x['region'],'->',x['name'],x['article_count']\\) for x in r]\")",
       "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sentiment-divergence?_=$\\(date +%s\\)\")",
-      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dashboards/continental/overview?_=$\\(date +%s\\)\")"
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dashboards/continental/overview?_=$\\(date +%s\\)\")",
+      "Bash(curl -s -H 'X-Auth-Token: b1fb237492cb446e9e43013e6f707713' https://api.football-data.org/v4/competitions/WC/matches?status=SCHEDULED)",
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/world-cup/teams\")",
+      "Bash(grep -rniE \"38%|\\\\\\\\\\\\$800|62 coffee|goal|raised|backers|of \\\\\\\\\\\\$|width: '[0-9]+%'|width=\\\\\"[0-9]\" --include=*.tsx)",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\).get\\('results',[]\\);print\\(r if r else '\\(no funding config keys\\)'\\)\")",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\([x['name'] for x in \\(d[0] if isinstance\\(d,list\\) else d\\).get\\('results',[]\\)]\\)\")",
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/config/system\")",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\({k:v for k,v in d.items\\(\\) if 'funding' in k}\\)\")"
     ]
   }
 }
