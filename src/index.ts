@@ -322,6 +322,15 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await safe('roll-events', () => rollRecurringEvents(env));
     }
 
+    // Auto-discover new events from the live news feed every 6 hours, so the
+    // calendar stays current continent-wide without manual seeding.
+    if (hours % 6 === 0 && minutes === 30) {
+        await safe('discover-events', async () => {
+            const { discoverEvents } = await import('./workers/events-discovery');
+            await discoverEvents(env);
+        });
+    }
+
     // 3. Reporting: Daily at 5am UTC
     if (hours === 5 && minutes === 0) {
         await safe('daily-reporting', () => runDailyReporting(env));
