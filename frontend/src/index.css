@@ -247,6 +247,32 @@ body {
     box-shadow: 0 0 28px rgba(201,168,76,0.2);
   }
 
+  /* ── World Cup event ribbon ──────────────────────────────────────────────
+     Celebratory but on-brand: a slow gold sheen sweeps the navy bar and the
+     flag chips drift in a seamless marquee. Both pause under reduced-motion. */
+  @keyframes wc-sheen {
+    0%   { transform: translateX(-120%); }
+    100% { transform: translateX(220%); }
+  }
+  .wc-sheen { animation: wc-sheen 7s ease-in-out infinite; }
+
+  @keyframes wc-marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  .wc-marquee { animation: wc-marquee 32s linear infinite; will-change: transform; }
+  .wc-marquee-group:hover .wc-marquee { animation-play-state: paused; }
+
+  @keyframes wc-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.35; transform: scale(0.8); }
+  }
+  .wc-pulse { animation: wc-pulse 1.6s ease-in-out infinite; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wc-sheen, .wc-marquee, .wc-pulse { animation: none; }
+  }
+
   /* Reading progress bar */
   .reading-progress {
     position: fixed;
