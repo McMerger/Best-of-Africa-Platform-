@@ -99,7 +99,7 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => {
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
+        <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{stripMarkdown(article.summary)}</p>
       )}
       <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} {t('article.min_read', 'min read')}</p>
     </div>

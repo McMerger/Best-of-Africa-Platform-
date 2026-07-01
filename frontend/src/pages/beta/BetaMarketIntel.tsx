@@ -13,6 +13,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { stripMarkdown } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 // Dynamic content fetched via API
@@ -231,8 +232,8 @@ export const BetaMarketIntel = () => {
                     </span>
                     <span className="text-[11px] text-primary/30">{update.date}</span>
                   </div>
-                  <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{update.title}</h3>
-                  <p className="text-sm text-primary/60 leading-relaxed">{update.body}</p>
+                  <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{stripMarkdown(update.title)}</h3>
+                  <p className="text-sm text-primary/60 leading-relaxed">{stripMarkdown(update.body)}</p>
                 </motion.div>
               ))
             ) : (

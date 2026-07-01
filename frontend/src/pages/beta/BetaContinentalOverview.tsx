@@ -8,6 +8,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { CountryFlag } from '../../components/CountryFlag';
+import { stripMarkdown } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaContinentalOverview: React.FC = () => {
@@ -281,11 +282,11 @@ export const BetaContinentalOverview: React.FC = () => {
                         {article.sector_name && <span>{article.sector_name}</span>}
                       </div>
                       <h4 className="font-serif text-[1.5rem] leading-snug mb-3 text-foreground group-hover:text-accent transition-colors">
-                        {article.title}
+                        {stripMarkdown(article.title)}
                       </h4>
                       {article.summary && (
                         <p className="text-[15px] font-light leading-relaxed text-foreground/50 line-clamp-2">
-                          {article.summary}
+                          {stripMarkdown(article.summary)}
                         </p>
                       )}
                     </div>

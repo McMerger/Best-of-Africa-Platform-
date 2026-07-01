@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
+import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import type { ArticleListItem } from '../../types';
@@ -65,11 +66,11 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                     </div>
                 )}
                 <h3 className={`font-serif text-xl font-bold mb-2 leading-snug ${isHighlighted ? 'text-foreground' : 'text-primary group-hover:text-accent'} transition-colors`}>
-                    {article.title}
+                    {stripMarkdown(article.title)}
                 </h3>
                 {article.summary && (
                     <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/60'}`}>
-                        {article.summary}
+                        {stripMarkdown(article.summary)}
                     </p>
                 )}
                 {article.published_at && (

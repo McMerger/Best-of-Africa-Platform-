@@ -5,6 +5,7 @@ import { Shield, Target, FileText, ArrowLeft, Activity, Globe, MessageSquare } f
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { stripMarkdown } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaNarrativeToolkit: React.FC = () => {
@@ -209,7 +210,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                           <Link key={article.id} to={`/posts/${article.slug}`} className="block group">
                             <div className="text-xs font-bold text-accent mb-1 truncate">{article.narrative_theme || 'Organic Alignment'}</div>
                             <h4 className="font-serif text-primary group-hover:text-accent transition-colors leading-snug line-clamp-2">
-                              {article.title}
+                              {stripMarkdown(article.title)}
                             </h4>
                           </Link>
                         ))

@@ -12,6 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
+import { stripMarkdown } from '@/lib/utils';
 import type { Article, ArticleListItem, Country } from '../../types';
 
 interface ArticleResponse {
@@ -289,8 +290,8 @@ export const BetaArticle = () => {
   return (
     <div id="article-root" className="bg-background text-primary font-sans selection:bg-accent selection:text-primary">
       <SEO 
-        title={article.meta_title || article.title}
-        description={article.meta_description || article.summary || ''}
+        title={stripMarkdown(article.meta_title || article.title)}
+        description={stripMarkdown(article.meta_description || article.summary || '')}
         image={article.hero_image_url || undefined}
         type="article"
         publishedTime={article.published_at || undefined}
@@ -366,13 +367,13 @@ export const BetaArticle = () => {
             </span>
           )}
           <h1 className="font-serif text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.95] tracking-tighter mb-8">
-            {article.title}
+            {stripMarkdown(article.title)}
           </h1>
 
           {/* Lede / standfirst, rendered from article.summary */}
           {article.summary && (
             <p className="font-serif text-[1.25rem] md:text-[1.5rem] lg:text-[2rem] leading-[1.4] text-foreground/70 italic mb-8 md:mb-10 border-l-2 border-accent pl-5 md:pl-6 py-2">
-              {article.summary}
+              {stripMarkdown(article.summary)}
             </p>
           )}
 
@@ -391,15 +392,15 @@ export const BetaArticle = () => {
                 </>
               )}
             </div>
-            <ShareButtons title={article.title} url={articleUrl} />
+            <ShareButtons title={stripMarkdown(article.title)} url={articleUrl} />
           </div>
         </header>
 
         {/* Audio Player */}
         <div className="mb-10">
-          <BetaAudioPlayer 
-            slug={slug!} 
-            title={article.title} 
+          <BetaAudioPlayer
+            slug={slug!}
+            title={stripMarkdown(article.title)}
             subtitle={categoryLabel} 
             imageUrl={article.hero_image_url} 
           />
@@ -540,7 +541,7 @@ export const BetaArticle = () => {
                           <span className="text-[11px] font-semibold tracking-widest text-accent uppercase">{a.sector_name}</span>
                         )}
                       </div>
-                      <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{a.title}</h4>
+                      <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{stripMarkdown(a.title)}</h4>
                       <p className="text-sm text-primary/50">{a.reading_time_minutes} {t('article.min_read', 'min read')}</p>
                     </div>
                   </Link>

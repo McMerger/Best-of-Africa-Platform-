@@ -3,6 +3,7 @@ import { ShieldAlert, TrendingUp, Activity, BarChart2, AlertCircle } from 'lucid
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
+import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
@@ -213,8 +214,8 @@ export const BetaIntelligence = () => {
                       </span>
                       <span className="text-xs font-bold uppercase tracking-widest text-foreground/40">{opp.country_name} • {opp.sector_name}</span>
                     </div>
-                    <h3 className="font-serif text-2xl text-foreground mb-3 leading-snug">{opp.title}</h3>
-                    <p className="text-[15px] text-foreground/60 line-clamp-3 leading-relaxed font-light">{opp.summary}</p>
+                    <h3 className="font-serif text-2xl text-foreground mb-3 leading-snug">{stripMarkdown(opp.title)}</h3>
+                    <p className="text-[15px] text-foreground/60 line-clamp-3 leading-relaxed font-light">{stripMarkdown(opp.summary)}</p>
                     <div className="mt-6">
                       <Link to={`/countries/${opp.country_code}`} className="text-[11px] uppercase tracking-widest text-accent font-bold hover:text-foreground transition-colors">
                         View {opp.country_name} Hub →
