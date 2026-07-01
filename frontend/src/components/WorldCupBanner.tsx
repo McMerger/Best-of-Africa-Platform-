@@ -6,6 +6,21 @@ import { CountryFlag } from '@/components/CountryFlag';
 
 const DISMISS_KEY = 'boa_wc_banner_dismissed_2026';
 
+/** Compact, human kickoff label: "Today 20:00", "Tomorrow 18:00", "Sat 20:00", "14 Jun". */
+function formatKickoff(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const now = new Date();
+  const diff = d.getTime() - now.getTime();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diff <= 0) return 'Live';
+  const DAY = 86400000;
+  if (d.toDateString() === now.toDateString()) return `Today ${time}`;
+  if (d.toDateString() === new Date(now.getTime() + DAY).toDateString()) return `Tomorrow ${time}`;
+  if (diff < 7 * DAY) return `${d.toLocaleDateString([], { weekday: 'short' })} ${time}`;
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
 /**
  * TEMPORARY contextual World Cup ribbon (see config/worldCup.ts).
  * On-brand (navy + gold): a gold sheen sweeps the bar, real flags of the
@@ -18,7 +33,7 @@ export const WorldCupBanner = () => {
   const [dismissed, setDismissed] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem(DISMISS_KEY) === '1'
   );
-  const { teams, updatedAt } = useWorldCupTeams();
+  const { teams, updatedAt, nextFixture } = useWorldCupTeams();
 
   if (!WORLD_CUP.enabled || teams.length === 0 || dismissed) return null;
 
@@ -52,11 +67,13 @@ export const WorldCupBanner = () => {
           <span className="grid place-items-center w-7 h-7 rounded-full bg-accent/15 border border-accent/40 text-accent shadow-[0_0_12px_-2px_rgba(201,168,76,0.6)]">
             <Trophy className="w-3.5 h-3.5" aria-hidden="true" />
           </span>
-          <span className="leading-tight">
+          {/* Wordmark yields to the fixture on the smallest screens; the trophy
+              badge carries the theme there. */}
+          <span className="hidden sm:block leading-tight">
             <span className="block text-accent font-bold uppercase tracking-[0.16em] text-[11px]">
               {WORLD_CUP.label}
             </span>
-            <span className="hidden sm:block text-white/45 text-[9.5px] font-semibold uppercase tracking-[0.14em]">
+            <span className="hidden md:block text-white/45 text-[9.5px] font-semibold uppercase tracking-[0.14em]">
               Africa still standing
             </span>
           </span>
@@ -74,8 +91,26 @@ export const WorldCupBanner = () => {
 
         <span className="hidden sm:block h-4 w-px bg-white/15 shrink-0" />
 
-        {/* Flag marquee — duplicated once for a seamless loop, fades at the edges */}
-        <div className="wc-marquee-group relative flex-1 min-w-0 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]">
+        {/* Next fixture — the headline info when the feed provides one */}
+        {nextFixture && (
+          <div className="shrink-0 flex items-center gap-2 rounded-full bg-accent/10 border border-accent/25 pl-2.5 pr-2.5 py-1">
+            <span className="hidden sm:inline text-accent text-[9px] font-bold uppercase tracking-[0.18em]">Next</span>
+            <span className="flex items-center gap-1.5 text-[12px] font-semibold text-white whitespace-nowrap">
+              {nextFixture.home.code && <CountryFlag code={nextFixture.home.code} size={16} title={nextFixture.home.name} className="!rounded-[2px] ring-white/20" />}
+              {nextFixture.home.name}
+              <span className="text-white/40 font-normal">v</span>
+              {nextFixture.away.code && <CountryFlag code={nextFixture.away.code} size={16} title={nextFixture.away.name} className="!rounded-[2px] ring-white/20" />}
+              {nextFixture.away.name}
+            </span>
+            <span className="text-accent text-[11px] font-bold tabular-nums whitespace-nowrap border-l border-accent/25 pl-2">
+              {formatKickoff(nextFixture.utcDate)}
+            </span>
+          </div>
+        )}
+
+        {/* Flag marquee — duplicated once for a seamless loop, fades at the edges.
+            Yields to the fixture chip on small screens when one is present. */}
+        <div className={`wc-marquee-group relative flex-1 min-w-0 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)] ${nextFixture ? 'hidden lg:block' : 'block'}`}>
           <div className="wc-marquee flex w-max items-center gap-2.5">
             {[...teams, ...teams].map((t, i) => (
               <Chip key={`${t.code}-${i}`} t={t} />
@@ -86,7 +121,7 @@ export const WorldCupBanner = () => {
         <button
           onClick={dismiss}
           aria-label="Dismiss World Cup banner"
-          className="shrink-0 rounded-full p-1 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          className="ml-auto shrink-0 rounded-full p-1 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
         >
           <X className="h-4 w-4" />
         </button>

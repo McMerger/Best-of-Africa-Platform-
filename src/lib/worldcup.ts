@@ -12,6 +12,14 @@ import type { Env } from '../types';
 
 export interface WorldCupTeam { name: string; flag: string; code: string; }
 
+/** The next scheduled fixture involving an African nation. */
+export interface WorldCupFixture {
+  utcDate: string;                                    // ISO kickoff time
+  stage?: string;                                     // e.g. "Round of 16"
+  home: { name: string; code?: string };              // code present when African
+  away: { name: string; code?: string };
+}
+
 const KV_KEY = 'world_cup:teams';
 // TheSportsDB league id for the FIFA World Cup (overridable via env if needed).
 const WC_LEAGUE_ID = '4429';
@@ -60,16 +68,42 @@ function matchAfrican(teamName: string): WorldCupTeam | null {
   return null;
 }
 
+// football-data.org stage codes → human labels.
+const STAGE_LABELS: Record<string, string> = {
+  GROUP_STAGE: 'Group Stage',
+  LAST_32: 'Round of 32',
+  LAST_16: 'Round of 16',
+  QUARTER_FINALS: 'Quarter-final',
+  SEMI_FINALS: 'Semi-final',
+  THIRD_PLACE: 'Third-place Play-off',
+  FINAL: 'Final',
+};
+function prettyStage(stage?: string | null): string | undefined {
+  if (!stage) return undefined;
+  return STAGE_LABELS[stage] || stage.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+// A side carries an ISO2 code only when we can resolve it to an African nation
+// (so the UI can show its flag); non-African opponents render by name.
+function sideOf(name?: string | null): { name: string; code?: string } {
+  const t = name ? matchAfrican(name) : null;
+  return t ? { name: t.name, code: t.code } : { name: (name || 'TBD').trim() };
+}
+
 /** Read the cached African teams still in (or the seed list if not yet populated). */
-export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null }> {
+export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null }> {
   try {
     const raw = await env.CACHE.get(KV_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string };
-      if (Array.isArray(parsed.teams) && parsed.teams.length > 0) return parsed;
+      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string; nextFixture?: WorldCupFixture | null };
+      if (Array.isArray(parsed.teams) && parsed.teams.length > 0) {
+        // Drop a fixture that has already kicked off since the last refresh.
+        const nf = parsed.nextFixture && Date.parse(parsed.nextFixture.utcDate) > Date.now() ? parsed.nextFixture : null;
+        return { teams: parsed.teams, updatedAt: parsed.updatedAt, nextFixture: nf };
+      }
     }
   } catch { /* fall through to seed */ }
-  return { teams: SEED_TEAMS, updatedAt: null };
+  return { teams: SEED_TEAMS, updatedAt: null, nextFixture: null };
 }
 
 /**
@@ -82,6 +116,17 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
     const found = new Map<string, WorldCupTeam>();
     const add = (name?: string | null) => { const t = name ? matchAfrican(name) : null; if (t) found.set(t.code, t); };
 
+    // Candidate fixtures that involve at least one African nation; we pick the
+    // earliest future one as the "next fixture".
+    const fixtures: WorldCupFixture[] = [];
+    const considerFixture = (home?: string | null, away?: string | null, utcDate?: string | null, stage?: string | null) => {
+      if (!utcDate) return;
+      const ts = Date.parse(utcDate);
+      if (!Number.isFinite(ts) || ts <= Date.now()) return;      // future only
+      if (!matchAfrican(home || '') && !matchAfrican(away || '')) return;
+      fixtures.push({ utcDate: new Date(ts).toISOString(), stage: prettyStage(stage), home: sideOf(home), away: sideOf(away) });
+    };
+
     const token = (env as Record<string, any>).FOOTBALL_DATA_TOKEN as string | undefined;
 
     if (token) {
@@ -91,8 +136,11 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
         headers: { 'X-Auth-Token': token },
       });
       if (r.ok) {
-        const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string } }> };
-        for (const m of d.matches || []) { add(m.homeTeam?.name); add(m.awayTeam?.name); }
+        const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string }> };
+        for (const m of d.matches || []) {
+          add(m.homeTeam?.name); add(m.awayTeam?.name);
+          considerFixture(m.homeTeam?.name, m.awayTeam?.name, m.utcDate, m.stage);
+        }
       }
     }
 
@@ -105,14 +153,21 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
         headers: { 'User-Agent': 'BestOfAfrica/1.0' },
       });
       if (res.ok) {
-        const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string }> | null };
-        for (const ev of data.events || []) { add(ev.strHomeTeam); add(ev.strAwayTeam); }
+        const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string; strTimestamp?: string; dateEvent?: string; strTime?: string; strRound?: string }> | null };
+        for (const ev of data.events || []) {
+          add(ev.strHomeTeam); add(ev.strAwayTeam);
+          const iso = ev.strTimestamp || (ev.dateEvent ? `${ev.dateEvent}T${ev.strTime || '00:00:00'}Z` : null);
+          considerFixture(ev.strHomeTeam, ev.strAwayTeam, iso, ev.strRound ? `Round ${ev.strRound}` : null);
+        }
       }
     }
 
     if (found.size === 0) return; // nothing reliable — keep last cache / seed, don't wipe
 
-    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString() });
+    fixtures.sort((a, b) => Date.parse(a.utcDate) - Date.parse(b.utcDate));
+    const nextFixture = fixtures[0] || null;
+
+    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString(), nextFixture });
     await env.CACHE.put(KV_KEY, payload, { expirationTtl: 7 * 24 * 3600 });
   } catch (err) {
     console.error('[worldcup] refresh failed:', err);

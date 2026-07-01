@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
-import { WORLD_CUP, type WorldCupTeam } from '../config/worldCup';
+import { WORLD_CUP, type WorldCupTeam, type WorldCupFixture } from '../config/worldCup';
 
 /**
- * Returns the African nations still in the World Cup, auto-updated from the
- * backend (which refreshes from a live sports feed). Falls back to the curated
- * list in config/worldCup.ts if the request fails, so the UI never breaks.
+ * Returns the African nations still in the World Cup plus the next fixture
+ * involving one of them, auto-updated from the backend (which refreshes from a
+ * live sports feed). Falls back to the curated list in config/worldCup.ts if
+ * the request fails, so the UI never breaks.
  */
-export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null } {
+export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null } {
   const { data } = useQuery({
     queryKey: ['world-cup-teams'],
     queryFn: api.getWorldCupTeams,
@@ -16,6 +17,8 @@ export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string |
   });
 
   const live = data?.teams;
-  if (live && live.length > 0) return { teams: live, updatedAt: data?.updated_at ?? null };
-  return { teams: WORLD_CUP.teams, updatedAt: null };
+  if (live && live.length > 0) {
+    return { teams: live, updatedAt: data?.updated_at ?? null, nextFixture: data?.next_fixture ?? null };
+  }
+  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null };
 }

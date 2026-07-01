@@ -117,7 +117,16 @@ export const api = {
     },
     getArticle: (slug: string) => request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(`/articles/${slug}`),
     getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured?limit=20'),
-    getWorldCupTeams: () => request<{ teams: { name: string; flag: string; code: string }[]; updated_at: string | null }>('/world-cup/teams'),
+    getWorldCupTeams: () => request<{
+        teams: { name: string; flag: string; code: string }[];
+        updated_at: string | null;
+        next_fixture: {
+            utcDate: string;
+            stage?: string;
+            home: { name: string; code?: string };
+            away: { name: string; code?: string };
+        } | null;
+    }>('/world-cup/teams'),
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest?limit=20'),
     getEvents: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);

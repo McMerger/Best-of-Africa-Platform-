@@ -17,6 +17,14 @@ export interface WorldCupTeam {
   code: string;
 }
 
+/** The next scheduled fixture involving an African nation (from the live feed). */
+export interface WorldCupFixture {
+  utcDate: string;
+  stage?: string;
+  home: { name: string; code?: string };
+  away: { name: string; code?: string };
+}
+
 export const WORLD_CUP: { enabled: boolean; label: string; teams: WorldCupTeam[] } = {
   enabled: true,
   label: 'FIFA World Cup 2026',
