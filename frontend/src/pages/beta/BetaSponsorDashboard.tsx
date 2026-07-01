@@ -29,8 +29,21 @@ export const BetaSponsorDashboard: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: timeseriesRes, isLoading: isLoadingSeries } = useQuery({
+    queryKey: ['campaign-timeseries', selectedCampaignId],
+    queryFn: () => api.getCampaignTimeseries(selectedCampaignId!, 14),
+    enabled: !!selectedCampaignId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const analytics = analyticsRes?.data;
   const activeCampaign = campaigns.find(c => c.id === selectedCampaignId);
+  // Real per-day delivery series (empty until impressions/clicks are recorded).
+  const timeline = (timeseriesRes?.data || []).map(d => ({
+    day: (d.day || '').slice(5),
+    impressions: d.impressions,
+    clicks: d.clicks,
+  }));
 
   if (!isMember) {
     return (
@@ -83,14 +96,6 @@ export const BetaSponsorDashboard: React.FC = () => {
       </>
     );
   }
-
-  // Mock timeline data to visualize the performance since the analytics endpoint currently returns totals.
-  const mockTimeline = [
-    { day: 'Day 1', impressions: Math.round(analytics?.impressions! * 0.1), clicks: Math.round(analytics?.clicks! * 0.1) },
-    { day: 'Day 2', impressions: Math.round(analytics?.impressions! * 0.15), clicks: Math.round(analytics?.clicks! * 0.12) },
-    { day: 'Day 3', impressions: Math.round(analytics?.impressions! * 0.25), clicks: Math.round(analytics?.clicks! * 0.28) },
-    { day: 'Day 4', impressions: Math.round(analytics?.impressions! * 0.5), clicks: Math.round(analytics?.clicks! * 0.5) },
-  ];
 
   return (
     <>
@@ -215,11 +220,17 @@ export const BetaSponsorDashboard: React.FC = () => {
                 <BarChart3 className="text-accent" /> Delivery Trajectory
               </h3>
               <div className="h-[300px] w-full">
-                {isLoadingAnalytics ? (
+                {(isLoadingAnalytics || isLoadingSeries) ? (
                   <div className="w-full h-full bg-background/5 animate-pulse rounded-xl" />
+                ) : timeline.length === 0 ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center text-primary/40 gap-2">
+                    <Activity className="w-8 h-8 text-primary/20" />
+                    <p className="text-sm font-medium">No delivery recorded yet</p>
+                    <p className="text-xs max-w-xs">Daily impressions and clicks will appear here as this campaign runs.</p>
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={mockTimeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <AreaChart data={timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#0A2540" stopOpacity={0.3}/>

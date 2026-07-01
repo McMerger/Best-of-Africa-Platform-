@@ -327,4 +327,49 @@ router.get('/:id/analytics', async (c) => {
     });
 });
 
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /campaigns/:id/timeseries - Real daily impression/click series
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/:id/timeseries', async (c) => {
+    const id = c.req.param('id');
+    const days = Math.min(parseInt(c.req.query('days') || '14', 10) || 14, 90);
+
+    const rows = await c.env.DB.prepare(`
+        SELECT date(created_at) AS day,
+               SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) AS impressions,
+               SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS clicks
+        FROM campaign_events
+        WHERE campaign_id = ? AND created_at >= date('now', ?)
+        GROUP BY day
+        ORDER BY day ASC
+    `).bind(id, `-${days} days`).all();
+
+    return c.json({ success: true, data: rows.results || [] });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns/:id/track - Record an impression/click (also keeps totals in sync)
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/:id/track', async (c) => {
+    const id = c.req.param('id');
+    let body: Record<string, any> = {};
+    try { body = await c.req.json(); } catch { /* allow empty */ }
+    const eventType = body.event_type === 'click' ? 'click' : 'impression';
+
+    const campaign = await c.env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(id).first();
+    if (!campaign) return c.json({ success: false, error: 'not_found' }, 404);
+
+    await c.env.DB.prepare(
+        "INSERT INTO campaign_events (id, campaign_id, event_type) VALUES (?, ?, ?)"
+    ).bind(crypto.randomUUID(), id, eventType).run();
+
+    // Keep the campaign's running totals consistent with the event log.
+    const col = eventType === 'click' ? 'clicks' : 'impressions';
+    await c.env.DB.prepare(
+        `UPDATE campaigns SET ${col} = COALESCE(${col}, 0) + 1 WHERE id = ?`
+    ).bind(id).run();
+
+    return c.json({ success: true });
+});
+
 export { router as campaignsRouter };

@@ -386,6 +386,7 @@ export const api = {
     launchCampaign: (id: string) => request<{ success: boolean }>(`/campaigns/${id}/launch`, { method: 'POST' }),
     pauseCampaign: (id: string) => request<{ success: boolean }>(`/campaigns/${id}/pause`, { method: 'POST' }),
     getCampaignAnalytics: (id: string) => request<{ data: CampaignAnalytics }>(`/campaigns/${id}/analytics`),
+    getCampaignTimeseries: (id: string, days = 14) => request<{ data: { day: string; impressions: number; clicks: number }[] }>(`/campaigns/${id}/timeseries?days=${days}`),
 
     // Narratives
     getNarrativeStrategies: (params: Record<string, string> = {}) => {
