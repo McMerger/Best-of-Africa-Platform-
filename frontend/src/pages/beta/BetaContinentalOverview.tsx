@@ -67,17 +67,16 @@ export const BetaContinentalOverview: React.FC = () => {
       
       {/* Header */}
       <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
-        <motion.div 
+        <motion.div
           className="absolute inset-0 z-0"
           style={{ y: heroY, scale: 1.05 }}
         >
-          <div className="absolute inset-0 bg-background/80 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_intel.webp" 
-            alt="Continental Intelligence Data" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_intel.webp"
+            alt="Continental Intelligence Data"
+            className="hero-photo w-full h-[120%] object-cover object-center absolute top-[-10%]"
           />
+          <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
         <div className="max-w-6xl mx-auto w-full relative z-30">
@@ -86,11 +85,11 @@ export const BetaContinentalOverview: React.FC = () => {
               <BarChart3 size={14} />
               Executive Dashboard
             </div>
-            
-            <h1 className="font-serif text-[4rem] md:text-[5.5rem] font-bold leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl text-foreground">
+
+            <h1 className="font-serif text-[4rem] md:text-[5.5rem] font-bold leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl text-white">
               Continental <br className="hidden md:block"/><span className="text-accent italic">Overview.</span>
             </h1>
-            <p className="text-foreground/70 text-[1.125rem] font-light max-w-2xl leading-[1.8] drop-shadow-md">
+            <p className="text-white/80 text-[1.125rem] font-light max-w-2xl leading-[1.8] drop-shadow-md">
               A high-level view of our coverage across Africa over the past 30 days. Track active regions, trending nations, and the most heavily researched sectors.
             </p>
           </motion.div>
@@ -101,7 +100,7 @@ export const BetaContinentalOverview: React.FC = () => {
 
         {/* Free-preview banner */}
         {!isMember && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4 mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/30 bg-card shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] px-6 py-4 mb-10">
             <p className="text-sm text-foreground/70 leading-relaxed">
               <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Open access</span>
               The full continental dashboard — coverage, regional heatmap, trending nations, sectors and editor's highlights — is free for everyone.
