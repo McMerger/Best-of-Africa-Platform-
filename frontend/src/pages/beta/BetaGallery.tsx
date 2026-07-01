@@ -14,8 +14,8 @@ const GALLERY_IMAGES = [
   },
   {
     url: '/images/v2_editorial_2.webp',
-    caption: 'City lights',
-    location: 'Lagos, Nigeria',
+    caption: 'Nairobi after hours',
+    location: 'Nairobi, Kenya',
     category: 'Cities'
   },
   {
@@ -26,20 +26,20 @@ const GALLERY_IMAGES = [
   },
   {
     url: '/images/v2_editorial_1.webp',
-    caption: 'Made to be seen',
-    location: 'Lagos, Nigeria',
+    caption: 'Colour on the avenue',
+    location: 'Dakar, Senegal',
     category: 'People'
   },
   {
     url: '/images/v2_concierge.webp',
     caption: 'Service, elevated',
-    location: 'Lagos, Nigeria',
+    location: 'Cape Town, South Africa',
     category: 'People'
   },
   {
     url: '/images/v2_real_background.webp',
     caption: 'Night market',
-    location: 'Across the continent',
+    location: 'Marrakech, Morocco',
     category: 'Culture'
   },
   {

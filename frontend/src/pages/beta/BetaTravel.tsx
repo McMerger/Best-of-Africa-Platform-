@@ -5,26 +5,65 @@ import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { SEO } from '../../components/SEO';
 
+// A geographically balanced set of business/luxury hotels spanning all five
+// African regions and distinct countries — not a two-country shortlist.
+// Images are bundled local WebP (premium, on-brand, and always load — external
+// stock URLs kept 404-ing).
 const HOTELS = [
+    {
+        name: "La Mamounia",
+        location: "Marrakech, Morocco",
+        description: "A legendary palace hotel blending Moorish grandeur with modern executive comfort — a landmark for high-level meetings in North Africa.",
+        image: "/images/v2_concierge.webp",
+        benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "Spa & hammam credit", "Early check-in/late checkout"]
+    },
+    {
+        name: "Eko Hotel & Suites",
+        location: "Lagos, Nigeria",
+        description: "West Africa's premier business address on Victoria Island, with the conference infrastructure and security serious deal-making demands.",
+        image: "/images/v2_events.webp",
+        benefits: ["Daily breakfast for two", "Executive lounge access", "Complimentary high-speed WiFi", "Airport fast-track"]
+    },
+    {
+        name: "Kempinski Gold Coast City",
+        location: "Accra, Ghana",
+        description: "A contemporary five-star anchor for investors moving through the AfCFTA's fastest-opening market.",
+        image: "/images/v2_real_background.webp",
+        benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "$100 dining credit", "Late checkout"]
+    },
+    {
+        name: "Villa Rosa Kempinski",
+        location: "Nairobi, Kenya",
+        description: "East Africa's diplomatic and tech hub, from a tower designed around the executive traveller.",
+        image: "/images/v2_hero_kigali.webp",
+        benefits: ["Daily breakfast for two", "Executive lounge access", "Complimentary airport transfers", "Early check-in/late checkout"]
+    },
+    {
+        name: "Kigali Serena Hotel",
+        location: "Kigali, Rwanda",
+        description: "The calm, secure base of choice in Africa's most walkable capital — minutes from the convention centre.",
+        image: "/images/v2_travel.webp",
+        benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "Spa credit", "Complimentary WiFi"]
+    },
     {
         name: "The Mora Zanzibar",
         location: "Zanzibar, Tanzania",
-        description: "A luxury lifestyle resort offering an effortlessly chic business retreat. Perfect for executive retreats and strategy offsites.",
-        image: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&q=80&w=800",
+        description: "A luxury lifestyle resort offering an effortlessly chic business retreat — ideal for executive retreats and strategy offsites.",
+        image: "/images/v2_travel.webp",
         benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "$100 Resort Credit", "Early check-in/late checkout"]
     },
     {
-        name: "Santorini Mozambique",
-        location: "Vilanculo, Mozambique",
-        description: "Perched above the red cliffs of King Fisher Bay. Designed like a Greek village but deeply rooted in African hospitality.",
-        image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&q=80&w=800",
-        benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "$100 Spa Credit", "Complimentary airport transfers"]
+        name: "The Silo Hotel",
+        location: "Cape Town, South Africa",
+        description: "A design icon above the V&A Waterfront, pairing world-class hospitality with boardrooms fit for the continent's biggest deals.",
+        image: "/images/v2_concierge.webp",
+        benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "Rooftop spa access", "Late checkout"]
     },
     {
         name: "Polana Serena Hotel",
         location: "Maputo, Mozambique",
-        description: "The 'Grand Dame' of Maputo. A historic, palatial hotel offering the finest executive amenities and secure conference facilities in the capital.",
-        image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
+        description: "The 'Grand Dame' of Maputo — a historic, palatial hotel with the finest executive amenities and secure conference facilities in the capital.",
+        image: "/images/v2_real_background.webp",
         benefits: ["Daily breakfast for two", "Room upgrade (subject to availability)", "Complimentary high-speed WiFi", "Early check-in/late checkout"]
     }
 ];

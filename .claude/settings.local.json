@@ -165,7 +165,8 @@
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);u=d.get\\('underreported',[]\\);print\\('count:',len\\(u\\)\\);[print\\(' ',x['code'],x['name'],'-',x['articles'],'stories'\\) for x in u]\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(json.dumps\\(x\\)\\) for x in r]\")",
       "Bash(curl -s -A \"Mozilla/5.0\" \"https://allafrica.com/tools/headlines/rdf/burundi/headlines.rdf\")",
-      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\(' active sources:',\\(d[0] if isinstance\\(d,list\\) else d\\)['results'][0]['n']\\)\")"
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);print\\(' active sources:',\\(d[0] if isinstance\\(d,list\\) else d\\)['results'][0]['n']\\)\")",
+      "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(' ',repr\\(x.get\\('location'\\)\\),x['n']\\) for x in r]\")"
     ]
   }
 }
