@@ -136,25 +136,25 @@ const ArticleSkeleton = () => (
 function renderArticleHtml(md: string): string {
   if (!md) return '';
   let s = md.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  s = s.replace(/^#{4,6}\s+(.*)$/gm, '<h4 class="font-serif text-[1.375rem] md:text-[1.625rem] text-foreground/90 mt-10 mb-4 leading-snug">$1</h4>');
-  s = s.replace(/^###\s+(.*)$/gm, '<h3 class="font-serif text-[1.75rem] md:text-[2.25rem] text-foreground/90 mt-12 mb-6 leading-snug">$1</h3>');
+  s = s.replace(/^#{4,6}\s+(.*)$/gm, '<h4 class="font-serif text-[1.375rem] md:text-[1.625rem] text-foreground mt-10 mb-4 leading-snug">$1</h4>');
+  s = s.replace(/^###\s+(.*)$/gm, '<h3 class="font-serif text-[1.75rem] md:text-[2.25rem] text-foreground mt-12 mb-6 leading-snug">$1</h3>');
   s = s.replace(/^##\s+(.*)$/gm, '<h2 class="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">$1</h2>');
   s = s.replace(/^#\s+(.*)$/gm, '<h2 class="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">$1</h2>');
   s = s.replace(/^---$/gm, '<hr class="my-10 border-primary/10"/>');
-  s = s.replace(/^>\s+(.*)$/gm, '<blockquote class="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/60 font-serif italic text-[1.5rem] leading-[1.6]">$1</blockquote>');
+  s = s.replace(/^>\s+(.*)$/gm, '<blockquote class="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/75 font-serif italic text-[1.5rem] leading-[1.6]">$1</blockquote>');
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-accent font-semibold">$1</strong>');
   s = s.replace(/\*(.+?)\*/g, '<em class="italic text-foreground">$1</em>');
   s = s.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-accent underline hover:text-gold-italic" target="_blank" rel="noopener noreferrer">$1</a>');
   // Use [ \t]* (not \s*) so the blank-line separator between a paragraph and a
   // list isn't swallowed into the first item, that merges the list into the
   // preceding <p> and breaks <ul>/<ol> grouping.
-  s = s.replace(/^[ \t]*[-*][ \t]+(.*)$/gm, '<li class="ul-item text-foreground/80 text-[1.125rem] leading-[1.8] flex gap-4 font-light tracking-wide mb-3"><span class="text-accent mt-1 shrink-0">→</span><span>$1</span></li>');
-  s = s.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gm, '<li class="ol-item text-foreground/80 text-[1.125rem] leading-[1.8] font-light tracking-wide mb-3 pl-1">$1</li>');
+  s = s.replace(/^[ \t]*[-*][ \t]+(.*)$/gm, '<li class="ul-item text-foreground/90 text-[1.125rem] leading-[1.8] flex gap-4 font-normal tracking-wide mb-3"><span class="text-accent mt-1 shrink-0">→</span><span>$1</span></li>');
+  s = s.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gm, '<li class="ol-item text-foreground/90 text-[1.125rem] leading-[1.8] font-normal tracking-wide mb-3 pl-1">$1</li>');
   s = s.split(/\n\n+/).map(b => {
     const t = b.trim();
     if (!t) return '';
     if (/^<(h\d|li|blockquote|hr|ul|ol)/.test(t)) return t;
-    return '<p class="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-light tracking-wide">' + t.replace(/\n/g, '<br/>') + '</p>';
+    return '<p class="text-foreground/90 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-8 font-sans font-normal tracking-wide">' + t.replace(/\n/g, '<br/>') + '</p>';
   }).join('\n');
   // Wrap ordered runs first (decimal markers), then any remaining bullet runs.
   s = s.replace(/((?:<li class="ol-item[\s\S]*?<\/li>\s*)+)/g, '<ol class="my-6 space-y-2 list-decimal pl-7 marker:text-accent marker:font-semibold">$1</ol>');
