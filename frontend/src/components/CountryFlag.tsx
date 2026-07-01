@@ -18,7 +18,9 @@ interface CountryFlagProps {
 export const CountryFlag = ({ code, size = 28, className = '', title }: CountryFlagProps) => {
   const [errored, setErrored] = useState(false);
   const c = (code || '').trim().toLowerCase();
-  const valid = /^[a-z]{2}$/.test(c);
+  // ISO 3166-1 alpha-2 (e.g. "ng"), plus flagcdn subdivision codes for the UK
+  // home nations (e.g. "gb-eng", "gb-sct", "gb-wls", "gb-nir").
+  const valid = /^[a-z]{2}(-[a-z]{2,3})?$/.test(c);
 
   if (!valid || errored) {
     return (

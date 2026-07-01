@@ -83,11 +83,40 @@ function prettyStage(stage?: string | null): string | undefined {
   return STAGE_LABELS[stage] || stage.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-// A side carries an ISO2 code only when we can resolve it to an African nation
-// (so the UI can show its flag); non-African opponents render by name.
+// Name → flag code for likely non-African World Cup nations, so opponents also
+// render a real flag. Codes are ISO 3166-1 alpha-2 (flagcdn), except the Home
+// Nations which use flagcdn's UK subdivision codes (gb-eng / gb-sct / gb-wls).
+const OPPONENT_CODES: Record<string, string> = {
+  // UEFA
+  england: 'gb-eng', scotland: 'gb-sct', wales: 'gb-wls', 'northern ireland': 'gb-nir',
+  spain: 'es', france: 'fr', germany: 'de', italy: 'it', portugal: 'pt', netherlands: 'nl',
+  belgium: 'be', switzerland: 'ch', croatia: 'hr', denmark: 'dk', poland: 'pl', serbia: 'rs',
+  austria: 'at', czechia: 'cz', 'czech republic': 'cz', turkey: 'tr', 'türkiye': 'tr', turkiye: 'tr',
+  ukraine: 'ua', norway: 'no', sweden: 'se', hungary: 'hu', romania: 'ro', greece: 'gr',
+  slovenia: 'si', slovakia: 'sk', albania: 'al', russia: 'ru',
+  // CONMEBOL
+  argentina: 'ar', brazil: 'br', uruguay: 'uy', colombia: 'co', chile: 'cl', peru: 'pe',
+  ecuador: 'ec', paraguay: 'py', bolivia: 'bo', venezuela: 've',
+  // CONCACAF
+  usa: 'us', 'united states': 'us', 'united states of america': 'us', mexico: 'mx', canada: 'ca',
+  'costa rica': 'cr', panama: 'pa', honduras: 'hn', jamaica: 'jm', 'el salvador': 'sv',
+  // AFC
+  japan: 'jp', 'south korea': 'kr', 'korea republic': 'kr', 'north korea': 'kp', 'korea dpr': 'kp',
+  australia: 'au', 'saudi arabia': 'sa', qatar: 'qa', iran: 'ir', 'ir iran': 'ir', iraq: 'iq',
+  uae: 'ae', 'united arab emirates': 'ae', uzbekistan: 'uz', china: 'cn', 'china pr': 'cn',
+  jordan: 'jo', oman: 'om', bahrain: 'bh', india: 'in', indonesia: 'id', kuwait: 'kw',
+  // OFC
+  'new zealand': 'nz',
+};
+
+// A side carries a flag code when we can resolve it — African nations first
+// (preserving canonical display names/variants), then the opponent map.
 function sideOf(name?: string | null): { name: string; code?: string } {
   const t = name ? matchAfrican(name) : null;
-  return t ? { name: t.name, code: t.code } : { name: (name || 'TBD').trim() };
+  if (t) return { name: t.name, code: t.code };
+  const raw = (name || '').trim();
+  const code = OPPONENT_CODES[raw.toLowerCase()];
+  return code ? { name: raw, code } : { name: raw || 'TBD' };
 }
 
 /** Read the cached African teams still in (or the seed list if not yet populated). */
