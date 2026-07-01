@@ -96,18 +96,17 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
       }
     }
 
-    // Fallback: TheSportsDB (keyless, but sparse) — full-season fixtures still ahead.
+    // Fallback: TheSportsDB (keyless). Use the UPCOMING-fixtures endpoint —
+    // "still in" = has a scheduled match. (The season endpoint returns stale,
+    // sparse data on the free tier, which is why the banner never updated.)
     if (found.size === 0) {
       const leagueId = (env as Record<string, any>).WC_LEAGUE_ID || WC_LEAGUE_ID;
-      const today = new Date().toISOString().slice(0, 10);
-      const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsseason.php?id=${leagueId}&s=2026`, {
+      const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`, {
         headers: { 'User-Agent': 'BestOfAfrica/1.0' },
       });
       if (res.ok) {
-        const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string; dateEvent?: string }> | null };
-        for (const ev of data.events || []) {
-          if ((ev.dateEvent || '') >= today) { add(ev.strHomeTeam); add(ev.strAwayTeam); }
-        }
+        const data = await res.json() as { events?: Array<{ strHomeTeam?: string; strAwayTeam?: string }> | null };
+        for (const ev of data.events || []) { add(ev.strHomeTeam); add(ev.strAwayTeam); }
       }
     }
 

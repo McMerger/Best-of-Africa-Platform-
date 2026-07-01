@@ -777,17 +777,24 @@ Return ONLY valid JSON matching this schema: {"growth": number, "trend": "up" | 
 // GET /market-intel/sentiment-divergence - Country reality vs perception (for NarrativesPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sentiment-divergence', async (c) => {
+    // Pick ONE representative country per region (the most-covered within each)
+    // rather than the top 5 by volume — which always crowned the same big
+    // economies and left whole regions (East, Central) unrepresented.
     const countries = await c.env.DB.prepare(`
-        SELECT c.code, c.name,
-                        c.diplomacy_score,
-                        c.image_strength_score,
-                        COUNT(a.id) as article_count,
-                        AVG(a.engagement_score) as avg_engagement
-        FROM countries c
-        LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
-        GROUP BY c.code
-        ORDER BY article_count DESC
-        LIMIT 5
+        SELECT code, name, diplomacy_score, image_strength_score, article_count, avg_engagement
+        FROM (
+            SELECT code, name, region, diplomacy_score, image_strength_score, article_count, avg_engagement,
+                   ROW_NUMBER() OVER (PARTITION BY region ORDER BY article_count DESC) AS rn
+            FROM (
+                SELECT c.code, c.name, c.region, c.diplomacy_score, c.image_strength_score,
+                       COUNT(a.id) AS article_count, AVG(a.engagement_score) AS avg_engagement
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                GROUP BY c.code
+            )
+        )
+        WHERE rn = 1 AND article_count > 0
+        ORDER BY region
                         `).all();
 
     const divergence = await Promise.all((countries.results || []).map(async (c: any) => {
