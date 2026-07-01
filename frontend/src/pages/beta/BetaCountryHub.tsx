@@ -14,6 +14,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
@@ -159,6 +160,9 @@ export const BetaCountryHub = () => {
   const articles: ArticleListItem[] = (articlesQuery.data?.data ?? []) as ArticleListItem[];
 
   const isLoading = countryQuery.isLoading;
+
+  // Show the country name in the breadcrumb instead of the raw code.
+  useSetBreadcrumb(country?.name ?? null);
 
   if (!isLoading && !country && countryQuery.isFetched) {
     return (

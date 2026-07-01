@@ -70,6 +70,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
 import { LensProvider } from './context/LensContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { BreadcrumbProvider } from './context/BreadcrumbContext';
 import { AuthProvider } from './context/AuthContext';
 import { MemberProvider } from './context/MemberContext';
 import { AudioProvider } from './context/AudioContext';
@@ -155,11 +156,13 @@ function App() {
                 <MissionProvider>
                   <AudioProvider>
                     <Router>
+                      <BreadcrumbProvider>
                       <ErrorBoundary>
                         <Suspense fallback={<PageLoader />}>
                           <AnimatedRoutes />
                         </Suspense>
                       </ErrorBoundary>
+                      </BreadcrumbProvider>
                       <BetaGlobalPlayer />
                       <BetaChatWidget />
                       <CustomCursor />

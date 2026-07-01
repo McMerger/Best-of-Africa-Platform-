@@ -13,6 +13,7 @@ import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { stripMarkdown } from '@/lib/utils';
+import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import type { Article, ArticleListItem, Country } from '../../types';
 
 interface ArticleResponse {
@@ -208,6 +209,9 @@ export const BetaArticle = () => {
       api.trackSponsorImpression(a.id).catch(() => { /* non-critical */ });
     }
   }, [data]);
+
+  // Show the real headline in the breadcrumb instead of the de-slugified URL.
+  useSetBreadcrumb(data?.article ? stripMarkdown(data.article.title) : null);
 
   if (isLoading) return <ArticleSkeleton />;
 

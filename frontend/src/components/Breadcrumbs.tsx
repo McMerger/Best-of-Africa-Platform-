@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { HomeIcon } from '@radix-ui/react-icons';
+import { useBreadcrumbOverride } from '@/context/BreadcrumbContext';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -12,11 +13,14 @@ import {
 
 export const Breadcrumbs: React.FC = () => {
     const location = useLocation();
+    const { override } = useBreadcrumbOverride();
     const pathnames = location.pathname.split('/').filter((x) => x);
 
     if (pathnames.length === 0) return null;
 
-    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ');
+    // Title-case each hyphen-separated word: "request-consultation" → "Request Consultation".
+    const capitalize = (s: string) =>
+        s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
     return (
         <div className="container py-2.5">
@@ -32,13 +36,17 @@ export const Breadcrumbs: React.FC = () => {
                     {pathnames.map((value, index) => {
                         const to = `/${pathnames.slice(0, index + 1).join('/')}`;
                         const isLast = index === pathnames.length - 1;
+                        // A detail page can override its own (last) crumb with a real title.
+                        const label = isLast && override && override.path === location.pathname
+                            ? override.label
+                            : capitalize(value);
 
                         return (
                             <React.Fragment key={to}>
                                 <BreadcrumbSeparator />
                                 <BreadcrumbItem>
                                     {isLast ? (
-                                        <BreadcrumbPage>{capitalize(value)}</BreadcrumbPage>
+                                        <BreadcrumbPage>{label}</BreadcrumbPage>
                                     ) : (
                                         <BreadcrumbLink asChild>
                                             <Link to={to}>{capitalize(value)}</Link>
