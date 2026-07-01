@@ -164,7 +164,10 @@ router.get('/events', validate('query', PaginationSchema.extend({
         query += ' AND LOWER(e.status) = LOWER(?)';
         params.push(status);
     }
-    // No default status filter - show all events
+
+    // Only surface UPCOMING (or currently-running) events — never lead with
+    // summits that already happened, which made the calendar look stale/static.
+    query += " AND date(COALESCE(e.date_end, e.date_start)) >= date('now')";
 
     query += ' ORDER BY e.date_start ASC';
 

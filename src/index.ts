@@ -316,6 +316,12 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await safe('world-cup-refresh', () => refreshWorldCupTeams(env));
     }
 
+    // Roll recurring annual summits forward once a day so the events calendar
+    // is perpetually current instead of a fixed list that ages into the past.
+    if (hours === 4 && minutes === 0) {
+        await safe('roll-events', () => rollRecurringEvents(env));
+    }
+
     // 3. Reporting: Daily at 5am UTC
     if (hours === 5 && minutes === 0) {
         await safe('daily-reporting', () => runDailyReporting(env));
@@ -360,6 +366,20 @@ async function runIngestion(env: Env) {
     // Implemented in workers/ingestion.ts
     const { ingestNews } = await import('./workers/ingestion');
     await ingestNews(env);
+}
+
+// Roll any event whose date has fully passed forward by one year (these are
+// annual, recurring pan-African summits). Also bumps the year embedded in the
+// title (e.g. "GITEX Africa 2026" -> "2027"). SQLite evaluates all SET
+// expressions against the pre-update row, so the title uses the old year.
+async function rollRecurringEvents(env: Env) {
+    await env.DB.prepare(`
+        UPDATE events
+        SET title = REPLACE(title, CAST(strftime('%Y', date_start) AS TEXT), CAST(strftime('%Y', date(date_start, '+1 year')) AS TEXT)),
+            date_end = CASE WHEN date_end IS NOT NULL THEN date(date_end, '+1 year') ELSE NULL END,
+            date_start = date(date_start, '+1 year')
+        WHERE date(COALESCE(date_end, date_start)) < date('now')
+    `).run();
 }
 
 async function runOptimization(env: Env) {
