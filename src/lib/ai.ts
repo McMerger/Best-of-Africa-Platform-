@@ -449,10 +449,18 @@ const COUNTRY_TERMS: Array<[string, string, number]> = [
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// A single passing mention (e.g. "Cairo" cited once in a Phuket travel piece, or
+// "Egypt" in a pan-African aid story) must NOT crown a country. Require the
+// leading country to clear a confidence floor AND to beat the runner-up by a
+// margin — otherwise the story stays continental (null) rather than mis-tagged.
+const COUNTRY_MATCH_MIN_SCORE = 3;   // e.g. one title mention, or 2+ body mentions, or a weight-3 name
+const COUNTRY_MATCH_MIN_MARGIN = 2;  // winner must lead the next country by this much
+
 /**
  * Deterministically identify the dominant African country by scanning the text
  * for country names, major cities and demonyms. Title matches count triple.
- * Returns null when nothing matches (caller falls back to the model).
+ * Returns null when nothing matches, when confidence is too low, or when two
+ * countries are too close to call (caller falls back to the model / continental).
  */
 export function matchCountryByName(title: string, content: string): string | null {
     const titleL = ` ${(title || '').toLowerCase()} `;
@@ -469,9 +477,15 @@ export function matchCountryByName(title: string, content: string): string | nul
 
     let best: string | null = null;
     let bestScore = 0;
+    let secondScore = 0;
     for (const [code, score] of Object.entries(scores)) {
-        if (score > bestScore) { bestScore = score; best = code; }
+        if (score > bestScore) { secondScore = bestScore; bestScore = score; best = code; }
+        else if (score > secondScore) { secondScore = score; }
     }
+
+    // Low-confidence or ambiguous → don't force a country tag.
+    if (bestScore < COUNTRY_MATCH_MIN_SCORE) return null;
+    if (bestScore - secondScore < COUNTRY_MATCH_MIN_MARGIN) return null;
     return best;
 }
 
@@ -494,18 +508,24 @@ export async function identifyCountry(
 Reply with ONLY the 2 - letter ISO country code(e.g., NG for Nigeria, KE for Kenya, ZA for South Africa).
 If no specific country, reply "NONE".`;
 
-    const response = await withCircuitBreaker(
-        env,
-        'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            prompt,
-            max_tokens: 10,
-            temperature: 0.2,
-        })
-    );
+    try {
+        const response = await withCircuitBreaker(
+            env,
+            'ai-text-gen',
+            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+                prompt,
+                max_tokens: 10,
+                temperature: 0.2,
+            })
+        );
 
-    const code = ((response as Record<string, any>).response || '').trim().toUpperCase();
-    return VALID_COUNTRY_CODES.includes(code) ? code : null;
+        const code = ((response as Record<string, any>).response || '').trim().toUpperCase();
+        return VALID_COUNTRY_CODES.includes(code) ? code : null;
+    } catch {
+        // Breaker open / model unavailable — leave the article continental rather
+        // than fail ingestion.
+        return null;
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
