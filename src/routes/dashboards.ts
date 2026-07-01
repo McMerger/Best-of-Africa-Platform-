@@ -172,15 +172,26 @@ router.get('/continental/overview', async (c) => {
             GROUP BY c.region
         `).all(),
 
+        // Region-balanced "active nations": top 2 per region by recent activity,
+        // so the list reflects the whole continent instead of ranking the same
+        // big economies by raw volume.
         c.env.DB.prepare(`
-            SELECT c.code, c.name, c.flag_emoji, c.image_strength_score,
-                   COUNT(a.id) as articles, SUM(a.view_count) as views
-            FROM countries c
-            JOIN articles a ON a.country_code = c.code
-            WHERE a.status = 'published'
-            GROUP BY c.code
-            ORDER BY views DESC
-            LIMIT 10
+            SELECT code, name, flag_emoji, image_strength_score, articles, views
+            FROM (
+                SELECT code, name, flag_emoji, image_strength_score, region, articles, views, recent,
+                       ROW_NUMBER() OVER (PARTITION BY region ORDER BY recent DESC, articles DESC) AS rn
+                FROM (
+                    SELECT c.code, c.name, c.flag_emoji, c.image_strength_score, c.region,
+                           COUNT(a.id) AS articles,
+                           SUM(a.view_count) AS views,
+                           SUM(CASE WHEN a.published_at > datetime('now', '-30 days') THEN 1 ELSE 0 END) AS recent
+                    FROM countries c
+                    JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    GROUP BY c.code
+                )
+            )
+            WHERE rn <= 2
+            ORDER BY recent DESC, articles DESC
         `).all(),
 
         c.env.DB.prepare(`

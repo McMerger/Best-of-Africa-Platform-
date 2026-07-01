@@ -170,7 +170,7 @@ export const BetaContinentalOverview: React.FC = () => {
 
           {/* List: Top Countries */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl flex flex-col">
-            <h3 className="font-serif text-[2rem] text-foreground mb-8">Trending Nations</h3>
+            <h3 className="font-serif text-[2rem] text-foreground mb-8">Active Across the Continent</h3>
             <ul className="space-y-5 flex-1">
               {top_countries.map((c) => (
                 <li key={c.code} className="flex items-center justify-between group">

@@ -182,7 +182,8 @@
       "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sentiment-divergence\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);[print\\(' ',c.get\\('country_name'\\)\\) for c in d.get\\('countries',[]\\)]\")",
       "Bash(python -c \"import sys,json;d=json.load\\(sys.stdin\\);r=\\(d[0] if isinstance\\(d,list\\) else d\\)['results'];[print\\(' ',x['region'],'->',x['name'],x['article_count']\\) for x in r]\")",
-      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sentiment-divergence?_=$\\(date +%s\\)\")"
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/market-intel/sentiment-divergence?_=$\\(date +%s\\)\")",
+      "Bash(curl -s \"https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1/dashboards/continental/overview?_=$\\(date +%s\\)\")"
     ]
   }
 }
