@@ -126,6 +126,12 @@ export const api = {
             home: { name: string; code?: string };
             away: { name: string; code?: string };
         } | null;
+        fixtures: {
+            utcDate: string;
+            stage?: string;
+            home: { name: string; code?: string };
+            away: { name: string; code?: string };
+        }[];
     }>('/world-cup/teams'),
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest?limit=20'),
     getEvents: (params: Record<string, string> = {}) => {

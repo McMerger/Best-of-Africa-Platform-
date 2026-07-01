@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Trophy } from 'lucide-react';
 import { WORLD_CUP, type WorldCupTeam } from '@/config/worldCup';
 import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
@@ -61,7 +62,11 @@ export const WorldCupBanner = () => {
         <div className="absolute -left-10 -top-8 h-24 w-40 rounded-full bg-accent/10 blur-2xl" />
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-8 py-2 flex items-center gap-3 sm:gap-4">
+      <Link
+        to="/world-cup"
+        aria-label="African nations at the FIFA World Cup — view fixtures and standings"
+        className="group relative z-10 flex items-center gap-3 sm:gap-4 max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-8 pr-10 sm:pr-12 py-2 hover:bg-white/[0.04] transition-colors"
+      >
         {/* Title cluster */}
         <div className="shrink-0 flex items-center gap-2.5">
           <span className="grid place-items-center w-7 h-7 rounded-full bg-accent/15 border border-accent/40 text-accent shadow-[0_0_12px_-2px_rgba(201,168,76,0.6)]">
@@ -117,15 +122,16 @@ export const WorldCupBanner = () => {
             ))}
           </div>
         </div>
+      </Link>
 
-        <button
-          onClick={dismiss}
-          aria-label="Dismiss World Cup banner"
-          className="ml-auto shrink-0 rounded-full p-1 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
+      {/* Dismiss sits outside the link so closing the ribbon never navigates. */}
+      <button
+        onClick={dismiss}
+        aria-label="Dismiss World Cup banner"
+        className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 shrink-0 rounded-full p-1 text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 };

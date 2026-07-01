@@ -91,19 +91,22 @@ function sideOf(name?: string | null): { name: string; code?: string } {
 }
 
 /** Read the cached African teams still in (or the seed list if not yet populated). */
-export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null }> {
+export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[] }> {
   try {
     const raw = await env.CACHE.get(KV_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string; nextFixture?: WorldCupFixture | null };
+      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string; nextFixture?: WorldCupFixture | null; fixtures?: WorldCupFixture[] };
       if (Array.isArray(parsed.teams) && parsed.teams.length > 0) {
-        // Drop a fixture that has already kicked off since the last refresh.
-        const nf = parsed.nextFixture && Date.parse(parsed.nextFixture.utcDate) > Date.now() ? parsed.nextFixture : null;
-        return { teams: parsed.teams, updatedAt: parsed.updatedAt, nextFixture: nf };
+        // Drop fixtures that have already kicked off since the last refresh.
+        const upcoming = (parsed.fixtures || []).filter(f => Date.parse(f.utcDate) > Date.now());
+        const nf = parsed.nextFixture && Date.parse(parsed.nextFixture.utcDate) > Date.now()
+          ? parsed.nextFixture
+          : (upcoming[0] || null);
+        return { teams: parsed.teams, updatedAt: parsed.updatedAt, nextFixture: nf, fixtures: upcoming };
       }
     }
   } catch { /* fall through to seed */ }
-  return { teams: SEED_TEAMS, updatedAt: null, nextFixture: null };
+  return { teams: SEED_TEAMS, updatedAt: null, nextFixture: null, fixtures: [] };
 }
 
 /**
@@ -165,9 +168,10 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
     if (found.size === 0) return; // nothing reliable — keep last cache / seed, don't wipe
 
     fixtures.sort((a, b) => Date.parse(a.utcDate) - Date.parse(b.utcDate));
-    const nextFixture = fixtures[0] || null;
+    const upcoming = fixtures.slice(0, 24);
+    const nextFixture = upcoming[0] || null;
 
-    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString(), nextFixture });
+    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString(), nextFixture, fixtures: upcoming });
     await env.CACHE.put(KV_KEY, payload, { expirationTtl: 7 * 24 * 3600 });
   } catch (err) {
     console.error('[worldcup] refresh failed:', err);

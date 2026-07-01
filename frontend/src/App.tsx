@@ -55,6 +55,7 @@ const BetaFeed        = lazyWithRetry(() => import('./pages/beta/BetaFeed').then
 const BetaContinentalOverview = lazyWithRetry(() => import('./pages/beta/BetaContinentalOverview').then(m => ({ default: m.BetaContinentalOverview })));
 const BetaSponsorDashboard = lazyWithRetry(() => import('./pages/beta/BetaSponsorDashboard').then(m => ({ default: m.BetaSponsorDashboard })));
 const BetaNarrativeToolkit = lazyWithRetry(() => import('./pages/beta/BetaNarrativeToolkit').then(m => ({ default: m.BetaNarrativeToolkit })));
+const BetaWorldCup    = lazyWithRetry(() => import('./pages/beta/BetaWorldCup').then(m => ({ default: m.BetaWorldCup })));
 
 // ── Utility / Account pages ───────────────────────────────────────────────────
 const SettingsPage = lazyWithRetry(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -125,6 +126,7 @@ const AnimatedRoutes = () => {
           <Route path="/travel"                 element={<PageTransition><BetaTravel /></PageTransition>} />
           <Route path="/search"                 element={<PageTransition><BetaSearch /></PageTransition>} />
           <Route path="/feed"                   element={<PageTransition><BetaFeed /></PageTransition>} />
+          <Route path="/world-cup"              element={<PageTransition><BetaWorldCup /></PageTransition>} />
 
           {/* ── Utility pages ─────────────────────────────────────────── */}
           <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />

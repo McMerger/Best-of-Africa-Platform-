@@ -8,7 +8,7 @@ import { WORLD_CUP, type WorldCupTeam, type WorldCupFixture } from '../config/wo
  * live sports feed). Falls back to the curated list in config/worldCup.ts if
  * the request fails, so the UI never breaks.
  */
-export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null } {
+export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[] } {
   const { data } = useQuery({
     queryKey: ['world-cup-teams'],
     queryFn: api.getWorldCupTeams,
@@ -18,7 +18,7 @@ export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string |
 
   const live = data?.teams;
   if (live && live.length > 0) {
-    return { teams: live, updatedAt: data?.updated_at ?? null, nextFixture: data?.next_fixture ?? null };
+    return { teams: live, updatedAt: data?.updated_at ?? null, nextFixture: data?.next_fixture ?? null, fixtures: data?.fixtures ?? [] };
   }
-  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null };
+  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null, fixtures: [] };
 }
