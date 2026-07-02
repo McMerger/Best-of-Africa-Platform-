@@ -8,6 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="manifest" href="/manifest.json" />
+  <!-- Landing hero is the LCP element; without this it can't start downloading
+       until React mounts. Scoped to "/" so deep links don't pay the 124KB. -->
+  <script>if(location.pathname==='/'){var _p=document.createElement('link');_p.rel='preload';_p.as='image';_p.href='/images/v2_hero_kigali.webp';_p.fetchPriority='high';document.head.appendChild(_p);}</script>
   <link rel="apple-touch-icon" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <meta name="apple-mobile-web-app-capable" content="yes" />

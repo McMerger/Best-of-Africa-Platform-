@@ -18,10 +18,10 @@ import type { ArticleListItem, SearchResult } from '../../types';
 /** Editorial fallback images, rotated by card index, for stories with no hero_image_url. */
 const STORY_FALLBACKS = [
   '/images/v2_editorial_1.webp',
-  '/images/fallback_business.png',
+  '/images/fallback_business.webp',
   '/images/v2_editorial_2.webp',
-  '/images/fallback_culture.png',
-  '/images/fallback_tech.png',
+  '/images/fallback_culture.webp',
+  '/images/fallback_tech.webp',
 ];
 
 /** Strip Markdown bold markers (**) and surrounding quote wrapping from a string. */

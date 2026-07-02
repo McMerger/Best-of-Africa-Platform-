@@ -65,9 +65,9 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 const HUB_FALLBACKS = [
   '/images/v2_editorial_1.webp',
   '/images/v2_editorial_2.webp',
-  '/images/fallback_business.png',
-  '/images/fallback_culture.png',
-  '/images/fallback_tech.png',
+  '/images/fallback_business.webp',
+  '/images/fallback_culture.webp',
+  '/images/fallback_tech.webp',
 ];
 const hubFallback = (seed = '') =>
   HUB_FALLBACKS[Math.abs([...seed].reduce((a, c) => a + c.charCodeAt(0), 0)) % HUB_FALLBACKS.length];

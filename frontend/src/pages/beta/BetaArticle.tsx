@@ -330,9 +330,11 @@ export const BetaArticle = () => {
             transition={{ duration: 1.5, ease: "easeOut" }}
             src={article.hero_image_url}
             alt={article.title}
+            fetchPriority="high"
+            decoding="async"
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement;
-              if (!img.dataset.fellback) { img.dataset.fellback = '1'; img.src = '/images/fallback_business.png'; }
+              if (!img.dataset.fellback) { img.dataset.fellback = '1'; img.src = '/images/fallback_business.webp'; }
             }}
             className="w-full h-full object-cover"
           />
@@ -347,8 +349,10 @@ export const BetaArticle = () => {
             initial={{ scale: 1.05 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            src={`/images/fallback_${categoryLabel?.toLowerCase().includes('tech') ? 'tech' : categoryLabel?.toLowerCase().includes('culture') ? 'culture' : 'business'}.png`}
+            src={`/images/fallback_${categoryLabel?.toLowerCase().includes('tech') ? 'tech' : categoryLabel?.toLowerCase().includes('culture') ? 'culture' : 'business'}.webp`}
             alt={article.title}
+            fetchPriority="high"
+            decoding="async"
             className="w-full h-full object-cover opacity-60"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-navy/90 via-navy/60 to-transparent mix-blend-multiply" />

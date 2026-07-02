@@ -209,6 +209,8 @@ export const BetaLanding = () => {
           <img
             src="/images/v2_hero_kigali.webp"
             alt="Modern African Metropolis"
+            fetchPriority="high"
+            decoding="async"
             className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />
           {/* Navy wash keeps the band on-brand and the white headline legible */}
@@ -422,7 +424,9 @@ export const BetaLanding = () => {
           >
             {[...platformPreviews, ...platformPreviews].map((item, idx) => (
               <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_24px_60px_-20px_rgba(15,31,61,0.5)] flex-shrink-0 group">
-                <img src={item.src} loading={idx < 5 ? 'eager' : 'lazy'} decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1200ms]" alt={item.label} />
+                {/* The panel strip sits below the fold — always lazy, or it doubles
+                    the landing page's image payload and tanks mobile LCP. */}
+                <img src={item.src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1200ms]" alt={item.label} />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
                 <div className="absolute top-6 left-6">
                   <div className="w-9 h-9 rounded-full bg-navy/40 backdrop-blur-md border border-accent/40 flex items-center justify-center text-accent"><Lock size={14}/></div>
