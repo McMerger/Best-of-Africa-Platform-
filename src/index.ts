@@ -305,6 +305,14 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // 1. Ingestion: every minute
     await safe('ingestion', () => runIngestion(env));
 
+    // Backfill hero images for the ~8k articles published while image
+    // generation was over quota. Small batch per tick (newest first); the
+    // function self-terminates when the backlog is gone.
+    await safe('backfill-heroes', async () => {
+        const { backfillHeroImages } = await import('./workers/generator');
+        await backfillHeroImages(env, 5);
+    });
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));

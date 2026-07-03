@@ -247,6 +247,45 @@ export async function recoverPendingItems(env: Env, limit = 10): Promise<number>
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Hero-image backfill (Cron — every minute, small batch)
+//
+// A third of the archive was published while Workers AI image generation was
+// over quota, leaving hero_image_url empty (the UI shows category fallbacks).
+// This works newest-first so the most-visible articles get real imagery first,
+// and stops the batch on the first failure (model unavailable / breaker open)
+// so it never burns the budget in a down period. Self-terminates once the
+// backlog is empty.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title
+        FROM articles
+        WHERE status = 'published' AND (hero_image_url IS NULL OR hero_image_url = '')
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const imagePrompt = `African editorial photography: ${a.title}. Photojournalistic, high quality.`;
+            const imageBuffer = await generateArticleImage(env, imagePrompt);
+            if (!imageBuffer) break; // model unavailable — retry next cron tick
+            const imageUrl = await uploadImage(env, `articles/${a.id}/hero.png`, imageBuffer, 'image/png');
+            if (imageUrl) {
+                await env.DB.prepare('UPDATE articles SET hero_image_url = ? WHERE id = ?').bind(imageUrl, a.id).run();
+                done++;
+            }
+        } catch (err) {
+            console.error('[backfill-hero] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-hero] Generated ${done} hero image(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Stale Task Fallback (Cron — every 2 minutes)
 //
 // ZeroClaw is an external that polls //tasks/pending. If it goes
