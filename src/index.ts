@@ -129,7 +129,15 @@ app.get('/health', (c) => {
 app.get('/assets/*', async (c) => {
     const key = decodeURIComponent(c.req.path.replace(/^\/assets\//, ''));
     if (!key) return c.notFound();
-    const obj = await c.env.MEDIA.get(key);
+
+    // ?w=768 → serve the pre-generated mobile variant when it exists (created
+    // at generation time / by the variant backfill cron), else the original.
+    let obj: R2ObjectBody | null = null;
+    if (c.req.query('w') === '768') {
+        const { heroVariantKey } = await import('./lib/media');
+        obj = await c.env.MEDIA.get(heroVariantKey(key));
+    }
+    if (!obj) obj = await c.env.MEDIA.get(key);
     if (!obj) return c.notFound();
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
@@ -339,6 +347,14 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     await safe('backfill-heroes', async () => {
         const { backfillHeroImages } = await import('./workers/generator');
         await backfillHeroImages(env, 5);
+    });
+
+    // Backfill 768w hero variants for articles whose heroes predate variant
+    // generation (pure resize, no AI — CPU-cheap, so a bigger batch is fine).
+    // Self-terminates when done.
+    await safe('backfill-hero-variants', async () => {
+        const { backfillHeroVariants } = await import('./workers/generator');
+        await backfillHeroVariants(env, 12);
     });
 
     // 2. Optimization + stale task recovery: every 2 minutes

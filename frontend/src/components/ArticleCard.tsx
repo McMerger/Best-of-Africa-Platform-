@@ -36,7 +36,11 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
     const title = clean(article.title) || 'Untitled Article';
     const seed = article.slug || title;
     const fbIndex = Math.abs([...seed].reduce((a, c) => a + c.charCodeAt(0), 0)) % CARD_FALLBACKS.length;
-    const imgSrc = article.hero_image_url || CARD_FALLBACKS[fbIndex];
+    // Cards never render wider than ~600px, so request the 768w hero variant
+    // (?w=768 serves the pre-resized copy, or the original if none exists yet).
+    const imgSrc = article.hero_image_url
+        ? (article.hero_image_url.includes('/assets/') ? `${article.hero_image_url}?w=768` : article.hero_image_url)
+        : CARD_FALLBACKS[fbIndex];
 
     return (
         <Link

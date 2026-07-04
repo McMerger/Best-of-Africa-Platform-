@@ -324,20 +324,25 @@ export const BetaArticle = () => {
       {/* Hero */}
       {article.hero_image_url ? (
         <div className="w-full h-[300px] md:h-[400px] relative mt-4 overflow-hidden">
-          <motion.img
-            initial={{ scale: 1.05 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
-            src={article.hero_image_url}
-            alt={article.title}
-            fetchPriority="high"
-            decoding="async"
-            onError={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              if (!img.dataset.fellback) { img.dataset.fellback = '1'; img.src = '/images/fallback_business.webp'; }
-            }}
-            className="w-full h-full object-cover"
-          />
+          {/* ?w=768 serves the pre-resized mobile variant (or the original if
+              none exists yet) — same breakpoint as the prerendered fold. */}
+          <picture>
+            <source media="(max-width: 768px)" srcSet={`${article.hero_image_url}?w=768`} />
+            <motion.img
+              initial={{ scale: 1.05 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              src={article.hero_image_url}
+              alt={article.title}
+              fetchPriority="high"
+              decoding="async"
+              onError={(e) => {
+                const img = e.currentTarget as HTMLImageElement;
+                if (!img.dataset.fellback) { img.dataset.fellback = '1'; img.src = '/images/fallback_business.webp'; }
+              }}
+              className="w-full h-full object-cover"
+            />
+          </picture>
           <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
           <div className="absolute bottom-6 left-6 md:left-12 z-10">
             <CountryFlag code={article.country_code} title={countryLabel} size={56} className="!rounded-lg shadow-lg" />

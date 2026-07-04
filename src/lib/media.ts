@@ -48,3 +48,66 @@ export async function uploadImage(
 export function getPublicUrl(key: string): string {
     return `/assets/${key}`;
 }
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Hero variants
+//
+// Generated heroes are 1024² (~170KB JPEG) but phones display them at ~390px —
+// most of the LCP budget on article pages. A 768w JPEG variant (~60KB) is
+// stored next to the original as `hero_768.jpg`; the /assets route serves it
+// for `?w=768` requests and falls back to the original if it doesn't exist.
+// ───────────────────────────────────────────────────────────────────────────────
+
+export const HERO_VARIANT_WIDTH = 768;
+
+/** Resize image bytes to a 768w JPEG using photon (wasm). Returns null on any failure. */
+export async function makeHeroVariant(data: ArrayBuffer | Uint8Array): Promise<Uint8Array | null> {
+    try {
+        const { PhotonImage, resize, SamplingFilter } = await import('@cf-wasm/photon');
+        const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+        const img = PhotonImage.new_from_byteslice(bytes);
+        try {
+            const w = img.get_width();
+            const h = img.get_height();
+            if (w <= HERO_VARIANT_WIDTH) return null; // already small enough
+            const nh = Math.round((h * HERO_VARIANT_WIDTH) / w);
+            const resized = resize(img, HERO_VARIANT_WIDTH, nh, SamplingFilter.Lanczos3);
+            try {
+                // q62: photon's encoder is conservative — q75 was only ~14%
+                // smaller than the 1024² original. These are soft AI images
+                // shown under a gradient scrim; q62 reads identically.
+                return resized.get_bytes_jpeg(62);
+            } finally {
+                resized.free();
+            }
+        } finally {
+            img.free();
+        }
+    } catch (err) {
+        console.error('[media] hero variant resize failed:', err);
+        return null;
+    }
+}
+
+/** Variant R2 key for a hero key, e.g. articles/{id}/hero.png → articles/{id}/hero_768.jpg */
+export function heroVariantKey(key: string): string {
+    return key.replace(/\/[^/]+$/, '/hero_768.jpg');
+}
+
+/**
+ * Upload an article hero plus its 768w variant. Returns the public URL of the
+ * original (the variant is addressed via ?w=768 on the same URL).
+ */
+export async function uploadArticleHero(
+    env: Env,
+    articleId: string,
+    data: ArrayBuffer | Uint8Array
+): Promise<string> {
+    const key = `articles/${articleId}/hero.png`;
+    const url = await uploadImage(env, key, data, 'image/png');
+    const variant = await makeHeroVariant(data);
+    if (variant) {
+        await uploadImage(env, heroVariantKey(key), variant, 'image/jpeg');
+    }
+    return url;
+}

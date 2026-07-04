@@ -5,7 +5,7 @@
 
 import type { Env, ContentGenerationMessage } from '../types';
 import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
-import { uploadImage } from '../lib/media';
+import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
 import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
 import { onArticlePublished } from '../lib/alerts';
@@ -170,10 +170,9 @@ export async function generateArticleFromQueue(
             const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (imageBuffer) {
-                const imageKey = `articles/${articleId}/hero.png`;
-                const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
+                const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);
                 if (imageUrl) {
-                    await env.DB.prepare('UPDATE articles SET hero_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();
+                    await env.DB.prepare('UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?').bind(imageUrl, articleId).run();
                 }
             }
         } catch (err) { console.error('Image gen failed:', err); }
@@ -271,9 +270,9 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
             const imagePrompt = `African editorial photography: ${a.title}. Photojournalistic, high quality.`;
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (!imageBuffer) break; // model unavailable — retry next cron tick
-            const imageUrl = await uploadImage(env, `articles/${a.id}/hero.png`, imageBuffer, 'image/png');
+            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer);
             if (imageUrl) {
-                await env.DB.prepare('UPDATE articles SET hero_image_url = ? WHERE id = ?').bind(imageUrl, a.id).run();
+                await env.DB.prepare('UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?').bind(imageUrl, a.id).run();
                 done++;
             }
         } catch (err) {
@@ -282,6 +281,48 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
         }
     }
     if (done) console.log(`[backfill-hero] Generated ${done} hero image(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Hero-variant backfill (Cron — every minute, small batch)
+//
+// Articles whose heroes predate variant generation ship a 1024² (~170KB) image
+// to phones. This walks hero_variant=0 articles newest-first, resizes the
+// stored original to the 768w JPEG variant, and marks the row. No AI involved;
+// self-terminates when every hero has a variant.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillHeroVariants(env: Env, batch = 4): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, hero_image_url
+        FROM articles
+        WHERE status = 'published'
+          AND hero_image_url LIKE '%/assets/articles/%'
+          AND (hero_variant IS NULL OR hero_variant = 0)
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; hero_image_url: string }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const key = decodeURIComponent(a.hero_image_url.replace(/^.*\/assets\//, ''));
+            const obj = await env.MEDIA.get(key);
+            if (obj) {
+                const bytes = new Uint8Array(await obj.arrayBuffer());
+                const variant = await makeHeroVariant(bytes);
+                if (variant) await uploadImage(env, heroVariantKey(key), variant, 'image/jpeg');
+                // Mark done even when no variant was produced (source ≤768w or
+                // undecodable) so the cron never loops on the same rows.
+            }
+            await env.DB.prepare('UPDATE articles SET hero_variant = 1 WHERE id = ?').bind(a.id).run();
+            done++;
+        } catch (err) {
+            console.error('[backfill-variant] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-variant] Processed ${done} hero variant(s).`);
     return done;
 }
 
@@ -394,11 +435,10 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                 const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
                 const imageBuffer = await generateArticleImage(env, imagePrompt);
                 if (imageBuffer) {
-                    const imageKey = `articles/${articleId}/hero.png`;
-                    const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
+                    const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);
                     if (imageUrl) {
                         await env.DB.prepare(
-                            'UPDATE articles SET hero_image_url = ? WHERE id = ?'
+                            'UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?'
                         ).bind(imageUrl, articleId).run();
                     }
                 } else {

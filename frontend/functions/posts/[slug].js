@@ -47,7 +47,7 @@ function fallbackHero(sectorName) {
 // Static article fold, styled to mirror BetaArticle's header (hero band with
 // navy gradient, gold kicker, serif headline, italic standfirst). Inline
 // styles + one tiny <style> block only — the app CSS hasn't loaded yet.
-function buildFold({ heroUrl, kicker, title, summary }) {
+function buildFold({ heroUrl, mobileHeroUrl, kicker, title, summary }) {
   const summaryHtml = summary
     ? `<p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:1.25rem;line-height:1.4;color:rgba(15,31,61,.7);border-left:2px solid #C9A84C;padding:.5rem 0 .5rem 1.25rem;margin:0 0 2rem;">${esc(summary)}</p>`
     : '';
@@ -55,7 +55,10 @@ function buildFold({ heroUrl, kicker, title, summary }) {
 <style>#boa-article-hero{height:300px}@media(min-width:768px){#boa-article-hero{height:400px}}</style>
 <div id="boa-article-fold" style="background:#fff;min-height:100vh;">
   <div id="boa-article-hero" style="width:100%;position:relative;overflow:hidden;margin-top:1rem;">
-    <img src="${esc(heroUrl)}" alt="${esc(title)}" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;">
+    <picture style="display:block;width:100%;height:100%;">
+      <source media="(max-width: 768px)" srcset="${esc(mobileHeroUrl)}">
+      <img src="${esc(heroUrl)}" alt="${esc(title)}" fetchpriority="high" style="width:100%;height:100%;object-fit:cover;">
+    </picture>
     <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to top,#0F1F3D,rgba(15,31,61,.3) 40%,transparent);"></div>
   </div>
   <div style="max-width:48rem;margin:0 auto;padding:3rem 1.5rem 0;">
@@ -111,17 +114,23 @@ export async function onRequest(context) {
         // the request at parse time, well before React), and inject the static
         // fold as #root's first child. The landing prerender (#boa-hero) is
         // removed on non-"/" paths by the shell's own inline script.
+        // Mobile gets the pre-resized 768w variant (?w=768 falls back to the
+        // original server-side when no variant exists yet) — breakpoint must
+        // match BetaArticle's <picture>.
         const heroUrl = a.hero_image_url || fallbackHero(data.sector && data.sector.name);
+        const mobileHeroUrl = heroUrl.includes('/assets/') ? `${heroUrl}?w=768` : heroUrl;
         const kicker = [data.sector && data.sector.name, data.country && data.country.name]
           .filter(Boolean).join(' • ');
         html = html.replace(
           '</head>',
-          `  <link rel="preload" as="image" href="${esc(heroUrl)}" fetchpriority="high" />\n</head>`
+          `  <link rel="preload" as="image" href="${esc(mobileHeroUrl)}" media="(max-width: 768px)" fetchpriority="high" />\n` +
+          `  <link rel="preload" as="image" href="${esc(heroUrl)}" media="(min-width: 769px)" fetchpriority="high" />\n</head>`
         );
         html = html.replace(
           '<div id="root">',
           '<div id="root">' + buildFold({
             heroUrl,
+            mobileHeroUrl,
             kicker,
             title: strip(a.title),
             summary: strip(a.summary || a.subtitle || '').slice(0, 300),

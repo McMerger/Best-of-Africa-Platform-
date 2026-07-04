@@ -21,6 +21,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@cf-wasm/photon": "^0.3.6",
         "hono": "^4.6.0",
         "zod": "^4.3.6"
     },
