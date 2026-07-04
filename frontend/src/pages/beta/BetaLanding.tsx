@@ -206,13 +206,21 @@ export const BetaLanding = () => {
           className="absolute inset-0 z-0"
           style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
         >
-          <img
-            src="/images/v2_hero_kigali.webp"
-            alt="Modern African Metropolis"
-            fetchPriority="high"
-            decoding="async"
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
-          />
+          {/* Breakpoints must stay identical to the prerendered hero + preload
+              in index.html (≤768 / ≤1280 CSS px) so the React swap is a cache
+              hit, not a second download. Media queries, not srcset — srcset's
+              DPR factor made the preload and the img disagree on the variant. */}
+          <picture>
+            <source media="(max-width: 768px)" srcSet="/images/v2_hero_kigali_768.webp" />
+            <source media="(max-width: 1280px)" srcSet="/images/v2_hero_kigali_1280.webp" />
+            <img
+              src="/images/v2_hero_kigali.webp"
+              alt="Modern African Metropolis"
+              fetchPriority="high"
+              decoding="async"
+              className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
+            />
+          </picture>
           {/* Navy wash keeps the band on-brand and the white headline legible */}
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
