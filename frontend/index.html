@@ -44,13 +44,28 @@
     <!-- Static above-the-fold hero: paints instantly from HTML (no JS), improving
          FCP/LCP. React's createRoot replaces #root's contents on mount. The inline
          script below removes it on non-landing deep links to avoid a wrong-page flash. -->
-    <div id="boa-hero" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0F1F3D;color:#fff;padding:6rem 1.5rem;box-sizing:border-box;font-family:'Playfair Display',Georgia,serif;">
-      <div style="font-family:Inter,system-ui,sans-serif;color:#C9A84C;font-weight:600;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.5rem;">— Early Access</div>
-      <h1 style="font-size:clamp(4rem,9vw,8rem);line-height:.95;letter-spacing:-.04em;font-weight:900;margin:0 0 2rem;max-width:64rem;">Africa without the filter.</h1>
-      <p style="font-family:Inter,system-ui,sans-serif;font-weight:300;font-size:clamp(1.125rem,2vw,1.5rem);line-height:1.6;max-width:42rem;color:rgba(255,255,255,.8);margin:0;">A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.</p>
+    <div id="boa-hero" style="position:relative;overflow:hidden;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#0F1F3D;color:#fff;padding:6rem 1.5rem;box-sizing:border-box;font-family:'Playfair Display',Georgia,serif;">
+      <!-- Static hero photo: painting the LCP image from HTML means LCP fires as
+           soon as it decodes (~3s on slow mobile) instead of waiting ~4 extra
+           seconds for React to parse+mount. data-src (set by the inline script
+           below, landing only) keeps the preload scanner from fetching it on
+           deep links; the conditional <head> preload has already started the
+           download on "/". React re-renders the same (cached) image on mount. -->
+      <img id="boa-hero-img" alt="" data-src="/images/v2_hero_kigali.webp" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:.9;z-index:0;">
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to top,rgba(15,31,61,.85),rgba(15,31,61,.4) 50%,rgba(15,31,61,.55));z-index:1;"></div>
+      <div style="position:relative;z-index:2;">
+        <div style="font-family:Inter,system-ui,sans-serif;color:#C9A84C;font-weight:600;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:1.5rem;">— Early Access</div>
+        <h1 style="font-size:clamp(4rem,9vw,8rem);line-height:.95;letter-spacing:-.04em;font-weight:900;margin:0 0 2rem;max-width:64rem;">Africa without the filter.</h1>
+        <p style="font-family:Inter,system-ui,sans-serif;font-weight:300;font-size:clamp(1.125rem,2vw,1.5rem);line-height:1.6;max-width:42rem;color:rgba(255,255,255,.8);margin:0;">A digital home for real, thoughtful stories about African lives, cities, and ideas — beyond charity ads and disaster headlines.</p>
+      </div>
     </div>
   </div>
-  <script>if(location.pathname!=='/'){var _h=document.getElementById('boa-hero');if(_h)_h.remove();}</script>
+  <script>
+    (function(){
+      if(location.pathname!=='/'){var _h=document.getElementById('boa-hero');if(_h)_h.remove();return;}
+      var _i=document.getElementById('boa-hero-img');if(_i)_i.src=_i.getAttribute('data-src');
+    })();
+  </script>
   <noscript>You need to enable JavaScript to run this app.</noscript>
   <script>
     if ('serviceWorker' in navigator) {

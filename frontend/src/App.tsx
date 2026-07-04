@@ -2,8 +2,6 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './components/beta/PageTransition';
-import { Toaster } from "@/components/ui/sonner";
-import { CommandMenu } from '@/components/CommandMenu';
 import { Layout } from './components/Layout';
 
 // Resilient lazy import. After a redeploy, an already-open tab still references the
@@ -34,7 +32,12 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
 }
 
 // ── BOA-Story pages ───────────────────────────────────────────────────────────
-const BetaLanding     = lazyWithRetry(() => import('./pages/beta/BetaLanding').then(m => ({ default: m.BetaLanding })));
+// The landing page is the default route and the most-visited entry point: it is
+// imported statically so its code ships in the main bundle. Lazy-loading it put
+// a second network round trip between index.js and the hero render, which held
+// the (already-downloaded, preloaded) hero image unpainted for ~3 extra seconds
+// of mobile LCP.
+import { BetaLanding } from './pages/beta/BetaLanding';
 const BetaMembership  = lazyWithRetry(() => import('./pages/beta/BetaMembership').then(m => ({ default: m.BetaMembership })));
 const BetaIntelligence = lazyWithRetry(() => import('./pages/beta/BetaIntelligence').then(m => ({ default: m.BetaIntelligence })));
 const BetaStories     = lazyWithRetry(() => import('./pages/beta/BetaStories').then(m => ({ default: m.BetaStories })));
@@ -76,9 +79,38 @@ import { MemberProvider } from './context/MemberContext';
 import { AudioProvider } from './context/AudioContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { BetaGlobalPlayer } from './components/beta/BetaGlobalPlayer';
-import { BetaChatWidget } from './components/beta/BetaChatWidget';
-import { CustomCursor } from './components/CustomCursor';
+
+// ── Deferred chrome ─────────────────────────────────────────────────────────
+// None of these are needed for first paint, and together (cmdk, sonner, audio
+// player, chat widget, cursor) they add real parse+mount work to the boot-time
+// long task that delays mobile LCP. They lazy-load and mount after first idle.
+const BetaGlobalPlayer = lazyWithRetry(() => import('./components/beta/BetaGlobalPlayer').then(m => ({ default: m.BetaGlobalPlayer })));
+const BetaChatWidget   = lazyWithRetry(() => import('./components/beta/BetaChatWidget').then(m => ({ default: m.BetaChatWidget })));
+const CustomCursor     = lazyWithRetry(() => import('./components/CustomCursor').then(m => ({ default: m.CustomCursor })));
+const ToasterDeferred  = lazyWithRetry(() => import('@/components/ui/sonner').then(m => ({ default: m.Toaster })));
+const CommandMenuDeferred = lazyWithRetry(() => import('@/components/CommandMenu').then(m => ({ default: m.CommandMenu })));
+
+const DeferredChrome = () => {
+  const [ready, setReady] = React.useState(false);
+  React.useEffect(() => {
+    const start = () => setReady(true);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(start, { timeout: 3000 });
+    } else {
+      setTimeout(start, 1500);
+    }
+  }, []);
+  if (!ready) return null;
+  return (
+    <Suspense fallback={null}>
+      <BetaGlobalPlayer />
+      <BetaChatWidget />
+      <CustomCursor />
+      <ToasterDeferred />
+      <CommandMenuDeferred />
+    </Suspense>
+  );
+};
 
 const queryClient = new QueryClient();
 
@@ -163,11 +195,7 @@ function App() {
                         </Suspense>
                       </ErrorBoundary>
                       </BreadcrumbProvider>
-                      <BetaGlobalPlayer />
-                      <BetaChatWidget />
-                      <CustomCursor />
-                      <Toaster />
-                      <CommandMenu />
+                      <DeferredChrome />
                     </Router>
                   </AudioProvider>
                 </MissionProvider>
