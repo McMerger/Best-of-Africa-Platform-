@@ -214,10 +214,38 @@ router.get('/', async (c) => {
             }
         }
 
+        // Enrich semantic entries with their article rows. They were pushed with
+        // only {id, score} — without this, every semantic hit (which sorts to the
+        // top) reached the UI with no title/slug/summary and rendered as an
+        // empty card, and the RAG prompt below saw "Untitled" for all of them.
+        const semanticIds = merged.filter((m: any) => m.source === 'semantic').map((m: any) => m.id);
+        if (semanticIds.length > 0) {
+            const ph = semanticIds.map(() => '?').join(',');
+            const rows = await c.env.DB.prepare(`
+                SELECT a.id, a.slug, a.title, a.summary,
+                       a.country_code, c.name as country_name,
+                       a.sector_id, s.name as sector_name,
+                       a.hero_image_url, a.published_at
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.id IN (${ph}) AND a.status = 'published'
+            `).bind(...semanticIds).all();
+            const byId = new Map((rows.results || []).map((r: any) => [r.id, r]));
+            for (const m of merged as any[]) {
+                if (m.source === 'semantic') {
+                    const row = byId.get(m.id);
+                    if (row) Object.assign(m, row);
+                }
+            }
+        }
+        // Drop anything that never resolved to a published article (stale vectors).
+        const resolvedResults = merged.filter((m: any) => m.slug && m.title);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // RAG: Generate summary from top results using Workers (CACHED)
         // ═══════════════════════════════════════════════════════════════════════════
-        const topResults = merged.slice(0, 5);
+        const topResults = resolvedResults.slice(0, 5);
         let aiSummary: string | null = null;
 
         if (topResults.length > 0) {
@@ -248,7 +276,7 @@ router.get('/', async (c) => {
         }
 
         // Transform results to match frontend SearchResult type
-        const searchResults = merged.slice(0, limitNum).map((item: any) => ({
+        const searchResults = resolvedResults.slice(0, limitNum).map((item: any) => ({
             article: {
                 id: item.id,
                 slug: item.slug,
