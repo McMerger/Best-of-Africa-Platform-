@@ -150,6 +150,30 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Pan-African diversity pass for headline lists. High-volume countries (NG/ZA
+// publish thousands of articles) otherwise monopolize "latest"/"featured" —
+// after the big backlog drain the feed showed five Nigeria stories in a row.
+// Greedily keeps the original (recency/score) order but caps how many times a
+// single country appears; skipped items backfill the tail if the list runs
+// short. Continental stories (no country) are never capped.
+function diversifyByCountry<T extends { country_code?: string | null }>(rows: T[], limit: number, maxPerCountry = 2): T[] {
+    const picked: T[] = [];
+    const skipped: T[] = [];
+    const counts: Record<string, number> = {};
+    for (const row of rows) {
+        if (picked.length >= limit) break;
+        const cc = row.country_code || '';
+        if (cc && (counts[cc] || 0) >= maxPerCountry) { skipped.push(row); continue; }
+        if (cc) counts[cc] = (counts[cc] || 0) + 1;
+        picked.push(row);
+    }
+    for (const row of skipped) {
+        if (picked.length >= limit) break;
+        picked.push(row);
+    }
+    return picked;
+}
+
 // GET /articles/featured - Get featured/trending articles (CACHED)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true, lens: true })), async (c) => {
@@ -184,8 +208,8 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                 WHERE a.status = 'published' ${lensWhereClause}
                 ORDER BY ((a.engagement_score + 3.0) / pow((julianday('now') - julianday(a.published_at)) + 2, 1.3)) DESC, a.published_at DESC, a.id DESC
                 LIMIT ?
-            `).bind(...lensParams, limitNum).all();
-            return result.results || [];
+            `).bind(...lensParams, limitNum * 4).all();
+            return diversifyByCountry((result.results || []) as Array<{ country_code?: string | null }>, limitNum);
         },
         { ttl: CACHE_TTL.FREQUENT }
     );
@@ -237,8 +261,8 @@ router.get('/latest', validate('query', ArticleQuerySchema.pick({ limit: true })
                 WHERE a.status = 'published'
                 ORDER BY a.published_at DESC
                 LIMIT ?
-            `).bind(limitNum).all();
-            return result.results || [];
+            `).bind(limitNum * 4).all();
+            return diversifyByCountry((result.results || []) as Array<{ country_code?: string | null }>, limitNum);
         },
         { ttl: CACHE_TTL.DYNAMIC }
     );
