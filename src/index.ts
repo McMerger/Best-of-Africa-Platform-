@@ -31,6 +31,15 @@ const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 // Global Middleware
 // ───────────────────────────────────────────────────────────────────────────────
 app.use('*', logger());
+// /assets serves public images embedded by the Pages frontend (a different
+// origin). secureHeaders() sets Cross-Origin-Resource-Policy: same-origin,
+// which makes browsers hard-block those embeds (ERR_BLOCKED_BY_RESPONSE) — so
+// every R2-served hero silently fell back. Registered BEFORE secureHeaders so
+// this post-handler override runs after it and wins.
+app.use('/assets/*', async (c, next) => {
+    await next();
+    c.res.headers.set('Cross-Origin-Resource-Policy', 'cross-origin');
+});
 app.use('*', secureHeaders());
 app.use('*', prettyJSON());
 // Production-safe allowed origins.
@@ -127,7 +136,26 @@ app.get('/assets/*', async (c) => {
     headers.set('etag', obj.httpEtag);
     headers.set('Cache-Control', 'public, max-age=31536000, immutable');
     headers.set('Access-Control-Allow-Origin', '*');
-    return new Response(obj.body, { headers });
+
+    // Correct the content-type from the actual bytes. Workers AI (SDXL) returns
+    // JPEG, but thousands of heroes were stored as "hero.png" / image/png; with
+    // the global nosniff header, browsers refuse to decode the mismatch and
+    // every AI hero silently fell back. Sniffing magic bytes here fixes all
+    // existing objects without re-uploading anything.
+    const body = obj.body;
+    if ((headers.get('content-type') || '').startsWith('image/') && body) {
+        const [probe, rest] = body.tee();
+        const reader = probe.getReader();
+        const { value } = await reader.read();
+        reader.cancel().catch(() => {});
+        if (value && value.length >= 12) {
+            if (value[0] === 0xff && value[1] === 0xd8) headers.set('content-type', 'image/jpeg');
+            else if (value[0] === 0x89 && value[1] === 0x50) headers.set('content-type', 'image/png');
+            else if (value[0] === 0x52 && value[1] === 0x49 && value[8] === 0x57 && value[9] === 0x45) headers.set('content-type', 'image/webp');
+        }
+        return new Response(rest, { headers });
+    }
+    return new Response(body, { headers });
 });
 
 // Public provider status — shows active model without exposing credentials
