@@ -206,7 +206,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                 LEFT JOIN countries c ON a.country_code = c.code
                 LEFT JOIN sectors s ON a.sector_id = s.id
                 WHERE a.status = 'published' ${lensWhereClause}
-                ORDER BY ((a.engagement_score + 3.0) / pow((julianday('now') - julianday(a.published_at)) + 2, 1.3)) DESC, a.published_at DESC, a.id DESC
+                ORDER BY a.curated DESC, ((a.engagement_score + 3.0) / pow((julianday('now') - julianday(a.published_at)) + 2, 1.3)) DESC, a.published_at DESC, a.id DESC
                 LIMIT ?
             `).bind(...lensParams, limitNum * 4).all();
             return diversifyByCountry((result.results || []) as Array<{ country_code?: string | null }>, limitNum);
@@ -421,6 +421,11 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     if (!article) {
         return c.json({ error: 'not_found', message: 'Article not found' }, 404);
     }
+
+    // Two-tier byline: only human-reviewed (curated) stories carry the personal
+    // byline; automated briefing coverage is attributed to the desk.
+    (article as Record<string, unknown>).author_name =
+        (article as Record<string, unknown>).curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
 
     // Increment view count asynchronously
     c.executionCtx.waitUntil(

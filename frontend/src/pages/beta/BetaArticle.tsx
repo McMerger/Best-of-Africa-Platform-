@@ -250,7 +250,9 @@ export const BetaArticle = () => {
   const categoryLabel = article.sector_name
     || tagList.find(t => typeof t === 'string' && t.toLowerCase() !== countryLabel.toLowerCase())
     || '';
-  const authorName = article.author_name || 'Mailles Cortes';
+  // Byline comes from the API: curated stories carry the personal byline,
+  // automated briefing coverage is attributed to the desk.
+  const authorName = article.author_name || 'BOA Briefing Desk';
 
   // ── Paywall: trust the API's server-side decision ─────────────────────────
   // The backend already truncated content for non-members and set paywall:true
@@ -455,10 +457,10 @@ export const BetaArticle = () => {
               {/* Faded teaser so the story visibly continues beneath the prompt */}
               <div className="opacity-30 select-none pointer-events-none blur-[5px]" aria-hidden="true">
                 <p className="text-foreground/80 text-[1.125rem] md:text-[1.25rem] leading-[1.8] mb-6 font-light">
-                  {t('article.teaser1', 'The story goes deeper here, the people, the numbers, and the on-the-ground context that the headlines miss, reported in full for members.')}
+                  {t('article.teaser1', 'The brief goes deeper here — the numbers, the background, and how it connects across the region, available in full for members.')}
                 </p>
                 <p className="text-foreground/70 text-[1.125rem] leading-[1.8] mb-6 font-light">
-                  {t('article.teaser2', 'It continues with the interviews and detail that make this more than a summary, and there is much more still to read below.')}
+                  {t('article.teaser2', 'It continues with the detail and context that make this more than a headline, and there is much more still to read below.')}
                 </p>
                 <p className="text-foreground/60 text-[1.125rem] leading-[1.8] font-light">
                   {t('article.teaser3', 'Become a founding member to keep reading every story in full.')}
@@ -477,7 +479,7 @@ export const BetaArticle = () => {
                     {t('article.keep_reading', 'Keep reading the full story')}
                   </h3>
                   <p className="text-white/70 mb-7 max-w-sm mx-auto leading-relaxed">
-                    {t('article.paywall_desc', 'Back independent African journalism and unlock every story in full, from the people who make it possible.')}
+                    {t('article.paywall_desc', 'Back independent African coverage and unlock every story in full — daily briefs across all 54 countries.')}
                   </p>
                   <ul className="text-left space-y-2.5 mb-7 max-w-xs mx-auto text-[15px] text-white/85">
                     {[t('article.bullet_full', 'Every story & report, in full'), t('article.bullet_bts', 'Behind-the-scenes founder updates'), t('article.bullet_vote', 'Founding members vote on what we cover next')].map(b => (
@@ -550,7 +552,7 @@ export const BetaArticle = () => {
           {/* Post-read nudge for non-members, a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
             <ScrollReveal className="block mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">
-              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', 'Independent journalism')}</span>
+              <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">{t('article.indep_journalism', 'Independent coverage')}</span>
               <p className="font-serif text-white text-2xl md:text-[1.75rem] mb-3">{t('article.enjoyed', 'Enjoyed this story?')}</p>
               <p className="text-white/70 text-[15px] mb-7 max-w-md mx-auto leading-relaxed">
                 {t('article.enjoyed_desc', 'BOA-Story is reader-funded and independent. Founding members keep these stories coming, and help decide what we cover next.')}

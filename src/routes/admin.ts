@@ -265,6 +265,27 @@ router.post('/articles/:id/publish', async (c) => {
 });
 
 /**
+ * POST /admin/articles/:id/curate
+ * Toggle the curated (human-reviewed, personal byline, magazine-front) tier.
+ * Body: { curated: boolean } — defaults to true when omitted.
+ */
+router.post('/articles/:id/curate', async (c) => {
+    const id = c.req.param('id');
+    let curated = 1;
+    try {
+        const body = await c.req.json();
+        if (typeof body?.curated === 'boolean') curated = body.curated ? 1 : 0;
+    } catch { /* no body → curate */ }
+
+    const res = await c.env.DB.prepare(
+        `UPDATE articles SET curated = ?, updated_at = datetime('now') WHERE id = ?`
+    ).bind(curated, id).run();
+
+    if (!res.meta.changes) return c.json({ error: 'not_found' }, 404);
+    return c.json({ success: true, curated: !!curated });
+});
+
+/**
  * POST /admin/articles/:id/reject
  * Reject and archive article, logging the reason as feedback for agents.
  */

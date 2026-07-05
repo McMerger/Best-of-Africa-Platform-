@@ -56,10 +56,13 @@ export interface Article {
     sector_icon?: string;
     author_name?: string;
     paywall?: boolean;
-    // Provenance: the original reporting this AI-assisted brief is based on.
+    // Provenance: the original reporting this brief is based on.
     source_url?: string | null;
     source_title?: string | null;
     source_published_at?: string | null;
+    // Two-tier content model: 1 = human-reviewed magazine story (personal
+    // byline, preferred on the front), 0 = automated briefing coverage.
+    curated?: number;
     meta_title?: string;
     meta_description?: string;
     ai_sentiment_score?: number;
