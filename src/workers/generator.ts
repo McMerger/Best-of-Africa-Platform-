@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION } from '../lib/ai';
 import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
 import { generateAudioNarration } from '../lib/audio';
 import { indexArticle } from '../lib/vectorize';
@@ -168,7 +168,7 @@ export async function generateArticleFromQueue(
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
         try {
-            const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
+            const imagePrompt = buildHeroPrompt(generated.title, sectorId, generated.summary);
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (imageBuffer) {
                 const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);
@@ -264,17 +264,17 @@ export async function recoverPendingItems(env: Env, limit = 10): Promise<number>
 // ───────────────────────────────────────────────────────────────────────────────
 export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
     const rows = await env.DB.prepare(`
-        SELECT id, title
+        SELECT id, title, summary, sector_id
         FROM articles
         WHERE status = 'published' AND (hero_image_url IS NULL OR hero_image_url = '')
         ORDER BY published_at DESC
         LIMIT ?
-    `).bind(batch).all<{ id: string; title: string }>();
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; sector_id: string | null }>();
 
     let done = 0;
     for (const a of rows.results || []) {
         try {
-            const imagePrompt = `African editorial photography: ${a.title}. Photojournalistic, high quality.`;
+            const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (!imageBuffer) break; // model unavailable — retry next cron tick
             const imageUrl = await uploadArticleHero(env, a.id, imageBuffer);
@@ -304,17 +304,17 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
 // ───────────────────────────────────────────────────────────────────────────────
 export async function regenerateHeroImages(env: Env, batch = 5): Promise<number> {
     const rows = await env.DB.prepare(`
-        SELECT id, title
+        SELECT id, title, summary, sector_id
         FROM articles
         WHERE status = 'published' AND (hero_regen IS NULL OR hero_regen = 0)
         ORDER BY curated DESC, view_count DESC, published_at DESC
         LIMIT ?
-    `).bind(batch).all<{ id: string; title: string }>();
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; sector_id: string | null }>();
 
     let done = 0;
     for (const a of rows.results || []) {
         try {
-            const imagePrompt = `African editorial photography: ${a.title}. Photojournalistic, high quality.`;
+            const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (!imageBuffer) break; // model unavailable — retry next cron tick
             const imageUrl = await uploadArticleHero(env, a.id, imageBuffer);
@@ -513,7 +513,7 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
 
             // 4. Image generation (independent — failure does not block article)
             try {
-                const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
+                const imagePrompt = buildHeroPrompt(generated.title, payload.sector_id ?? null, generated.summary);
                 const imageBuffer = await generateArticleImage(env, imagePrompt);
                 if (imageBuffer) {
                     const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);

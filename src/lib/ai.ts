@@ -1257,8 +1257,22 @@ function getDefaultBriefing(): UnifiedBriefing {
 
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Generate Article Image (Stable Diffusion XL)
+// Generate Article Image
 // ───────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compose the hero-image prompt from what the story is actually about. Titles
+ * alone produce beautiful-but-generic images (a banking story got a rural
+ * portrait); the sector and a slice of the summary anchor the subject matter.
+ */
+export function buildHeroPrompt(title: string, sectorId?: string | null, summary?: string | null): string {
+    const sector = (sectorId || '').replace(/[-_]/g, ' ').trim();
+    const scene = (summary || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    return `African editorial photography${sector ? ` for a ${sector} news story` : ''}: ${title}.`
+        + (scene ? ` Scene context: ${scene}.` : '')
+        + ' Photojournalistic, high quality.';
+}
+
 export async function generateArticleImage(
     env: Env,
     prompt: string
