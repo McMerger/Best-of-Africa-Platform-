@@ -227,6 +227,25 @@ body {
     @apply bg-gradient-to-t from-navy/85 via-navy/40 to-navy/55;
   }
 
+  /* ── Editorial reading typography (article body) ─────────────────────────
+     Classic magazine moves: a serif drop cap on the opening paragraph and an
+     ornamented gold rule wherever the writer used a horizontal break. */
+  .article-body > p:first-of-type::first-letter {
+    @apply font-serif text-accent-ink font-bold float-left;
+    font-size: 3.4em;
+    line-height: 0.82;
+    padding-right: 0.12em;
+    padding-top: 0.06em;
+  }
+  .article-body hr {
+    @apply border-0 my-12 h-auto text-center;
+  }
+  .article-body hr::after {
+    content: '◆ ◆ ◆';
+    @apply text-accent text-[10px] tracking-[1.2em] block;
+    margin-left: 0.6em; /* optically recenter (tracking adds trailing space) */
+  }
+
   /* Force High Contrast Prose for Reading */
   .prose p {
     @apply text-foreground font-medium text-base leading-relaxed;

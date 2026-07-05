@@ -150,23 +150,24 @@ export const BetaFeed: React.FC = () => {
                 description="Your curated daily Africa intelligence briefing, the continent's most important stories, every morning."
             />
 
-            {/* Masthead */}
-            <div className="bg-background text-foreground pt-14 md:pt-20 pb-10 md:pb-16 px-4 sm:px-6">
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 text-accent-ink text-xs font-bold uppercase tracking-widest">
-                            <Zap className="w-3.5 h-3.5" />
-                            Daily Briefing
-                        </div>
-                        <div className="flex items-center gap-2 text-foreground/40 text-xs">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {today}
+            {/* Masthead — newspaper treatment: centered nameplate between a
+                thick-thin double rule, with a dateline row inside the rules. */}
+            <div className="bg-background text-foreground pt-14 md:pt-20 pb-10 md:pb-14 px-4 sm:px-6">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h1 className="font-serif text-[2.5rem] sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight mb-5">
+                        The Africa Intelligence Brief
+                    </h1>
+                    <div className="border-t-[3px] border-b border-foreground/80 py-2 mb-1">
+                        <div className="flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/60">
+                            <span className="flex items-center gap-1.5 text-accent-ink"><Zap className="w-3 h-3" /> Daily Briefing</span>
+                            <span className="text-foreground/25">·</span>
+                            <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {today}</span>
+                            <span className="hidden sm:inline text-foreground/25">·</span>
+                            <span className="hidden sm:inline">54 Nations</span>
                         </div>
                     </div>
-                    <h1 className="font-serif text-[2.25rem] sm:text-5xl md:text-6xl font-black leading-tight mb-4">
-                        The Africa<br />Intelligence Brief
-                    </h1>
-                    <p className="text-foreground/60 text-lg max-w-xl">
+                    <div className="border-b border-foreground/20 mb-6" />
+                    <p className="text-foreground/60 text-lg max-w-xl mx-auto">
                         The continent's most important business stories, curated each morning for decision-makers.
                     </p>
                 </div>

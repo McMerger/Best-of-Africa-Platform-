@@ -163,7 +163,9 @@ function renderArticleHtml(md: string): string {
 }
 
 function ArticleMarkdown({ content }: { content: string }) {
-  return <div dangerouslySetInnerHTML={{ __html: renderArticleHtml(content) }} />;
+  // .article-body drives the editorial typography extras (drop cap on the
+  // opening paragraph, ornamented rules) defined in index.css.
+  return <div className="article-body" dangerouslySetInnerHTML={{ __html: renderArticleHtml(content) }} />;
 }
 
 export const BetaArticle = () => {
@@ -449,6 +451,13 @@ export const BetaArticle = () => {
           {/* Article content */}
           <div className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
             <ArticleMarkdown content={activeContent} />
+            {/* End mark — the classic editorial "story ends here" slug. */}
+            {!isPaywalled && (
+              <div aria-hidden="true" className="mt-2 flex items-center gap-3">
+                <span className="inline-block w-2 h-2 rotate-45 bg-accent" />
+                <span className="h-px flex-1 bg-foreground/10" />
+              </div>
+            )}
           </div>
 
           {/* Paywall, premium, value-forward membership prompt */}
