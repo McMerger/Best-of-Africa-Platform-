@@ -10,7 +10,9 @@ import {
     ArchiveIcon,
     MagicWandIcon,
     MagnifyingGlassIcon,
-    ActivityLogIcon
+    ActivityLogIcon,
+    StarIcon,
+    StarFilledIcon
 } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,6 +83,22 @@ export const AdminPage: React.FC = () => {
                 toast.error("Auth Failure", { description: "Invalid security token." });
             }
         }, 800);
+    };
+
+    const handleCurateToggle = async (article: ArticleListItem) => {
+        const next = !article.curated;
+        try {
+            await api.curateArticle(article.id, next);
+            toast.success(next ? "Story curated" : "Curation removed", {
+                description: next
+                    ? "Now a magazine story: personal byline, preferred on the front."
+                    : "Back to briefing coverage with the desk byline.",
+            });
+            // Optimistic local update — no full refetch needed for one flag.
+            setArticles(prev => prev.map(a => a.id === article.id ? { ...a, curated: next ? 1 : 0 } : a));
+        } catch {
+            toast.error("Curation failed", { description: "Check your admin token and try again." });
+        }
     };
 
     const handleRejectClick = (article: ArticleListItem) => {
@@ -191,10 +209,23 @@ export const AdminPage: React.FC = () => {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge className="bg-background/10 text-primary border-primary/20">Live</Badge>
+                                                        {a.curated ? (
+                                                            <Badge className="bg-accent/15 text-accent border-accent/30">Curated</Badge>
+                                                        ) : (
+                                                            <Badge className="bg-background/10 text-primary border-primary/20">Live</Badge>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right pr-6">
                                                         <div className="flex items-center justify-end gap-2">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                title={a.curated ? 'Remove curation (back to desk byline)' : 'Curate: personal byline + front-page preference'}
+                                                                className={`rounded-full transition-colors ${a.curated ? 'text-accent hover:bg-accent/10' : 'text-muted-foreground hover:bg-accent/10 hover:text-accent'}`}
+                                                                onClick={() => handleCurateToggle(a)}
+                                                            >
+                                                                {a.curated ? <StarFilledIcon className="h-4 w-4" /> : <StarIcon className="h-4 w-4" />}
+                                                            </Button>
                                                             <Button variant="ghost" size="icon" className="rounded-full hover:bg-background/10 hover:text-primary" onClick={() => window.open(`/posts/${a.slug}`, '_blank')}>
                                                                 <EyeOpenIcon className="h-4 w-4" />
                                                             </Button>

@@ -436,6 +436,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ reason })
     }),
+    curateArticle: (id: string, curated: boolean) => request<{ success: boolean; curated: boolean }>(`/admin/articles/${id}/curate`, {
+        method: 'POST',
+        body: JSON.stringify({ curated })
+    }),
     updateArticleWithFeedback: (id: string, content: string, comment: string) => request(`/admin/articles/${id}/edit`, {
         method: 'POST',
         body: JSON.stringify({ content, comment })

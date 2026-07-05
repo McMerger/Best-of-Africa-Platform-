@@ -114,6 +114,8 @@ export interface ArticleListItem {
     reading_time_minutes: number;
     published_at: string;
     engagement_score?: number;
+    // 1 = human-reviewed magazine story (personal byline), 0 = briefing coverage.
+    curated?: number;
 }
 
 export interface Dashboard {
