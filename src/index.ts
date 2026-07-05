@@ -142,7 +142,13 @@ app.get('/assets/*', async (c) => {
     const headers = new Headers();
     obj.writeHttpMetadata(headers);
     headers.set('etag', obj.httpEtag);
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    // Article media lives at STABLE URLs but is mutable (hero regeneration,
+    // audio re-narration overwrite in place) — a year of "immutable" caching
+    // would hide every regenerated hero from returning visitors. One day is
+    // plenty; other asset keys stay long-lived.
+    headers.set('Cache-Control', key.startsWith('articles/') || key.startsWith('audio/')
+        ? 'public, max-age=86400'
+        : 'public, max-age=31536000, immutable');
     headers.set('Access-Control-Allow-Origin', '*');
 
     // Correct the content-type from the actual bytes. Workers AI (SDXL) returns
