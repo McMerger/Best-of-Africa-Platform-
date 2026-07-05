@@ -357,6 +357,13 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await backfillHeroVariants(env, 12);
     });
 
+    // Backfill audio narration (summary-length TTS), newest-first — the Listen
+    // buttons promised audio that never existed. Self-terminates when done.
+    await safe('backfill-audio', async () => {
+        const { backfillAudio } = await import('./workers/generator');
+        await backfillAudio(env, 3);
+    });
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));

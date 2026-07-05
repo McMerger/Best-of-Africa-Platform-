@@ -6,6 +6,7 @@
 import type { Env, ContentGenerationMessage } from '../types';
 import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
 import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
+import { generateAudioNarration } from '../lib/audio';
 import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
 import { onArticlePublished } from '../lib/alerts';
@@ -177,6 +178,12 @@ export async function generateArticleFromQueue(
             }
         } catch (err) { console.error('Image gen failed:', err); }
 
+        // Audio narration ships with the article (the UI shows Listen buttons on
+        // every card — audio must exist, not be a member-gated maybe).
+        try {
+            await generateAudioNarration(env, articleId, generated.title, generated.summary || generated.content.slice(0, 1200));
+        } catch (err) { console.error('Audio gen failed:', err); }
+
         try {
             await autoTranslateArticle(env, articleId, {
                 title: generated.title, subtitle: generated.subtitle, summary: generated.summary, content: generated.content, country_code: countryCode ?? null,
@@ -323,6 +330,38 @@ export async function backfillHeroVariants(env: Env, batch = 4): Promise<number>
         }
     }
     if (done) console.log(`[backfill-variant] Processed ${done} hero variant(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Audio-narration backfill (Cron — every minute, small batch)
+//
+// Audio was member-gated and on-demand only, and its stored URLs pointed at the
+// disabled r2.dev subdomain — so despite Listen buttons on every card, zero
+// articles had working audio. Narrates the summary (short, cheap) newest-first;
+// self-terminates when every published article has audio.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillAudio(env: Env, batch = 3): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, content
+        FROM articles
+        WHERE status = 'published' AND (audio_url IS NULL OR audio_url = '')
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; content: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const res = await generateAudioNarration(env, a.id, a.title, a.summary || (a.content || '').slice(0, 1200));
+            if (!res) break; // TTS unavailable — retry next tick rather than loop
+            done++;
+        } catch (err) {
+            console.error('[backfill-audio] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-audio] Narrated ${done} article(s).`);
     return done;
 }
 

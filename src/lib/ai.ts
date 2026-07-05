@@ -13,11 +13,17 @@ import { getProviderToken } from './provider-tokens';
 // Models Configuration
 // ───────────────────────────────────────────────────────────────────────────────
 const MODELS = {
-    TEXT_GENERATION: '@cf/meta/llama-3.1-70b-instruct',
+    TEXT_GENERATION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
     // Lightning is a few-step distilled SDXL — comparable quality at a fraction
     // of the neuron cost vs base SDXL (20 steps), to stretch the daily AI budget.
-    IMAGE_GENERATION: '@cf/bytedance/stable-diffusion-xl-lightning',
+    // FLUX.1 [schnell]: the best image model on Workers AI that is actually
+    // callable through the AI binding (verified: photographic skin/fabric,
+    // coherent crowds). The newer FLUX.2 family (dev/klein) would be closer to
+    // Gemini's "nano banana", but every FLUX.2 model rejects JSON input with
+    // "required properties at '/' are 'multipart'" — a multipart-only schema
+    // env.AI.run() can't express today. Revisit when the binding supports it.
+    IMAGE_GENERATION: '@cf/black-forest-labs/flux-1-schnell',
 };
 
 // Bump this string whenever the article generation prompt changes.
@@ -1258,21 +1264,37 @@ export async function generateArticleImage(
     prompt: string
 ): Promise<ArrayBuffer | null> {
     const negative_prompt = "text, watermark, signature, caption, blurry, cartoon, illustration, low quality, distorted, bad anatomy, deformed, ugly, pixelated, grain, low resolution, superimposed text, logo, branding, writing";
+    // Style suffix applied for every caller — pushes the model toward candid
+    // photojournalism instead of the glossy AI-stock look.
+    const styled = `${prompt} Candid documentary photograph, natural light, realistic skin and fabric detail, editorial photojournalism, no text, no watermark.`;
 
     try {
+        const model = MODELS.IMAGE_GENERATION;
+        const isFlux = model.includes('flux');
         const response = await withCircuitBreaker(
             env,
             'ai-image-gen',
-            () => (env.AI as Record<string, any>).run(MODELS.IMAGE_GENERATION, {
-                prompt,
-                negative_prompt,
-                num_steps: 6, // Lightning sweet spot — sharp at far lower cost than base SDXL's 20
-            })
+            () => (env.AI as Record<string, any>).run(model, isFlux
+                // flux family returns JSON { image: base64 }, no negative_prompt.
+                // (flux-2-dev is NOT usable here: it demands a true multipart
+                // request the AI binding can't express — kept off the roster.)
+                ? (model.includes('schnell') ? { prompt: styled, steps: 6 } : { prompt: styled })
+                : { prompt: styled, negative_prompt, num_steps: 6 }  // sdxl family: binary
+            )
         );
 
-        // Response is the binary image data (PNG) or stream
-        // Workers usually returns a Response object with body stream, or direct arrayBuffer depending on implementation.
-        // For @cf/stabilityai/stable-diffusion-xl-base-1.0 it returns binary.
+        // flux returns { image: <base64> }
+        const b64 = (response as Record<string, any>)?.image;
+        if (typeof b64 === 'string') {
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes.buffer;
+        }
+        // sdxl family returns a binary stream / ArrayBuffer
+        if (response instanceof ReadableStream) {
+            return await new Response(response).arrayBuffer();
+        }
         return response as ArrayBuffer;
     } catch (error) {
         console.error('Image generation failed:', error);

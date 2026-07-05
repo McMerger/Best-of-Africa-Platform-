@@ -73,7 +73,11 @@ export async function generateAudioNarration(
             httpMetadata: { contentType: 'audio/mpeg' },
         });
 
-        const finalAudioUrl = `https://best-of-africa-media.r2.dev/${audioKey}`;
+        // Serve through the worker's /assets route (same as hero images). The
+        // old r2.dev URL pointed at R2's dev subdomain, which is disabled by
+        // default — every audio URL ever saved was a 404.
+        const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
+        const finalAudioUrl = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
 
         // Store reference in DB
         await env.DB.prepare(`
@@ -172,8 +176,9 @@ export async function generateBriefAudio(
                 httpMetadata: { contentType: 'audio/mpeg' },
             });
 
+            const briefBase = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
             return {
-                audioUrl: `/assets/${audioKey}`,
+                audioUrl: briefBase ? `${briefBase}/assets/${audioKey}` : `/assets/${audioKey}`,
                 transcript,
             };
         },
