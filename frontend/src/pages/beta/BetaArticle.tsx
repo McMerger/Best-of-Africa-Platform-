@@ -523,7 +523,7 @@ export const BetaArticle = () => {
                 {t('article.source_label', 'Source')}
               </div>
               <p className="text-[13px] text-foreground/50 leading-relaxed mb-3">
-                {t('article.source_disclosure', 'This story is an AI-assisted brief based on original reporting. Read the source:')}
+                {t('article.source_disclosure', 'This briefing draws on the original reporting below:')}
               </p>
               <a
                 href={article.source_url}
