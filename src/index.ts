@@ -364,6 +364,13 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await backfillAudio(env, 3);
     });
 
+    // Regenerate SDXL-era heroes with FLUX (most-visible articles first).
+    // Self-terminates once the whole archive is flux-era.
+    await safe('regen-heroes', async () => {
+        const { regenerateHeroImages } = await import('./workers/generator');
+        await regenerateHeroImages(env, 5);
+    });
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));
