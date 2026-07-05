@@ -70,12 +70,12 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
             {/* Body */}
             <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent">
+                    <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent-ink">
                         <CountryFlag code={article.country_code} title={article.country_name} size={20} />
                         {article.country_name || 'Africa'}
                     </span>
                     {article.sector_name && (
-                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-foreground/40">
+                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-foreground/70">
                             {article.sector_name}
                         </span>
                     )}
@@ -91,7 +91,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                     </p>
                 )}
 
-                <div className="mt-auto flex items-center justify-between border-t border-foreground/8 pt-3 text-[11px] font-medium text-foreground/45">
+                <div className="mt-auto flex items-center justify-between border-t border-foreground/8 pt-3 text-[11px] font-medium text-foreground/70">
                     <span className="flex items-center gap-2">
                         {article.reading_time_minutes || 5} min read
                         {article.published_at && (
@@ -135,7 +135,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                         >
                             <Bookmark size={15} />
                         </button>
-                        <span className="text-accent transition-transform group-hover:translate-x-1">Read →</span>
+                        <span className="text-accent-ink transition-transform group-hover:translate-x-1">Read →</span>
                     </div>
                 </div>
             </div>

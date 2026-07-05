@@ -52,7 +52,9 @@ export default {
                 },
                 accent: {
                     DEFAULT: 'hsl(var(--accent))',
-                    foreground: 'hsl(var(--accent-foreground))'
+                    foreground: 'hsl(var(--accent-foreground))',
+                    // AA-compliant gold for small text on light surfaces.
+                    ink: 'hsl(var(--accent-ink))'
                 },
                 destructive: {
                     DEFAULT: 'hsl(var(--destructive))',

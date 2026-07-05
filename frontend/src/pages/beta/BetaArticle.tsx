@@ -142,7 +142,7 @@ function renderArticleHtml(md: string): string {
   s = s.replace(/^#\s+(.*)$/gm, '<h2 class="font-serif text-[2.5rem] md:text-[3.5rem] text-foreground mt-16 mb-8 leading-[1.1] tracking-tight">$1</h2>');
   s = s.replace(/^---$/gm, '<hr class="my-10 border-primary/10"/>');
   s = s.replace(/^>\s+(.*)$/gm, '<blockquote class="my-10 border-l-[3px] border-accent pl-8 py-2 text-foreground/75 font-serif italic text-[1.5rem] leading-[1.6]">$1</blockquote>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-accent font-semibold">$1</strong>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="text-accent-ink font-semibold">$1</strong>');
   s = s.replace(/\*(.+?)\*/g, '<em class="italic text-foreground">$1</em>');
   s = s.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" class="text-accent underline hover:text-gold-italic" target="_blank" rel="noopener noreferrer">$1</a>');
   // Use [ \t]* (not \s*) so the blank-line separator between a paragraph and a
@@ -316,7 +316,7 @@ export const BetaArticle = () => {
       <div className="max-w-3xl mx-auto px-6 pt-6">
         <Link
           to="/posts"
-          className="inline-flex items-center gap-1.5 text-sm text-primary/40 hover:text-primary/70 transition-colors group"
+          className="inline-flex items-center gap-1.5 text-sm text-primary/70 hover:text-primary transition-colors group"
         >
           <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
           {t('article.all_stories', 'All Stories')}
@@ -377,7 +377,7 @@ export const BetaArticle = () => {
       >
         <header className="mb-10 md:mb-16">
           {(categoryLabel || countryLabel) && (
-            <span className="text-accent text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
+            <span className="text-accent-ink text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
             </span>
           )}
@@ -520,7 +520,7 @@ export const BetaArticle = () => {
             try { sourceHost = new URL(article.source_url).hostname.replace(/^www\./, ''); } catch { /* keep '' */ }
             return (
             <aside className="mt-12 rounded-2xl border border-foreground/10 bg-card p-6 md:p-7">
-              <div className="flex items-center gap-2 text-accent text-[11px] font-bold uppercase tracking-[0.16em] mb-3">
+              <div className="flex items-center gap-2 text-accent-ink text-[11px] font-bold uppercase tracking-[0.16em] mb-3">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 {t('article.source_label', 'Source')}
               </div>
@@ -596,13 +596,13 @@ export const BetaArticle = () => {
                         )}
                       </div>
                       <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{stripMarkdown(a.title)}</h4>
-                      <p className="text-sm text-primary/50">{a.reading_time_minutes} {t('article.min_read', 'min read')}</p>
+                      <p className="text-sm text-primary/70">{a.reading_time_minutes} {t('article.min_read', 'min read')}</p>
                     </div>
                   </Link>
                 ))
               : (
                   <div className="col-span-1 md:col-span-3 text-center py-12">
-                    <p className="text-primary/40 mb-4">{t('article.archive_note', 'Explore the full archive for more stories from the continent.')}</p>
+                    <p className="text-primary/70 mb-4">{t('article.archive_note', 'Explore the full archive for more stories from the continent.')}</p>
                     <Link
                       to="/posts"
                       className="inline-flex items-center gap-2 text-accent font-semibold text-sm hover:opacity-80 transition-opacity"

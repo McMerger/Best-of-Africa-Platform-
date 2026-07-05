@@ -92,7 +92,7 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => {
     </div>
     <div className="p-6">
       {article.sector_name && (
-        <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-3 block">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-accent-ink mb-3 block">
           {article.sector_name}
         </span>
       )}
@@ -100,9 +100,9 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => {
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{stripMarkdown(article.summary)}</p>
+        <p className="text-[14px] text-foreground/60 mt-3 line-clamp-2 leading-relaxed">{stripMarkdown(article.summary)}</p>
       )}
-      <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} {t('article.min_read', 'min read')}</p>
+      <p className="text-[11px] text-foreground/60 mt-4">{article.reading_time_minutes} {t('article.min_read', 'min read')}</p>
     </div>
   </Link>
   );

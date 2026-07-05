@@ -48,14 +48,14 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
             }`}
         >
             {/* Index marker */}
-            <div className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent' : 'text-primary/20'}`}>
+            <div aria-hidden="true" className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent' : 'text-primary/20'}`}>
                 <span className="text-xs font-mono font-bold">{String(index + 1).padStart(2, '0')}</span>
                 <div className={`mt-2 w-px flex-1 ${isHighlighted ? 'bg-accent/30' : 'bg-background/10'}`} />
             </div>
 
             <div className="flex-1 min-w-0">
                 {(article.country_name || article.sector_name) && (
-                    <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 ${isHighlighted ? 'text-accent' : 'text-primary/40'}`}>
+                    <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                         {article.country_name && (
                             <span className="flex items-center gap-1.5">
                                 <CountryFlag code={article.country_code} title={article.country_name} size={16} /> {article.country_name}
@@ -69,12 +69,12 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                     {stripMarkdown(article.title)}
                 </h3>
                 {article.summary && (
-                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/60'}`}>
+                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/70'}`}>
                         {stripMarkdown(article.summary)}
                     </p>
                 )}
                 {article.published_at && (
-                    <div className={`flex items-center gap-1 mt-3 text-xs ${isHighlighted ? 'text-accent/80' : 'text-primary/30'}`}>
+                    <div className={`flex items-center gap-1 mt-3 text-xs ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                         <Calendar className="w-3 h-3" />
                         {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
@@ -154,7 +154,7 @@ export const BetaFeed: React.FC = () => {
             <div className="bg-background text-foreground pt-14 md:pt-20 pb-10 md:pb-16 px-4 sm:px-6">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-accent-ink text-xs font-bold uppercase tracking-widest">
                             <Zap className="w-3.5 h-3.5" />
                             Daily Briefing
                         </div>
@@ -177,7 +177,7 @@ export const BetaFeed: React.FC = () => {
                 {/* Editorial Curated section (members only) */}
                 {isMember && (
                     <section className="mt-10 mb-12">
-                        <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest text-accent">
+                        <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest text-accent-ink">
                             <Sparkles className="w-4 h-4" />
                             Curated for You
                         </div>
@@ -199,7 +199,7 @@ export const BetaFeed: React.FC = () => {
                         ) : (
                             <div className="py-6 px-6 bg-background rounded-xl border border-primary/8 text-center text-primary/50 text-sm">
                                 <Sparkles className="w-8 h-8 text-accent/40 mx-auto mb-3" />
-                                <Link to="/settings" className="text-accent font-semibold hover:underline">
+                                <Link to="/settings" className="text-accent-ink font-semibold hover:underline">
                                     Set your country and sector preferences
                                 </Link>
                                 {' '}to unlock a personalised briefing.
