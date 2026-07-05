@@ -508,6 +508,45 @@ export const BetaArticle = () => {
             </div>
           )}
 
+          {/* Source attribution — every generated brief traces back to original
+              reporting; linking it is basic editorial honesty and lets readers
+              verify. Rendered AFTER the paywall block: its membership card
+              intentionally overflows upward over the faded teaser, and would
+              cover anything placed between the content and the wall. */}
+          {article.source_url && (() => {
+            let sourceHost = '';
+            try { sourceHost = new URL(article.source_url).hostname.replace(/^www\./, ''); } catch { /* keep '' */ }
+            return (
+            <aside className="mt-12 rounded-2xl border border-foreground/10 bg-card p-6 md:p-7">
+              <div className="flex items-center gap-2 text-accent text-[11px] font-bold uppercase tracking-[0.16em] mb-3">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                {t('article.source_label', 'Source')}
+              </div>
+              <p className="text-[13px] text-foreground/50 leading-relaxed mb-3">
+                {t('article.source_disclosure', 'This story is an AI-assisted brief based on original reporting. Read the source:')}
+              </p>
+              <a
+                href={article.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-start gap-2 font-serif text-[1.0625rem] leading-snug text-foreground hover:text-accent transition-colors"
+              >
+                <span className="underline decoration-accent/40 underline-offset-4 group-hover:decoration-accent">
+                  {stripMarkdown(article.source_title) || sourceHost || article.source_url}
+                </span>
+                <svg className="mt-1 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+              </a>
+              <div className="mt-2 text-[12px] text-foreground/40">
+                {sourceHost}
+                {article.source_published_at && (() => {
+                  const d = new Date(article.source_published_at);
+                  return Number.isNaN(d.getTime()) ? '' : ` · ${d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                })()}
+              </div>
+            </aside>
+            );
+          })()}
+
           {/* Post-read nudge for non-members, a calm, confident invitation (not a hard wall) */}
           {!isPaywalled && !isMember && articleContent.length > 0 && (
             <ScrollReveal className="block mt-16 rounded-3xl bg-navy text-white border border-accent/20 p-8 md:p-10 text-center">

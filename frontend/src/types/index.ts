@@ -56,6 +56,10 @@ export interface Article {
     sector_icon?: string;
     author_name?: string;
     paywall?: boolean;
+    // Provenance: the original reporting this AI-assisted brief is based on.
+    source_url?: string | null;
+    source_title?: string | null;
+    source_published_at?: string | null;
     meta_title?: string;
     meta_description?: string;
     ai_sentiment_score?: number;
