@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Globe, MapPin, Activity, ArrowRight, BarChart3, Newspaper } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
@@ -142,13 +142,16 @@ export const BetaContinentalOverview: React.FC = () => {
           {/* Chart: Regional Breakdown */}
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl">
             <h3 className="font-serif text-[2rem] text-foreground mb-8 flex items-center gap-4">
-              <Activity className="text-accent" size={32} /> Regional Coverage Heatmap
+              <Activity className="text-accent" size={32} /> Regional Coverage Share
             </h3>
-            <div className="h-[350px] w-full">
+            {/* Brand gold sits at 2.2:1 on white — below the 3:1 mark threshold —
+                so the value labels at the bar ends are mandatory relief, not
+                decoration (palette validated; labels wear ink, not series color). */}
+            <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={regionData} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(15,31,61,0.08)" />
-                  <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: 'rgba(15,31,61,0.5)' }} />
+                <BarChart data={regionData} layout="vertical" margin={{ top: 0, right: 46, left: 20, bottom: 0 }}>
+                  <CartesianGrid horizontal={false} stroke="rgba(15,31,61,0.06)" />
+                  <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} tickCount={5} />
                   <YAxis
                     type="category"
                     dataKey="region"
@@ -158,11 +161,13 @@ export const BetaContinentalOverview: React.FC = () => {
                     width={140}
                   />
                   <Tooltip
-                    contentStyle={{ borderRadius: '16px', border: '1px solid rgba(15,31,61,0.1)', backgroundColor: '#0F1F3D', color: '#fff' }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                     cursor={{ fill: 'rgba(15,31,61,0.04)' }}
                     formatter={(value: any, _n: any, p: any) => [`${value}% of coverage (${p?.payload?.count ?? 0} stories)`, 'Share']}
                   />
-                  <Bar dataKey="pct" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={24} />
+                  <Bar dataKey="pct" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false}>
+                    <LabelList dataKey="pct" position="right" formatter={(v: any) => `${v}%`} style={{ fill: 'rgba(15,31,61,0.75)', fontSize: 12, fontWeight: 600 }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
