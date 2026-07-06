@@ -115,7 +115,10 @@ export const api = {
         const searchParams = new URLSearchParams(params);
         return request<PaginatedResponse<ArticleListItem>>(`/articles?${searchParams}`);
     },
-    getArticle: (slug: string) => request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(`/articles/${slug}`),
+    getArticle: (slug: string, lang?: string) =>
+        request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(
+            `/articles/${slug}${lang && ['fr', 'ar', 'pt'].includes(lang) ? `?lang=${lang}` : ''}`
+        ),
     getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured?limit=20'),
     getWorldCupTeams: () => request<{
         teams: { name: string; flag: string; code: string }[];

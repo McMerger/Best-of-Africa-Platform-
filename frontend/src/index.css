@@ -231,10 +231,13 @@ body {
      Classic magazine moves: a serif drop cap on the opening paragraph and an
      ornamented gold rule wherever the writer used a horizontal break. */
   .article-body > p:first-of-type::first-letter {
-    @apply font-serif text-accent-ink font-bold float-left;
+    @apply font-serif text-accent-ink font-bold;
+    /* Logical float/padding so the drop cap sits on the correct side for RTL
+       (Arabic) article bodies as well as LTR. */
+    float: inline-start;
     font-size: 3.4em;
     line-height: 0.82;
-    padding-right: 0.12em;
+    padding-inline-end: 0.12em;
     padding-top: 0.06em;
   }
   .article-body hr {

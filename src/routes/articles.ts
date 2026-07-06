@@ -427,6 +427,29 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     (article as Record<string, unknown>).author_name =
         (article as Record<string, unknown>).curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
 
+    // Serve stored translations when the reader's UI language is fr/ar/pt and
+    // one exists (the pipeline auto-translates by country). ONLY the short
+    // fields (title/subtitle/summary) are overlaid: m2m100 translates those
+    // acceptably, but its BODY translations are truncated stumps and
+    // repetition loops — serving them would be worse than English. The body
+    // stays English until long-form translations are regenerated properly.
+    // title_language / content_language tell the client what each block is in
+    // so it can set text direction per block.
+    const reqLang = (c.req.query('lang') || 'en').toLowerCase();
+    const a = article as Record<string, unknown>;
+    a.title_language = 'en';
+    a.content_language = 'en';
+    if (reqLang === 'fr' || reqLang === 'ar' || reqLang === 'pt') {
+        const { getTranslation } = await import('../lib/translate');
+        const tr = await getTranslation(c.env, article.id, reqLang as 'fr' | 'ar' | 'pt');
+        if (tr) {
+            a.title = tr.title;
+            if (tr.subtitle) a.subtitle = tr.subtitle;
+            if (tr.summary) a.summary = tr.summary;
+            a.title_language = reqLang;
+        }
+    }
+
     // Increment view count asynchronously
     c.executionCtx.waitUntil(
         c.env.DB.prepare(

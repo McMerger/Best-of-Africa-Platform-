@@ -63,6 +63,11 @@ export interface Article {
     // Two-tier content model: 1 = human-reviewed magazine story (personal
     // byline, preferred on the front), 0 = automated briefing coverage.
     curated?: number;
+    // Languages of the served blocks ('en' | 'fr' | 'ar' | 'pt'). Titles and
+    // standfirsts are overlaid from stored translations when available; bodies
+    // stay English until long-form translations are regenerated properly.
+    title_language?: string;
+    content_language?: string;
     meta_title?: string;
     meta_description?: string;
     ai_sentiment_score?: number;

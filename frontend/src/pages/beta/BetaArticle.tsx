@@ -172,15 +172,17 @@ export const BetaArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const readingProgress = useReadingProgress('article-root');
   const { isMember } = useMember();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [lens, setLens] = useState<'original' | 'investor' | 'government' | 'explorer'>('original');
   const [isReframing, setIsReframing] = useState(false);
   const [reframedContent, setReframedContent] = useState<Record<string, string>>({});
 
+  // Refetch when the UI language changes — the API overlays a stored fr/ar/pt
+  // translation when one exists for this article.
   const { data, isLoading, isError } = useQuery<ArticleResponse>({
-    queryKey: ['article', slug],
-    queryFn: () => api.getArticle(slug!),
+    queryKey: ['article', slug, language],
+    queryFn: () => api.getArticle(slug!, language),
     enabled: !!slug,
     retry: 1 });
 
@@ -240,6 +242,10 @@ export const BetaArticle = () => {
   }
 
   const { article, country } = data;
+  // Text direction follows each block's OWN language, not the UI language:
+  // an Arabic headline renders RTL while the (still-English) body stays LTR.
+  const headerDir: 'rtl' | 'ltr' = article.title_language === 'ar' ? 'rtl' : 'ltr';
+  const contentDir: 'rtl' | 'ltr' = article.content_language === 'ar' ? 'rtl' : 'ltr';
   // Category = the sector ("Energy & Mining"), NOT tags[0] which is the country name.
   const countryLabel = country?.name || article.country_name || article.country_code;
   // tags may arrive as a JSON string ('["a","b"]'), an array, or be absent —
@@ -377,7 +383,7 @@ export const BetaArticle = () => {
         transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
         className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-24"
       >
-        <header className="mb-10 md:mb-16">
+        <header dir={headerDir} className="mb-10 md:mb-16">
           {(categoryLabel || countryLabel) && (
             <span className="text-accent-ink text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
@@ -449,7 +455,7 @@ export const BetaArticle = () => {
           )}
 
           {/* Article content */}
-          <div className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
+          <div dir={contentDir} className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
             <ArticleMarkdown content={activeContent} />
             {/* End mark — the classic editorial "story ends here" slug. */}
             {!isPaywalled && (
