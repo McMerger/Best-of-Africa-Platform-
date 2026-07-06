@@ -24,10 +24,12 @@ interface BetaInteractiveMapProps {
 export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, onCountryClick }) => {
     const [tooltipContent, setTooltipContent] = useState('');
 
-    // Color scale from primary/10 to accent color
+    // Divergence gap is a MAGNITUDE → sequential ramp, one hue light→dark
+    // (pale champagne → deep gold). No-data countries get a faint navy tint
+    // that reads against the light card without competing with the data.
     const colorScale = scaleLinear<string>()
         .domain([0, 100])
-        .range(["#f0f4f8", "#d4af37"]);
+        .range(["#F3EAD3", "#9A7A22"]);
 
     const getScore = (geoName: string) => {
         // Simple mapping, might need more robust country name matching in production
@@ -44,8 +46,10 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
             <ComposableMap
                 projection="geoAzimuthalEqualArea"
                 projectionConfig={{
-                    rotate: [-20.0, -5.0, 0],
-                    scale: 400
+                    // Centered near [20E, 1N] at a scale that fits the WHOLE
+                    // continent — at scale 400 the southern third was clipped.
+                    rotate: [-20.0, 4.0, 0],
+                    scale: 292
                 }}
             >
                 <ZoomableGroup zoom={1}>
@@ -79,9 +83,9 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
                                         }}
                                         style={{
                                             default: {
-                                                fill: score > 0 ? colorScale(score) : "#e0e0e0",
+                                                fill: score > 0 ? colorScale(score) : "rgba(15,31,61,0.06)",
                                                 stroke: "#ffffff",
-                                                strokeWidth: 0.5,
+                                                strokeWidth: 0.75,
                                                 outline: "none"
                                             },
                                             hover: {
@@ -104,10 +108,16 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
                 </ZoomableGroup>
             </ComposableMap>
             {tooltipContent && (
-                <div className="absolute bottom-4 left-4 bg-background text-foreground px-4 py-2 rounded-lg shadow-lg text-sm font-semibold pointer-events-none">
+                <div className="absolute bottom-4 left-4 bg-navy text-white border border-accent/35 px-4 py-2 rounded-xl shadow-[0_12px_32px_rgba(15,31,61,0.35)] text-sm font-semibold pointer-events-none">
                     {tooltipContent}
                 </div>
             )}
+            {/* Legend — sequential ramp with ink labels (identity never color-alone) */}
+            <div aria-hidden="true" className="absolute bottom-4 right-4 flex items-center gap-2 bg-white/90 backdrop-blur px-3 py-2 rounded-lg border border-primary/10 shadow-sm">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Lower</span>
+                <span className="h-2 w-24 rounded-full" style={{ background: 'linear-gradient(to right, #F3EAD3, #9A7A22)' }} />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Higher divergence</span>
+            </div>
         </div>
     );
 };

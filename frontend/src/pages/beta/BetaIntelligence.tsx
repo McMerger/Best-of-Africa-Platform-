@@ -161,8 +161,9 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-[2rem] text-foreground">Interactive Sentiment Map</h2>
           </div>
           <p className="text-lg text-foreground/50 mb-8 font-light">Real-time sentiment divergence mapped across the continent. Click a highlighted market to view its intelligence hub.</p>
+          {/* No overlay washes here: a former to-primary/80 gradient sat on top
+              of the map and buried the geography in navy murk. */}
           <div className="h-[500px] md:h-[600px] w-full rounded-3xl overflow-hidden border border-foreground/10 shadow-2xl relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/80 pointer-events-none z-10" />
             {isLoadingSent ? (
               <div className="w-full h-full bg-foreground/5 animate-pulse" />
             ) : sentiment?.countries ? (
