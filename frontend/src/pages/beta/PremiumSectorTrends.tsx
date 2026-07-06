@@ -49,7 +49,16 @@ export const PremiumSectorTrends: React.FC = () => {
     );
   }
 
-  const { sector, trends, top_companies, summary } = data;
+  const { sector, trends: rawTrends, top_companies, summary } = data;
+
+  // The API returns years newest-first and can contain duplicate year rows —
+  // charted as-is, time flowed right-to-left with repeated axis labels, and
+  // "latest" KPIs actually read the OLDEST year. Dedupe (first row per year =
+  // most recent) and sort ascending so time reads left → right.
+  const seenYears = new Set<number>();
+  const trends = (rawTrends as Array<{ year: number; market_size: number; investment_volume: number }>)
+    .filter(t => (seenYears.has(t.year) ? false : (seenYears.add(t.year), true)))
+    .sort((a, b) => a.year - b.year);
 
   // Values arrive as raw USD; format compactly (B/M/K).
   const formatCurrency = (value: number | null | undefined) => {
@@ -145,27 +154,30 @@ export const PremiumSectorTrends: React.FC = () => {
                 </h3>
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
+                    {/* Line wears navy (gold at 3px is 2.2:1 on white — fails the
+                        3:1 mark threshold); the gold stays in the decorative
+                        gradient. Hover dot gets a 2px surface ring. */}
                     <AreaChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorSize" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.3}/>
+                          <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.28}/>
                           <stop offset="95%" stopColor="#C9A84C" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis 
+                      <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
+                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} dy={10} />
+                      <YAxis
                         tickFormatter={(val) => formatCurrency(val)}
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }} 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }}
                         dx={-10}
                       />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                         formatter={(value: any) => [formatCurrency(value), 'Market Size']}
                       />
-                      <Area type="monotone" dataKey="market_size" stroke="#C9A84C" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" isAnimationActive={false} />
+                      <Area type="monotone" dataKey="market_size" stroke="#0F1F3D" strokeWidth={2} fillOpacity={1} fill="url(#colorSize)" activeDot={{ r: 5, fill: '#C9A84C', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -179,21 +191,22 @@ export const PremiumSectorTrends: React.FC = () => {
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis 
+                      <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
+                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} dy={10} />
+                      <YAxis
                         tickFormatter={(val) => formatCurrency(val)}
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }} 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }}
                         dx={-10}
                       />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                         formatter={(value: any) => [formatCurrency(value), 'Investment']}
-                        cursor={{ fill: '#f8fafc' }}
+                        cursor={{ fill: 'rgba(15,31,61,0.04)' }}
                       />
-                      <Bar dataKey="investment_volume" fill="#0A2540" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                      {/* Navy passes mark contrast on white (≈14:1) — no label relief needed. */}
+                      <Bar dataKey="investment_volume" fill="#0F1F3D" radius={[4, 4, 0, 0]} barSize={20} isAnimationActive={false} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
