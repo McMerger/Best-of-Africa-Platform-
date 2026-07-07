@@ -4,6 +4,7 @@ import { CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
+import { CountryFlag } from '../../components/CountryFlag';
 import { request } from '../../services/api';
 
 const MIN_DISPLAY_SUBSCRIBERS = 50;
@@ -126,15 +127,19 @@ export const BetaNewsletter = () => {
               <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-blue">Sunday · 5 min read</span>
             </div>
             <ul className="space-y-5">
+              {/* CountryFlag, not emoji — Windows renders flag emoji as bare
+                  letter pairs ("KE KENYA"). Same fix as the rest of the app. */}
               {[
-                { country: '🇰🇪 Kenya', sector: 'Technology', headline: 'The quiet infrastructure bet paying off in Nairobi' },
-                { country: '🇳🇬 Nigeria', sector: 'Finance', headline: 'Inside the fintech quietly banking the unbanked' },
-                { country: '🇷🇼 Rwanda', sector: 'Agriculture', headline: 'How smallholder co-ops are rewriting the export map' },
+                { code: 'KE', country: 'Kenya', sector: 'Technology', headline: 'The quiet infrastructure bet paying off in Nairobi' },
+                { code: 'NG', country: 'Nigeria', sector: 'Finance', headline: 'Inside the fintech quietly banking the unbanked' },
+                { code: 'RW', country: 'Rwanda', sector: 'Agriculture', headline: 'How smallholder co-ops are rewriting the export map' },
               ].map(item => (
                 <li key={item.headline} className="border-b border-border last:border-0 pb-5 last:pb-0">
                   <div className="flex items-center gap-3 mb-1.5">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-blue">{item.country}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent">{item.sector}</span>
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-blue">
+                      <CountryFlag code={item.code} title={item.country} size={16} /> {item.country}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent-ink">{item.sector}</span>
                   </div>
                   <p className="font-serif text-lg text-ink leading-snug">{item.headline}</p>
                 </li>
