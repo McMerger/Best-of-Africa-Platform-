@@ -377,6 +377,14 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await regenerateHeroImages(env, 5);
     });
 
+    // Regenerate legacy m2m100 translations with the large model (bodies were
+    // degenerate stumps and are never served until quality=1). Newest-first,
+    // degeneracy-gated, self-terminating.
+    await safe('backfill-translations', async () => {
+        const { backfillTranslations } = await import('./lib/translate');
+        await backfillTranslations(env, 2);
+    });
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));

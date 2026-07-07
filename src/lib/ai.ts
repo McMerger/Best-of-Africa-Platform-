@@ -12,7 +12,7 @@ import { getProviderToken } from './provider-tokens';
 // ───────────────────────────────────────────────────────────────────────────────
 // Models Configuration
 // ───────────────────────────────────────────────────────────────────────────────
-const MODELS = {
+export const MODELS = {
     TEXT_GENERATION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
     // Lightning is a few-step distilled SDXL — comparable quality at a fraction

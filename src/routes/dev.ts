@@ -69,6 +69,44 @@ router.post('/retag-countries', devAuthGuard, async (c) => {
     });
 });
 
+// Translation-regeneration diagnostic: run one quality=0 row through the
+// pipeline and report exactly what the model returned and which gate fired.
+router.post('/test-translate', devAuthGuard, async (c) => {
+    const { MODELS } = await import('../lib/ai');
+    const { looksDegenerate } = await import('../lib/translate');
+    const row = await c.env.DB.prepare(`
+        SELECT t.id tid, t.language, a.title, a.content
+        FROM article_translations t JOIN articles a ON a.id = t.article_id
+        WHERE t.quality = 0 AND a.status='published'
+        ORDER BY a.published_at DESC LIMIT 1
+    `).first() as Record<string, any> | null;
+    if (!row) return c.json({ ok: false, reason: 'no rows' });
+
+    const langNames: Record<string, string> = { fr: 'French', ar: 'Modern Standard Arabic', pt: 'Portuguese' };
+    const chunk = (row.content || '').split(/\n\n+/).slice(0, 3).join('\n\n').slice(0, 1400);
+    const prompt = `Translate the following news text into ${langNames[row.language] || row.language}. Preserve the markdown formatting exactly (headings, **bold**, lists). Output ONLY the translation, no preamble.\n\n${chunk}`;
+    let raw: unknown = null; let err: string | null = null;
+    try {
+        raw = await (c.env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                { role: 'system', content: `You are a professional news translator. Translate the user's text into ${langNames[row.language] || row.language}. Preserve the markdown formatting exactly. Output ONLY the translation — no preamble, no notes.` },
+                { role: 'user', content: chunk },
+            ],
+            max_tokens: 1400, temperature: 0.2,
+        });
+    } catch (e) { err = String(e); }
+    const out = ((raw as Record<string, any>)?.response || '').trim();
+    return c.json({
+        lang: row.language,
+        srcLen: chunk.length,
+        err,
+        rawKeys: raw ? Object.keys(raw as object) : null,
+        outLen: out.length,
+        outSample: out.slice(0, 300),
+        degenerate: out ? looksDegenerate(chunk, out) : null,
+    });
+});
+
 // Direct image-model smoke test: returns byte count + magic bytes so model
 // swaps can be verified without waiting for the generation pipeline.
 router.post('/test-image', devAuthGuard, async (c) => {

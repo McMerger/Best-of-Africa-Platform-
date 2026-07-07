@@ -135,9 +135,10 @@ export async function getTranslation(
     subtitle: string | null;
     summary: string | null;
     content: string;
+    quality: number;
 } | null> {
     const result = await env.DB.prepare(`
-        SELECT title, subtitle, summary, content
+        SELECT title, subtitle, summary, content, quality
         FROM article_translations
         WHERE article_id = ? AND language = ?
     `).bind(articleId, lang).first();
@@ -150,7 +151,152 @@ export async function getTranslation(
         subtitle: r.subtitle,
         summary: r.summary,
         content: r.content,
+        quality: Number(r.quality ?? 0),
     };
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Long-form translation with the large model + degeneracy gate
+//
+// m2m100 (above) is fine for titles/summaries but collapses on long markdown:
+// its stored bodies are 200-800 char stumps and repetition loops. These
+// helpers translate bodies chunk-by-chunk with the main text model and refuse
+// to accept output that looks degenerate — a failed check means we keep
+// serving English rather than store garbage.
+// ───────────────────────────────────────────────────────────────────────────────
+
+const LANG_NAMES: Record<string, string> = { fr: 'French', ar: 'Modern Standard Arabic', pt: 'Portuguese' };
+
+/** Max recurrence of any 24-char window (sampled every 12 chars). */
+function maxWindowRepeat(text: string): number {
+    const counts = new Map<string, number>();
+    let max = 0;
+    for (let i = 0; i + 24 <= text.length; i += 12) {
+        const k = text.slice(i, i + 24);
+        const n = (counts.get(k) || 0) + 1;
+        counts.set(k, n);
+        if (n > max) max = n;
+    }
+    return max;
+}
+
+/**
+ * True when a translation looks broken: empty, wildly wrong length, or looping.
+ * Repetition is judged RELATIVE to the source — article bodies legitimately
+ * contain repeated markdown (table separator rows from enrichment), and a
+ * faithful translation preserves them; only repetition well beyond the
+ * source's own level indicates a model loop.
+ */
+export function looksDegenerate(source: string, out: string): boolean {
+    const o = (out || '').trim();
+    if (!o) return true;
+    if (o.length < source.length * 0.35 || o.length > source.length * 2.5) return true;
+    const srcRep = maxWindowRepeat(source);
+    const outRep = maxWindowRepeat(o);
+    return outRep >= Math.max(5, srcRep * 2 + 2);
+}
+
+async function llmTranslate(env: Env, text: string, targetLang: SupportedLanguage): Promise<string | null> {
+    const { MODELS } = await import('./ai');
+    try {
+        // Chat format is mandatory here: with a raw completion prompt the model
+        // ignores the instruction and CONTINUES the article in English instead
+        // of translating it (verified: 438-char input → 6k chars of English).
+        const res = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                { role: 'system', content: `You are a professional news translator. Translate the user's text into ${LANG_NAMES[targetLang] || targetLang}. Preserve the markdown formatting exactly (headings, **bold**, lists, tables). Output ONLY the translation — no preamble, no notes.` },
+                { role: 'user', content: text },
+            ],
+            max_tokens: 1400,
+            temperature: 0.2,
+        });
+        const out = ((res as Record<string, any>)?.response || '').trim();
+        return out || null;
+    } catch (e) {
+        console.error('[translate] llm chunk failed:', e);
+        return null;
+    }
+}
+
+/** Split markdown into paragraph-aligned chunks of ~1400 chars. */
+function chunkMarkdown(md: string, max = 1400): string[] {
+    const parts = md.split(/\n\n+/);
+    const chunks: string[] = [];
+    let cur = '';
+    for (const p of parts) {
+        if (cur && cur.length + p.length + 2 > max) { chunks.push(cur); cur = p; }
+        else cur = cur ? `${cur}\n\n${p}` : p;
+    }
+    if (cur) chunks.push(cur);
+    return chunks;
+}
+
+/**
+ * Translate a full article body with the large model. Returns null if the
+ * model is unavailable OR any chunk fails the degeneracy check.
+ */
+export async function translateLongText(
+    env: Env,
+    text: string,
+    targetLang: SupportedLanguage
+): Promise<string | null> {
+    const chunks = chunkMarkdown(text);
+    const out: string[] = [];
+    for (const chunk of chunks) {
+        const tr = await llmTranslate(env, chunk, targetLang);
+        if (tr === null) return null;              // model unavailable — retry later
+        if (looksDegenerate(chunk, tr)) return null; // refuse garbage
+        out.push(tr);
+    }
+    return out.join('\n\n');
+}
+
+/**
+ * Regenerate stored translations (quality=0 → 1) newest-article-first with the
+ * large model; short fields and the body are all redone in one pass. Rows whose
+ * output fails the degeneracy gate are marked quality=-1 (skipped, no loop).
+ * Self-terminates when no quality=0 rows remain.
+ */
+export async function backfillTranslations(env: Env, batch = 2): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT t.id AS tid, t.language, a.title, a.subtitle, a.summary, a.content
+        FROM article_translations t
+        JOIN articles a ON a.id = t.article_id
+        WHERE t.quality = 0 AND a.status = 'published'
+        ORDER BY a.published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ tid: string; language: SupportedLanguage; title: string; subtitle: string | null; summary: string | null; content: string }>();
+
+    let done = 0;
+    for (const r of rows.results || []) {
+        try {
+            const [title, subtitle, summary] = await Promise.all([
+                llmTranslate(env, r.title, r.language),
+                r.subtitle ? llmTranslate(env, r.subtitle, r.language) : Promise.resolve(null),
+                r.summary ? llmTranslate(env, r.summary, r.language) : Promise.resolve(null),
+            ]);
+            if (title === null) break; // model unavailable — retry next tick
+            const content = await translateLongText(env, r.content || '', r.language);
+
+            if (!content || looksDegenerate(r.title, title)) {
+                await env.DB.prepare('UPDATE article_translations SET quality = -1 WHERE id = ?').bind(r.tid).run();
+                console.warn(`[translate] degenerate output for ${r.tid} (${r.language}) — marked -1`);
+                continue;
+            }
+
+            await env.DB.prepare(`
+                UPDATE article_translations
+                SET title = ?, subtitle = ?, summary = ?, content = ?, quality = 1, created_at = datetime('now')
+                WHERE id = ?
+            `).bind(title, subtitle, summary, content, r.tid).run();
+            done++;
+        } catch (e) {
+            console.error('[translate] backfill failed for', r.tid, e);
+            break;
+        }
+    }
+    if (done) console.log(`[translate] Regenerated ${done} translation(s).`);
+    return done;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
