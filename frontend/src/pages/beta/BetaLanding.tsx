@@ -263,46 +263,7 @@ export const BetaLanding = () => {
       {/* TEMPORARY: World Cup feature band (config/worldCup.ts) */}
       <WorldCupFeature />
 
-      {/* 2. KO-FI FUNDING STATUS */}
-      <section className="bg-background/95 py-14 md:py-24 border-b border-foreground/5 relative z-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent opacity-50" />
-        <div className="container mx-auto px-6 max-w-4xl text-center relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="glass-panel p-10 rounded-3xl border border-accent/20 flex flex-col items-center"
-          >
-            <h3 className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-8 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> {t('landing.funding_label', 'Live Funding Progress')}
-            </h3>
-
-            <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
-              <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
-                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {fundPct}% of ${fundGoal.toLocaleString()} goal funded, {fundCoffees} coffees received
-              </p>
-              <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${fundPct}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(201,168,76,0.5)]"
-                >
-                  <div className="absolute inset-0 bg-foreground/20 animate-pulse" />
-                </motion.div>
-              </div>
-            </div>
-            
-            <p className="mt-8 text-[1.125rem] font-light text-foreground/50 max-w-xl leading-relaxed">
-              {t('landing.funding_note', 'BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 3. CONTENT PREVIEW */}
+      {/* 2. CONTENT PREVIEW — the product leads; the ask comes after. */}
       <section className="py-14 md:py-20 lg:py-32 px-6 container mx-auto max-w-7xl">
         <div className="text-center mb-10 md:mb-16">
           <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
@@ -399,14 +360,49 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      {/* 4. TIERS */}
+      {/* 3. FUND THE PLATFORM — single funding moment: live status + tiers.
+          (Was two separate sections, with the money ask ABOVE the stories.) */}
       <section className="py-14 md:py-20 lg:py-32 bg-background border-y border-foreground/10 px-6">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12 md:mb-20">
+          <div className="text-center mb-12 md:mb-16">
             <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
             <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
               {t('landing.fund_note', 'This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.')}
             </p>
+          </div>
+          <div className="max-w-4xl mx-auto mb-12 md:mb-16">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="glass-panel p-10 rounded-3xl border border-accent/20 flex flex-col items-center"
+          >
+            <h3 className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-8 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> {t('landing.funding_label', 'Live Funding Progress')}
+            </h3>
+
+            <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
+              <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
+                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {fundPct}% of ${fundGoal.toLocaleString()} goal funded, {fundCoffees} coffees received
+              </p>
+              <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${fundPct}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(201,168,76,0.5)]"
+                >
+                  <div className="absolute inset-0 bg-foreground/20 animate-pulse" />
+                </motion.div>
+              </div>
+            </div>
+
+            <p className="mt-8 text-[1.125rem] font-light text-foreground/50 max-w-xl leading-relaxed">
+              {t('landing.funding_note', 'BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.')}
+            </p>
+          </motion.div>
           </div>
           <MembershipTiersGrid />
         </div>
