@@ -27,7 +27,7 @@ const AFRICA_KEYWORDS = [
     'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
     'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
     'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
-    'benin', 'burkina faso', 'cape verde', 'cabo verde', "cote d'ivoire", 'ivory coast',
+    'benin', 'burkina faso', 'cape verde', 'cabo verde', "cote d'ivoire", "côte d'ivoire", 'ivory coast',
     'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
     'senegal', 'sierra leone', 'togo',
     'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
@@ -39,7 +39,7 @@ const AFRICA_KEYWORDS = [
     'cape town', 'durban', 'pretoria', 'soweto', 'gauteng', 'limpopo', 'stellenbosch',
     'marrakech', 'marrakesh', 'rabat', 'tangier', 'fez', 'tunis', 'alexandria', 'giza',
     'ibadan', 'kano', 'port harcourt', 'abidjan', 'khartoum', 'douala', 'yaounde',
-    'mombasa', 'kisumu', 'kampala', 'lusaka', 'harare', 'bulawayo', 'maputo', 'gaborone',
+    'mombasa', 'kisumu', 'gqeberha', 'kampala', 'lusaka', 'harare', 'bulawayo', 'maputo', 'gaborone',
     'windhoek', 'kumasi', 'zanzibar', 'arusha', 'dodoma', 'freetown', 'monrovia', 'bamako',
     'maghreb', 'sahel', 'horn of africa', 'east africa', 'west africa', 'southern africa',
     'north africa', 'central africa', 'east african', 'west african',
@@ -49,15 +49,41 @@ const AFRICA_KEYWORDS = [
     'lubumbashi', 'kisangani', 'mwanza', 'oran', 'sfax', 'kumasi', 'mombasa', 'nampula',
 ];
 
+// Stories whose HEADLINE centres on these places are foreign coverage that only
+// brushes Africa (e.g. "India slams Pakistan minister's remark on PM Modi's
+// Seychelles honor" — a Delhi story that mentions Seychelles once). A single
+// incidental African keyword must not admit them.
+const FOREIGN_PRIMARY = [
+    'india', 'indian', 'pakistan', 'pakistani', 'modi', 'new delhi', 'tamil nadu',
+    'maldives', 'sri lanka', 'bangladesh', 'nepal', 'china', 'chinese', 'beijing',
+    'russia', 'russian', 'ukraine', 'united states', 'america', 'washington',
+    'europe', 'european union', 'brazil', 'indonesia', 'philippines',
+];
+
+const kwRegex = (kw: string) => new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
 function isAfricanContent(title: string, content = ''): boolean {
-    const text = `${title} ${content}`.toLowerCase();
     // Word-boundary on the leading edge (so "mali" doesn't match "normalize"),
     // but allow trailing letters so adjectives/demonyms still match
     // ("nigeria"→"nigerian", "morocco"→"moroccan", "benin"→"beninese").
-    return AFRICA_KEYWORDS.some(kw => {
-        const re = new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        return re.test(text);
-    });
+    const titleL = title.toLowerCase();
+    const bodyL = content.toLowerCase();
+
+    const titleHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(titleL)).length;
+    const foreignTitle = FOREIGN_PRIMARY.some(kw => kwRegex(kw).test(titleL));
+
+    // Headline names Africa and isn't centred elsewhere → in.
+    if (titleHits >= 1 && !foreignTitle) return true;
+    // Headline centred elsewhere needs multiple African signals to qualify
+    // (kills the Modi-Seychelles / Tamil-Nadu class of leak).
+    if (titleHits >= 2) return true;
+    // No African headline: allow only clearly African bodies with no foreign
+    // headline focus (two distinct keywords, e.g. two countries or country+city).
+    if (!foreignTitle) {
+        const bodyHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(bodyL)).length;
+        return bodyHits >= 2;
+    }
+    return false;
 }
 
 async function parseRSS(url: string): Promise<RSSItem[]> {
