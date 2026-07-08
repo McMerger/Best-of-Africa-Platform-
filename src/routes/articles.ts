@@ -424,8 +424,8 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
 
     // Two-tier byline: only human-reviewed (curated) stories carry the personal
     // byline; automated briefing coverage is attributed to the desk.
-    (article as Record<string, unknown>).author_name =
-        (article as Record<string, unknown>).curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
+    const a = article as unknown as Record<string, unknown>;
+    a.author_name = a.curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
 
     // Serve stored translations when the reader's UI language is fr/ar/pt and
     // one exists (the pipeline auto-translates by country). ONLY the short
@@ -436,7 +436,6 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     // title_language / content_language tell the client what each block is in
     // so it can set text direction per block.
     const reqLang = (c.req.query('lang') || 'en').toLowerCase();
-    const a = article as Record<string, unknown>;
     a.title_language = 'en';
     a.content_language = 'en';
     if (reqLang === 'fr' || reqLang === 'ar' || reqLang === 'pt') {

@@ -255,7 +255,15 @@ export async function translateLongText(
  * Regenerate stored translations (quality=0 → 1) newest-article-first with the
  * large model; short fields and the body are all redone in one pass. Rows whose
  * output fails the degeneracy gate are marked quality=-1 (skipped, no loop).
- * Self-terminates when no quality=0 rows remain.
+ *
+ * Once no quality=0 rows remain, spare batch capacity moves to historical
+ * coverage: articles in fr/ar/pt-country buckets that predate auto-translation
+ * and have no translation row at all get one created, newest-first, through
+ * the same model and gate. Gate refusals are stored as quality=-1 rows holding
+ * the ENGLISH source fields (the shorts overlay serves any-quality rows, so a
+ * refused row must be a no-op, not a degenerate title) — and the -1 row keeps
+ * the article from being retried every tick. Self-terminates when both the
+ * legacy rows and the coverage gap are exhausted.
  */
 export async function backfillTranslations(env: Env, batch = 2): Promise<number> {
     const rows = await env.DB.prepare(`
@@ -295,7 +303,65 @@ export async function backfillTranslations(env: Env, batch = 2): Promise<number>
             break;
         }
     }
+
+    const spare = batch - (rows.results?.length || 0);
+    if (spare > 0) done += await backfillMissingTranslations(env, spare);
+
     if (done) console.log(`[translate] Regenerated ${done} translation(s).`);
+    return done;
+}
+
+/** Phase 2 of the backfill: create rows for covered-language articles that have none. */
+async function backfillMissingTranslations(env: Env, batch: number): Promise<number> {
+    const inList = (codes: string[]) => codes.map(c => `'${c}'`).join(',');
+    const missing = await env.DB.prepare(`
+        SELECT a.id AS aid, l.lang, a.title, a.subtitle, a.summary, a.content
+        FROM articles a
+        JOIN (SELECT 'fr' AS lang UNION ALL SELECT 'ar' UNION ALL SELECT 'pt') l
+          ON (l.lang = 'fr' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.fr)}))
+          OR (l.lang = 'ar' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.ar)}))
+          OR (l.lang = 'pt' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.pt)}))
+        WHERE a.status = 'published'
+          AND NOT EXISTS (
+              SELECT 1 FROM article_translations t
+              WHERE t.article_id = a.id AND t.language = l.lang
+          )
+        ORDER BY a.published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ aid: string; lang: SupportedLanguage; title: string; subtitle: string | null; summary: string | null; content: string }>();
+
+    let done = 0;
+    for (const r of missing.results || []) {
+        try {
+            const [title, subtitle, summary] = await Promise.all([
+                llmTranslate(env, r.title, r.lang),
+                r.subtitle ? llmTranslate(env, r.subtitle, r.lang) : Promise.resolve(null),
+                r.summary ? llmTranslate(env, r.summary, r.lang) : Promise.resolve(null),
+            ]);
+            if (title === null) break; // model unavailable — retry next tick
+            const content = await translateLongText(env, r.content || '', r.lang);
+            const ok = !!content && !looksDegenerate(r.title, title);
+
+            await env.DB.prepare(`
+                INSERT OR REPLACE INTO article_translations
+                    (id, article_id, language, title, subtitle, summary, content, quality, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+            `).bind(
+                crypto.randomUUID(), r.aid, r.lang,
+                ok ? title : r.title,
+                ok ? subtitle : r.subtitle,
+                ok ? summary : r.summary,
+                ok ? content : (r.content || ''),
+                ok ? 1 : -1,
+            ).run();
+
+            if (ok) done++;
+            else console.warn(`[translate] degenerate output for article ${r.aid} (${r.lang}) — stored as -1`);
+        } catch (e) {
+            console.error('[translate] coverage backfill failed for', r.aid, e);
+            break;
+        }
+    }
     return done;
 }
 
