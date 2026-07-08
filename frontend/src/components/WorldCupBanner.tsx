@@ -43,6 +43,16 @@ export const WorldCupBanner = () => {
     setDismissed(true);
   };
 
+  // Teams already named in the fixture chip add nothing as marquee chips —
+  // late in the tournament that left "Morocco · Morocco" floating beside
+  // "France v Morocco". Skip them, and only duplicate the list when there
+  // are enough chips for the seamless loop to make sense.
+  const marqueeTeams = teams.filter(
+    t => !nextFixture || (t.code !== nextFixture.home.code && t.code !== nextFixture.away.code)
+  );
+  const loop = marqueeTeams.length >= 4;
+  const chips = loop ? [...marqueeTeams, ...marqueeTeams] : marqueeTeams;
+
   const Chip = ({ t }: { t: WorldCupTeam }) => (
     <span className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] border border-white/10 pl-1.5 pr-3 py-1 whitespace-nowrap hover:bg-white/[0.12] hover:border-accent/30 transition-colors">
       <CountryFlag code={t.code} size={20} title={t.name} className="!rounded-[3px] ring-white/20" />
@@ -115,13 +125,15 @@ export const WorldCupBanner = () => {
 
         {/* Flag marquee — duplicated once for a seamless loop, fades at the edges.
             Yields to the fixture chip on small screens when one is present. */}
-        <div className={`wc-marquee-group relative flex-1 min-w-0 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)] ${nextFixture ? 'hidden lg:block' : 'block'}`}>
-          <div className="wc-marquee flex w-max items-center gap-2.5">
-            {[...teams, ...teams].map((t, i) => (
-              <Chip key={`${t.code}-${i}`} t={t} />
-            ))}
+        {chips.length > 0 && (
+          <div className={`wc-marquee-group relative flex-1 min-w-0 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)] ${nextFixture ? 'hidden lg:block' : 'block'}`}>
+            <div className={`${loop ? 'wc-marquee' : ''} flex w-max items-center gap-2.5`}>
+              {chips.map((t, i) => (
+                <Chip key={`${t.code}-${i}`} t={t} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </Link>
 
       {/* Dismiss sits outside the link so closing the ribbon never navigates. */}

@@ -57,6 +57,8 @@ export const BetaContinentalOverview: React.FC = () => {
   const regionData = [...by_region]
     .map(r => ({ region: r.region, count: r.count, pct: Math.round((r.count / regionTotal) * 1000) / 10 }))
     .sort((a, b) => a.pct - b.pct);
+  const heaviest = regionData[regionData.length - 1];
+  const thinnest = regionData[0];
 
   return (
     <div className="bg-background text-foreground min-h-screen pb-24">
@@ -140,14 +142,16 @@ export const BetaContinentalOverview: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">
           {/* Chart: Regional Breakdown */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl flex flex-col">
             <h3 className="font-serif text-[2rem] text-foreground mb-8 flex items-center gap-4">
               <Activity className="text-accent" size={32} /> Regional Coverage Share
             </h3>
             {/* Brand gold sits at 2.2:1 on white — below the 3:1 mark threshold —
                 so the value labels at the bar ends are mandatory relief, not
-                decoration (palette validated; labels wear ink, not series color). */}
-            <div className="h-[260px] w-full">
+                decoration (palette validated; labels wear ink, not series color).
+                flex-1 lets the chart absorb the grid-stretch that used to leave
+                a blank band under the bars when the country list ran taller. */}
+            <div className="flex-1 min-h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={regionData} layout="vertical" margin={{ top: 0, right: 46, left: 20, bottom: 0 }}>
                   <CartesianGrid horizontal={false} stroke="rgba(15,31,61,0.06)" />
@@ -158,7 +162,7 @@ export const BetaContinentalOverview: React.FC = () => {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 13, fill: 'rgba(15,31,61,0.85)', fontWeight: 400 }}
-                    width={140}
+                    width={82}
                   />
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
@@ -171,6 +175,13 @@ export const BetaContinentalOverview: React.FC = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            {heaviest && thinnest && heaviest.region !== thinnest.region && (
+              <p className="mt-8 pt-6 border-t border-foreground/10 font-serif italic text-[1.0625rem] leading-relaxed text-foreground/60">
+                {heaviest.region} Africa carries {heaviest.pct}% of the month's coverage;{' '}
+                {thinnest.region} Africa remains the thinnest at {thinnest.pct}% — the gap our
+                underreported-nations desk is working to close.
+              </p>
+            )}
           </motion.div>
 
           {/* List: Top Countries */}

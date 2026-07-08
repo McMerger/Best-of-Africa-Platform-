@@ -203,13 +203,17 @@ router.get('/continental/overview', async (c) => {
             ORDER BY count DESC
         `).all(),
 
+        // "Editor's Highlights" leads with hand-curated pieces (the two-tier
+        // model's top shelf), then falls back to recency-weighted engagement.
         c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code,
-                   c.name as country_name, c.flag_emoji, a.published_at
+            SELECT a.id, a.slug, a.title, a.summary, a.country_code, a.hero_image_url, a.curated,
+                   c.name as country_name, c.flag_emoji, s.name as sector_name, a.published_at
             FROM articles a
             JOIN countries c ON a.country_code = c.code
+            LEFT JOIN sectors s ON a.sector_id = s.id
             WHERE a.status = 'published'
-            ORDER BY (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
+            ORDER BY a.curated DESC,
+                     (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
             LIMIT 5
         `).all(),
 
