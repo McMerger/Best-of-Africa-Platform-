@@ -330,7 +330,9 @@ export const api = {
     }),
     verifyOtp: (email: string, code: string) => request<{ token: string; user: any; isNewUser: boolean }>('/members/verify-otp', {
         method: 'POST',
-        body: JSON.stringify({ email, code })
+        // The endpoint reads `otp`, not `code` — the wrong field name made every
+        // login through this helper 400 with "Email and OTP required".
+        body: JSON.stringify({ email, otp: code })
     }),
 
     // Analytics

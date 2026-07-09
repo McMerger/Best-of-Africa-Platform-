@@ -92,10 +92,17 @@ router.post('/kofi-webhook', async (c) => {
             ? new Date(Date.now() + 32 * 86400_000).toISOString()
             : new Date(Date.now() + 365 * 86400_000).toISOString();
 
+        // clients.api_key_hash is NOT NULL (the table predates members). Members
+        // authenticate via OTP + JWT, never by API key, so store a random hash
+        // that can never match a presented key. Without this the INSERT throws
+        // and every first-time Ko-fi payment fails to create the membership.
+        const apiKeyHash = [...crypto.getRandomValues(new Uint8Array(32))]
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+
         await c.env.DB.prepare(`
-            INSERT INTO clients (id, name, email, type, tier, rate_limit_per_hour, is_active, expires_at, created_at)
-            VALUES (?, ?, ?, 'member', ?, 500, 1, ?, ?)
-        `).bind(clientId, name, email, tier, expiresAt, new Date().toISOString()).run();
+            INSERT INTO clients (id, name, email, type, tier, api_key_hash, rate_limit_per_hour, is_active, expires_at, created_at)
+            VALUES (?, ?, ?, 'member', ?, ?, 500, 1, ?, ?)
+        `).bind(clientId, name, email, tier, apiKeyHash, expiresAt, new Date().toISOString()).run();
     }
 
     // Live funding progress: every public contribution increments the running
@@ -238,16 +245,23 @@ router.post('/verify-email', async (c) => {
     </html>
     `;
 
-    c.executionCtx.waitUntil(
-        import('../lib/email').then(({ sendEmail }) => {
-            return sendEmail(c.env, {
-                to: email,
-                toName: client.name,
-                subject: `${otp} is your verification code`,
-                html: htmlEmail,
-            }).catch(err => console.error('[OTP Email Error]', err));
-        })
-    );
+    // Await the send and report failure honestly: telling someone to check an
+    // inbox that will never receive the code is a dead-end, not a login flow.
+    const { sendEmail } = await import('../lib/email');
+    const sent = await sendEmail(c.env, {
+        to: email,
+        toName: client.name,
+        subject: `${otp} is your verification code`,
+        html: htmlEmail,
+    });
+
+    if (!sent) {
+        console.error('[OTP Email] delivery failed for', email);
+        return c.json({
+            ok: false,
+            error: 'We could not send your access code just now. Please try again in a few minutes.',
+        }, 502);
+    }
 
     return c.json({ ok: true, status: 'pending_otp' });
 });

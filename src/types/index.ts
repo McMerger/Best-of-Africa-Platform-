@@ -37,6 +37,22 @@ export interface Env {
     NEWS_API_KEY: string;
     ADMIN_API_KEY: string;
 
+    // Transactional email (see src/lib/email.ts for provider order).
+    // EMAIL is the Cloudflare Email Sending binding (wrangler.toml send_email);
+    // it only delivers once a domain is onboarded to the account.
+    EMAIL?: {
+        send: (message: {
+            to: string;
+            from: { email: string; name?: string };
+            subject: string;
+            html: string;
+            text?: string;
+        }) => Promise<unknown>;
+    };
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;
+    EMAIL_FROM_NAME?: string;
+
     // Optional Provider keys (set via `wrangler secret put`)
     // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)
     OPENAI_API_KEY?: string;
