@@ -84,8 +84,11 @@ export const BetaGallery = () => {
           <h1 className="font-serif text-ink text-[40px] md:text-[56px] leading-tight mb-4">
             Gallery
           </h1>
+          {/* No authenticity claims here: these are illustrative renders, and
+              "real images" over generated art is exactly the kind of false
+              promise this project positions itself against. */}
           <p className="text-xl text-ink-blue max-w-2xl">
-            The places, people, and moments that make up the story we're trying to tell. Real images, real Africa.
+            The places, people, and moments that make up the story we're trying to tell — a visual mood board for the Africa we cover.
           </p>
         </header>
 
