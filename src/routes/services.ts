@@ -61,7 +61,9 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         if (context) {
             const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Request: ${keywords}. News: ${context}`;
             const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.6 });
-            preliminaryNote = aiResponse?.trim();
+            // Coalesce to null — D1 .bind() throws on undefined, which would
+            // fail the whole booking over an optional nicety.
+            preliminaryNote = aiResponse?.trim() || null;
         }
     } catch (e) {
         console.error('AI Concierge Brief Failed', e);

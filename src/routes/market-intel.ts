@@ -271,7 +271,14 @@ Tone: Professional, direct, balance sheet focused.
 
 Headlines: ${context || 'General economic outlook stable.'}`;
                 const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-                return text || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
+                // Models often open with "Here is a 3-sentence Investment
+                // Thesis…:" — assistant scaffolding, not analysis. Drop any
+                // such preface so only the thesis reaches readers.
+                const clean = (text || '')
+                    .replace(/^\s*(sure|certainly|of course)[,!.]?\s*/i, '')
+                    .replace(/^\s*here(?:'s| is| are)\b[^:\n]*:\s*/i, '')
+                    .trim();
+                return clean || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
             } catch (e) {
                 console.error('AI Commentary Failed', e);
                 return `Investment outlook for ${countryData.name} remains stable.`;

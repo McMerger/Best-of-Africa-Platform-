@@ -37,14 +37,16 @@ export const BetaConcierge: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Field names must match BookingRequestSchema (guest_*); the schema
+        // strips unknown keys, so the old contact_*/destination payload was
+        // rejected with "guest_email is required" on every submission.
         bookingMutation.mutate({
-            contact_name: name,
-            contact_email: email,
-            organization,
+            guest_name: name,
+            guest_email: email,
+            guest_organization: organization,
             service_type: serviceType,
-            destination,
-            requirements: details,
-            dates: "TBD" // Defaulting dates for initial inquiry
+            requirements: [destination && `Destination: ${destination}.`, details]
+                .filter(Boolean).join(' '),
         });
     };
 

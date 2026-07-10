@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Twitter, Linkedin, Link2, Check, Loader2, Bookmark } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BetaAudioPlayer } from '../../components/beta';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import { SEO } from '../../components/SEO';
@@ -109,6 +109,39 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         {copied ? <Check size={13} className="text-accent" /> : <Link2 size={13} />}
       </button>
     </div>
+  );
+}
+
+// Save-to-library toggle. Bookmarks are session-scoped (X-Session-ID), so this
+// works for every visitor — the Library page reads the same ['bookmarks'] query.
+function BookmarkButton({ articleId }: { articleId: string }) {
+  const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ['bookmarks'],
+    queryFn: api.getBookmarks,
+    staleTime: 60_000,
+  });
+  const saved = (data?.data || []).some((b: { article_id: string }) => b.article_id === articleId);
+  const toggle = useMutation({
+    mutationFn: () => (saved ? api.removeBookmarkByArticleId(articleId) : api.addBookmark(articleId)),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['bookmarks'] }),
+  });
+  return (
+    <button
+      onClick={() => toggle.mutate()}
+      disabled={toggle.isPending}
+      aria-pressed={saved}
+      aria-label={saved ? t('article.unsave', 'Remove from your library') : t('article.save', 'Save to your library')}
+      title={saved ? t('article.unsave', 'Remove from your library') : t('article.save', 'Save to your library')}
+      className={`p-2 rounded-lg transition-all ${
+        saved
+          ? 'bg-accent/15 text-accent-ink hover:bg-accent/25'
+          : 'bg-background/5 text-primary/40 hover:bg-foreground/10 hover:text-primary'
+      }`}
+    >
+      <Bookmark size={13} className={saved ? 'fill-current' : ''} />
+    </button>
   );
 }
 
@@ -415,7 +448,10 @@ export const BetaArticle = () => {
                 </>
               )}
             </div>
-            <ShareButtons title={stripMarkdown(article.title)} url={articleUrl} />
+            <div className="flex items-center gap-2 shrink-0">
+              <BookmarkButton articleId={article.id} />
+              <ShareButtons title={stripMarkdown(article.title)} url={articleUrl} />
+            </div>
           </div>
         </header>
 
