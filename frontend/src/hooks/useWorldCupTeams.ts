@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../services/api';
-import { WORLD_CUP, type WorldCupTeam, type WorldCupFixture } from '../config/worldCup';
+import { WORLD_CUP, type WorldCupTeam, type WorldCupFixture, type WorldCupResult } from '../config/worldCup';
 
 /**
- * Returns the African nations still in the World Cup plus the next fixture
- * involving one of them, auto-updated from the backend (which refreshes from a
- * live sports feed). Falls back to the curated list in config/worldCup.ts if
- * the request fails, so the UI never breaks.
+ * Returns the African nations still in the World Cup, the next fixture, and
+ * recent results involving them, auto-updated from the backend (which
+ * refreshes from a live sports feed). Falls back to the curated list in
+ * config/worldCup.ts only when the request itself fails — a successful
+ * response with an empty roster is meaningful (the African run is over) and
+ * must NOT be papered over with the stale seed list.
  */
-export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[] } {
+export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[]; results: WorldCupResult[] } {
   const { data } = useQuery({
     queryKey: ['world-cup-teams'],
     queryFn: api.getWorldCupTeams,
@@ -16,9 +18,14 @@ export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string |
     enabled: WORLD_CUP.enabled,
   });
 
-  const live = data?.teams;
-  if (live && live.length > 0) {
-    return { teams: live, updatedAt: data?.updated_at ?? null, nextFixture: data?.next_fixture ?? null, fixtures: data?.fixtures ?? [] };
+  if (data?.teams) {
+    return {
+      teams: data.teams,
+      updatedAt: data.updated_at ?? null,
+      nextFixture: data.next_fixture ?? null,
+      fixtures: data.fixtures ?? [],
+      results: data.results ?? [],
+    };
   }
-  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null, fixtures: [] };
+  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null, fixtures: [], results: [] };
 }

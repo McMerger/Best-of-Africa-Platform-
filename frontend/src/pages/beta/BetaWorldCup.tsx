@@ -5,7 +5,7 @@ import { Trophy, CalendarClock, ArrowRight } from 'lucide-react';
 import { SEO } from '../../components/SEO';
 import { CountryFlag } from '../../components/CountryFlag';
 import { useWorldCupTeams } from '../../hooks/useWorldCupTeams';
-import { WORLD_CUP, type WorldCupFixture } from '../../config/worldCup';
+import { WORLD_CUP, type WorldCupFixture, type WorldCupResult } from '../../config/worldCup';
 
 // Full, human kickoff label for the page (locale-aware): "Sat, 14 Jun · 20:00".
 function formatFull(iso: string): string {
@@ -42,10 +42,11 @@ const Side = ({ side, size = 22 }: { side: { name: string; code?: string }; size
 export const BetaWorldCup: React.FC = () => {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 800], [0, 200]);
-  const { teams, updatedAt, nextFixture, fixtures } = useWorldCupTeams();
+  const { teams, updatedAt, nextFixture, fixtures, results } = useWorldCupTeams();
 
   // Fixtures beyond the spotlight one.
   const rest: WorldCupFixture[] = nextFixture ? fixtures.filter(f => f !== nextFixture).slice(0, 12) : fixtures.slice(0, 12);
+  const runOver = teams.length === 0;
 
   return (
     <div className="bg-background text-foreground min-h-screen pb-24">
@@ -81,7 +82,9 @@ export const BetaWorldCup: React.FC = () => {
               Africa at the <span className="text-accent italic">World Cup.</span>
             </h1>
             <p className="text-[1.125rem] font-light text-white/80 max-w-2xl leading-[1.8] drop-shadow-md">
-              The continent's {teams.length} {teams.length === 1 ? 'nation' : 'nations'} still standing at the tournament — who they are, and the road ahead.
+              {runOver
+                ? "The African run at this World Cup has ended — the results that carried the continent this far are below."
+                : `The continent's ${teams.length} ${teams.length === 1 ? 'nation' : 'nations'} still standing at the tournament — who they are, and the road ahead.`}
             </p>
           </motion.div>
         </div>
@@ -145,7 +148,34 @@ export const BetaWorldCup: React.FC = () => {
           </section>
         )}
 
+        {/* Recent results with scores */}
+        {results.length > 0 && (
+          <section className="mt-16">
+            <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">Latest results</h2>
+            <div className="rounded-3xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
+              {results.map((r: WorldCupResult, i: number) => (
+                <div key={`${r.utcDate}-${i}`} className="flex items-center gap-4 px-5 sm:px-7 py-4">
+                  <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/50 tabular-nums">
+                    {formatFull(r.utcDate)}
+                  </div>
+                  <div className="flex-1 min-w-0 flex items-center gap-3 text-[15px] font-medium text-foreground">
+                    <div className="flex-1 flex sm:justify-end min-w-0"><Side side={r.home} /></div>
+                    <span className="shrink-0 px-2 py-0.5 rounded-md bg-primary text-white font-serif tabular-nums text-[15px]">
+                      {r.home.score ?? '–'}<span className="text-white/40 px-1">:</span>{r.away.score ?? '–'}
+                    </span>
+                    <div className="flex-1 min-w-0"><Side side={r.away} /></div>
+                  </div>
+                  {r.stage && (
+                    <div className="hidden md:block w-32 shrink-0 text-right text-[11px] font-bold uppercase tracking-widest text-foreground/35">{r.stage}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Nations still standing */}
+        {teams.length > 0 && (
         <section className="mt-16">
           <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">
             Still standing <span className="text-foreground/40 text-lg">· {teams.length}</span>
@@ -164,6 +194,7 @@ export const BetaWorldCup: React.FC = () => {
             ))}
           </div>
         </section>
+        )}
 
         {/* Provenance / disclaimer */}
         <p className="mt-12 text-center text-[12px] text-foreground/35 max-w-2xl mx-auto leading-relaxed">

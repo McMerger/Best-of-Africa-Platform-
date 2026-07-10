@@ -20,6 +20,14 @@ export interface WorldCupFixture {
   away: { name: string; code?: string };
 }
 
+/** A finished match involving an African nation, with the score. */
+export interface WorldCupResult {
+  utcDate: string;
+  stage?: string;
+  home: { name: string; code?: string; score?: number | null };
+  away: { name: string; code?: string; score?: number | null };
+}
+
 const KV_KEY = 'world_cup:teams';
 // TheSportsDB league id for the FIFA World Cup (overridable via env if needed).
 const WC_LEAGUE_ID = '4429';
@@ -120,22 +128,25 @@ function sideOf(name?: string | null): { name: string; code?: string } {
 }
 
 /** Read the cached African teams still in (or the seed list if not yet populated). */
-export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[] }> {
+export async function getWorldCupTeams(env: Env): Promise<{ teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[]; results: WorldCupResult[] }> {
   try {
     const raw = await env.CACHE.get(KV_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string; nextFixture?: WorldCupFixture | null; fixtures?: WorldCupFixture[] };
-      if (Array.isArray(parsed.teams) && parsed.teams.length > 0) {
+      const parsed = JSON.parse(raw) as { teams: WorldCupTeam[]; updatedAt: string; nextFixture?: WorldCupFixture | null; fixtures?: WorldCupFixture[]; results?: WorldCupResult[] };
+      // An empty teams array is meaningful once the feed has written the cache:
+      // it means the African run is over (no scheduled matches left) — the page
+      // then leads with the final results instead of a stale "still standing".
+      if (Array.isArray(parsed.teams)) {
         // Drop fixtures that have already kicked off since the last refresh.
         const upcoming = (parsed.fixtures || []).filter(f => Date.parse(f.utcDate) > Date.now());
         const nf = parsed.nextFixture && Date.parse(parsed.nextFixture.utcDate) > Date.now()
           ? parsed.nextFixture
           : (upcoming[0] || null);
-        return { teams: parsed.teams, updatedAt: parsed.updatedAt, nextFixture: nf, fixtures: upcoming };
+        return { teams: parsed.teams, updatedAt: parsed.updatedAt, nextFixture: nf, fixtures: upcoming, results: parsed.results || [] };
       }
     }
   } catch { /* fall through to seed */ }
-  return { teams: SEED_TEAMS, updatedAt: null, nextFixture: null, fixtures: [] };
+  return { teams: SEED_TEAMS, updatedAt: null, nextFixture: null, fixtures: [], results: [] };
 }
 
 /**
@@ -160,6 +171,8 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
     };
 
     const token = (env as Record<string, any>).FOOTBALL_DATA_TOKEN as string | undefined;
+    let scheduledFeedOk = false;
+    const results: WorldCupResult[] = [];
 
     if (token) {
       // Preferred: football-data.org (complete WC coverage). Scheduled matches =
@@ -168,18 +181,44 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
         headers: { 'X-Auth-Token': token },
       });
       if (r.ok) {
+        scheduledFeedOk = true;
         const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string }> };
         for (const m of d.matches || []) {
           add(m.homeTeam?.name); add(m.awayTeam?.name);
           considerFixture(m.homeTeam?.name, m.awayTeam?.name, m.utcDate, m.stage);
         }
       }
+
+      // Recent FINISHED matches involving African sides, with scores — the page
+      // shows these ("Morocco 2–1 France"), and they carry the story when the
+      // last African team goes out and the schedule alone would say nothing.
+      try {
+        const iso = (d: Date) => d.toISOString().slice(0, 10);
+        const to = new Date(); const from = new Date(Date.now() - 10 * 86400_000);
+        const rf = await fetch(`https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED&dateFrom=${iso(from)}&dateTo=${iso(to)}`, {
+          headers: { 'X-Auth-Token': token },
+        });
+        if (rf.ok) {
+          const df = await rf.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string; score?: { fullTime?: { home?: number | null; away?: number | null } } }> };
+          for (const m of df.matches || []) {
+            if (!matchAfrican(m.homeTeam?.name || '') && !matchAfrican(m.awayTeam?.name || '')) continue;
+            results.push({
+              utcDate: m.utcDate || new Date().toISOString(),
+              stage: prettyStage(m.stage),
+              home: { ...sideOf(m.homeTeam?.name), score: m.score?.fullTime?.home ?? null },
+              away: { ...sideOf(m.awayTeam?.name), score: m.score?.fullTime?.away ?? null },
+            });
+          }
+          results.sort((a, b) => Date.parse(b.utcDate) - Date.parse(a.utcDate));
+          results.splice(6);
+        }
+      } catch { /* results are enrichment — never block the refresh */ }
     }
 
     // Fallback: TheSportsDB (keyless). Use the UPCOMING-fixtures endpoint —
     // "still in" = has a scheduled match. (The season endpoint returns stale,
     // sparse data on the free tier, which is why the banner never updated.)
-    if (found.size === 0) {
+    if (found.size === 0 && !scheduledFeedOk) {
       const leagueId = (env as Record<string, any>).WC_LEAGUE_ID || WC_LEAGUE_ID;
       const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/eventsnextleague.php?id=${leagueId}`, {
         headers: { 'User-Agent': 'BestOfAfrica/1.0' },
@@ -194,13 +233,16 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
       }
     }
 
-    if (found.size === 0) return; // nothing reliable — keep last cache / seed, don't wipe
+    // Distinguish "feed failed" (keep the last cache, don't wipe) from "feed
+    // answered and no African side has a match left" (the run is over — write
+    // the empty roster so the site stops claiming someone is still standing).
+    if (found.size === 0 && !scheduledFeedOk) return;
 
     fixtures.sort((a, b) => Date.parse(a.utcDate) - Date.parse(b.utcDate));
     const upcoming = fixtures.slice(0, 24);
     const nextFixture = upcoming[0] || null;
 
-    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString(), nextFixture, fixtures: upcoming });
+    const payload = JSON.stringify({ teams: Array.from(found.values()), updatedAt: new Date().toISOString(), nextFixture, fixtures: upcoming, results });
     await env.CACHE.put(KV_KEY, payload, { expirationTtl: 7 * 24 * 3600 });
   } catch (err) {
     console.error('[worldcup] refresh failed:', err);

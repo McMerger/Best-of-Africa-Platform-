@@ -25,6 +25,14 @@ export interface WorldCupFixture {
   away: { name: string; code?: string };
 }
 
+/** A finished match involving an African nation, with the score. */
+export interface WorldCupResult {
+  utcDate: string;
+  stage?: string;
+  home: { name: string; code?: string; score?: number | null };
+  away: { name: string; code?: string; score?: number | null };
+}
+
 export const WORLD_CUP: { enabled: boolean; label: string; teams: WorldCupTeam[] } = {
   enabled: true,
   label: 'FIFA World Cup 2026',

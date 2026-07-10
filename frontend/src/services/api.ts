@@ -142,6 +142,12 @@ export const api = {
             home: { name: string; code?: string };
             away: { name: string; code?: string };
         }[];
+        results?: {
+            utcDate: string;
+            stage?: string;
+            home: { name: string; code?: string; score?: number | null };
+            away: { name: string; code?: string; score?: number | null };
+        }[];
     }>('/world-cup/teams'),
     getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest?limit=20'),
     getEvents: (params: Record<string, string> = {}) => {
