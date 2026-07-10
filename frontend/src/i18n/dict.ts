@@ -5,6 +5,8 @@
 //
 // Add a key here, then reference it in a component via t('key', 'English fallback').
 
+import { PAGE_TRANSLATIONS } from './pages';
+
 export type UIDict = Record<string, string>;
 
 export const TRANSLATIONS: Record<string, UIDict> = {
@@ -1076,4 +1078,10 @@ const HUB: Record<string, UIDict> = {
 // Merge all page namespaces into the main table.
 for (const lang of Object.keys(TRANSLATIONS)) {
   Object.assign(TRANSLATIONS[lang], LANDING[lang] || {}, STORIES[lang] || {}, ARTICLE[lang] || {}, MEMBERSHIP[lang] || {}, COUNTRIES[lang] || {}, ABOUT[lang] || {}, HUB[lang] || {});
+}
+
+// Gap-fill for keys introduced after the tables above were authored
+// (see pages.ts). Existing translations always win; this only fills holes.
+for (const lang of Object.keys(PAGE_TRANSLATIONS)) {
+  TRANSLATIONS[lang] = { ...PAGE_TRANSLATIONS[lang], ...(TRANSLATIONS[lang] || {}) };
 }
