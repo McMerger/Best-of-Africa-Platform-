@@ -430,6 +430,43 @@ router.post('/clients', async (c) => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Operator Inbox — every inbound submission in one place. The public forms
+// (contact, consultation booking, event registration, newsletter) all store
+// to D1; without this endpoint nothing ever surfaced them to a human.
+// ───────────────────────────────────────────────────────────────────────────────
+
+router.get('/inbox', async (c) => {
+    const [contact, bookings, registrations, subscribers] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT id, name, organization, email, inquiry_type, message, created_at
+            FROM contact_submissions ORDER BY created_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(`
+            SELECT id, guest_name, guest_email, guest_organization, service_type,
+                   requirements, budget_range, urgency, status, created_at
+            FROM booking_requests ORDER BY created_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(`
+            SELECT r.id, r.event_id, e.title AS event_title, r.user_email, r.user_name,
+                   r.user_organization, r.ticket_type, r.status, r.confirmation_code, r.registered_at
+            FROM event_registrations r
+            LEFT JOIN events e ON e.id = r.event_id
+            ORDER BY r.registered_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(
+            'SELECT COUNT(*) AS n FROM digest_subscriptions WHERE is_active = 1'
+        ).first<{ n: number }>(),
+    ]);
+
+    return c.json({
+        contact: contact.results || [],
+        bookings: bookings.results || [],
+        registrations: registrations.results || [],
+        newsletter_subscribers: subscribers?.n || 0,
+    });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Intelligence & Strategy (-Driven)
 // ───────────────────────────────────────────────────────────────────────────────
 

@@ -3,12 +3,16 @@ import type { Env, Variables } from '../types';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-const BASE_URL = 'https://bestofafrica.com';
+// Crawlers and feed readers follow these URLs verbatim — they must point at
+// the site that actually serves traffic. bestofafrica.com is not registered
+// yet; when it is, set PUBLIC_SITE_URL in wrangler.toml and this follows.
+const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /sitemap.xml
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sitemap.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     // 1. Fetch all published articles
     const articles = await c.env.DB.prepare(
         "SELECT slug, published_at FROM articles WHERE status = 'published' ORDER BY published_at DESC"
@@ -73,6 +77,7 @@ router.get('/sitemap.xml', async (c) => {
 // GET /rss.xml
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/rss.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     // Fetch top 50 recent published articles
     const articles = await c.env.DB.prepare(`
         SELECT a.title, a.slug, a.summary, a.published_at, c.name as country_name 
@@ -121,6 +126,7 @@ router.get('/rss.xml', async (c) => {
 // GET /podcast.xml (Daily Pulse Podcast Feed)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/podcast.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     const articles = await c.env.DB.prepare(`
         SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.hero_image_url
         FROM articles a

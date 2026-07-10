@@ -107,6 +107,9 @@ API_VERSION = "v1"
 # Public origin of this worker — used to build absolute URLs for uploaded media
 # (article hero images) so the Pages frontend can load them cross-origin.
 PUBLIC_API_URL = "https://best-of-africa-backend.cortesmailles01.workers.dev"
+# Public origin of the reader-facing site; sitemap/RSS/podcast links point here.
+# Switch to https://bestofafrica.com once the domain is registered and wired.
+PUBLIC_SITE_URL = "https://best-of-africa.pages.dev"
 # Comma-separated extra CORS origins beyond bestofafrica.com (e.g. staging domain).
 # For local frontend dev add "http://localhost:5173" to .dev.vars instead.
 ADDITIONAL_ORIGINS = "https://best-of-africa.pages.dev"

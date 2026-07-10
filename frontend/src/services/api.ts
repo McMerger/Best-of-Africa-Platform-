@@ -30,6 +30,13 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    // Admin surface authenticates with the admin API key, not the member JWT.
+    // Without this header no admin call has ever carried credentials.
+    if (endpoint.startsWith('/admin')) {
+        const adminToken = getAdminToken();
+        if (adminToken) headers['X-Admin-Key'] = adminToken;
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers,
@@ -464,6 +471,12 @@ export const api = {
     createAdminClient: (data: any) => request<{ id: string; api_key: string }>('/admin/clients', { method: 'POST', body: JSON.stringify(data) }),
     
     getIntelligenceRecommendations: () => request<{ recommendations: string[] }>('/admin/intelligence/recommendations'),
+    getAdminInbox: () => request<{
+        contact: any[];
+        bookings: any[];
+        registrations: any[];
+        newsletter_subscribers: number;
+    }>('/admin/inbox'),
 
     // Personalization & Bookmarks
     getBookmarks: () => request<{ data: any[] }>('/bookmarks'),

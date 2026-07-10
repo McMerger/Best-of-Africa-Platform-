@@ -12,7 +12,8 @@ import {
     MagnifyingGlassIcon,
     ActivityLogIcon,
     StarIcon,
-    StarFilledIcon
+    StarFilledIcon,
+    EnvelopeClosedIcon
 } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ import { AgentStatusPanel } from '../components/beta/AgentStatusPanel';
 import { AdminIntelligenceTab } from '../components/admin/AdminIntelligenceTab';
 import { AdminSourcesTab } from '../components/admin/AdminSourcesTab';
 import { AdminClientsTab } from '../components/admin/AdminClientsTab';
+import { AdminInboxTab } from '../components/admin/AdminInboxTab';
 import type { ArticleListItem } from '../types';
 
 export const AdminPage: React.FC = () => {
@@ -72,17 +74,19 @@ export const AdminPage: React.FC = () => {
         e.preventDefault();
         setStatus('loading');
 
-        setTimeout(async () => {
-            if (token.length > 5) {
-                localStorage.setItem('boa_admin_token', token);
-                setStatus('success');
-                fetchArticles();
-                toast.success("Authenticated", { description: "Administrative access granted." });
-            } else {
-                setStatus('error');
-                toast.error("Auth Failure", { description: "Invalid security token." });
-            }
-        }, 800);
+        // Validate against the backend — the old check accepted any string
+        // longer than 5 characters without ever talking to the server.
+        localStorage.setItem('boa_admin_token', token);
+        try {
+            await api.getAdminArticles();
+            setStatus('success');
+            fetchArticles();
+            toast.success("Authenticated", { description: "Administrative access granted." });
+        } catch {
+            localStorage.removeItem('boa_admin_token');
+            setStatus('error');
+            toast.error("Auth Failure", { description: "Invalid security token." });
+        }
     };
 
     const handleCurateToggle = async (article: ArticleListItem) => {
@@ -150,6 +154,9 @@ export const AdminPage: React.FC = () => {
                             <TabsTrigger value="moderation" className="rounded-xl px-6 py-2 flex gap-2">
                                 <CheckCircledIcon className="h-4 w-4" /> Content Moderation
                             </TabsTrigger>
+                            <TabsTrigger value="inbox" className="rounded-xl px-6 py-2 flex gap-2">
+                                <EnvelopeClosedIcon className="h-4 w-4" /> Inbox
+                            </TabsTrigger>
                             <TabsTrigger value="audit" className="rounded-xl px-6 py-2 flex gap-2 text-accent">
                                 <MagnifyingGlassIcon className="h-4 w-4" /> Proactive Audit
                             </TabsTrigger>
@@ -169,6 +176,10 @@ export const AdminPage: React.FC = () => {
                                 <ActivityLogIcon className="h-4 w-4" /> Systems Monitor
                             </TabsTrigger>
                         </TabsList>
+
+                        <TabsContent value="inbox">
+                            <AdminInboxTab />
+                        </TabsContent>
 
                         <TabsContent value="moderation" className="space-y-6">
                             <Card className="border-border rounded-3xl overflow-hidden shadow-sm">

@@ -53,6 +53,9 @@ export interface Env {
     EMAIL_FROM?: string;
     EMAIL_FROM_NAME?: string;
 
+    // Public origin of the reader-facing site (sitemap/RSS/podcast URLs).
+    PUBLIC_SITE_URL?: string;
+
     // Optional Provider keys (set via `wrangler secret put`)
     // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)
     OPENAI_API_KEY?: string;
