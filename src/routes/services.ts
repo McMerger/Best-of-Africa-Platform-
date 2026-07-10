@@ -18,6 +18,15 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 // POST /services/booking - Submit booking/concierge request
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
+    // Per-IP throttle — each booking triggers an AI preliminary brief, so an
+    // unthrottled loop burns Workers AI budget on top of filling D1.
+    const bookingIp = c.req.header('CF-Connecting-IP') || 'unknown';
+    const { checkRateLimit } = await import('../lib/ratelimit');
+    const bookingRl = await checkRateLimit(c.env, `booking:${bookingIp}`, 'free');
+    if (!bookingRl.allowed) {
+        return c.json({ success: false, error: 'too_many_requests', message: `Rate limit exceeded. Retry in ${bookingRl.retryAfter}s.` }, 429);
+    }
+
     const {
         service_type,
         destination_country,
@@ -251,6 +260,15 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
 // POST /services/events/:id/register - Register for an event
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/events/:id/register', validate('param', IdOrSlugParamSchema), validate('json', EventRegistrationSchema), async (c) => {
+    // Per-IP throttle — unauthenticated writes + (once email is live) a
+    // confirmation send per request.
+    const regIp = c.req.header('CF-Connecting-IP') || 'unknown';
+    const { checkRateLimit } = await import('../lib/ratelimit');
+    const regRl = await checkRateLimit(c.env, `event-register:${regIp}`, 'free');
+    if (!regRl.allowed) {
+        return c.json({ success: false, error: 'too_many_requests', message: `Rate limit exceeded. Retry in ${regRl.retryAfter}s.` }, 429);
+    }
+
     const { id: eventId } = (c.req as any).valid('param');
     const {
         user_email,

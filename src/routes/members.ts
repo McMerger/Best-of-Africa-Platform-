@@ -161,6 +161,20 @@ router.post('/verify-email', async (c) => {
     const email = body.email?.toLowerCase().trim();
     if (!email) return c.json({ ok: false, error: 'Email required' }, 400);
 
+    // Abuse limits: per-IP throttle (membership enumeration / OTP farming) and
+    // a per-address cooldown so one member's inbox can't be bombed with codes.
+    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+    const { checkRateLimit } = await import('../lib/ratelimit');
+    const rl = await checkRateLimit(c.env, `otp-request:${ip}`, 'free');
+    if (!rl.allowed) {
+        return c.json({ ok: false, error: `Too many requests. Retry in ${rl.retryAfter}s.` }, 429);
+    }
+    const cooldownKey = `otp_cooldown:${email}`;
+    if (await c.env.CACHE.get(cooldownKey)) {
+        return c.json({ ok: false, error: 'A code was just sent. Please wait a minute before requesting another.' }, 429);
+    }
+    await c.env.CACHE.put(cooldownKey, '1', { expirationTtl: 60 });
+
     const client = await c.env.DB.prepare(`
         SELECT id, name, tier, is_active, expires_at
         FROM clients

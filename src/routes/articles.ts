@@ -42,6 +42,23 @@ async function decodeBearerJWT(authHeader: string | undefined, secret: string): 
     }
 }
 
+// A signed JWT alone must not unlock member content: tokens live 30 days, so a
+// cancelled or expired membership would otherwise keep full access until the
+// token ran out. Validate the client row is still active and unexpired.
+// (expires_at is stored as an ISO string; comparing against datetime('now')
+// differs only in the T/space separator, which string-compares correctly for
+// any date difference.)
+async function activeMemberId(env: Env, authHeader: string | undefined): Promise<string | null> {
+    const clientId = await decodeBearerJWT(authHeader, env.JWT_SECRET);
+    if (!clientId) return null;
+    const row = await env.DB.prepare(`
+        SELECT 1 AS ok FROM clients
+        WHERE id = ? AND is_active = 1
+          AND (expires_at IS NULL OR expires_at > datetime('now'))
+    `).bind(clientId).first();
+    return row ? clientId : null;
+}
+
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -527,7 +544,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     // ── Server-side paywall ────────────────────────────────────────────────────
     // Validate any Bearer JWT. Any authenticated client (basic/premium/enterprise)
     // gets full content. Anonymous visitors receive a truncated preview + paywall flag.
-    const clientId = await decodeBearerJWT(c.req.header('Authorization'), c.env.JWT_SECRET);
+    const clientId = await activeMemberId(c.env, c.req.header('Authorization'));
 
     let articleContent = article.content || '';
     let paywallActive = false;
@@ -567,7 +584,7 @@ router.post('/:slug/audio', validate('param', SlugParamSchema), async (c) => {
     // Require authentication — audio generation calls ElevenLabs and incurs cost
     const authHeader = c.req.header('Authorization');
     const apiKey = c.req.header('X-API-Key');
-    const clientId = await decodeBearerJWT(authHeader, c.env.JWT_SECRET);
+    const clientId = await activeMemberId(c.env, authHeader);
     if (!clientId && !apiKey) {
         return c.json({ success: false, error: 'unauthorized', message: 'Authentication required to generate audio' }, 401);
     }
