@@ -7,6 +7,10 @@
 
 import type { Env } from '../types';
 
+// The IMF DataMapper WAF rejects empty and browser-style User-Agents from
+// non-browser clients but accepts API-client UAs; identify honestly.
+const IMF_USER_AGENT = 'curl/8.9.0 (BOA-Story enrichment; cortesmailles01@gmail.com)';
+
 // African country codes (IMF uses ISO 3-letter codes)
 const AFRICAN_IMF_CODES: Record<string, string> = {
     'Nigeria': 'NGA',
@@ -93,8 +97,11 @@ export async function fetchIMFData(
         const indicators = Object.keys(IMF_INDICATORS).join(',');
         const url = `https://www.imf.org/external/datamapper/api/v1/${indicators}/${countryCode}`;
 
+        // The IMF WAF 403s requests with no User-Agent (Workers' fetch default)
+        // or browser-style UAs from non-browser contexts, but accepts API-client
+        // UAs. Identify honestly in curl format with a contact address.
         const response = await fetch(url, {
-            headers: { 'Accept': 'application/json' }
+            headers: { 'User-Agent': IMF_USER_AGENT }
         });
 
         if (!response.ok) {
@@ -165,7 +172,9 @@ export async function getGDPForecast(
     try {
         const url = `https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/${countryCode}`;
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: { 'User-Agent': IMF_USER_AGENT }
+        });
         if (!response.ok) return null;
 
         const data = await response.json() as Record<string, any>;
@@ -220,7 +229,9 @@ export async function getDebtMetrics(
     try {
         const url = `https://www.imf.org/external/datamapper/api/v1/GGXWDG_NGDP/${countryCode}`;
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: { 'User-Agent': IMF_USER_AGENT }
+        });
         if (!response.ok) return null;
 
         const data = await response.json() as Record<string, any>;

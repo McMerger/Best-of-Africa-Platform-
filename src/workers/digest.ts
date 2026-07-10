@@ -201,43 +201,17 @@ export async function sendDigestEmail(
     to: string,
     subject: string,
     html: string,
-    text: string
+    _text: string
 ): Promise<boolean> {
-    // Check for Resend API key
-    const resendKey = (env as Record<string, any>).RESEND_API_KEY;
-
-    if (resendKey) {
-        try {
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from: 'BOA-Story <digest@bestofafrica.com>',
-                    to: [to],
-                    subject,
-                    html,
-                    text,
-                }),
-            });
-
-            if (!response.ok) {
-                console.error('Resend API error:', await response.text());
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Failed to send email via Resend:', error);
-            return false;
-        }
-    }
-
-    // Fallback: Log the email (would be sent via Email Workers in production)
-    console.log(`[EMAIL] To: ${to}, Subject: ${subject}`);
-    return true;
+    // Delegate to the shared transactional sender (Cloudflare EMAIL binding →
+    // Resend → MailChannels) so the digest lights up with the same domain
+    // onboarding as OTP/welcome mail. The old local implementation only knew
+    // Resend and, without a key, LOGGED the email and returned true — the cron
+    // then reported "Sent digest to …" while delivering nothing.
+    const { sendEmail } = await import('../lib/email');
+    const sent = await sendEmail(env, { to, subject, html });
+    if (!sent) console.error(`[digest] delivery failed for ${to}`);
+    return sent;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -258,8 +232,8 @@ export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): P
                 ? await generateDailyDigest(env, sub)
                 : await generateWeeklyDigest(env, sub);
 
-            await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
-            console.log(`Sent ${frequency} digest to ${sub.email}`);
+            const sent = await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
+            if (sent) console.log(`Sent ${frequency} digest to ${sub.email}`);
         } catch (error) {
             console.error(`Failed to send digest to ${sub.email}:`, error);
         }
