@@ -377,6 +377,52 @@ export async function backfillHeroVariants(env: Env, batch = 4): Promise<number>
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Audio-narration backfill (Cron — every minute, small batch)
+// ───────────────────────────────────────────────────────────────────────────────
+// Sector Backfill (Cron — per-minute, self-terminating)
+//
+// ~6k older articles predate sector assignment (sector_id NULL), making them
+// invisible to sector filters, trends and kickers. Classify newest-first with
+// the text model; stories that fit no business sector (sports, culture,
+// politics, human interest) get the honest 'general' sector — a real sectors
+// row, so the FK holds and the article permanently leaves the NULL queue.
+// ───────────────────────────────────────────────────────────────────────────────
+const SECTOR_IDS = ['tourism', 'energy', 'agriculture', 'technology', 'infrastructure', 'finance', 'manufacturing', 'healthcare'];
+
+export async function backfillSectors(env: Env, batch = 8): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary FROM articles
+        WHERE status = 'published' AND sector_id IS NULL
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const { MODELS } = await import('../lib/ai');
+            const res = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+                messages: [
+                    { role: 'system', content: 'Classify the news item into exactly one sector id from: tourism, energy, agriculture, technology, infrastructure, finance, manufacturing, healthcare. If none fits (sports, culture, politics, human interest), reply none. Reply with the single word only.' },
+                    { role: 'user', content: `${a.title}\n\n${(a.summary || '').slice(0, 300)}` },
+                ],
+                max_tokens: 8,
+                temperature: 0,
+            });
+            const out = String((res as Record<string, any>)?.response || '').toLowerCase();
+            const sector = SECTOR_IDS.find(s => out.includes(s)) || 'general';
+            await env.DB.prepare('UPDATE articles SET sector_id = ? WHERE id = ?').bind(sector, a.id).run();
+            done++;
+        } catch (err) {
+            console.error('[backfill-sectors] failed for', a.id, err);
+            break; // model unavailable — retry next tick
+        }
+    }
+    if (done) console.log(`[backfill-sectors] Classified ${done} article(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Audio Backfill (Cron — per-minute, self-terminating)
 //
 // Audio was member-gated and on-demand only, and its stored URLs pointed at the
 // disabled r2.dev subdomain — so despite Listen buttons on every card, zero

@@ -385,6 +385,13 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await backfillTranslations(env, 2);
     });
 
+    // Classify the ~6k pre-taxonomy articles with no sector (invisible to
+    // sector filters/trends/kickers). Newest-first, self-terminating.
+    await safe('backfill-sectors', async () => {
+        const { backfillSectors } = await import('./workers/generator');
+        await backfillSectors(env, 8);
+    });
+
     // 2. Optimization + stale task recovery: every 2 minutes
     if (minutes % 2 === 0) {
         await safe('optimization', () => runOptimization(env));
