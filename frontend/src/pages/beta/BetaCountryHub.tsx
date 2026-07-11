@@ -18,13 +18,10 @@ import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
+import { stripMarkdown } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
-
-/** Strip leading/trailing Markdown bold markers and whitespace from a string. */
-const stripMarkdown = (text: string): string =>
-  text.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '').trim();
 
 /**
  * Generate stable-looking placeholder scores for the paywall blur preview.

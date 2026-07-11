@@ -15,6 +15,7 @@ import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { stripMarkdown } from '@/lib/utils';
 import React from 'react';
 
 const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
@@ -70,13 +71,6 @@ const MagneticButton = ({ children, className = '' }: { children: React.ReactNod
   );
 };
 
-const stripMarkdown = (text: string): string => {
-  if (!text) return text;
-  let t = text.trim();
-  t = t.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '');
-  if (t.startsWith('"') && t.endsWith('"') && t.length > 2) t = t.slice(1, -1);
-  return t.trim();
-};
 
 function RotatingSubheadline() {
   const { t } = useLanguage();

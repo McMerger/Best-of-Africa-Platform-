@@ -8,6 +8,14 @@ const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 // yet; when it is, set PUBLIC_SITE_URL in wrangler.toml and this follows.
 const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
 
+// RSS-sourced titles are stored with HTML entities (&#8211;, &amp;, …). Inside
+// CDATA nothing re-decodes them, so feed readers would display them literally.
+const decodeEntities = (s?: string | null): string => (s || '')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
+
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /sitemap.xml
 // ───────────────────────────────────────────────────────────────────────────────
@@ -102,10 +110,10 @@ router.get('/rss.xml', async (c) => {
         const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
         
         xml += `    <item>\n`;
-        xml += `      <title><![CDATA[${article.title}]]></title>\n`;
+        xml += `      <title><![CDATA[${decodeEntities(article.title)}]]></title>\n`;
         xml += `      <link>${url}</link>\n`;
         xml += `      <guid isPermaLink="true">${url}</guid>\n`;
-        xml += `      <description><![CDATA[${article.summary}]]></description>\n`;
+        xml += `      <description><![CDATA[${decodeEntities(article.summary)}]]></description>\n`;
         if (article.country_name) {
             xml += `      <category><![CDATA[${article.country_name}]]></category>\n`;
         }
@@ -155,10 +163,10 @@ router.get('/podcast.xml', async (c) => {
         const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
         
         xml += `    <item>\n`;
-        xml += `      <title><![CDATA[${article.title}]]></title>\n`;
+        xml += `      <title><![CDATA[${decodeEntities(article.title)}]]></title>\n`;
         xml += `      <link>${url}</link>\n`;
         xml += `      <guid isPermaLink="true">${url}</guid>\n`;
-        xml += `      <description><![CDATA[${article.summary}]]></description>\n`;
+        xml += `      <description><![CDATA[${decodeEntities(article.summary)}]]></description>\n`;
         xml += `      <pubDate>${pubDate}</pubDate>\n`;
         
         if (article.audio_url) {

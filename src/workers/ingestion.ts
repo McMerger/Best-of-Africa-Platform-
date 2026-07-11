@@ -77,12 +77,16 @@ function isAfricanContent(title: string, content = ''): boolean {
     // Headline centred elsewhere needs multiple African signals to qualify
     // (kills the Modi-Seychelles / Tamil-Nadu class of leak).
     if (titleHits >= 2) return true;
+
+    const bodyHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(bodyL)).length;
     // No African headline: allow only clearly African bodies with no foreign
     // headline focus (two distinct keywords, e.g. two countries or country+city).
-    if (!foreignTitle) {
-        const bodyHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(bodyL)).length;
-        return bodyHits >= 2;
-    }
+    if (!foreignTitle) return bodyHits >= 2;
+    // Foreign-centred headline that still names an African place ("China
+    // pledges $1bn for Kenya railway"): admit when the body is substantially
+    // African too. The Modi-Seychelles class stays out — its body names the
+    // African place once at most.
+    if (titleHits >= 1) return bodyHits >= 2;
     return false;
 }
 

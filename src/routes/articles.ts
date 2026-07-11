@@ -11,52 +11,27 @@ import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, UuidParamSchema } from '../lib';
 import { callConfiguredAI } from '../lib/ai';
 import { generateAudioNarration } from '../lib/audio';
+import { verifyJWT } from '../lib/auth';
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Helper: decode and validate a Bearer JWT without killing the request
-// Returns the client_id (sub) on success, null if absent/invalid/expired
+// Helper: resolve the ACTIVE member behind a Bearer JWT (or null)
 // ───────────────────────────────────────────────────────────────────────────────
-async function decodeBearerJWT(authHeader: string | undefined, secret: string): Promise<string | null> {
-    if (!authHeader?.startsWith('Bearer ')) return null;
-    const token = authHeader.slice(7);
-    try {
-        const [headerB64, payloadB64, signatureB64] = token.split('.');
-        if (!headerB64 || !payloadB64 || !signatureB64) return null;
-
-        const key = await crypto.subtle.importKey(
-            'raw',
-            new TextEncoder().encode(secret),
-            { name: 'HMAC', hash: 'SHA-256' },
-            false,
-            ['verify']
-        );
-        const signature = Uint8Array.from(atob(signatureB64), ch => ch.charCodeAt(0));
-        const isValid = await crypto.subtle.verify('HMAC', key, signature, new TextEncoder().encode(`${headerB64}.${payloadB64}`));
-        if (!isValid) return null;
-
-        const payload: { sub: string; exp: number } = JSON.parse(atob(payloadB64));
-        if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-        return payload.sub;
-    } catch {
-        return null;
-    }
-}
-
 // A signed JWT alone must not unlock member content: tokens live 30 days, so a
 // cancelled or expired membership would otherwise keep full access until the
 // token ran out. Validate the client row is still active and unexpired.
-// (expires_at is stored as an ISO string; comparing against datetime('now')
-// differs only in the T/space separator, which string-compares correctly for
-// any date difference.)
+// datetime(expires_at) normalizes the stored ISO 'T'/'Z' format to SQLite's
+// space format before comparing — a raw string compare would treat any
+// membership as active for its entire expiry DAY ('T' > ' ' at position 10).
 async function activeMemberId(env: Env, authHeader: string | undefined): Promise<string | null> {
-    const clientId = await decodeBearerJWT(authHeader, env.JWT_SECRET);
-    if (!clientId) return null;
+    if (!authHeader?.startsWith('Bearer ')) return null;
+    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+    if (!payload?.sub) return null;
     const row = await env.DB.prepare(`
         SELECT 1 AS ok FROM clients
         WHERE id = ? AND is_active = 1
-          AND (expires_at IS NULL OR expires_at > datetime('now'))
-    `).bind(clientId).first();
-    return row ? clientId : null;
+          AND (expires_at IS NULL OR datetime(expires_at) > datetime('now'))
+    `).bind(payload.sub).first();
+    return row ? payload.sub : null;
 }
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();

@@ -11,6 +11,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { stripMarkdown } from '@/lib/utils';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
@@ -23,17 +24,6 @@ const STORY_FALLBACKS = [
   '/images/fallback_culture.webp',
   '/images/fallback_tech.webp',
 ];
-
-/** Strip Markdown bold markers (**) and surrounding quote wrapping from a string. */
-const stripMarkdown = (text: string): string => {
-  if (!text) return text;
-  let t = text.trim();
-  // Remove leading/trailing ** bold markers
-  t = t.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '');
-  // Remove surrounding double-quote wrapping added by LLMs (e.g. "Title Here")
-  if (t.startsWith('"') && t.endsWith('"') && t.length > 2) t = t.slice(1, -1);
-  return t.trim();
-};
 
 const StoryCardSkeleton = () => (
   <div className="bg-background rounded-xl border border-primary/8 h-[380px] animate-pulse">

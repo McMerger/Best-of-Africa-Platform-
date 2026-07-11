@@ -25,8 +25,11 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
         ...((options.headers as Record<string, string>) || {}),
     };
 
-    // Add auth token if available
-    if (token) {
+    // Add auth token if available — but never clobber an Authorization header
+    // the caller set explicitly (triggerAuditScan / triggerAgentEvolution pass
+    // the ADMIN key as Bearer; overwriting it with the member JWT 401s those
+    // calls for any operator who is also a signed-in member).
+    if (token && !headers['Authorization']) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 

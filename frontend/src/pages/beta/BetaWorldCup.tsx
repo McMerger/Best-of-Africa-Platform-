@@ -44,8 +44,13 @@ export const BetaWorldCup: React.FC = () => {
   const heroY = useTransform(scrollY, [0, 800], [0, 200]);
   const { teams, updatedAt, nextFixture, fixtures, results } = useWorldCupTeams();
 
-  // Fixtures beyond the spotlight one.
-  const rest: WorldCupFixture[] = nextFixture ? fixtures.filter(f => f !== nextFixture).slice(0, 12) : fixtures.slice(0, 12);
+  // Fixtures beyond the spotlight one. Compare by kickoff+teams, not object
+  // identity — next_fixture and fixtures[0] are distinct objects after JSON
+  // parsing, so a reference filter would render the spotlight match twice.
+  const fixtureKey = (f: WorldCupFixture) => `${f.utcDate}|${f.home.name}|${f.away.name}`;
+  const rest: WorldCupFixture[] = nextFixture
+    ? fixtures.filter(f => fixtureKey(f) !== fixtureKey(nextFixture)).slice(0, 12)
+    : fixtures.slice(0, 12);
   const runOver = teams.length === 0;
 
   return (

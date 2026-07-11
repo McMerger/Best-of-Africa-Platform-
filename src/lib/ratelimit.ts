@@ -88,6 +88,31 @@ export async function checkRateLimit(
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Per-IP throttle for unauthenticated endpoints — one call site per handler:
+//   const limited = await throttle(c, 'contact'); if (limited) return limited;
+// Returns a 429 Response (with X-RateLimit-* / Retry-After headers) when the
+// bucket is exhausted, null otherwise. Centralized so every abuse-prone route
+// shares one shape instead of hand-rolled copies that drift.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function throttle(
+    c: {
+        env: Env;
+        req: { header(name: string): string | undefined };
+        header(name: string, value: string): void;
+        json(object: unknown, status?: number): Response;
+    },
+    bucket: string,
+): Promise<Response | null> {
+    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
+    const rl = await checkRateLimit(c.env, `${bucket}:${ip}`, 'free');
+    for (const [k, v] of Object.entries(rateLimitHeaders(rl))) c.header(k, v);
+    if (!rl.allowed) {
+        return c.json({ error: 'too_many_requests', message: `Rate limit exceeded. Retry in ${rl.retryAfter}s.` }, 429);
+    }
+    return null;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Get User Tier from API Key or Session
 // ───────────────────────────────────────────────────────────────────────────────
 export async function getUserTier(

@@ -175,32 +175,26 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
     const results: WorldCupResult[] = [];
 
     if (token) {
-      // Preferred: football-data.org (complete WC coverage). Scheduled matches =
-      // teams still in. Free tier requires only a token.
-      const r = await fetch('https://api.football-data.org/v4/competitions/WC/matches?status=SCHEDULED', {
+      // Preferred: football-data.org (complete WC coverage; free tier needs
+      // only a token). ONE unfiltered fetch: "still in" must count IN_PLAY /
+      // PAUSED / TIMED matches too, not just SCHEDULED — filtering to
+      // SCHEDULED made a lone African team "disappear" the moment its match
+      // kicked off, and the empty roster read as elimination mid-match.
+      const ACTIVE_STATUSES = new Set(['SCHEDULED', 'TIMED', 'IN_PLAY', 'PAUSED']);
+      const r = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
         headers: { 'X-Auth-Token': token },
       });
       if (r.ok) {
         scheduledFeedOk = true;
-        const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string }> };
+        const d = await r.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string; status?: string; score?: { fullTime?: { home?: number | null; away?: number | null } } }> };
+        const tenDaysAgo = Date.now() - 10 * 86400_000;
         for (const m of d.matches || []) {
-          add(m.homeTeam?.name); add(m.awayTeam?.name);
-          considerFixture(m.homeTeam?.name, m.awayTeam?.name, m.utcDate, m.stage);
-        }
-      }
-
-      // Recent FINISHED matches involving African sides, with scores — the page
-      // shows these ("Morocco 2–1 France"), and they carry the story when the
-      // last African team goes out and the schedule alone would say nothing.
-      try {
-        const iso = (d: Date) => d.toISOString().slice(0, 10);
-        const to = new Date(); const from = new Date(Date.now() - 10 * 86400_000);
-        const rf = await fetch(`https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED&dateFrom=${iso(from)}&dateTo=${iso(to)}`, {
-          headers: { 'X-Auth-Token': token },
-        });
-        if (rf.ok) {
-          const df = await rf.json() as { matches?: Array<{ homeTeam?: { name?: string }; awayTeam?: { name?: string }; utcDate?: string; stage?: string; score?: { fullTime?: { home?: number | null; away?: number | null } } }> };
-          for (const m of df.matches || []) {
+          if (ACTIVE_STATUSES.has(m.status || '')) {
+            add(m.homeTeam?.name); add(m.awayTeam?.name);
+            considerFixture(m.homeTeam?.name, m.awayTeam?.name, m.utcDate, m.stage);
+          } else if (m.status === 'FINISHED' && Date.parse(m.utcDate || '') > tenDaysAgo) {
+            // Recent results involving African sides, with scores — the page
+            // shows these, and they carry the story once the run is over.
             if (!matchAfrican(m.homeTeam?.name || '') && !matchAfrican(m.awayTeam?.name || '')) continue;
             results.push({
               utcDate: m.utcDate || new Date().toISOString(),
@@ -209,10 +203,10 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
               away: { ...sideOf(m.awayTeam?.name), score: m.score?.fullTime?.away ?? null },
             });
           }
-          results.sort((a, b) => Date.parse(b.utcDate) - Date.parse(a.utcDate));
-          results.splice(6);
         }
-      } catch { /* results are enrichment — never block the refresh */ }
+        results.sort((a, b) => Date.parse(b.utcDate) - Date.parse(a.utcDate));
+        results.splice(6);
+      }
     }
 
     // Fallback: TheSportsDB (keyless). Use the UPCOMING-fixtures endpoint —
@@ -237,6 +231,22 @@ export async function refreshWorldCupTeams(env: Env): Promise<void> {
     // answered and no African side has a match left" (the run is over — write
     // the empty roster so the site stops claiming someone is still standing).
     if (found.size === 0 && !scheduledFeedOk) return;
+
+    // Guard the bracket-entry gap: if the most recent African result was a win
+    // (or an ambiguous draw → decided on penalties, which fullTime can't
+    // settle), the team advanced but the next round's pairing may not be in
+    // the feed yet — keep the last cache rather than declaring the run over.
+    // Only a clear full-time loss ends the run.
+    if (found.size === 0 && results.length > 0) {
+      const last = results[0];
+      const h = last.home.score ?? null, a = last.away.score ?? null;
+      const africanIsHome = !!matchAfrican(last.home.name);
+      // An all-African tie always sends someone through — never a clear loss.
+      const bothAfrican = africanIsHome && !!matchAfrican(last.away.name);
+      const clearLoss = !bothAfrican && h !== null && a !== null && h !== a &&
+        (africanIsHome ? h < a : a < h);
+      if (!clearLoss) return;
+    }
 
     fixtures.sort((a, b) => Date.parse(a.utcDate) - Date.parse(b.utcDate));
     const upcoming = fixtures.slice(0, 24);

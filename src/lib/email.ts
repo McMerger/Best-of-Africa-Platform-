@@ -103,10 +103,15 @@ export async function sendEmail(
             content: [{ type: 'text/html', value: html }],
         };
 
+        // MailChannels' free Workers tier is discontinued; this is a last
+        // resort that usually fails. The send is awaited on the login request
+        // path now, so bound it — an untimed fetch to a dead service would
+        // hang the response.
         const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(5000),
         });
 
         if (!response.ok) {

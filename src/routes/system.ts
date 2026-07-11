@@ -33,12 +33,9 @@ router.get('/live/status', async (c) => {
 router.post('/contact', async (c) => {
     // Per-IP throttle — this endpoint writes unauthenticated input to D1 and
     // feeds the operator inbox; without a limit it's a spam funnel.
-    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
-    const { checkRateLimit } = await import('../lib/ratelimit');
-    const rl = await checkRateLimit(c.env, `contact:${ip}`, 'free');
-    if (!rl.allowed) {
-        return c.json({ error: 'too_many_requests', message: `Rate limit exceeded. Retry in ${rl.retryAfter}s.` }, 429);
-    }
+    const { throttle } = await import('../lib/ratelimit');
+    const limited = await throttle(c, 'contact');
+    if (limited) return limited;
 
     const body = await c.req.json();
     const { name, organization, email, inquiry_type, message } = body;

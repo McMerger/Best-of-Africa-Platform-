@@ -163,17 +163,16 @@ router.post('/verify-email', async (c) => {
 
     // Abuse limits: per-IP throttle (membership enumeration / OTP farming) and
     // a per-address cooldown so one member's inbox can't be bombed with codes.
-    const ip = c.req.header('CF-Connecting-IP') || 'unknown';
-    const { checkRateLimit } = await import('../lib/ratelimit');
-    const rl = await checkRateLimit(c.env, `otp-request:${ip}`, 'free');
-    if (!rl.allowed) {
-        return c.json({ ok: false, error: `Too many requests. Retry in ${rl.retryAfter}s.` }, 429);
-    }
+    // The cooldown is only WRITTEN after a successful send (below) — setting it
+    // up front would lock the user out for 60s after a failed delivery while
+    // telling them to "try again".
+    const { throttle } = await import('../lib/ratelimit');
+    const limited = await throttle(c, 'otp-request');
+    if (limited) return limited;
     const cooldownKey = `otp_cooldown:${email}`;
     if (await c.env.CACHE.get(cooldownKey)) {
         return c.json({ ok: false, error: 'A code was just sent. Please wait a minute before requesting another.' }, 429);
     }
-    await c.env.CACHE.put(cooldownKey, '1', { expirationTtl: 60 });
 
     const client = await c.env.DB.prepare(`
         SELECT id, name, tier, is_active, expires_at
@@ -276,6 +275,9 @@ router.post('/verify-email', async (c) => {
             error: 'We could not send your access code just now. Please try again in a few minutes.',
         }, 502);
     }
+
+    // Delivery succeeded — start the per-address cooldown now.
+    await c.env.CACHE.put(cooldownKey, '1', { expirationTtl: 60 });
 
     return c.json({ ok: true, status: 'pending_otp' });
 });

@@ -313,6 +313,13 @@ export async function backfillTranslations(env: Env, batch = 2): Promise<number>
 
 /** Phase 2 of the backfill: create rows for covered-language articles that have none. */
 async function backfillMissingTranslations(env: Env, batch: number): Promise<number> {
+    // Once coverage is complete the anti-join below scans every covered
+    // article and finds nothing — every minute, forever. Park the sweep for
+    // 6h whenever it comes back empty; new articles are translated at
+    // enrichment time anyway, so the backfill only needs occasional passes.
+    const DONE_FLAG = 'translate:coverage_done';
+    if (await env.CACHE.get(DONE_FLAG)) return 0;
+
     const inList = (codes: string[]) => codes.map(c => `'${c}'`).join(',');
     const missing = await env.DB.prepare(`
         SELECT a.id AS aid, l.lang, a.title, a.subtitle, a.summary, a.content
@@ -329,6 +336,11 @@ async function backfillMissingTranslations(env: Env, batch: number): Promise<num
         ORDER BY a.published_at DESC
         LIMIT ?
     `).bind(batch).all<{ aid: string; lang: SupportedLanguage; title: string; subtitle: string | null; summary: string | null; content: string }>();
+
+    if ((missing.results || []).length === 0) {
+        await env.CACHE.put(DONE_FLAG, '1', { expirationTtl: 6 * 3600 });
+        return 0;
+    }
 
     let done = 0;
     for (const r of missing.results || []) {
