@@ -467,7 +467,7 @@ export async function regenerateAudio(env: Env, batch = 3): Promise<number> {
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, content
         FROM articles INDEXED BY idx_articles_audio_regen
-        WHERE status = 'published' AND audio_url IS NOT NULL AND (audio_regen IS NULL OR audio_regen = 0)
+        WHERE status = 'published' AND audio_url IS NOT NULL AND (audio_regen IS NULL OR audio_regen < 2)
         ORDER BY published_at DESC
         LIMIT ?
     `).bind(batch).all<{ id: string; title: string; summary: string | null; content: string | null }>();
@@ -483,7 +483,7 @@ export async function regenerateAudio(env: Env, batch = 3): Promise<number> {
             break;
         }
     }
-    if (done) console.log(`[regen-audio] Re-narrated ${done} article(s) with Aura.`);
+    if (done) console.log(`[regen-audio] Re-narrated ${done} article(s) with Aura 2.`);
     return done;
 }
 

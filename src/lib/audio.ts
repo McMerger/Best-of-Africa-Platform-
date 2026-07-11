@@ -1,232 +1,187 @@
-// ═══════════════════════════════════════════════════════════════════════════════
-// AUDIO SERVICE
-// Text-to-Speech narration for articles using Workers 
-// ═══════════════════════════════════════════════════════════════════════════════
-
 import type { Env } from '../types';
 import { getCached } from './cache';
 
-// Decode a base64 string (e.g. MeloTTS audio output) into raw bytes for R2 storage.
-function base64ToBytes(b64: string): Uint8Array {
-    const binary = atob(b64);
+type TtsProvider = 'elevenlabs' | 'aura-2' | 'aura-1';
+
+function base64ToBytes(value: string): Uint8Array {
+    const binary = atob(value);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return bytes;
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Generate Audio Narration for Article
-// ───────────────────────────────────────────────────────────────────────────────
+async function audioBytes(result: unknown): Promise<ArrayBuffer | Uint8Array | null> {
+    if (result instanceof ReadableStream) return new Response(result).arrayBuffer();
+    if (result instanceof ArrayBuffer) return result;
+    if (typeof result === 'string') return base64ToBytes(result);
+    if (result && typeof result === 'object' && 'audio' in result) {
+        const encoded = (result as { audio?: unknown }).audio;
+        if (typeof encoded === 'string') return base64ToBytes(encoded);
+    }
+    return null;
+}
+
+function looksLikeMp3(value: ArrayBuffer | Uint8Array): boolean {
+    const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+    if (bytes.byteLength < 1024) return false;
+    return (bytes[0] === 0x49 && bytes[1] === 0x44 && bytes[2] === 0x33)
+        || (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0);
+}
+
+async function synthesizeNarration(
+    env: Env,
+    text: string,
+): Promise<{ audio: ArrayBuffer | Uint8Array; provider: TtsProvider } | null> {
+    if (env.ELEVENLABS_API_KEY) {
+        const voiceId = env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
+        const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
+            method: 'POST',
+            headers: {
+                Accept: 'audio/mpeg',
+                'Content-Type': 'application/json',
+                'xi-api-key': env.ELEVENLABS_API_KEY,
+            },
+            body: JSON.stringify({
+                text: text.slice(0, 4000),
+                model_id: 'eleven_multilingual_v2',
+                voice_settings: {
+                    stability: 0.42,
+                    similarity_boost: 0.78,
+                    style: 0.18,
+                    use_speaker_boost: true,
+                },
+            }),
+        });
+        if (response.ok) {
+            const audio = await response.arrayBuffer();
+            if (looksLikeMp3(audio)) return { audio, provider: 'elevenlabs' };
+        } else {
+            console.warn('[TTS] ElevenLabs failed:', response.status, (await response.text()).slice(0, 160));
+        }
+    }
+
+    // Aura 2 is context-aware and materially more natural than Aura 1. Aura 1
+    // remains a reliable fallback; the dead, robotic MeloTTS model does not.
+    for (const model of [
+        { name: '@cf/deepgram/aura-2-en', provider: 'aura-2' as const },
+        { name: '@cf/deepgram/aura-1', provider: 'aura-1' as const },
+    ]) {
+        try {
+            const result = await (env.AI as Record<string, any>).run(model.name, {
+                text: text.slice(0, 2000),
+                speaker: 'athena',
+                encoding: 'mp3',
+                bit_rate: 128000,
+            });
+            const audio = await audioBytes(result);
+            if (audio && looksLikeMp3(audio)) return { audio, provider: model.provider };
+            console.warn(`[TTS] ${model.name} returned invalid or empty audio`);
+        } catch (error) {
+            console.warn(`[TTS] ${model.name} failed:`, String(error).slice(0, 160));
+        }
+    }
+    return null;
+}
+
 export async function generateAudioNarration(
     env: Env,
     articleId: string,
     title: string,
-    content: string
+    content: string,
 ): Promise<{ audioUrl: string; durationSeconds: number } | null> {
     try {
         const narrationText = createNarrationScript(title, content);
+        const generated = await synthesizeNarration(env, narrationText);
+        if (!generated) return null;
+
         const audioKey = `audio/${articleId}.mp3`;
-        const wordCount = narrationText.split(/\s+/).length;
-        const durationSeconds = Math.ceil((wordCount / 150) * 60);
-        let audioBuffer: ArrayBuffer | Uint8Array | null = null;
-
-        // 1. Try ElevenLabs Premium Voice
-        if (env.ELEVENLABS_API_KEY) {
-            const voiceId = env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM';
-            const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'audio/mpeg',
-                    'Content-Type': 'application/json',
-                    'xi-api-key': env.ELEVENLABS_API_KEY
-                },
-                body: JSON.stringify({
-                    text: narrationText.slice(0, 4000),
-                    model_id: "eleven_monolingual_v1",
-                    voice_settings: { stability: 0.5, similarity_boost: 0.75 }
-                })
-            });
-
-            if (elevenRes.ok) {
-                audioBuffer = await elevenRes.arrayBuffer();
-            } else {
-                console.warn('[TTS] ElevenLabs failed, falling back to Workers AI:', await elevenRes.text());
-            }
-        }
-
-        // 2. Workers AI TTS — Deepgram Aura first. It is the natural,
-        // production-grade voice (MeloTTS sounds robotic and has been failing
-        // server-side with 3043s since 2026-07-09, which froze the audio
-        // pipeline for 2.5 days). Returns an MP3 stream.
-        if (!audioBuffer) {
-            try {
-                const res = await (env.AI as Record<string, any>).run('@cf/deepgram/aura-1', {
-                    text: narrationText.slice(0, 2000),
-                    speaker: 'athena', // warm, measured narration voice
-                });
-                if (res instanceof ReadableStream) {
-                    audioBuffer = await new Response(res).arrayBuffer();
-                } else if (res instanceof ArrayBuffer) {
-                    audioBuffer = res;
-                } else if (res && typeof res === 'object' && 'audio' in res) {
-                    audioBuffer = base64ToBytes((res as Record<string, string>).audio);
-                }
-                if (audioBuffer && audioBuffer.byteLength === 0) audioBuffer = null;
-            } catch (err) {
-                console.warn('[TTS] Aura failed, falling back to MeloTTS:', String(err).slice(0, 120));
-            }
-        }
-
-        // 3. Last resort: MeloTTS (base64 MP3) — kept in case Aura regresses.
-        if (!audioBuffer) {
-            const response = await (env.AI as Record<string, any>).run('@cf/myshell-ai/melotts', {
-                prompt: narrationText.slice(0, 2000), // Limit to avoid timeout
-                lang: 'en',
-            });
-
-            if (!response || !response.audio) {
-                console.error('TTS response missing audio');
-                return null;
-            }
-            audioBuffer = base64ToBytes(response.audio);
-        }
-
-        // Store audio in R2 bucket
-        await env.MEDIA.put(audioKey, audioBuffer, {
+        const durationSeconds = Math.ceil((narrationText.split(/\s+/).length / 150) * 60);
+        await env.MEDIA.put(audioKey, generated.audio, {
             httpMetadata: { contentType: 'audio/mpeg' },
         });
 
-        // Serve through the worker's /assets route (same as hero images). The
-        // old r2.dev URL pointed at R2's dev subdomain, which is disabled by
-        // default — every audio URL ever saved was a 404.
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
-        const finalAudioUrl = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
+        const path = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
+        const audioUrl = `${path}?v=2`;
 
-        // Store reference in DB (byte size feeds the podcast enclosure length;
-        // audio_regen=1 marks the narration as Aura-era so the regeneration
-        // cron never re-queues it)
         await env.DB.prepare(`
             UPDATE articles
-            SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?, audio_regen = 1
+            SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?,
+                audio_regen = 2, audio_provider = ?
             WHERE id = ?
-        `).bind(finalAudioUrl, durationSeconds, (audioBuffer as ArrayBuffer | Uint8Array).byteLength ?? null, articleId).run();
+        `).bind(audioUrl, durationSeconds, generated.audio.byteLength, generated.provider, articleId).run();
 
-        return {
-            audioUrl: finalAudioUrl,
-            durationSeconds,
-        };
-
+        return { audioUrl, durationSeconds };
     } catch (error) {
         console.error('Audio narration generation failed:', error);
         return null;
     }
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Create Narration Script from Article
-// ───────────────────────────────────────────────────────────────────────────────
-function createNarrationScript(title: string, content: string): string {
-    // Clean up markdown and format for speech
-    let script = content
-        // Remove markdown headers
+export function createNarrationScript(title: string, content: string): string {
+    const clean = (value: string) => value
         .replace(/^#{1,6}\s+/gm, '')
-        // Remove markdown links but keep text
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        // Remove bold/italic markers
         .replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1')
         .replace(/_{1,2}([^_]+)_{1,2}/g, '$1')
-        // Remove bullet points
         .replace(/^[-*]\s+/gm, '')
-        // Clean up extra whitespace
+        .replace(/^>\s?/gm, '')
+        .replace(/^\|?\s*[-:]+(?:\s*\|\s*[-:]+)+\s*\|?$/gm, '')
+        .replace(/\|/g, ', ')
+        .replace(/https?:\/\/\S+/g, '')
+        .replace(/\b(\d+(?:\.\d+)?)%/g, '$1 percent')
+        .replace(/\bvs\.?/gi, 'versus')
+        .replace(/&/g, ' and ')
+        .replace(/^\s*,\s*|\s*,\s*$/gm, '')
+        .replace(/\s*,\s*/g, ', ')
+        .replace(/([.!?]),/g, '$1')
+        .replace(/\s+([,.;:!?])/g, '$1')
+        .replace(/([.!?])(?=[A-Z])/g, '$1 ')
+        .replace(/[ \t]{2,}/g, ' ')
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 
-    // Add intro
-    const intro = `This is a BOA-Story deep-dive. ${title}. `;
-
-    return intro + script;
+    return `From BOA-Story, here is today's briefing. ${clean(title)}. ${clean(content)}`;
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Generate Executive Brief Audio (Cached Summary)
-// ───────────────────────────────────────────────────────────────────────────────
 export async function generateBriefAudio(
     env: Env,
     countryCode: string,
-    date: string
+    date: string,
 ): Promise<{ audioUrl: string; transcript: string } | null> {
-    const cacheKey = `brief_audio:${countryCode}:${date}`;
+    return getCached(env, `brief_audio:v2:${countryCode}:${date}`, async () => {
+        const articles = await env.DB.prepare(`
+            SELECT title, summary FROM articles
+            WHERE country_code = ? AND status = 'published' AND date(published_at) = ?
+            ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
+            LIMIT 5
+        `).bind(countryCode, date).all();
+        if (!articles.results?.length) return null;
 
-    return getCached(
-        env,
-        cacheKey,
-        async () => {
-            // Get today's articles for country
-            const articles = await env.DB.prepare(`
-                SELECT title, summary FROM articles
-                WHERE country_code = ? 
-                  AND status = 'published'
-                  AND date(published_at) = ?
-                ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC
-                LIMIT 5
-            `).bind(countryCode, date).all();
+        const country = await env.DB.prepare('SELECT name FROM countries WHERE code = ?')
+            .bind(countryCode).first<{ name: string }>();
+        const headlines = (articles.results as Array<{ title: string }>)
+            .map((article, index) => `${index + 1}. ${article.title}`)
+            .join('. ');
+        const transcript = `Good morning. This is your ${country?.name || countryCode} briefing for ${date}. Today's top stories: ${headlines}. For the full stories, visit BOA-Story.`;
+        const generated = await synthesizeNarration(env, transcript);
+        if (!generated) return null;
 
-            if (!articles.results || articles.results.length === 0) {
-                return null;
-            }
-
-            // Get country name
-            const country = await env.DB.prepare(
-                'SELECT name FROM countries WHERE code = ?'
-            ).bind(countryCode).first<{ name: string }>();
-
-            // Create brief transcript
-            const headlines = (articles.results as any[])
-                .map((a, i) => `${i + 1}. ${a.title}`)
-                .join('. ');
-
-            const transcript = `Good morning. This is your ${country?.name || countryCode} market briefing for ${date}. Today's top stories: ${headlines}. That's your briefing. Visit BOA-Story for full coverage.`;
-
-            // Generate audio (MeloTTS — base64-encoded MP3)
-            const response = await (env.AI as Record<string, any>).run('@cf/myshell-ai/melotts', {
-                prompt: transcript.slice(0, 2000),
-                lang: 'en',
-            });
-
-            if (!response?.audio) return null;
-
-            // Store in R2
-            const audioKey = `briefs/${countryCode}/${date}.mp3`;
-            await env.MEDIA.put(audioKey, base64ToBytes(response.audio), {
-                httpMetadata: { contentType: 'audio/mpeg' },
-            });
-
-            const briefBase = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
-            return {
-                audioUrl: briefBase ? `${briefBase}/assets/${audioKey}` : `/assets/${audioKey}`,
-                transcript,
-            };
-        },
-        { ttl: 86400 } // Cache for 24 hours
-    );
+        const audioKey = `briefs/${countryCode}/${date}.mp3`;
+        await env.MEDIA.put(audioKey, generated.audio, { httpMetadata: { contentType: 'audio/mpeg' } });
+        const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
+        const path = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
+        return { audioUrl: `${path}?v=2`, transcript };
+    }, { ttl: 86400 });
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
-// Check if Audio Exists
-// ───────────────────────────────────────────────────────────────────────────────
 export async function getArticleAudio(
     env: Env,
-    articleId: string
+    articleId: string,
 ): Promise<{ audioUrl: string; durationSeconds: number } | null> {
     const article = await env.DB.prepare(`
-        SELECT audio_url, audio_duration_seconds
-        FROM articles WHERE id = ?
+        SELECT audio_url, audio_duration_seconds FROM articles WHERE id = ?
     `).bind(articleId).first<{ audio_url: string | null; audio_duration_seconds: number | null }>();
-
     if (!article?.audio_url) return null;
-
-    return {
-        audioUrl: article.audio_url,
-        durationSeconds: article.audio_duration_seconds || 0,
-    };
+    return { audioUrl: article.audio_url, durationSeconds: article.audio_duration_seconds || 0 };
 }
