@@ -365,9 +365,13 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
 
     // Backfill audio narration (summary-length TTS), newest-first — the Listen
     // buttons promised audio that never existed. Self-terminates when done.
+    // Aura regeneration takes priority: fixing the robotic MeloTTS voice on
+    // articles readers can already play beats extending coverage to ones
+    // nobody has reached yet. Once the regen queue drains, coverage resumes.
     await safe('backfill-audio', async () => {
-        const { backfillAudio } = await import('./workers/generator');
-        await backfillAudio(env, 3);
+        const { backfillAudio, regenerateAudio } = await import('./workers/generator');
+        const regenerated = await regenerateAudio(env, 3);
+        if (regenerated === 0) await backfillAudio(env, 3);
     });
 
     // Regenerate SDXL-era heroes with FLUX (most-visible articles first).

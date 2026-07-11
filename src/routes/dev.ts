@@ -132,6 +132,33 @@ router.post('/trigger-optimization', devAuthGuard, async (c) => {
     return c.json({ success: true, message: 'Optimization complete - market_metrics and narrative_strategies populated' });
 });
 
+// Probe a TTS model directly (MeloTTS went 3043 server-side on 2026-07-09,
+// freezing the audio pipeline — this measures candidates for the fallback).
+router.post('/test-tts', devAuthGuard, async (c) => {
+    const model = c.req.query('model') || '@cf/myshell-ai/melotts';
+    const text = 'Nairobi is building a new financial district, and investors are paying attention.';
+    const t0 = Date.now();
+    try {
+        const res = await (c.env.AI as Record<string, any>).run(
+            model,
+            model.includes('melotts') ? { prompt: text, lang: 'en' } : { text },
+        );
+        let bytes = 0; let kind: string = typeof res;
+        if (res instanceof ReadableStream) {
+            const buf = await new Response(res).arrayBuffer();
+            bytes = buf.byteLength; kind = 'stream';
+            (globalThis as Record<string, any>).__ttsHead = [...new Uint8Array(buf.slice(0, 4))].map(b => b.toString(16).padStart(2, '0')).join('');
+        } else if (res && typeof res === 'object' && 'audio' in res) {
+            bytes = atob((res as Record<string, string>).audio).length; kind = 'base64';
+        } else if (res instanceof ArrayBuffer) {
+            bytes = res.byteLength; kind = 'arraybuffer';
+        }
+        return c.json({ ok: bytes > 0, model, kind, bytes, head: (globalThis as Record<string, any>).__ttsHead || null, ms: Date.now() - t0 });
+    } catch (e) {
+        return c.json({ ok: false, model, error: String(e).slice(0, 300), ms: Date.now() - t0 });
+    }
+});
+
 // Backfill articles.audio_file_size from R2 object metadata (podcast feeds
 // need a real enclosure byte length; historical uploads never stored one).
 // Paginated by R2 list cursor; DB.batch keeps each call to two subrequests.

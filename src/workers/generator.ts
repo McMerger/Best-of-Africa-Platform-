@@ -454,6 +454,40 @@ export async function backfillAudio(env: Env, batch = 3): Promise<number> {
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
+// Audio Regeneration (Cron — per-minute, self-terminating)
+//
+// The first 5,680 narrations were MeloTTS — robotic, and the model died
+// server-side on 2026-07-09. Re-narrate them with the Deepgram Aura voice,
+// newest-first (they are the articles readers actually play), overwriting the
+// same R2 key so existing audio URLs keep working. Runs INSTEAD of the
+// coverage backfill each tick until the regen queue drains — fixing the voice
+// on audible articles beats adding audio to ones nobody has reached yet.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function regenerateAudio(env: Env, batch = 3): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, content
+        FROM articles INDEXED BY idx_articles_audio_regen
+        WHERE status = 'published' AND audio_url IS NOT NULL AND (audio_regen IS NULL OR audio_regen = 0)
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; content: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const res = await generateAudioNarration(env, a.id, a.title, a.summary || (a.content || '').slice(0, 1200));
+            if (!res) break; // TTS unavailable — retry next tick
+            done++;
+        } catch (err) {
+            console.error('[regen-audio] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[regen-audio] Re-narrated ${done} article(s) with Aura.`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Stale Task Fallback (Cron — every 2 minutes)
 //
 // ZeroClaw is an external that polls //tasks/pending. If it goes

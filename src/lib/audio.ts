@@ -54,7 +54,30 @@ export async function generateAudioNarration(
             }
         }
 
-        // 2. Fallback to Workers AI TTS (MeloTTS). Returns base64-encoded MP3.
+        // 2. Workers AI TTS — Deepgram Aura first. It is the natural,
+        // production-grade voice (MeloTTS sounds robotic and has been failing
+        // server-side with 3043s since 2026-07-09, which froze the audio
+        // pipeline for 2.5 days). Returns an MP3 stream.
+        if (!audioBuffer) {
+            try {
+                const res = await (env.AI as Record<string, any>).run('@cf/deepgram/aura-1', {
+                    text: narrationText.slice(0, 2000),
+                    speaker: 'athena', // warm, measured narration voice
+                });
+                if (res instanceof ReadableStream) {
+                    audioBuffer = await new Response(res).arrayBuffer();
+                } else if (res instanceof ArrayBuffer) {
+                    audioBuffer = res;
+                } else if (res && typeof res === 'object' && 'audio' in res) {
+                    audioBuffer = base64ToBytes((res as Record<string, string>).audio);
+                }
+                if (audioBuffer && audioBuffer.byteLength === 0) audioBuffer = null;
+            } catch (err) {
+                console.warn('[TTS] Aura failed, falling back to MeloTTS:', String(err).slice(0, 120));
+            }
+        }
+
+        // 3. Last resort: MeloTTS (base64 MP3) — kept in case Aura regresses.
         if (!audioBuffer) {
             const response = await (env.AI as Record<string, any>).run('@cf/myshell-ai/melotts', {
                 prompt: narrationText.slice(0, 2000), // Limit to avoid timeout
@@ -79,10 +102,12 @@ export async function generateAudioNarration(
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
         const finalAudioUrl = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
 
-        // Store reference in DB (byte size feeds the podcast enclosure length)
+        // Store reference in DB (byte size feeds the podcast enclosure length;
+        // audio_regen=1 marks the narration as Aura-era so the regeneration
+        // cron never re-queues it)
         await env.DB.prepare(`
             UPDATE articles
-            SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?
+            SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?, audio_regen = 1
             WHERE id = ?
         `).bind(finalAudioUrl, durationSeconds, (audioBuffer as ArrayBuffer | Uint8Array).byteLength ?? null, articleId).run();
 

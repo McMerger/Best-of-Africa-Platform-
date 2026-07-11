@@ -63,6 +63,13 @@ const FOREIGN_PRIMARY = [
     'maldives', 'sri lanka', 'bangladesh', 'nepal', 'china', 'chinese', 'beijing',
     'russia', 'russian', 'ukraine', 'united states', 'america', 'washington',
     'europe', 'european union', 'brazil', 'indonesia', 'philippines',
+    // Middle East — a wave of Iran coverage ("Tehran's Streets Beat with
+    // Defiance", Mashhad, Strait of Hormuz) leaked through in July 2026
+    // because none of these were vetoed.
+    'iran', 'iranian', 'tehran', 'mashhad', 'khamenei', 'hormuz',
+    'israel', 'israeli', 'gaza', 'palestinian', 'lebanon', 'beirut',
+    'syria', 'syrian', 'iraq', 'iraqi', 'saudi', 'riyadh', 'qatar',
+    'yemen', 'afghanistan', 'taliban',
 ];
 
 const kwRegex = (kw: string) => new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
