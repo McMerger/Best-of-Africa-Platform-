@@ -7,25 +7,31 @@
 import type { Env, OptimizationMessage } from '../../types';
 import { generateHeadlineVariants, fillNarrativeGap } from '../../lib/ai';
 import { findNarrativeGaps, indexArticle } from '../../lib/vectorize';
-import { updateArticleEngagement } from '../../lib/analytics';
-
-
 // ───────────────────────────────────────────────────────────────────────────────
 // Update Engagement Scores
 // ───────────────────────────────────────────────────────────────────────────────
 export async function updateEngagementScores(env: Env): Promise<void> {
-    // Get articles published in last 30 days
-    const articles = await env.DB.prepare(`
-    SELECT id FROM articles
-    WHERE status = 'published'
-      AND published_at > datetime('now', '-30 days')
-  `).all();
+    // Set-based on purpose: the old version looped every article from the last
+    // 30 days calling updateArticleEngagement (two D1 queries each) — 13k+
+    // subrequests per 2-minute run against Workers' 1,000 cap. It died partway
+    // through EVERY invocation, which is why 28k published articles carried six
+    // nonzero engagement scores. One UPDATE applies the same formula
+    // (calculateEngagementScore in lib/analytics.ts) to every row, and the
+    // score-changed guard keeps it from rewriting thousands of identical rows.
+    const SCORE = `ROUND((
+        MIN(100.0, view_count / 10.0)
+        + MIN(1.0, avg_read_time_seconds / (COALESCE(NULLIF(reading_time_minutes, 0), 3) * 60.0)) * 50.0
+        + MIN(50.0, share_count * 5.0)
+    ) / 2.0)`;
 
-    for (const article of articles.results || []) {
-        await updateArticleEngagement(env, (article as Record<string, any>).id);
-    }
+    const res = await env.DB.prepare(`
+        UPDATE articles SET engagement_score = ${SCORE}
+        WHERE status = 'published'
+          AND published_at > datetime('now', '-30 days')
+          AND engagement_score <> ${SCORE}
+    `).run();
 
-    console.log(`Updated engagement for ${articles.results?.length || 0} articles`);
+    console.log(`Updated engagement for ${res.meta?.changes ?? 0} article(s)`);
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
