@@ -117,8 +117,8 @@ export const BetaContinentalOverview: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
-            { Icon: Globe, label: 'Countries Tracked', value: overview.countries_covered },
-            { Icon: MapPin, label: 'Active Regions', value: overview.regions },
+            { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
+            { Icon: MapPin, label: 'Audio Briefings (30d)', value: overview.narrated_briefings ?? '—' },
           ].map(({ Icon, label, value }, i) => (
             <motion.div
               key={label}

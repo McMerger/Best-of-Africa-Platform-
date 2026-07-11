@@ -781,6 +781,59 @@ Return ONLY valid JSON matching this schema: {"growth": number, "trend": "up" | 
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
+// GET /market-intel/coverage-pulse — the free-visitor intelligence view.
+// Every number here is REAL coverage data. Its predecessor blended pseudo-
+// metrics ("stability 100/moderate", identical perception/reality rows) that
+// read as meaningless to visitors — because they were.
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/coverage-pulse', async (c) => {
+    const data = await getCached(c.env, 'coverage:pulse', async () => {
+        const [totals, topSector, countries, thinnest] = await Promise.all([
+            c.env.DB.prepare(`
+                SELECT COUNT(*) AS stories, COUNT(DISTINCT country_code) AS countries
+                FROM articles
+                WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+            `).first<{ stories: number; countries: number }>(),
+            c.env.DB.prepare(`
+                SELECT s.name, COUNT(*) AS n
+                FROM articles a JOIN sectors s ON s.id = a.sector_id
+                WHERE a.status = 'published' AND a.published_at > datetime('now', '-7 days')
+                  AND s.id != 'general'
+                GROUP BY s.id ORDER BY n DESC LIMIT 1
+            `).first<{ name: string; n: number }>(),
+            c.env.DB.prepare(`
+                SELECT c.code AS country_code, c.name AS country_name,
+                       SUM(CASE WHEN a.published_at > datetime('now', '-7 days') THEN 1 ELSE 0 END) AS this_week,
+                       SUM(CASE WHEN a.published_at <= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS last_week
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    AND a.published_at > datetime('now', '-14 days')
+                GROUP BY c.code
+                HAVING this_week > 0 OR last_week > 0
+                ORDER BY this_week DESC, (this_week - last_week) DESC, c.name ASC
+            `).all<{ country_code: string; country_name: string; this_week: number; last_week: number }>(),
+            c.env.DB.prepare(`
+                SELECT c.region, COUNT(a.id) AS n
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    AND a.published_at > datetime('now', '-7 days')
+                GROUP BY c.region ORDER BY n ASC LIMIT 1
+            `).first<{ region: string; n: number }>(),
+        ]);
+
+        return {
+            stories_7d: totals?.stories || 0,
+            countries_7d: totals?.countries || 0,
+            top_sector: topSector ? { name: topSector.name, stories: topSector.n } : null,
+            countries: countries.results || [],
+            thinnest_region: thinnest ? { region: thinnest.region, stories: thinnest.n } : null,
+            updated_at: new Date().toISOString(),
+        };
+    }, { ttl: 600 });
+    return c.json(data);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
 // GET /market-intel/sentiment-divergence - Country reality vs perception (for NarrativesPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sentiment-divergence', async (c) => {

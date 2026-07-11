@@ -175,6 +175,7 @@ export const api = {
         overview: {
             total_articles_30d: number;
             countries_covered: number;
+            narrated_briefings?: number;
             regions: number;
         };
         by_region: { region: string; count: number }[];
@@ -383,6 +384,15 @@ export const api = {
         trend: string;
         updated_at: string;
     }>('/market-intel/leading-sector'),
+
+    getCoveragePulse: () => request<{
+        stories_7d: number;
+        countries_7d: number;
+        top_sector: { name: string; stories: number } | null;
+        countries: { country_code: string; country_name: string; this_week: number; last_week: number }[];
+        thinnest_region: { region: string; stories: number } | null;
+        updated_at: string;
+    }>('/market-intel/coverage-pulse'),
 
     getSentimentDivergence: () => request<{
         average_divergence: number;

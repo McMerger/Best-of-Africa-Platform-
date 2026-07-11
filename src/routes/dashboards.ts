@@ -160,9 +160,12 @@ router.get('/continental/overview', async (c) => {
         leastCovered,
     ] = await Promise.all([
         c.env.DB.prepare(`
-            SELECT COUNT(*) as total FROM articles 
+            SELECT COUNT(*) as total,
+                   COUNT(DISTINCT country_code) as countries,
+                   SUM(CASE WHEN audio_url IS NOT NULL THEN 1 ELSE 0 END) as narrated
+            FROM articles
             WHERE status = 'published' AND published_at > datetime('now', '-30 days')
-        `).first<{ total: number }>(),
+        `).first<{ total: number; countries: number; narrated: number }>(),
 
         c.env.DB.prepare(`
             SELECT c.region, COUNT(a.id) as count
@@ -232,7 +235,10 @@ router.get('/continental/overview', async (c) => {
     return c.json({
         overview: {
             total_articles_30d: totalArticles?.total || 0,
-            countries_covered: 54,
+            // Real 30-day counts — the old hardcoded 54/5 never changed, which
+            // made the KPI row read as decoration.
+            countries_covered: totalArticles?.countries || 0,
+            narrated_briefings: totalArticles?.narrated || 0,
             regions: 5,
         },
         by_region: articlesByRegion.results || [],
