@@ -136,12 +136,12 @@ router.get('/rss.xml', async (c) => {
 router.get('/podcast.xml', async (c) => {
     const BASE_URL = siteBase(c.env);
     const articles = await c.env.DB.prepare(`
-        SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.hero_image_url
+        SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.audio_file_size, a.hero_image_url
         FROM articles a
         WHERE a.status = 'published' AND a.audio_url IS NOT NULL
-        ORDER BY a.published_at DESC 
+        ORDER BY a.published_at DESC
         LIMIT 50
-    `).all<{ title: string; slug: string; summary: string; published_at: string; audio_url: string; audio_duration_seconds: number; hero_image_url: string }>();
+    `).all<{ title: string; slug: string; summary: string; published_at: string; audio_url: string; audio_duration_seconds: number; audio_file_size: number | null; hero_image_url: string }>();
 
     let xml = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
     xml += `<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
@@ -171,7 +171,7 @@ router.get('/podcast.xml', async (c) => {
         
         if (article.audio_url) {
             const absoluteAudioUrl = article.audio_url.startsWith('http') ? article.audio_url : `${BASE_URL}${article.audio_url}`;
-            xml += `      <enclosure url="${absoluteAudioUrl}" type="audio/mpeg" length="${(article as any).audio_file_size || 0}" />\n`;
+            xml += `      <enclosure url="${absoluteAudioUrl}" type="audio/mpeg" length="${article.audio_file_size || 0}" />\n`;
             if (article.audio_duration_seconds) {
                 xml += `      <itunes:duration>${article.audio_duration_seconds}</itunes:duration>\n`;
             }

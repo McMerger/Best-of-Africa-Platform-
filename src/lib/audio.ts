@@ -79,12 +79,12 @@ export async function generateAudioNarration(
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
         const finalAudioUrl = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
 
-        // Store reference in DB
+        // Store reference in DB (byte size feeds the podcast enclosure length)
         await env.DB.prepare(`
-            UPDATE articles 
-            SET audio_url = ?, audio_duration_seconds = ?
+            UPDATE articles
+            SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?
             WHERE id = ?
-        `).bind(finalAudioUrl, durationSeconds, articleId).run();
+        `).bind(finalAudioUrl, durationSeconds, (audioBuffer as ArrayBuffer | Uint8Array).byteLength ?? null, articleId).run();
 
         return {
             audioUrl: finalAudioUrl,

@@ -43,7 +43,7 @@ const unsubscribeUrl = (env: Env, subscriptionId: string) =>
 export async function generateDailyDigest(
     env: Env,
     subscription: DigestSubscription
-): Promise<{ subject: string; html: string; text: string }> {
+): Promise<{ subject: string; html: string; text: string } | null> {
 
     // Get top articles from last 24 hours
     let query = `
@@ -79,13 +79,9 @@ export async function generateDailyDigest(
     const articles = await env.DB.prepare(query).bind(...bindings).all<DigestArticle>();
     const articleList = articles.results || [];
 
-    if (articleList.length === 0) {
-        return {
-            subject: 'No new articles today',
-            html: '<p>No new articles matching your preferences were published today.</p>',
-            text: 'No new articles matching your preferences were published today.',
-        };
-    }
+    // Nothing matched the subscriber's filters — skip the send entirely. A
+    // daily "no new articles" email is spam that trains readers to ignore us.
+    if (articleList.length === 0) return null;
 
     // Generate summary of the day's news
     let aiSummary = '';
@@ -134,7 +130,7 @@ Write a 3-4 sentence Executive Summary connecting our stories to the global pict
 export async function generateWeeklyDigest(
     env: Env,
     subscription: DigestSubscription
-): Promise<{ subject: string; html: string; text: string }> {
+): Promise<{ subject: string; html: string; text: string } | null> {
 
     // Get top articles from last 7 days
     const articles = await env.DB.prepare(`
@@ -152,6 +148,7 @@ export async function generateWeeklyDigest(
     `).all<DigestArticle>();
 
     const articleList = articles.results || [];
+    if (articleList.length === 0) return null; // nothing this week — skip the send
 
     // Group by sector
     const bySector: Record<string, DigestArticle[]> = {};
@@ -239,6 +236,7 @@ export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): P
             const digest = frequency === 'daily'
                 ? await generateDailyDigest(env, sub)
                 : await generateWeeklyDigest(env, sub);
+            if (!digest) continue; // nothing matched this subscriber's filters
 
             const sent = await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
             if (sent) console.log(`Sent ${frequency} digest to ${sub.email}`);

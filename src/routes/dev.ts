@@ -132,6 +132,29 @@ router.post('/trigger-optimization', devAuthGuard, async (c) => {
     return c.json({ success: true, message: 'Optimization complete - market_metrics and narrative_strategies populated' });
 });
 
+// Backfill articles.audio_file_size from R2 object metadata (podcast feeds
+// need a real enclosure byte length; historical uploads never stored one).
+// Paginated by R2 list cursor; DB.batch keeps each call to two subrequests.
+router.post('/audio-sizes', devAuthGuard, async (c) => {
+    const cursor = c.req.query('cursor') || undefined;
+    const listed = await c.env.MEDIA.list({ prefix: 'audio/', limit: 500, cursor });
+    const stmts = [];
+    for (const obj of listed.objects) {
+        const m = obj.key.match(/^audio\/(.+)\.mp3$/);
+        if (!m) continue;
+        stmts.push(c.env.DB.prepare(
+            'UPDATE articles SET audio_file_size = ? WHERE id = ? AND (audio_file_size IS NULL OR audio_file_size = 0)'
+        ).bind(obj.size, m[1]));
+    }
+    if (stmts.length) await c.env.DB.batch(stmts);
+    const truncated = 'truncated' in listed ? listed.truncated : false;
+    return c.json({
+        listed: listed.objects.length,
+        updates_attempted: stmts.length,
+        cursor: truncated && 'cursor' in listed ? listed.cursor : null,
+    });
+});
+
 // Dev endpoint to REQUEUE all pending items for processing
 router.post('/requeue-pending', devAuthGuard, async (c) => {
     const pending = await c.env.DB.prepare(`

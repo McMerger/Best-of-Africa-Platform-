@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { } from '../../components/beta';
@@ -10,6 +10,9 @@ import { request } from '../../services/api';
 const MIN_DISPLAY_SUBSCRIBERS = 50;
 
 export const BetaNewsletter = () => {
+  const [searchParams] = useSearchParams();
+  // Landing target of the one-click unsubscribe redirect — confirm it worked.
+  const justUnsubscribed = searchParams.get('unsubscribed') === '1';
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -84,6 +87,12 @@ export const BetaNewsletter = () => {
 
       <div className="flex-1 flex flex-col justify-center py-20 px-6">
         <div className="max-w-md mx-auto w-full flex flex-col items-center text-center">
+
+          {justUnsubscribed && (
+            <div className="mb-8 w-full rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 text-sm text-primary/80" role="status">
+              You've been unsubscribed — no more dispatches will be sent to that address. Changed your mind? Sign up again below.
+            </div>
+          )}
 
           <div className="mb-10 w-full">
             <h1 className="font-serif text-ink text-[40px] md:text-[48px] leading-tight mb-4">
