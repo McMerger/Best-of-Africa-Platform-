@@ -24,21 +24,27 @@ describe('audio provider selection', () => {
     };
 
     it('uses Aura 2 and records the real provider and cache version', async () => {
-        const calls: string[] = [];
+        const calls: Array<{ model: string; options: Record<string, unknown> }> = [];
         let bound: unknown[] = [];
         const statement = {
             bind: (...values: unknown[]) => { bound = values; return statement; },
             run: async () => ({ success: true }),
         };
         const env = createMockEnv({
-            AI: { run: async (model: string) => { calls.push(model); return mp3(); } } as unknown as Ai,
+            AI: { run: async (model: string, options: Record<string, unknown>) => {
+                calls.push({ model, options });
+                return mp3();
+            } } as unknown as Ai,
             DB: { prepare: () => statement } as unknown as D1Database,
             PUBLIC_API_URL: 'https://api.example.com',
         });
 
         const result = await generateAudioNarration(env, 'article-1', 'A title', 'A concise summary.');
 
-        expect(calls).toEqual(['@cf/deepgram/aura-2-en']);
+        expect(calls).toEqual([{
+            model: '@cf/deepgram/aura-2-en',
+            options: expect.objectContaining({ encoding: 'mp3', bit_rate: 48000, speaker: 'athena' }),
+        }]);
         expect(result?.audioUrl).toBe('https://api.example.com/assets/audio/article-1.mp3?v=2');
         expect(bound).toEqual([result?.audioUrl, 5, 2048, 'aura-2', 'article-1']);
     });

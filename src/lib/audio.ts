@@ -71,7 +71,7 @@ async function synthesizeNarration(
                 text: text.slice(0, 2000),
                 speaker: 'athena',
                 encoding: 'mp3',
-                bit_rate: 128000,
+                bit_rate: 48000,
             });
             const audio = await audioBytes(result);
             if (audio && looksLikeMp3(audio)) return { audio, provider: model.provider };
