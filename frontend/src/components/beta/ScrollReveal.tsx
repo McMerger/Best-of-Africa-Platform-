@@ -30,7 +30,10 @@ export function ScrollReveal({
     offset: ['start end', 'center center'],
   });
 
-  const opacity = useTransform(scrollYProgress, [0, 0.85], [0.25, 1]);
+  // Motion comes from translate/scale only. The old opacity ramp (0.25 → 1)
+  // left the PAYWALL CARD — the revenue prompt — sitting at quarter opacity
+  // whenever the reader paused with it in the lower viewport, and failed
+  // WCAG contrast for every string on it during the reveal.
   const y = useTransform(scrollYProgress, [0, 1], [70 * intensity, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], [1 - 0.05 * intensity, 1]);
 
@@ -43,7 +46,7 @@ export function ScrollReveal({
   }
 
   return (
-    <motion.div ref={ref} className={className} style={{ opacity, y, scale }}>
+    <motion.div ref={ref} className={className} style={{ y, scale }}>
       {children}
     </motion.div>
   );

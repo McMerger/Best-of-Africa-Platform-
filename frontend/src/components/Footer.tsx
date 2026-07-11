@@ -124,6 +124,7 @@ export const Footer: React.FC = () => {
                     whileInView={{ opacity: 0.03, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
+                    aria-hidden="true"
                     className="absolute -bottom-10 md:-bottom-20 left-0 right-0 font-serif font-black text-[15vw] leading-none text-center pointer-events-none select-none text-white whitespace-nowrap overflow-hidden"
                 >
                     AFRICA.

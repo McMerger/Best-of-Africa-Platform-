@@ -53,7 +53,7 @@ const CountryCard = ({
       >
         <div className="flex items-center justify-between mb-3">
           <CountryFlag code={country.code} title={country.name} size={36} />
-          <span className="text-[9px] font-bold uppercase tracking-widest text-accent/70 bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-accent-ink bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
             {country.region}
           </span>
         </div>
@@ -61,7 +61,7 @@ const CountryCard = ({
           {country.name}
         </h3>
         {tag && (
-          <p className="text-[11px] text-primary/40 font-medium leading-tight line-clamp-1">{tag}</p>
+          <p className="text-[11px] text-primary/70 font-medium leading-tight line-clamp-1">{tag}</p>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
       </Link>
@@ -142,7 +142,7 @@ export const BetaCountryTeaser = () => {
           <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
             {t('countries.title', 'One Continent. Every Story.')}
           </h1>
-          <p className="text-lg text-primary/60 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-primary/70 max-w-2xl mx-auto leading-relaxed">
             {t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
@@ -180,11 +180,11 @@ export const BetaCountryTeaser = () => {
                 className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
                     ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
-                    : 'bg-background/5 text-primary/60 hover:bg-foreground/10 hover:text-primary border border-primary/8'
+                    : 'bg-background/5 text-primary/70 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
                 {t('countries.region_' + region.toLowerCase(), region)}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy/70' : 'text-primary/30'}`}>
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy/70' : 'text-primary/70'}`}>
                   {regionCounts[region]}
                 </span>
               </button>

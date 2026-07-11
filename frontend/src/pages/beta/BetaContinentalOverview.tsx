@@ -104,10 +104,10 @@ export const BetaContinentalOverview: React.FC = () => {
         {!isMember && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/30 bg-card shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] px-6 py-4 mb-10">
             <p className="text-sm text-foreground/70 leading-relaxed">
-              <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Open access</span>
+              <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
               The full continental dashboard — coverage, regional heatmap, trending nations, sectors and editor's highlights — is free for everyone.
             </p>
-            <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-foreground transition-colors">
+            <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent-ink hover:text-foreground transition-colors">
               Unlock the full dashboard →
             </Link>
           </div>
@@ -133,7 +133,7 @@ export const BetaContinentalOverview: React.FC = () => {
                 <Icon className="text-accent w-7 h-7" />
               </div>
               <div className="relative">
-                <div className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest mb-2">{label}</div>
+                <div className="text-foreground/70 text-[11px] font-bold uppercase tracking-widest mb-2">{label}</div>
                 <div className="text-[2.75rem] font-serif text-foreground leading-none">{value}</div>
               </div>
             </motion.div>
@@ -198,7 +198,7 @@ export const BetaContinentalOverview: React.FC = () => {
                   </Link>
                   <div className="text-right">
                     <div className="text-[1.125rem] font-serif text-foreground">{c.articles}</div>
-                    <div className="text-[10px] text-foreground/40 uppercase tracking-widest font-bold">Stories</div>
+                    <div className="text-[10px] text-foreground/70 uppercase tracking-widest font-bold">Stories</div>
                   </div>
                 </li>
               ))}
@@ -224,7 +224,7 @@ export const BetaContinentalOverview: React.FC = () => {
               </h3>
               <span className="text-[11px] font-bold uppercase tracking-widest text-accent/80">Where coverage is thin</span>
             </div>
-            <p className="text-foreground/55 font-light mb-8 max-w-2xl">
+            <p className="text-foreground/70 font-light mb-8 max-w-2xl">
               The headlines crowd around a handful of big economies. These nations are the least covered here — and exactly where we're working to even the story out.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -237,7 +237,7 @@ export const BetaContinentalOverview: React.FC = () => {
                   <CountryFlag code={c.code} title={c.name} size={32} />
                   <div className="min-w-0">
                     <div className="text-[15px] font-medium text-foreground truncate group-hover:text-accent transition-colors">{c.name}</div>
-                    <div className="text-[11px] text-foreground/40">{c.articles} {c.articles === 1 ? 'story' : 'stories'}</div>
+                    <div className="text-[11px] text-foreground/70">{c.articles} {c.articles === 1 ? 'story' : 'stories'}</div>
                   </div>
                 </Link>
               ))}

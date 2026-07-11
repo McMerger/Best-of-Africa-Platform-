@@ -232,7 +232,7 @@ export const BetaStories = () => {
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (
-          <div className="mb-6 px-4 py-2.5 rounded-lg bg-background/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/50">
+          <div className="mb-6 px-4 py-2.5 rounded-lg bg-background/5 border border-primary/10 flex items-center gap-2 text-sm text-primary/70">
             <span className="w-1.5 h-1.5 rounded-full bg-accent/60 shrink-0" />
             {t('stories.unavailable', 'Live content is currently unavailable. Please check back shortly.')}
           </div>
@@ -247,7 +247,7 @@ export const BetaStories = () => {
                 className={`px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
                   feedMode === 'latest' 
                     ? 'bg-background text-primary shadow-sm border border-primary/10' 
-                    : 'text-primary/50 hover:text-primary'
+                    : 'text-primary/70 hover:text-primary'
                 }`}
               >
                 {t('stories.latest', 'Latest')}
@@ -257,7 +257,7 @@ export const BetaStories = () => {
                 className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-colors ${
                   feedMode === 'foryou' 
                     ? 'bg-accent text-navy shadow-sm border border-accent/20' 
-                    : 'text-primary/50 hover:text-accent'
+                    : 'text-primary/70 hover:text-accent'
                 }`}
               >
                 <Sparkles size={14} />
@@ -346,7 +346,7 @@ export const BetaStories = () => {
 
         {/* Search result count */}
         {isSearchMode && !isSearching && (
-          <p className="text-sm text-primary/40 mb-6">
+          <p className="text-sm text-primary/70 mb-6">
             {searchArticles.length > 0
               ? `${searchArticles.length} ${t('stories.results_for', 'results for')} "${debouncedQuery}"`
               : `${t('stories.no_results_for', 'No results found for')} "${debouncedQuery}"`}
@@ -393,7 +393,7 @@ export const BetaStories = () => {
                       <div className="p-6 pb-2 border-b border-primary/8 relative z-10 bg-background" aria-hidden="true">
                         <div className="flex justify-between items-center mb-4">
                           <CountryFlag code={article.country_code} title={article.country_name} size={26} />
-                          <span className="text-xs font-semibold tracking-wider text-primary/50 uppercase">{article.sector_name}</span>
+                          <span className="text-xs font-semibold tracking-wider text-primary/70 uppercase">{article.sector_name}</span>
                         </div>
                         <h3 className="font-serif text-[22px] leading-snug mb-3 text-primary blur-[4px] select-none opacity-60">
                           {t('stories.waiting', 'This story is waiting for you.')}
@@ -452,7 +452,7 @@ export const BetaStories = () => {
                     <div className={`flex-grow relative z-10 bg-card ${isFeatured ? 'p-7 md:p-10 lg:p-12 pb-4' : 'p-6 md:p-7 pb-4'}`}>
                       <div className="flex justify-between items-center mb-4">
                         <CountryFlag code={article.country_code} title={article.country_name} size={26} />
-                        <span className="text-[11px] font-semibold tracking-[0.16em] text-accent uppercase">{article.sector_name}</span>
+                        <span className="text-[11px] font-semibold tracking-[0.16em] text-accent-ink uppercase">{article.sector_name}</span>
                       </div>
                       <h3 className={`font-serif leading-[1.08] mb-4 text-foreground group-hover:text-accent transition-colors ${isFeatured ? 'text-[2.25rem] md:text-[3rem] lg:text-[3.5rem]' : 'text-[1.5rem] md:text-[1.6rem]'}`}>
                         {stripMarkdown(article.title)}
@@ -471,7 +471,7 @@ export const BetaStories = () => {
                       )}
                     </div>
                     <div className={`pt-0 bg-card ${isFeatured ? 'px-7 md:px-10 lg:px-12 pb-6' : 'p-6 pt-0'}`}>
-                      <div className="text-xs font-medium text-primary/50 border-t border-primary/8 pt-4 flex justify-between items-center">
+                      <div className="text-xs font-medium text-primary/70 border-t border-primary/8 pt-4 flex justify-between items-center">
                         <span className="flex items-center gap-2">
                           {article.reading_time_minutes} min read
                           {article.published_at && (
@@ -536,14 +536,14 @@ export const BetaStories = () => {
           <div className="text-center py-16">
             {isSearchMode ? (
               <>
-                <p className="text-primary/50 mb-4">{t('stories.no_results_pre', "That story isn't published yet.")}</p>
+                <p className="text-primary/70 mb-4">{t('stories.no_results_pre', "That story isn't published yet.")}</p>
                 <p className="text-primary/30 text-sm mb-6">{t('stories.try', 'Try a country name, city, or sector:')}</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {['Lagos', 'Kigali', 'Nairobi', 'Technology', 'Energy', 'Ghana'].map(s => (
                     <button
                       key={s}
                       onClick={() => setSearchInput(s)}
-                      className="px-3 py-1 rounded-full text-xs border border-primary/10 text-primary/50 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:text-accent transition-colors"
+                      className="px-3 py-1 rounded-full text-xs border border-primary/10 text-primary/70 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:text-accent transition-colors"
                     >
                       {s}
                     </button>
@@ -551,7 +551,7 @@ export const BetaStories = () => {
                 </div>
               </>
             ) : (
-              <p className="text-primary/50">{t('stories.no_category', 'No stories in this category yet.')}</p>
+              <p className="text-primary/70">{t('stories.no_category', 'No stories in this category yet.')}</p>
             )}
           </div>
         )}

@@ -110,7 +110,7 @@ export const BetaWorldCup: React.FC = () => {
                   <CalendarClock size={14} /> Next fixture
                 </span>
                 {nextFixture.stage && (
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/40">{nextFixture.stage}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-foreground/70">{nextFixture.stage}</span>
                 )}
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-8">
@@ -136,7 +136,7 @@ export const BetaWorldCup: React.FC = () => {
             <div className="rounded-3xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
               {rest.map((f, i) => (
                 <div key={`${f.utcDate}-${i}`} className="flex items-center gap-4 px-5 sm:px-7 py-4 hover:bg-foreground/[0.02] transition-colors">
-                  <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/50 tabular-nums">
+                  <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/70 tabular-nums">
                     {formatFull(f.utcDate)}
                   </div>
                   <div className="flex-1 min-w-0 flex items-center gap-3 text-[15px] font-medium text-foreground">
@@ -145,7 +145,7 @@ export const BetaWorldCup: React.FC = () => {
                     <div className="flex-1 min-w-0"><Side side={f.away} /></div>
                   </div>
                   {f.stage && (
-                    <div className="hidden md:block w-32 shrink-0 text-right text-[11px] font-bold uppercase tracking-widest text-foreground/35">{f.stage}</div>
+                    <div className="hidden md:block w-32 shrink-0 text-right text-[11px] font-bold uppercase tracking-widest text-foreground/70">{f.stage}</div>
                   )}
                 </div>
               ))}
@@ -160,7 +160,7 @@ export const BetaWorldCup: React.FC = () => {
             <div className="rounded-3xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
               {results.map((r: WorldCupResult, i: number) => (
                 <div key={`${r.utcDate}-${i}`} className="flex items-center gap-4 px-5 sm:px-7 py-4">
-                  <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/50 tabular-nums">
+                  <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/70 tabular-nums">
                     {formatFull(r.utcDate)}
                   </div>
                   <div className="flex-1 min-w-0 flex items-center gap-3 text-[15px] font-medium text-foreground">
@@ -171,7 +171,7 @@ export const BetaWorldCup: React.FC = () => {
                     <div className="flex-1 min-w-0"><Side side={r.away} /></div>
                   </div>
                   {r.stage && (
-                    <div className="hidden md:block w-32 shrink-0 text-right text-[11px] font-bold uppercase tracking-widest text-foreground/35">{r.stage}</div>
+                    <div className="hidden md:block w-32 shrink-0 text-right text-[11px] font-bold uppercase tracking-widest text-foreground/70">{r.stage}</div>
                   )}
                 </div>
               ))}
@@ -183,7 +183,7 @@ export const BetaWorldCup: React.FC = () => {
         {teams.length > 0 && (
         <section className="mt-16">
           <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">
-            Still standing <span className="text-foreground/40 text-lg">· {teams.length}</span>
+            Still standing <span className="text-foreground/70 text-lg">· {teams.length}</span>
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {teams.map((t) => (

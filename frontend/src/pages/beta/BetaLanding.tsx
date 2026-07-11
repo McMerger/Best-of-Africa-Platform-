@@ -475,7 +475,7 @@ export const BetaLanding = () => {
 
       {/* 7. TRANSPARENCY SECTION, gold SVG icons on navy circles (spec §2.8) */}
       <section className="py-20 md:py-32 px-6 container mx-auto max-w-6xl text-center">
-        <h3 className="font-sans font-bold text-accent uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
+        <h3 className="font-sans font-bold text-accent-ink uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {transparencyItems.map((item, i) => (
             <CardReveal key={item.label} delay={i * 0.1}>

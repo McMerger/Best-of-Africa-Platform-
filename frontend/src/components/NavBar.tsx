@@ -97,7 +97,8 @@ export const NavBar: React.FC = () => {
                 </div>
 
                 {/* CENTER: Desktop Nav */}
-                <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/60 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
+                {/* navy/70 is the contrast floor for 11px text on white — /60 is 4.38:1, under WCAG's 4.5 */}
+                <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/70 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
                     {[
                         { path: '/posts', label: t('nav.stories', 'Stories') },
                         { path: '/countries', label: t('nav.countries', 'Countries') },

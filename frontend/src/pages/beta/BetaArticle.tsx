@@ -82,7 +82,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[10px] text-primary/30 uppercase tracking-widest font-semibold hidden sm:block">{t('article.share', 'Share')}</span>
+      <span className="text-[10px] text-primary/70 uppercase tracking-widest font-semibold hidden sm:block">{t('article.share', 'Share')}</span>
       <a
         href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
         target="_blank"
@@ -554,7 +554,7 @@ export const BetaArticle = () => {
                   <Link to="/membership" className="block mt-4 text-white/70 text-sm hover:text-accent transition-colors">
                     {t('article.compare_tiers', 'Compare membership tiers →')}
                   </Link>
-                  <p className="mt-5 text-[11px] text-white/40 uppercase tracking-widest">{t('article.cancel_anytime', 'Cancel anytime · Secure checkout')}</p>
+                  <p className="mt-5 text-[11px] text-white/70 uppercase tracking-widest">{t('article.cancel_anytime', 'Cancel anytime · Secure checkout')}</p>
                 </div>
                 </ScrollReveal>
               </div>
@@ -575,7 +575,7 @@ export const BetaArticle = () => {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                 {t('article.source_label', 'Source')}
               </div>
-              <p className="text-[13px] text-foreground/50 leading-relaxed mb-3">
+              <p className="text-[13px] text-foreground/70 leading-relaxed mb-3">
                 {t('article.source_disclosure', 'This briefing draws on the original reporting below:')}
               </p>
               <a
@@ -589,7 +589,7 @@ export const BetaArticle = () => {
                 </span>
                 <svg className="mt-1 shrink-0 opacity-40 group-hover:opacity-100 transition-opacity" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
               </a>
-              <div className="mt-2 text-[12px] text-foreground/40">
+              <div className="mt-2 text-[12px] text-foreground/70">
                 {sourceHost}
                 {article.source_published_at && (() => {
                   const d = new Date(article.source_published_at);
@@ -616,7 +616,7 @@ export const BetaArticle = () => {
               >
                 {t('article.become_member', 'Become a Founding Member')}
               </a>
-              <p className="mt-4 text-[11px] text-white/40 uppercase tracking-widest">{t('article.from_5_cancel', 'From $5/month · cancel anytime')}</p>
+              <p className="mt-4 text-[11px] text-white/70 uppercase tracking-widest">{t('article.from_5_cancel', 'From $5/month · cancel anytime')}</p>
             </ScrollReveal>
           )}
         </article>
@@ -627,7 +627,7 @@ export const BetaArticle = () => {
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between items-end mb-12">
             <h2 className="font-serif text-[32px] text-primary">{t('article.more_stories', 'More Stories')}</h2>
-            <Link to="/posts" className="text-accent font-semibold text-sm tracking-wider uppercase hover:text-primary transition-colors">
+            <Link to="/posts" className="text-accent-ink font-semibold text-sm tracking-wider uppercase hover:text-primary transition-colors">
               {t('article.view_all', 'View All →')}
             </Link>
           </div>
@@ -643,7 +643,7 @@ export const BetaArticle = () => {
                       <div className="flex items-center gap-2 mb-4">
                         <CountryFlag code={a.country_code} title={a.country_name} size={24} />
                         {a.sector_name && (
-                          <span className="text-[11px] font-semibold tracking-widest text-accent uppercase">{a.sector_name}</span>
+                          <span className="text-[11px] font-semibold tracking-widest text-accent-ink uppercase">{a.sector_name}</span>
                         )}
                       </div>
                       <h4 className="font-serif text-lg leading-snug mb-2 group-hover:text-accent transition-colors">{stripMarkdown(a.title)}</h4>

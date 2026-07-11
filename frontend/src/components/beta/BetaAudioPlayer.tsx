@@ -127,8 +127,8 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
           <div className="text-sm font-medium text-foreground">
             {isThisTrackPlaying ? 'Now Playing globally' : 'Listen to this article'}
           </div>
-          <div className="text-[10px] text-foreground/40">
-            {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'High-quality TTS narration.'}
+          <div className="text-[10px] text-foreground/70">
+            {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'Audio narration of this briefing.'}
           </div>
         </div>
       </div>
