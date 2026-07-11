@@ -18,7 +18,7 @@ import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
-import { stripMarkdown } from '@/lib/utils';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => {
   >
     <div className="aspect-[16/9] overflow-hidden bg-navy-card relative">
       <img
-        src={article.hero_image_url || fb}
+        src={heroThumb(article.hero_image_url) || fb}
         alt={stripMarkdown(article.title)}
         loading="lazy"
         onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = fb; } }}

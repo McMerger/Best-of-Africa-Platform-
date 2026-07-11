@@ -202,7 +202,7 @@ export const BetaWorldCup: React.FC = () => {
         )}
 
         {/* Provenance / disclaimer */}
-        <p className="mt-12 text-center text-[12px] text-foreground/35 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-12 text-center text-[12px] text-foreground/70 max-w-2xl mx-auto leading-relaxed">
           Fixtures and standings update automatically from a live sports feed.
           {updatedAt && <> Last updated {new Date(updatedAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}.</>}
         </p>

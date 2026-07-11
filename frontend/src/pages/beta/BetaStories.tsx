@@ -11,7 +11,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { stripMarkdown } from '@/lib/utils';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
@@ -441,7 +441,7 @@ export const BetaStories = () => {
                       {/* Hero thumbnail */}
                     <div className={`overflow-hidden shrink-0 relative bg-navy-card ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
                       <img
-                        src={article.hero_image_url || STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
+                        src={heroThumb(article.hero_image_url) || STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
                         alt={stripMarkdown(article.title)}
                         loading="lazy"
                         onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = STORY_FALLBACKS[index % STORY_FALLBACKS.length]; } }}
@@ -502,7 +502,7 @@ export const BetaStories = () => {
                               <span className="font-semibold text-[10px] uppercase tracking-wider">{t('stories.listen', 'Listen')}</span>
                             </button>
                           )}
-                          <span className="text-accent group-hover:translate-x-1 transition-transform">{t('stories.read', 'Read →')}</span>
+                          <span className="text-accent-ink group-hover:translate-x-1 transition-transform">{t('stories.read', 'Read →')}</span>
                         </div>
                       </div>
                     </div>
@@ -520,7 +520,7 @@ export const BetaStories = () => {
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={isPlaceholderData}
-              className="px-6 py-2 rounded-full border border-accent/30 text-accent text-sm font-medium hover:bg-accent/10 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2 rounded-full border border-accent/30 text-accent-ink text-sm font-medium hover:bg-accent/10 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isPlaceholderData ? (
                 <>

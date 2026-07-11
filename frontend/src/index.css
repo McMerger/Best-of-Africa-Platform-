@@ -21,7 +21,7 @@
      #C9A84C on white is ~2.4:1 — far below WCAG AA's 4.5:1 — and axe flagged
      ~100 nodes per page. This stays ≥4.5:1 on white; keep bright --accent for
      fills, borders, and any text on navy (where it passes at ~7:1). */
-  --accent-ink: 43 62% 33%;    /* ~#89651F */
+  --accent-ink: 43 62% 30%;    /* ~#7D5C1D — ≥5:1 on white (33% measured 4.48, under the 4.5 floor) */
 
   --secondary: 210 20% 95%;    /* #EFF2F6 surface-light */
   --secondary-foreground: 219 60% 15%;

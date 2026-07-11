@@ -91,12 +91,12 @@ export const BetaMembership = () => {
     <section className="py-16 px-6 border-t border-primary/8">
       <div className="max-w-xl mx-auto text-center bg-background p-8 rounded-xl border border-primary/8">
         <h3 className="font-serif text-2xl mb-3">{t('mem.support_title', 'Support the work.')}</h3>
-        <p className="text-primary/60 text-sm mb-6">{t('mem.support_desc', 'A one-time contribution keeps this reporting independent and brings African stories to the world.')}</p>
+        <p className="text-primary/70 text-sm mb-6">{t('mem.support_desc', 'A one-time contribution keeps this reporting independent and brings African stories to the world.')}</p>
         <a
           href={KO_FI_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center bg-transparent border border-accent text-accent px-6 py-3 rounded-full hover:bg-accent/10 transition-colors"
+          className="inline-flex items-center justify-center bg-transparent border border-accent text-accent-ink px-6 py-3 rounded-full hover:bg-accent/10 transition-colors"
         >
           {t('mem.one_time', 'One-time contribution')}
         </a>

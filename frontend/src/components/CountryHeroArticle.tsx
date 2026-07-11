@@ -1,3 +1,4 @@
+import { heroThumb } from '@/lib/utils';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -23,7 +24,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
             <div className="absolute inset-0 w-full h-full">
                 {article.ai_image_url || article.hero_image_url ? (
                     <img
-                        src={article.ai_image_url || article.hero_image_url}
+                        src={heroThumb(article.ai_image_url || article.hero_image_url)}
                         alt={article.title}
                         className="w-full h-full object-cover opacity-60 transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
                     />

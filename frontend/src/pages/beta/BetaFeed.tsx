@@ -48,7 +48,7 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
             }`}
         >
             {/* Index marker */}
-            <div aria-hidden="true" className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent' : 'text-primary/20'}`}>
+            <div aria-hidden="true" className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                 <span className="text-xs font-mono font-bold">{String(index + 1).padStart(2, '0')}</span>
                 <div className={`mt-2 w-px flex-1 ${isHighlighted ? 'bg-accent/30' : 'bg-background/10'}`} />
             </div>

@@ -8,7 +8,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
 import { CountryFlag } from '../../components/CountryFlag';
-import { stripMarkdown } from '@/lib/utils';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaContinentalOverview: React.FC = () => {
@@ -176,7 +176,7 @@ export const BetaContinentalOverview: React.FC = () => {
               </ResponsiveContainer>
             </div>
             {heaviest && thinnest && heaviest.region !== thinnest.region && (
-              <p className="mt-8 pt-6 border-t border-foreground/10 font-serif italic text-[1.0625rem] leading-relaxed text-foreground/60">
+              <p className="mt-8 pt-6 border-t border-foreground/10 font-serif italic text-[1.0625rem] leading-relaxed text-foreground/70">
                 {heaviest.region} Africa carries {heaviest.pct}% of the month's coverage;{' '}
                 {thinnest.region} Africa remains the thinnest at {thinnest.pct}% — the gap our
                 underreported-nations desk is working to close.
@@ -256,7 +256,7 @@ export const BetaContinentalOverview: React.FC = () => {
                   <span className="text-[15px] font-light text-foreground capitalize">
                     {s.name}
                   </span>
-                  <span className="text-[13px] text-accent font-bold font-mono">
+                  <span className="text-[13px] text-accent-ink font-bold font-mono">
                     {s.count}
                   </span>
                 </li>
@@ -284,7 +284,7 @@ export const BetaContinentalOverview: React.FC = () => {
                       <div className="w-full sm:w-48 h-36 shrink-0 rounded-xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-background/20 group-hover:bg-transparent transition-colors z-10" />
                         <img 
-                          src={article.hero_image_url} 
+                          src={heroThumb(article.hero_image_url)} 
                           alt={article.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
@@ -300,7 +300,7 @@ export const BetaContinentalOverview: React.FC = () => {
                         {stripMarkdown(article.title)}
                       </h4>
                       {article.summary && (
-                        <p className="text-[15px] font-light leading-relaxed text-foreground/50 line-clamp-2">
+                        <p className="text-[15px] font-light leading-relaxed text-foreground/70 line-clamp-2">
                           {stripMarkdown(article.summary)}
                         </p>
                       )}

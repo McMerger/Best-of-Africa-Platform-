@@ -135,7 +135,7 @@ export const BetaCountryTeaser = () => {
 
         {/* Header */}
         <header className="mb-14 text-center">
-          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent-ink text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
             {t('countries.badge', '54 African Nations')}
           </div>
@@ -184,7 +184,7 @@ export const BetaCountryTeaser = () => {
                 }`}
               >
                 {t('countries.region_' + region.toLowerCase(), region)}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy/70' : 'text-primary/70'}`}>
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy' : 'text-primary/70'}`}>
                   {regionCounts[region]}
                 </span>
               </button>
@@ -230,7 +230,7 @@ export const BetaCountryTeaser = () => {
 
         {/* Bottom CTA */}
         <div className="text-center">
-          <p className="text-primary/40 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
+          <p className="text-primary/70 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
           <a
             href={KO_FI_URL}
             target="_blank"

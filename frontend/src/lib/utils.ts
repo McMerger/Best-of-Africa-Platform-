@@ -10,6 +10,18 @@ export function cn(...inputs: ClassValue[]) {
  * titles and summaries (**, ##, backticks, blockquote >, leading 📰 emoji,
  * surrounding quotes) so they never render raw in the UI.
  */
+/**
+ * Card-sized variant of an article hero. Backend heroes have a 768px JPEG
+ * variant behind ?w=768 (~40KB vs 400-700KB for the raw PNG); every list/card
+ * surface must use it — three full-size heroes were 1.6MB of the landing
+ * page's mobile payload. Non-backend URLs (bundled fallbacks) pass through.
+ */
+export function heroThumb(url?: string | null): string {
+    if (!url) return '';
+    if (url.includes('/assets/articles/') && !url.includes('?')) return `${url}?w=768`;
+    return url;
+}
+
 export function stripMarkdown(text?: string | null): string {
     if (!text) return '';
     let t = String(text).trim();

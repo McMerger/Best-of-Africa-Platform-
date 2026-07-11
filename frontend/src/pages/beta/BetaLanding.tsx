@@ -15,7 +15,7 @@ import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { stripMarkdown } from '@/lib/utils';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import React from 'react';
 
 const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
@@ -285,7 +285,7 @@ export const BetaLanding = () => {
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
                       <img
-                        src={article.hero_image_url || `/images/v2_editorial_${(index % 2) + 1}.webp`}
+                        src={heroThumb(article.hero_image_url) || `/images/v2_editorial_${(index % 2) + 1}.webp`}
                         alt={article.title}
                         loading="lazy"
                         onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = `/images/v2_editorial_${(index % 2) + 1}.webp`; } }}
