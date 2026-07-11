@@ -43,6 +43,11 @@ const AFRICA_KEYWORDS = [
     'windhoek', 'kumasi', 'zanzibar', 'arusha', 'dodoma', 'freetown', 'monrovia', 'bamako',
     'maghreb', 'sahel', 'horn of africa', 'east africa', 'west africa', 'southern africa',
     'north africa', 'central africa', 'east african', 'west african',
+    // Irregular demonyms the open-ended prefix match can NOT derive from the
+    // country name ('morocco' matches 'moroccan'? No — the adjective drops the
+    // final o). Regular ones (nigerian, kenyan, ghanaian…) need no entry.
+    'moroccan', 'ivorian', 'somali', 'mozambican', 'burkinabe', 'comorian',
+    'seychellois', 'malagasy', 'mauritian', 'swazi',
     // African subnational regions/provinces & more cities (further reduce false-negatives)
     'tshwane', 'niassa', 'kwazulu', 'mpumalanga', 'western cape', 'eastern cape', 'free state',
     'oromia', 'tigray', 'amhara', 'zanzibar', 'kaduna', 'enugu', 'ogun', 'rivers state',
@@ -62,7 +67,7 @@ const FOREIGN_PRIMARY = [
 
 const kwRegex = (kw: string) => new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-function isAfricanContent(title: string, content = ''): boolean {
+export function isAfricanContent(title: string, content = ''): boolean {
     // Word-boundary on the leading edge (so "mali" doesn't match "normalize"),
     // but allow trailing letters so adjectives/demonyms still match
     // ("nigeria"→"nigerian", "morocco"→"moroccan", "benin"→"beninese").

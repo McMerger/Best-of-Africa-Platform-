@@ -8,14 +8,16 @@ import type { Env } from '../../src/types';
  * Creates a mock D1 Database for testing
  */
 export function createMockD1Database(): D1Database {
+    // Routes call statements both directly (prepare(sql).first()) and after
+    // bind (prepare(sql).bind(x).first()) — the statement must support both.
+    const statement = {
+        bind: () => statement,
+        first: () => Promise.resolve({ count: 1 }),
+        all: () => Promise.resolve({ results: [], success: true }),
+        run: () => Promise.resolve({ success: true, meta: {} }),
+    };
     const mockDb = {
-        prepare: () => ({
-            bind: () => ({
-                first: () => Promise.resolve({}),
-                all: () => Promise.resolve({ results: [], success: true }),
-                run: () => Promise.resolve({ success: true, meta: {} }),
-            }),
-        }),
+        prepare: () => statement,
         batch: () => Promise.resolve([]),
         exec: () => Promise.resolve({ success: true, meta: {} }),
     };

@@ -85,8 +85,11 @@ export async function withCircuitBreaker<T>(
     try {
         const result = await operation();
 
-        // SUCCESS: Reset state if it was anything other than CLOSED
-        if (data.state !== 'CLOSED') {
+        // SUCCESS: clear the state AND any accumulated failure count. Only
+        // resetting on non-CLOSED states let intermittent failures creep
+        // toward the trip threshold forever — two flakes on Monday plus three
+        // on Friday opened the breaker despite thousands of successes between.
+        if (data.state !== 'CLOSED' || data.failures > 0) {
             data = { state: 'CLOSED', failures: 0, lastFailureTime: 0 };
             await env.CACHE.put(key, JSON.stringify(data));
         }

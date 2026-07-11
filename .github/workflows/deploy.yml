@@ -11,10 +11,44 @@ env:
 
 jobs:
   # ════════════════════════════════════════════════════════════════════
+  # QUALITY GATE — nothing deploys unless types, tests and the build pass
+  # ════════════════════════════════════════════════════════════════════
+  check:
+    name: Typecheck & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Backend typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit & integration tests
+        run: npx vitest run
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend typecheck
+        working-directory: frontend
+        run: npx tsc --noEmit -p tsconfig.app.json
+
+  # ════════════════════════════════════════════════════════════════════
   # BACKEND WORKER DEPLOYMENT
   # ════════════════════════════════════════════════════════════════════
   deploy-backend:
     name: Deploy Backend Worker
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,6 +75,7 @@ jobs:
   # ════════════════════════════════════════════════════════════════════
   deploy-frontend:
     name: Deploy Frontend (Pages)
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
