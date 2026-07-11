@@ -49,12 +49,18 @@ function useReadingProgress(targetId: string) {
 }
 
 // Inline share buttons, copy link, Twitter/X, LinkedIn
-function ShareButtons({ title, url }: { title: string; url: string }) {
+function ShareButtons({ title, url, articleId }: { title: string; url: string; articleId?: string }) {
   const [copied, setCopied] = useState(false);
   const { t } = useLanguage();
 
+  // Every share affordance counts as a share (feeds articles.share_count).
+  const recordShare = () => {
+    if (articleId) api.trackEvent({ type: 'article_share', article_id: articleId });
+  };
+
   const copyLink = () => {
     navigator.clipboard.writeText(url).catch(() => {});
+    recordShare();
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -64,6 +70,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
     if (navigator.share) {
       try {
         await navigator.share({ title, url });
+        recordShare();
       } catch (err) {
         // user cancelled or share failed, fallback to copy
         if ((err as Error).name !== 'AbortError') copyLink();
@@ -88,6 +95,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={t('article.share_x', 'Share on X / Twitter')}
+        onClick={recordShare}
         className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Twitter size={13} />
@@ -97,6 +105,7 @@ function ShareButtons({ title, url }: { title: string; url: string }) {
         target="_blank"
         rel="noopener noreferrer"
         aria-label={t('article.share_li', 'Share on LinkedIn')}
+        onClick={recordShare}
         className={`p-2 rounded-lg bg-background/5 hover:bg-foreground/10 text-primary/40 hover:text-primary transition-all ${hasShare ? 'hidden sm:inline-flex' : ''}`}
       >
         <Linkedin size={13} />
@@ -246,6 +255,42 @@ export const BetaArticle = () => {
       api.trackSponsorImpression(a.id).catch(() => { /* non-critical */ });
     }
   }, [data]);
+
+  // Read-time beacon: report seconds-on-article (and max scroll depth) when
+  // the reader leaves — tab hide, route change, or unmount. This feeds
+  // articles.avg_read_time_seconds, one of the three engagement inputs; until
+  // this existed nothing in the app ever emitted an analytics event.
+  const readStartRef = useRef<number>(Date.now());
+  const maxProgressRef = useRef<number>(0);
+  const readSentRef = useRef<boolean>(false);
+  if (readingProgress > maxProgressRef.current) maxProgressRef.current = readingProgress;
+  useEffect(() => {
+    const articleId = data?.article?.id;
+    if (!articleId) return;
+    readStartRef.current = Date.now();
+    maxProgressRef.current = 0;
+    readSentRef.current = false;
+    const send = () => {
+      if (readSentRef.current) return;
+      const seconds = Math.round((Date.now() - readStartRef.current) / 1000);
+      if (seconds < 5) return; // bounces aren't reads
+      readSentRef.current = true;
+      api.trackEvent({
+        type: 'article_read',
+        article_id: articleId,
+        duration_seconds: seconds,
+        scroll_depth: Math.round(maxProgressRef.current),
+      });
+    };
+    const onHide = () => { if (document.visibilityState === 'hidden') send(); };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', send);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', send);
+      send(); // SPA route change
+    };
+  }, [data?.article?.id]);
 
   // Show the real headline in the breadcrumb instead of the de-slugified URL.
   useSetBreadcrumb(data?.article ? stripMarkdown(data.article.title) : null);
@@ -450,7 +495,7 @@ export const BetaArticle = () => {
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <BookmarkButton articleId={article.id} />
-              <ShareButtons title={stripMarkdown(article.title)} url={articleUrl} />
+              <ShareButtons title={stripMarkdown(article.title)} url={articleUrl} articleId={article.id} />
             </div>
           </div>
         </header>

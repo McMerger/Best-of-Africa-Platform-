@@ -340,6 +340,26 @@ export const api = {
         body: JSON.stringify(prefs),
     }),
 
+    // Fire-and-forget analytics. keepalive lets the read-time beacon survive
+    // page unload / route change; failures are silently ignored — analytics
+    // must never affect the reading experience.
+    trackEvent: (event: {
+        type: 'page_view' | 'article_read' | 'article_share' | 'search' | 'click';
+        article_id?: string;
+        duration_seconds?: number;
+        scroll_depth?: number;
+        search_query?: string;
+    }) => {
+        try {
+            fetch(`${API_BASE_URL}/analytics/events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Session-ID': getSessionId() },
+                body: JSON.stringify(event),
+                keepalive: true,
+            }).catch(() => {});
+        } catch { /* ignore */ }
+    },
+
     verifyEmail: (email: string) => request<{ success: boolean; message: string }>('/members/verify-email', {
         method: 'POST',
         body: JSON.stringify({ email })
