@@ -150,8 +150,10 @@ router.get('/unsubscribe', async (c) => {
         'UPDATE digest_subscriptions SET is_active = 0, unsubscribed_at = ? WHERE id = ? AND is_active = 1'
     ).bind(new Date().toISOString(), token).run();
 
-    // Redirect to a friendly confirmation page
-    return c.redirect('https://boastory.com/newsletter/unsubscribed', 302);
+    // Redirect to the live site (boastory.com was never ours — an unsubscribe
+    // click would have landed on a stranger's domain).
+    const site = c.env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
+    return c.redirect(`${site}/newsletter?unsubscribed=1`, 302);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────

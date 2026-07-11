@@ -55,6 +55,8 @@ export interface Env {
 
     // Public origin of the reader-facing site (sitemap/RSS/podcast URLs).
     PUBLIC_SITE_URL?: string;
+    // Public origin of this worker (media/audio URLs, email unsubscribe links).
+    PUBLIC_API_URL?: string;
 
     // Optional Provider keys (set via `wrangler secret put`)
     // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)

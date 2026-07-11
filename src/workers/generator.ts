@@ -265,7 +265,7 @@ export async function recoverPendingItems(env: Env, limit = 10): Promise<number>
 export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, sector_id
-        FROM articles
+        FROM articles INDEXED BY idx_articles_hero_missing
         WHERE status = 'published' AND (hero_image_url IS NULL OR hero_image_url = '')
         ORDER BY published_at DESC
         LIMIT ?
@@ -305,7 +305,7 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
 export async function regenerateHeroImages(env: Env, batch = 5): Promise<number> {
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, sector_id
-        FROM articles
+        FROM articles INDEXED BY idx_articles_regen_pending
         WHERE status = 'published' AND (hero_regen IS NULL OR hero_regen = 0)
         ORDER BY curated DESC, view_count DESC, published_at DESC
         LIMIT ?
@@ -344,7 +344,7 @@ export async function regenerateHeroImages(env: Env, batch = 5): Promise<number>
 export async function backfillHeroVariants(env: Env, batch = 4): Promise<number> {
     const rows = await env.DB.prepare(`
         SELECT id, hero_image_url
-        FROM articles
+        FROM articles INDEXED BY idx_articles_variant_missing
         WHERE status = 'published'
           AND hero_image_url LIKE '%/assets/articles/%'
           AND (hero_variant IS NULL OR hero_variant = 0)
@@ -390,7 +390,7 @@ const SECTOR_IDS = ['tourism', 'energy', 'agriculture', 'technology', 'infrastru
 
 export async function backfillSectors(env: Env, batch = 8): Promise<number> {
     const rows = await env.DB.prepare(`
-        SELECT id, title, summary FROM articles
+        SELECT id, title, summary FROM articles INDEXED BY idx_articles_sector_missing
         WHERE status = 'published' AND sector_id IS NULL
         ORDER BY published_at DESC
         LIMIT ?
@@ -432,7 +432,7 @@ export async function backfillSectors(env: Env, batch = 8): Promise<number> {
 export async function backfillAudio(env: Env, batch = 3): Promise<number> {
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, content
-        FROM articles
+        FROM articles INDEXED BY idx_articles_audio_missing
         WHERE status = 'published' AND (audio_url IS NULL OR audio_url = '')
         ORDER BY published_at DESC
         LIMIT ?

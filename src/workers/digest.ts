@@ -29,6 +29,14 @@ interface DigestArticle {
     published_at: string;
 }
 
+
+// Public origins for links inside emails. bestofafrica.com is unregistered —
+// links must point at the live site, and unsubscribe at the backend endpoint
+// (RFC 8058-style one-click) carrying the subscription id as the token.
+const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
+const unsubscribeUrl = (env: Env, subscriptionId: string) =>
+    `${(env.PUBLIC_API_URL || 'https://best-of-africa-backend.cortesmailles01.workers.dev')}/api/v1/newsletter/unsubscribe?token=${encodeURIComponent(subscriptionId)}`;
+
 // ───────────────────────────────────────────────────────────────────────────────
 // Generate Daily Digest Content
 // ───────────────────────────────────────────────────────────────────────────────
@@ -110,7 +118,7 @@ Write a 3-4 sentence Executive Summary connecting our stories to the global pict
     }
 
     // Generate HTML email
-    const html = generateDigestHTML(articleList, aiSummary, 'daily');
+    const html = generateDigestHTML(articleList, aiSummary, 'daily', siteBase(env), unsubscribeUrl(env, subscription.id));
     const text = generateDigestText(articleList, aiSummary, 'daily');
 
     return {
@@ -183,7 +191,7 @@ Write a 5-sentence "Week in Review" analyzing how our coverage reflects or misse
         console.error('Failed to generate AI summary for weekly digest:', error);
     }
 
-    const html = generateWeeklyDigestHTML(bySector, aiSummary);
+    const html = generateWeeklyDigestHTML(bySector, aiSummary, siteBase(env), unsubscribeUrl(env, subscription.id));
     const text = generateDigestText(articleList, aiSummary, 'weekly');
 
     return {
@@ -245,11 +253,11 @@ export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): P
 // ───────────────────────────────────────────────────────────────────────────────
 // HTML Templates
 // ───────────────────────────────────────────────────────────────────────────────
-function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: string): string {
+function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: string, site: string, unsubUrl: string): string {
     const articleItems = articles.map(a => `
         <tr>
             <td style="padding: 16px 0; border-bottom: 1px solid #e5e5e5;">
-                <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                <a href="${site}/posts/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
                     ${a.title}
                 </a>
                 <div style="color: #666; font-size: 14px; margin-top: 4px;">
@@ -290,8 +298,8 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
         </div>
         
         <div style="background: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #666;">
-            <a href="https://bestofafrica.com" style="color: #0d6efd;">Visit BOA-Story</a> |
-            <a href="https://bestofafrica.com/unsubscribe" style="color: #0d6efd;">Unsubscribe</a>
+            <a href="${site}" style="color: #0d6efd;">Visit BOA-Story</a> |
+            <a href="${unsubUrl}" style="color: #0d6efd;">Unsubscribe</a>
         </div>
     </div>
 </body>
@@ -299,13 +307,13 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
     `;
 }
 
-function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiSummary: string): string {
+function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiSummary: string, site: string, unsubUrl: string): string {
     const sectorSections = Object.entries(bySector).map(([sector, articles]) => `
         <div style="margin: 20px 0;">
             <h3 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 8px;">${sector}</h3>
             ${articles.slice(0, 3).map(a => `
                 <div style="margin: 12px 0;">
-                    <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                    <a href="${site}/posts/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
                         ${a.title}
                     </a>
                     <span style="color: #666; font-size: 12px;"> • ${a.country_name || 'Africa'}</span>
