@@ -344,6 +344,15 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
         await recoverPendingItems(env, 25);
     });
 
+    // Regenerate existing narration newest-first, then extend audio coverage.
+    // This runs before expensive ingestion and image workloads so those jobs
+    // cannot consume the invocation budget before TTS is reached.
+    await safe('backfill-audio', async () => {
+        const { backfillAudio, regenerateAudio } = await import('./workers/generator');
+        const regenerated = await regenerateAudio(env, 3);
+        if (regenerated === 0) await backfillAudio(env, 3);
+    });
+
     // 1. Ingestion: every minute
     await safe('ingestion', () => runIngestion(env));
 
@@ -368,12 +377,6 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // Aura regeneration takes priority: fixing the robotic MeloTTS voice on
     // articles readers can already play beats extending coverage to ones
     // nobody has reached yet. Once the regen queue drains, coverage resumes.
-    await safe('backfill-audio', async () => {
-        const { backfillAudio, regenerateAudio } = await import('./workers/generator');
-        const regenerated = await regenerateAudio(env, 3);
-        if (regenerated === 0) await backfillAudio(env, 3);
-    });
-
     // Regenerate SDXL-era heroes with FLUX (most-visible articles first).
     // Self-terminates once the whole archive is flux-era.
     await safe('regen-heroes', async () => {
