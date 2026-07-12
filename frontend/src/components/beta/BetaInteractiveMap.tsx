@@ -19,9 +19,14 @@ interface MapData {
 interface BetaInteractiveMapProps {
     data: MapData[];
     onCountryClick?: (countryCode: string) => void;
+    /** Legend endpoint labels — must name what `score` measures on THIS page
+     *  (the old hardcoded "Higher divergence" survived a page whose scores
+     *  became story counts). */
+    legendLow?: string;
+    legendHigh?: string;
 }
 
-export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, onCountryClick }) => {
+export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, onCountryClick, legendLow = 'Fewer', legendHigh = 'More stories' }) => {
     const [tooltipContent, setTooltipContent] = useState('');
 
     // Divergence gap is a MAGNITUDE → sequential ramp, one hue light→dark
@@ -114,9 +119,9 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
             )}
             {/* Legend — sequential ramp with ink labels (identity never color-alone) */}
             <div aria-hidden="true" className="absolute bottom-4 right-4 flex items-center gap-2 bg-white/90 backdrop-blur px-3 py-2 rounded-lg border border-primary/10 shadow-sm">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Lower</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">{legendLow}</span>
                 <span className="h-2 w-24 rounded-full" style={{ background: 'linear-gradient(to right, #F3EAD3, #9A7A22)' }} />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Higher divergence</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">{legendHigh}</span>
             </div>
         </div>
     );
