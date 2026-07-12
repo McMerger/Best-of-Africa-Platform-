@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Activity, BarChart2, Globe, Newspaper, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { stripMarkdown } from '@/lib/utils';
@@ -14,7 +14,6 @@ import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
 // perception-vs-reality table whose rows were all identical defaults — which
 // read as meaningless because they were.
 export const BetaIntelligence = () => {
-  const { scrollY } = useScroll();
   const { isMember } = useMember();
   const navigate = useNavigate();
 
@@ -47,7 +46,6 @@ export const BetaIntelligence = () => {
       <div className="relative bg-card py-12 md:py-16 px-4 sm:px-6 border-b border-border">
         <motion.div
           className="hidden"
-          style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
         >
           <img
             src="/images/v2_intel_concrete_1780358106973.png"
@@ -63,28 +61,50 @@ export const BetaIntelligence = () => {
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink flex items-center gap-2">
                   <Activity size={14} />
-                  Live Data
+                  Africa Decision Intelligence
                 </span>
               </div>
-              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4rem] leading-[1] tracking-tight mb-4">Market Intelligence</h1>
+              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4.5rem] leading-[0.96] tracking-tight mb-4">Market Intelligence</h1>
               <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
-                The live shape of our reporting across 54 nations — what moved this week, where coverage runs thin, and the stories behind the numbers.
+                The institutional entry point for understanding markets, sectors and decision signals across all 54 African nations.
               </p>
             </motion.div>
             <motion.div initial={false}>
-              <Link
-                to="/dashboards/overview"
-                className="flex items-center gap-2 border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit shrink-0"
-              >
-                <BarChart2 size={16} />
-                Continental Dashboard
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link to="/dashboards/overview" className="flex items-center gap-2 bg-navy text-white px-5 py-3 rounded-md font-semibold text-sm hover:bg-navy/90 transition-colors w-fit shrink-0">
+                  <BarChart2 size={16} /> Open Continental Dashboard
+                </Link>
+                <Link to="/membership" className="flex items-center border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit">Institutional access</Link>
+              </div>
             </motion.div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 space-y-20">
+      <div className="border-b border-border bg-navy text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap gap-x-8 gap-y-2 text-xs font-medium text-white/70">
+          {['Investors & asset managers', 'Banks & DFIs', 'Corporate strategy', 'Governments & policymakers', 'Private capital', 'Research institutions'].map(label => <span key={label}>{label}</span>)}
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16 space-y-16 md:space-y-20">
+
+        <section className="border-b border-border pb-12">
+          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+            <div>
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Decision desk</p>
+              <h2 className="font-serif text-3xl md:text-4xl leading-tight text-navy">Built around the questions capital asks.</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6 text-sm leading-relaxed">
+              {[
+                ['Market entry', 'Where are regulations, incentives and competitive conditions changing?'],
+                ['Capital allocation', 'Which countries and sectors warrant deeper institutional diligence?'],
+                ['Risk monitoring', 'Where are political, currency, policy and supply-chain signals moving?'],
+                ['Opportunity discovery', 'Which projects, companies and underserved markets should enter the pipeline?'],
+              ].map(([title, copy]) => <div key={title} className="border-l-2 border-accent pl-4"><h3 className="font-semibold text-navy mb-1">{title}</h3><p className="text-muted-foreground">{copy}</p></div>)}
+            </div>
+          </div>
+        </section>
 
         {/* Free-preview banner */}
         {!isMember && (
@@ -101,6 +121,11 @@ export const BetaIntelligence = () => {
 
         {/* Weekly coverage pulse — real numbers only */}
         <section>
+          <div className="mb-7 max-w-3xl">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Live evidence layer</p>
+            <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {isLoading || !pulse ? (
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)

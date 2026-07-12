@@ -40,20 +40,20 @@ export const BetaLanding = () => {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20 grid lg:grid-cols-[1.05fr_.95fr] gap-10 lg:gap-16 items-center">
           <div>
             <p className="text-accent text-xs font-semibold uppercase tracking-[0.12em] mb-5">
-              Independent African reporting
+              Africa business intelligence
             </p>
             <h1 className="font-serif text-white text-[clamp(3rem,6vw,5.5rem)] leading-[0.98] tracking-tight max-w-3xl mb-6">
-              Africa, reported with context.
+              Intelligence for decisions across Africa.
             </h1>
             <p className="text-white/75 text-lg md:text-xl leading-relaxed max-w-2xl mb-8">
-              Stories, country briefings and market intelligence that treat the continent as a place of consequence—not a collection of crisis headlines.
+              Structured country intelligence, market coverage and decision-ready briefings for investors, companies, governments and institutions operating across the continent.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/posts" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">
-                Read the latest <ArrowRight size={16} />
+              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">
+                Enter Intelligence <ArrowRight size={16} />
               </Link>
-              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
-                Explore intelligence
+              <Link to="/dashboards/overview" className="inline-flex items-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+                Open Continental Dashboard
               </Link>
             </div>
           </div>
@@ -78,6 +78,15 @@ export const BetaLanding = () => {
               </div>
             </Link>
           )}
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-6">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Built for consequential decisions</p>
+          <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-navy">
+            {['Institutional investors', 'Banks & DFIs', 'Corporate strategy', 'Governments', 'Private equity & VC', 'Researchers & advisers'].map(label => <span key={label}>{label}</span>)}
+          </div>
         </div>
       </section>
 
@@ -122,9 +131,9 @@ export const BetaLanding = () => {
       <section className="border-y border-border bg-card">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-16">
           <div className="max-w-2xl mb-10">
-            <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-3">Use BOA-Story</p>
-            <h2 className="font-serif text-3xl md:text-4xl text-navy mb-4">Follow the story. Understand the landscape.</h2>
-            <p className="text-muted-foreground leading-relaxed">Move from daily reporting to country context and continent-wide coverage signals without switching products.</p>
+            <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-3">The intelligence platform</p>
+            <h2 className="font-serif text-3xl md:text-4xl text-navy mb-4">From signal to continental context.</h2>
+            <p className="text-muted-foreground leading-relaxed">Move from live reporting to country intelligence and continent-wide evidence without switching products.</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 border border-border rounded-xl overflow-hidden divide-y md:divide-y-0 md:divide-x divide-border">
             {[

@@ -80,18 +80,28 @@ export const BetaContinentalOverview: React.FC = () => {
 
         <div className="max-w-6xl mx-auto w-full">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-            <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+            <div className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
               <BarChart3 size={14} />
-              Executive Dashboard
+              Continental Intelligence Command Centre
             </div>
 
             <h1 className="max-w-3xl font-serif text-foreground text-[2.75rem] md:text-[4.5rem] leading-[0.96] tracking-tight mb-6">
-              Continental Overview
+              Africa at decision scale.
             </h1>
             <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
-              A high-level view of our coverage across Africa over the past 30 days. Track active regions, trending nations, and the most heavily researched sectors.
+              A continent-wide evidence layer for institutions monitoring where attention, research and reporting activity are concentrating across African markets.
             </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link to="/intelligence" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
+              <Link to="/membership" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy hover:border-accent">Institutional access</Link>
+            </div>
           </motion.div>
+        </div>
+      </div>
+
+      <div className="border-b border-border bg-navy text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap gap-x-8 gap-y-2 text-xs font-medium text-white/70">
+          {['Continental allocation', 'Country comparison', 'Sector monitoring', 'Coverage gaps', 'Executive briefing', 'Research prioritisation'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
 
@@ -102,13 +112,19 @@ export const BetaContinentalOverview: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/30 bg-card shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] px-6 py-4 mb-10">
             <p className="text-sm text-foreground/70 leading-relaxed">
               <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
-              The full continental dashboard — coverage, regional heatmap, trending nations, sectors and editor's highlights — is free for everyone.
+              This open dashboard shows BOA's verified research and reporting footprint. Premium institutional modules will extend into country, sector, company, project and risk intelligence.
             </p>
             <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent-ink hover:text-foreground transition-colors">
-              Unlock the full dashboard →
+              Request institutional access →
             </Link>
           </div>
         )}
+
+        <div className="mb-8 max-w-3xl">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Continental evidence layer</p>
+          <h2 className="font-serif text-3xl text-navy">Thirty-day intelligence footprint</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">These metrics measure BOA research coverage and narrated output. They are not macroeconomic performance, investment-return or sovereign-risk indicators.</p>
+        </div>
 
         {/* Top KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">

@@ -99,19 +99,19 @@ export const NavBar: React.FC = () => {
                 {/* navy/70 is the contrast floor for 11px text on white — /60 is 4.38:1, under WCAG's 4.5 */}
                 <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/70 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
                     {[
-                        { path: '/posts', label: t('nav.stories', 'Stories') },
+                        { path: '/intelligence', label: t('nav.intelligence_short', 'Intelligence'), priority: true },
+                        { path: '/dashboards/overview', label: 'Dashboard', priority: true },
                         { path: '/countries', label: t('nav.countries', 'Countries') },
                         { path: '/feed', label: t('nav.briefing_short', 'Briefing') },
-                        { path: '/intelligence', label: t('nav.intelligence_short', 'Intelligence') },
+                        { path: '/posts', label: t('nav.stories', 'Stories') },
                         { path: '/membership', label: t('nav.membership', 'Membership') },
-                        { path: '/about', label: t('nav.about', 'About') },
                     ].map((item) => {
                         const isActive = location.pathname.startsWith(item.path);
                         return (
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={cn("relative px-2.5 xl:px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-navy" : "hover:text-accent")}
+                                className={cn("relative px-2.5 xl:px-4 py-2 transition-colors whitespace-nowrap z-10", item.priority && !isActive && "text-navy", isActive ? "text-navy" : "hover:text-accent")}
                             >
                                 {isActive && (
                                     <span className="absolute inset-x-3 -bottom-[9px] h-0.5 bg-accent -z-10" />
