@@ -92,10 +92,13 @@ export const BetaEvents: React.FC = () => {
             {/* Event List */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
                 {isLoading ? (
-                    <div className="space-y-12">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-64 rounded-xl bg-card border border-foreground/10 animate-pulse" />
-                        ))}
+                    <div className="rounded-xl border border-border bg-card p-8" role="status">
+                        <p className="mb-6 text-sm font-medium text-foreground/60">Loading scheduled events…</p>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-28 rounded-lg bg-muted animate-pulse" />
+                            ))}
+                        </div>
                     </div>
                 ) : events.length === 0 ? (
                     <div className="text-center py-16 text-foreground/50 bg-card rounded-xl border border-foreground/10">

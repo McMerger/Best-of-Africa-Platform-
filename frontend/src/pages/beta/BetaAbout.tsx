@@ -44,11 +44,11 @@ export const BetaAbout = () => {
               { value: stats.total_countries, label: t('about.stat_countries', 'Countries Covered') },
               { value: stats.regions, label: t('about.stat_regions', 'African Regions') },
               { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: t('about.stat_reads', 'Total Reads') },
-            ].map(({ value, label }, i) => (
-              <motion.div key={label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+            ].map(({ value, label }) => (
+              <div key={label}>
                 <p className="font-serif text-[2rem] font-semibold text-foreground leading-none mb-2">{value}</p>
                 <p className="text-[11px] text-foreground/50 uppercase tracking-widest font-bold">{label}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </section>
