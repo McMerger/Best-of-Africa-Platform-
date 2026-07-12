@@ -229,8 +229,8 @@ export const BetaMemberAccess = () => {
           </div>
 
           {/* Right Side Auth Flow */}
-          <div className="mx-auto flex min-h-[70vh] min-w-0 max-w-xl flex-col justify-center px-6 py-16 sm:px-10">
-            <div className="max-w-md min-w-0 w-full mx-auto">
+          <div className="mx-auto flex min-h-[70vh] w-full min-w-0 max-w-[100vw] flex-col justify-center px-6 py-16 sm:max-w-xl sm:px-10">
+            <div className="mx-auto w-full min-w-0 max-w-[calc(100vw-3rem)] sm:max-w-md">
 
               {phase === 'otp' ? (
                 // ── OTP Form State ─────────────────────────────────────────────────

@@ -86,7 +86,7 @@ export const BetaNewsletter = () => {
       
 
       <div className="flex-1 py-14 md:py-20 px-6">
-        <div className="max-w-2xl min-w-0 mx-auto w-full">
+        <div className="mx-auto w-full min-w-0 max-w-[calc(100vw-3rem)] md:max-w-2xl">
 
           {justUnsubscribed && (
             <div className="mb-8 w-full rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 text-sm text-primary/80" role="status">
@@ -96,7 +96,7 @@ export const BetaNewsletter = () => {
 
           <div className="mb-10 min-w-0 w-full">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Weekly briefing</p>
-            <h1 className="font-serif text-ink text-[40px] md:text-[52px] leading-tight mb-4">
+            <h1 className="max-w-full break-words font-serif text-ink text-[36px] md:text-[52px] leading-tight mb-4">
               Stay close to Africa's story.
             </h1>
             <p className="text-lg text-ink-blue max-w-xl leading-relaxed">
@@ -151,7 +151,7 @@ export const BetaNewsletter = () => {
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent-ink">{item.sector}</span>
                   </div>
-                  <p className="break-words font-serif text-lg text-ink leading-snug">{item.headline}</p>
+                  <p className="max-w-full [overflow-wrap:anywhere] font-serif text-lg text-ink leading-snug">{item.headline}</p>
                 </li>
               ))}
             </ul>
