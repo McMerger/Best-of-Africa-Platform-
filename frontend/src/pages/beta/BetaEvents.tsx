@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '../../services/api';
 import { CalendarIcon, MapPinIcon, UsersIcon, ArrowRightIcon, CheckCircleIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,6 @@ export const BetaEvents: React.FC = () => {
     };
 
     const events = eventsData?.data || [];
-    const { scrollY } = useScroll();
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-24">
@@ -76,49 +75,34 @@ export const BetaEvents: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
-                <motion.div 
-                  className="absolute inset-0 z-0"
-                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
-                >
-                  <img
-                    src="/images/v2_events.webp"
-                    alt="African Executive Summit"
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
-                  />
-                  <div className="absolute inset-0 z-10 hero-scrim" />
-                </motion.div>
-
-                <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
-                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
-                            <UsersIcon size={14} />
-                            Private Network
-                        </div>
-                        <h1 className="text-white text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-                            Summits & <br className="hidden md:block"/>Executive Forums
+            <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+                <div className="max-w-6xl mx-auto w-full">
+                    <div>
+                        <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story Network</p>
+                        <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+                            Summits & Executive Forums
                         </h1>
-                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                        <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
                             Connect with industry leaders, investors, and policymakers shaping the future of African markets at our curated events.
                         </p>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
             {/* Event List */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-16">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
                 {isLoading ? (
                     <div className="space-y-12">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-64 rounded-3xl bg-card border border-foreground/10 animate-pulse" />
+                            <div key={i} className="h-64 rounded-xl bg-card border border-foreground/10 animate-pulse" />
                         ))}
                     </div>
                 ) : events.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20 md:py-32 text-foreground/40 bg-card rounded-3xl border border-foreground/10 shadow-2xl">
-                        <CalendarIcon className="w-16 h-16 mx-auto mb-6 opacity-50" />
+                    <div className="text-center py-16 text-foreground/50 bg-card rounded-xl border border-foreground/10">
+                        <CalendarIcon className="w-10 h-10 mx-auto mb-5 opacity-50" />
                         <h2 className="text-[2rem] font-serif mb-4">No upcoming events</h2>
                         <p className="text-[1.125rem] font-light">Check back later for newly scheduled summits.</p>
-                    </motion.div>
+                    </div>
                 ) : (
                     <div className="grid gap-12">
                         {events.map((event: any, index: number) => (
@@ -128,7 +112,7 @@ export const BetaEvents: React.FC = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: "-100px" }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="bg-card text-foreground rounded-3xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-colors duration-500"
+                                className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
                             >
                                 <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
                                     <div 
