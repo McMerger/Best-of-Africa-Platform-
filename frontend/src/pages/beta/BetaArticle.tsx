@@ -12,7 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
-import { stripMarkdown } from '@/lib/utils';
+import { heroThumb, stripMarkdown } from '@/lib/utils';
 import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import type { Article, ArticleListItem, Country } from '../../types';
 
@@ -411,7 +411,7 @@ export const BetaArticle = () => {
 
       {/* Hero */}
       {article.hero_image_url ? (
-        <div className="w-full h-[300px] md:h-[400px] relative mt-4 overflow-hidden">
+        <div className="hidden">
           {/* ?w=768 serves the pre-resized mobile variant (or the original if
               none exists yet) — same breakpoint as the prerendered fold. */}
           <picture>
@@ -437,7 +437,7 @@ export const BetaArticle = () => {
           </div>
         </div>
       ) : (
-        <div className="w-full h-[220px] md:h-[300px] relative mt-4 overflow-hidden">
+        <div className="hidden">
           <motion.img
             initial={{ scale: 1.05 }}
             animate={{ scale: 1 }}
@@ -459,7 +459,7 @@ export const BetaArticle = () => {
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
-        className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-24"
+        className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12"
       >
         <header dir={headerDir} className="mb-8 md:mb-12">
           {(categoryLabel || countryLabel) && (
@@ -467,13 +467,13 @@ export const BetaArticle = () => {
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
             </span>
           )}
-          <h1 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] leading-[1.02] tracking-tight mb-6 max-w-5xl">
+          <h1 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.04] tracking-tight mb-6 max-w-4xl">
             {stripMarkdown(article.title)}
           </h1>
 
           {/* Lede / standfirst, rendered from article.summary */}
           {article.summary && (
-            <p className="font-serif text-[1.25rem] md:text-[1.5rem] lg:text-[2rem] leading-[1.4] text-foreground/70 italic mb-8 md:mb-10 border-l-2 border-accent pl-5 md:pl-6 py-2">
+            <p className="text-lg md:text-xl leading-relaxed text-foreground/70 mb-8 max-w-3xl">
               {stripMarkdown(article.summary)}
             </p>
           )}
@@ -499,6 +499,17 @@ export const BetaArticle = () => {
             </div>
           </div>
         </header>
+
+        {article.hero_image_url && (
+          <figure className="mb-8 md:mb-10 overflow-hidden rounded-xl border border-border bg-muted">
+            <img
+              src={heroThumb(article.hero_image_url)}
+              alt={article.title}
+              className="w-full aspect-[16/9] object-cover"
+              loading="eager"
+            />
+          </figure>
+        )}
 
         {/* Audio Player */}
         <div className="mb-10">

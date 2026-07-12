@@ -195,9 +195,9 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative min-h-[55vh] md:min-h-[60vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-16 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+      <div className="relative bg-card py-12 md:py-16 px-4 sm:px-6 border-b border-border">
         <motion.div 
-          className="absolute inset-0 z-0"
+          className="hidden"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
         >
           <img
@@ -208,10 +208,10 @@ export const BetaCountryHub = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-5xl mx-auto w-full relative z-30 text-white">
+        <div className="max-w-5xl mx-auto w-full">
           <Link
             to="/countries"
-            className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-navy text-sm transition-colors mb-8 group"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
             {t('hub.all_54', 'All 54 Countries')}
@@ -221,7 +221,7 @@ export const BetaCountryHub = () => {
             {isLoading ? (
               <div className="w-24 h-24 bg-foreground/10 rounded-3xl animate-pulse" />
             ) : (
-              <CountryFlag code={upperCode} title={countryName} size={104} className="!rounded-2xl shadow-2xl ring-white/20" />
+              <CountryFlag code={upperCode} title={countryName} size={64} className="!rounded-lg border border-border" />
             )}
             <div className="flex-1 pb-2">
               {isLoading ? (
@@ -232,18 +232,18 @@ export const BetaCountryHub = () => {
               ) : (
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full backdrop-blur-md">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink">
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
-                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 bg-white/10 border border-white/20 px-4 py-1.5 rounded-full backdrop-blur-md">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                         {stats.article_count} {stats.article_count === 1 ? t('hub.story', 'story') : t('hub.stories', 'stories')}
                       </span>
                     )}
                   </div>
-                  <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
+                  <h1 className="font-serif text-navy text-[2.75rem] md:text-[4.5rem] leading-[1] tracking-tight mb-4">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-white/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
+                    <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">{country.description}</p>
                   )}
                 </motion.div>
               )}
@@ -254,10 +254,10 @@ export const BetaCountryHub = () => {
           {investmentHighlights.length > 0 && (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 1 }}
-              className="flex flex-wrap gap-2 mt-12"
+              className="flex flex-wrap gap-x-5 gap-y-2 mt-8"
             >
               {investmentHighlights.map(h => (
-                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-white/80 bg-white/10 border border-white/20 px-4 py-2 rounded-full backdrop-blur-md">
+                <span key={h} className="text-xs text-muted-foreground">
                   {h}
                 </span>
               ))}
@@ -271,7 +271,7 @@ export const BetaCountryHub = () => {
         {/* ── Sentiment Scores (members only) ────────────────────────────── */}
         <motion.section 
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className="bg-card rounded-3xl border border-foreground/10 p-8 md:p-12 shadow-2xl relative overflow-hidden"
+          className={`${!isMember ? 'hidden' : ''} bg-card rounded-xl border border-foreground/10 p-8 md:p-10 relative overflow-hidden`}
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
