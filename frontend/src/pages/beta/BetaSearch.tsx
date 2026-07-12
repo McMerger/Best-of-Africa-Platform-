@@ -90,7 +90,7 @@ export const BetaSearch: React.FC = () => {
                         </h1>
                         {/* Search Input, dark navy field with gold border */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowSuggestions(false); }}>
-                            <div className="flex items-center gap-3 bg-background border border-border rounded-xl px-5 md:px-6 py-4 focus-within:border-accent transition-colors group">
+                            <div className="flex min-w-0 items-center gap-3 overflow-hidden bg-background border border-border rounded-xl px-4 md:px-6 py-4 focus-within:border-accent transition-colors group">
                                 <SearchIcon className="w-5 h-5 text-foreground/40 group-focus-within:text-accent shrink-0 transition-colors" />
                                 <input
                                     ref={inputRef}
@@ -100,7 +100,7 @@ export const BetaSearch: React.FC = () => {
                                     onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true); }}
                                     onFocus={() => setShowSuggestions(true)}
                                     placeholder="Search Africa intelligence, countries, sectors..."
-                                    className="flex-1 bg-transparent text-foreground placeholder:text-foreground/40 text-lg outline-none"
+                                    className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-foreground/40 text-base md:text-lg outline-none"
                                     autoComplete="off"
                                 />
                                 {inputValue && (
@@ -144,12 +144,12 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Empty State */}
                 {!debouncedQ && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-14 md:py-24 text-foreground/40">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-14 md:py-24 text-foreground/40 overflow-hidden">
                         <div className="w-24 h-24 rounded-full bg-card border border-foreground/5 mx-auto mb-8 flex items-center justify-center">
                             <SearchIcon className="w-10 h-10 text-foreground/20" />
                         </div>
-                        <p className="text-[1.5rem] font-serif text-foreground mb-3">Start typing to search across all Africa intelligence</p>
-                        <p className="text-[1.125rem] font-light">Try: "Nigeria fintech", "Kenya infrastructure", "Rwanda agriculture"</p>
+                        <p className="text-xl md:text-[1.5rem] font-serif text-foreground mb-3">Start typing to search across all Africa intelligence</p>
+                        <p className="text-base md:text-[1.125rem] font-light">Try: "Nigeria fintech", "Kenya infrastructure", "Rwanda agriculture"</p>
                     </motion.div>
                 )}
 

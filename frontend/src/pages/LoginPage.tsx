@@ -87,7 +87,7 @@ export const LoginPage: React.FC = () => {
                 {/* Background decorative elements, amber/gold radial glow */}
                 <div className="hidden" />
 
-                <div className="relative z-10 w-full max-w-[420px] py-12">
+                <div className="relative z-10 min-w-0 w-full max-w-[420px] py-12">
                     <div className="mb-10 text-center">
                         <div className="relative mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-accent/30 bg-card">
                             {status === 'LOADING' ? (
@@ -106,8 +106,8 @@ export const LoginPage: React.FC = () => {
                         </p>
                     </div>
 
-                    <Card className="border-navy bg-navy text-white shadow-none">
-                        <CardContent className="p-8">
+                    <Card className="w-full min-w-0 overflow-hidden border-navy bg-navy text-white shadow-none">
+                        <CardContent className="min-w-0 p-6 sm:p-8">
                             {step === 'SUCCESS' ? (
                                 <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">
                                     <div className="mb-2 text-base font-bold tracking-widest text-accent">LOGIN SUCCESSFUL</div>
