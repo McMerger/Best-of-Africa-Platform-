@@ -164,12 +164,10 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative h-[55vh] min-h-[380px] md:min-h-[500px] w-full flex flex-col justify-end pb-10 md:pb-16 px-6 overflow-hidden border-b border-foreground/10">
+      <section className="relative h-[38vh] min-h-[320px] max-h-[460px] w-full flex flex-col justify-end pb-10 px-6 overflow-hidden border-b border-foreground/10">
         <motion.div 
           className="absolute inset-0 z-0"
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 10, ease: "easeOut" }}
+          initial={false}
         >
           <img
             src="/images/v2_editorial_2.webp"
@@ -181,9 +179,7 @@ export const BetaStories = () => {
 
         <div className="container mx-auto max-w-7xl relative z-30">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={false}
             className="flex flex-col md:flex-row md:items-end justify-between gap-8"
           >
             <div>
@@ -191,10 +187,10 @@ export const BetaStories = () => {
                 <Sparkles size={14} />
                 {t('landing.original_reporting', 'Original Reporting')}
               </div>
-              <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">
+              <h1 className="font-serif text-white text-[2.75rem] md:text-[4rem] leading-[0.98] tracking-tight mb-3 max-w-3xl">
                 {t('stories.title_1', 'Stories from')}<br/>{t('stories.title_2', 'the Continent.')}
               </h1>
-              <p className="text-[1.25rem] text-white/70 max-w-xl font-light drop-shadow-md">
+              <p className="text-base md:text-lg text-white/75 max-w-xl">
                 {t('stories.subtitle', "Real, grounded accounts from across the continent, the kind of story you won't find in a headline.")}
               </p>
             </div>
@@ -217,7 +213,7 @@ export const BetaStories = () => {
               }}
               disabled={!displayArticles.some(a => a.audio_url)}
               title={displayArticles.some(a => a.audio_url) ? t('stories.play_title', 'Play the latest audio briefings') : t('stories.audio_soon', 'Audio briefings coming soon')}
-              className="group flex items-center justify-center gap-3 px-6 py-4 rounded-full bg-accent/10 border border-accent/20 hover:bg-accent hover:text-navy hover:border-accent text-accent font-medium transition-all shadow-[0_0_30px_rgba(201,168,76,0.2)] backdrop-blur-md disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-accent/10 disabled:hover:text-accent disabled:hover:border-accent/20"
+              className="group flex items-center justify-center gap-3 px-5 py-3 rounded-lg bg-accent text-navy border border-accent font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <div className="w-10 h-10 rounded-full bg-accent text-navy group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>

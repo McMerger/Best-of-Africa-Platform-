@@ -456,18 +456,18 @@ export const BetaArticle = () => {
       )}
 
       <motion.main 
-        initial={{ opacity: 0, y: 30 }}
+        initial={false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.2, delay: 0.2, ease: "easeOut" }}
         className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-16 lg:py-24"
       >
-        <header dir={headerDir} className="mb-10 md:mb-16">
+        <header dir={headerDir} className="mb-8 md:mb-12">
           {(categoryLabel || countryLabel) && (
             <span className="text-accent-ink text-[11px] font-bold tracking-[0.2em] uppercase mb-6 block">
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
             </span>
           )}
-          <h1 className="font-serif text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.95] tracking-tighter mb-8">
+          <h1 className="font-serif text-[clamp(2.5rem,5vw,4.5rem)] leading-[1.02] tracking-tight mb-6 max-w-5xl">
             {stripMarkdown(article.title)}
           </h1>
 

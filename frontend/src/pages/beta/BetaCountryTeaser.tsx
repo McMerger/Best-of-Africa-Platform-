@@ -40,16 +40,11 @@ const CountryCard = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
+      initial={false}
     >
       <Link
         to={`/countries/${country.code.toLowerCase()}`}
-        className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-[0_1px_6px_rgba(0,0,0,0.06)] flex flex-col text-left transition-all duration-200 hover:border-accent/60 hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] p-5 block h-full"
+        className="group relative bg-white rounded-lg overflow-hidden border border-border flex flex-col text-left transition-colors hover:border-accent/60 p-4 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
           <CountryFlag code={country.code} title={country.name} size={36} />
@@ -131,24 +126,24 @@ export const BetaCountryTeaser = () => {
     <div className="selection:bg-accent selection:text-primary">
       
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
 
         {/* Header */}
-        <header className="mb-14 text-center">
+        <header className="mb-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent-ink text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
             {t('countries.badge', '54 African Nations')}
           </div>
-          <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
+          <h1 className="font-serif text-[40px] md:text-[52px] leading-tight mb-4">
             {t('countries.title', 'One Continent. Every Story.')}
           </h1>
-          <p className="text-lg text-primary/70 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg text-primary/70 max-w-2xl leading-relaxed">
             {t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
 
         {/* Search */}
-        <div className="relative max-w-md mx-auto mb-10">
+        <div className="relative max-w-md mb-8">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
           <input
             type="text"

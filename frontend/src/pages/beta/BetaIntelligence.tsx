@@ -44,7 +44,7 @@ export const BetaIntelligence = () => {
       />
 
       {/* Header */}
-      <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-10 md:pb-16 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+      <div className="relative min-h-[360px] md:min-h-[420px] max-h-[520px] flex flex-col justify-end pt-20 pb-12 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
         <motion.div
           className="absolute inset-0 z-0"
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
@@ -59,19 +59,19 @@ export const BetaIntelligence = () => {
 
         <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
+            <motion.div initial={false}>
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
                   <Activity size={14} className="animate-pulse" />
                   Live Data
                 </span>
               </div>
-              <h1 className="font-serif text-white text-[2.75rem] sm:text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
+              <h1 className="font-serif text-white text-[2.75rem] md:text-[4rem] leading-[0.98] tracking-tight mb-4">Market Intelligence</h1>
               <p className="text-white/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
                 The live shape of our reporting across 54 nations — what moved this week, where coverage runs thin, and the stories behind the numbers.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.8 }}>
+            <motion.div initial={false}>
               <Link
                 to="/dashboards/overview"
                 className="flex items-center gap-3 bg-accent text-navy px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:brightness-110 transition-all w-fit shrink-0 shadow-[0_0_30px_rgba(201,168,76,0.3)]"
@@ -111,7 +111,7 @@ export const BetaIntelligence = () => {
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
                   { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector?.name || '—', sub: pulse.top_sector ? `${pulse.top_sector.stories.toLocaleString()} stories this week` : 'No sector data yet', small: !!pulse.top_sector },
                 ].map(({ Icon, label, value, sub, small }, i) => (
-                  <motion.div key={label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] relative overflow-hidden group hover:border-accent/40 hover:-translate-y-1 transition-all duration-300">
+                  <motion.div key={label} initial={false} className="bg-card rounded-xl border border-foreground/10 p-6 relative overflow-hidden">
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-center gap-3 mb-6 text-foreground/70">
                       <Icon size={20} />
@@ -143,7 +143,7 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-[2rem] text-foreground">Coverage Heatmap — Last 7 Days</h2>
           </div>
           <p className="text-lg text-foreground/70 mb-8 font-light">Where our reporting concentrated this week. Click any nation to open its country hub.</p>
-          <div className="h-[500px] md:h-[600px] w-full rounded-3xl overflow-hidden border border-foreground/10 shadow-2xl relative">
+          <div className="h-[420px] md:h-[500px] w-full rounded-xl overflow-hidden border border-foreground/10 relative">
             {isLoading ? (
               <div className="w-full h-full bg-foreground/5 animate-pulse" />
             ) : countries.length > 0 ? (
