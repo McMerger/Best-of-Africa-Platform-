@@ -148,8 +148,20 @@ export const BetaSearch: React.FC = () => {
                         <div className="w-24 h-24 rounded-full bg-card border border-foreground/5 mx-auto mb-8 flex items-center justify-center">
                             <SearchIcon className="w-10 h-10 text-foreground/20" />
                         </div>
-                        <p className="text-xl md:text-[1.5rem] font-serif text-foreground mb-3">Start typing to search across all Africa intelligence</p>
-                        <p className="text-base md:text-[1.125rem] font-light">Try: "Nigeria fintech", "Kenya infrastructure", "Rwanda agriculture"</p>
+                        <p className="text-xl md:text-[1.5rem] font-serif text-foreground mb-3">Search the intelligence graph</p>
+                        <p className="mb-8 text-sm leading-relaxed text-muted-foreground">Start with a country, sector, company, project or decision question.</p>
+                        <div className="grid gap-3 text-left sm:grid-cols-2">
+                            {[
+                                'Compare Ghana and Rwanda for manufacturing investment',
+                                'Solar projects in East Africa',
+                                'Nigerian companies operating in Kenya',
+                                'Lithium, railways and export corridors',
+                            ].map(query => (
+                                <button key={query} type="button" onClick={() => { setInputValue(query); setShowSuggestions(false); }} className="rounded-lg border border-border bg-card p-4 text-sm leading-relaxed text-navy hover:border-accent hover:bg-accent/5">
+                                    {query}
+                                </button>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
 

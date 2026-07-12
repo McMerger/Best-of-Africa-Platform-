@@ -83,6 +83,7 @@ export const BetaLanding = () => {
 
       <section className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-6">
+          <p className="mb-5 max-w-4xl font-serif text-xl text-navy">Best of Africa is Africa's intelligence infrastructure for business, investment and economic decision-making.</p>
           <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Built for consequential decisions</p>
           <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-navy">
             {['Institutional investors', 'Banks & DFIs', 'Corporate strategy', 'Governments', 'Private equity & VC', 'Researchers & advisers'].map(label => <span key={label}>{label}</span>)}

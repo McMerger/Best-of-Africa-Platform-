@@ -7,6 +7,7 @@ import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
+import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 
 // The free-visitor intelligence page. Every number on it is real coverage
 // data (weekly volumes, per-country momentum, thinnest region). Its previous
@@ -74,7 +75,7 @@ export const BetaIntelligence = () => {
                 <Link to="/dashboards/overview" className="flex items-center gap-2 bg-navy text-white px-5 py-3 rounded-md font-semibold text-sm hover:bg-navy/90 transition-colors w-fit shrink-0">
                   <BarChart2 size={16} /> Open Continental Dashboard
                 </Link>
-                <Link to="/membership" className="flex items-center border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit">Institutional access</Link>
+                <Link to="/search" className="flex items-center border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit">Search Intelligence</Link>
               </div>
             </motion.div>
           </div>
@@ -86,6 +87,8 @@ export const BetaIntelligence = () => {
           {['Investors & asset managers', 'Banks & DFIs', 'Corporate strategy', 'Governments & policymakers', 'Private capital', 'Research institutions'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
+
+      <IntelligenceTrustPanel updatedAt={pulse?.updated_at} sourceLabel="BOA publishing, country and sector records" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16 space-y-16 md:space-y-20">
 

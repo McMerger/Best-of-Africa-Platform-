@@ -10,13 +10,14 @@ import { useMember } from '../../context/MemberContext';
 import { CountryFlag } from '../../components/CountryFlag';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
+import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
   // Hoisted so the hook runs on every render (the early loading/error returns
   // would otherwise make this conditional and break the rules of hooks).
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, dataUpdatedAt } = useQuery({
     queryKey: ['continental-overview'],
     queryFn: api.getContinentalOverview,
     staleTime: 5 * 60 * 1000,
@@ -93,7 +94,7 @@ export const BetaContinentalOverview: React.FC = () => {
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/intelligence" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
-              <Link to="/membership" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy hover:border-accent">Institutional access</Link>
+              <Link to="/search" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy hover:border-accent">Search Intelligence</Link>
             </div>
           </motion.div>
         </div>
@@ -104,6 +105,8 @@ export const BetaContinentalOverview: React.FC = () => {
           {['Continental allocation', 'Country comparison', 'Sector monitoring', 'Coverage gaps', 'Executive briefing', 'Research prioritisation'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
+
+      <IntelligenceTrustPanel updatedAt={dataUpdatedAt} sourceLabel="BOA continental dashboard and publishing records" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
 
