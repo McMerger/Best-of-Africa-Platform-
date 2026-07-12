@@ -83,16 +83,13 @@ export const LoginPage: React.FC = () => {
     return (
         <>
             <SEO title="Member Portal" description="Sign in to your Best of Africa membership with a one-click email login link." />
-            <div className="relative flex min-h-[80vh] items-center justify-center overflow-hidden bg-navy text-white px-4 md:px-0 rounded-3xl mt-4 mx-4 border border-white/10 shadow-2xl">
+            <div className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-16 text-foreground">
                 {/* Background decorative elements, amber/gold radial glow */}
-                <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] rounded-full bg-accent/10 blur-3xl" />
-                <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] rounded-full bg-accent/10 blur-3xl" />
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_20%,transparent_100%)] pointer-events-none" />
+                <div className="hidden" />
 
                 <div className="relative z-10 w-full max-w-[420px] py-12">
                     <div className="mb-10 text-center">
-                        <div className="relative mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_50px_rgba(201,168,76,0.35)]">
-                            <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl" />
+                        <div className="relative mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-accent/30 bg-card">
                             {status === 'LOADING' ? (
                                 <UpdateIcon className="relative h-9 w-9 animate-spin text-accent" />
                             ) : step === 'SUCCESS' ? (
@@ -101,15 +98,15 @@ export const LoginPage: React.FC = () => {
                                 <LockClosedIcon className="relative h-8 w-8 text-accent" />
                             )}
                         </div>
-                        <h1 className="mb-2 text-3xl font-serif font-bold uppercase tracking-tight text-white">
+                        <h1 className="mb-2 text-3xl font-serif font-semibold tracking-tight text-foreground">
                             {config?.['auth_login_header'] || "Member Portal"}
                         </h1>
-                        <p className="font-mono text-xs text-white/50">
+                        <p className="text-xs font-medium uppercase tracking-widest text-foreground/50">
                             {step === 'EMAIL' ? "PASSWORDLESS LOGIN" : step === 'OTP' ? "VERIFICATION REQUIRED" : "AUTHENTICATED"}
                         </p>
                     </div>
 
-                    <Card className="border-white/10 bg-navy-card/70 backdrop-blur-xl shadow-2xl">
+                    <Card className="border-navy bg-navy text-white shadow-none">
                         <CardContent className="p-8">
                             {step === 'SUCCESS' ? (
                                 <div className="animate-in fade-in zoom-in duration-500 py-10 text-center">

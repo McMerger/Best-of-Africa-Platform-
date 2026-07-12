@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Trophy, CalendarClock, ArrowRight } from 'lucide-react';
 import { SEO } from '../../components/SEO';
@@ -40,8 +40,6 @@ const Side = ({ side, size = 22 }: { side: { name: string; code?: string }; size
 );
 
 export const BetaWorldCup: React.FC = () => {
-  const { scrollY } = useScroll();
-  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
   const { teams, updatedAt, nextFixture, fixtures, results } = useWorldCupTeams();
 
   // Fixtures beyond the spotlight one. Compare by kickoff+teams, not object
@@ -61,8 +59,8 @@ export const BetaWorldCup: React.FC = () => {
       />
 
       {/* Hero */}
-      <div className="relative min-h-[45vh] md:min-h-[52vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
-        <motion.div className="absolute inset-0 z-0" style={{ y: heroY, scale: 1.05 }}>
+      <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+        <motion.div className="hidden">
           <img
             src="/images/v2_events.webp"
             alt="African supporters celebrating"
@@ -71,9 +69,9 @@ export const BetaWorldCup: React.FC = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
+        <div className="max-w-6xl mx-auto w-full text-foreground">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: 'easeOut' }}>
-            <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/30 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+            <div className="mb-5 flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
               <Trophy size={14} />
               {WORLD_CUP.label}
               {updatedAt && (
@@ -83,10 +81,10 @@ export const BetaWorldCup: React.FC = () => {
                 </span>
               )}
             </div>
-            <h1 className="text-white text-[3.25rem] sm:text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-              Africa at the <span className="text-accent italic">World Cup.</span>
+            <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+              Africa at the World Cup
             </h1>
-            <p className="text-[1.125rem] font-light text-white/80 max-w-2xl leading-[1.8] drop-shadow-md">
+            <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
               {runOver
                 ? "The African run at this World Cup has ended — the results that carried the continent this far are below."
                 : `The continent's ${teams.length} ${teams.length === 1 ? 'nation' : 'nations'} still standing at the tournament — who they are, and the road ahead.`}
@@ -102,7 +100,7 @@ export const BetaWorldCup: React.FC = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="-mt-16 relative z-40 rounded-3xl border border-accent/30 bg-card shadow-[0_20px_60px_-25px_rgba(15,31,61,0.5)] overflow-hidden"
+            className="mt-10 md:mt-14 rounded-xl border border-accent/30 bg-card overflow-hidden"
           >
             <div className="px-6 sm:px-10 py-8 sm:py-10">
               <div className="flex items-center justify-between gap-4 mb-6">
@@ -133,7 +131,7 @@ export const BetaWorldCup: React.FC = () => {
         {rest.length > 0 && (
           <section className="mt-16">
             <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">Upcoming fixtures</h2>
-            <div className="rounded-3xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
+            <div className="rounded-xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
               {rest.map((f, i) => (
                 <div key={`${f.utcDate}-${i}`} className="flex items-center gap-4 px-5 sm:px-7 py-4 hover:bg-foreground/[0.02] transition-colors">
                   <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/70 tabular-nums">
@@ -157,7 +155,7 @@ export const BetaWorldCup: React.FC = () => {
         {results.length > 0 && (
           <section className="mt-16">
             <h2 className="font-serif text-2xl md:text-3xl text-foreground mb-6">Latest results</h2>
-            <div className="rounded-3xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
+            <div className="rounded-xl border border-foreground/10 bg-card overflow-hidden divide-y divide-foreground/10">
               {results.map((r: WorldCupResult, i: number) => (
                 <div key={`${r.utcDate}-${i}`} className="flex items-center gap-4 px-5 sm:px-7 py-4">
                   <div className="w-28 sm:w-40 shrink-0 text-[12px] sm:text-[13px] font-semibold text-foreground/70 tabular-nums">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Globe, MapPin, Activity, ArrowRight, BarChart3, Newspaper } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
@@ -13,10 +13,8 @@ import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
-  const { scrollY } = useScroll();
   // Hoisted so the hook runs on every render (the early loading/error returns
   // would otherwise make this conditional and break the rules of hooks).
-  const heroY = useTransform(scrollY, [0, 800], [0, 200]);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['continental-overview'],
@@ -68,10 +66,9 @@ export const BetaContinentalOverview: React.FC = () => {
       />
       
       {/* Header */}
-      <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+      <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
         <motion.div
-          className="absolute inset-0 z-0"
-          style={{ y: heroY, scale: 1.05 }}
+          className="hidden"
         >
           <img
             src="/images/v2_intel.webp"
@@ -81,24 +78,24 @@ export const BetaContinentalOverview: React.FC = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-6xl mx-auto w-full relative z-30">
+        <div className="max-w-6xl mx-auto w-full">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-            <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+            <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
               <BarChart3 size={14} />
               Executive Dashboard
             </div>
 
-            <h1 className="font-serif text-[4rem] md:text-[5.5rem] font-bold leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl text-white">
-              Continental <br className="hidden md:block"/><span className="text-accent italic">Overview.</span>
+            <h1 className="max-w-3xl font-serif text-foreground text-[2.75rem] md:text-[4.5rem] leading-[0.96] tracking-tight mb-6">
+              Continental Overview
             </h1>
-            <p className="text-white/80 text-[1.125rem] font-light max-w-2xl leading-[1.8] drop-shadow-md">
+            <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
               A high-level view of our coverage across Africa over the past 30 days. Track active regions, trending nations, and the most heavily researched sectors.
             </p>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-40">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
 
         {/* Free-preview banner */}
         {!isMember && (
@@ -125,7 +122,7 @@ export const BetaContinentalOverview: React.FC = () => {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-              className="group relative overflow-hidden bg-card rounded-3xl p-8 border border-foreground/10 shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] flex items-center gap-6 hover:-translate-y-1 hover:border-accent/40 transition-all duration-300"
+              className="group relative overflow-hidden bg-card rounded-xl p-7 border border-foreground/10 flex items-center gap-6 hover:border-accent/40 transition-colors"
             >
               <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />
@@ -142,7 +139,7 @@ export const BetaContinentalOverview: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">
           {/* Chart: Regional Breakdown */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="lg:col-span-2 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl flex flex-col">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-card rounded-xl border border-foreground/10 p-8 md:p-10 flex flex-col">
             <h3 className="font-serif text-[2rem] text-foreground mb-8 flex items-center gap-4">
               <Activity className="text-accent" size={32} /> Regional Coverage Share
             </h3>
@@ -185,7 +182,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </motion.div>
 
           {/* List: Top Countries */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl flex flex-col">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-foreground/10 p-8 flex flex-col">
             <h3 className="font-serif text-[2rem] text-foreground mb-8">Active Across the Continent</h3>
             <ul className="space-y-5 flex-1">
               {top_countries.map((c) => (
@@ -216,7 +213,7 @@ export const BetaContinentalOverview: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-16 bg-card rounded-3xl border border-foreground/10 p-8 md:p-10 shadow-2xl"
+            className="mb-16 bg-card rounded-xl border border-foreground/10 p-8 md:p-10"
           >
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
               <h3 className="font-serif text-[2rem] text-foreground flex items-center gap-4">
@@ -248,7 +245,7 @@ export const BetaContinentalOverview: React.FC = () => {
         {/* Sectors in focus + editor's highlights, free for everyone */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* List: Top Sectors */}
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl h-fit">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-xl border border-foreground/10 p-8 h-fit">
             <h3 className="font-serif text-[2rem] text-foreground mb-8">Sectors in Focus</h3>
             <ul className="space-y-4">
               {top_sectors.map((s) => (
@@ -315,7 +312,7 @@ export const BetaContinentalOverview: React.FC = () => {
         {/* Membership CTA — the dashboard itself is fully free; this points to
             the genuinely premium, member-only intelligence. */}
         {!isMember && (
-          <div className="mt-14 rounded-3xl bg-navy text-white border border-accent/30 shadow-[0_20px_60px_rgba(15,31,61,0.28)] p-10 md:p-12 text-center">
+          <div className="mt-14 rounded-xl bg-navy text-white border border-accent/30 p-8 md:p-10 text-center">
             <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">
               <BarChart3 size={14} /> Founding Members
             </span>

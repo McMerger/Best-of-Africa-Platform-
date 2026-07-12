@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { PlaneIcon, ShieldCheckIcon, StarIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -69,7 +69,6 @@ const HOTELS = [
 ];
 
 export const BetaTravel: React.FC = () => {
-    const { scrollY } = useScroll();
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-24">
@@ -79,10 +78,9 @@ export const BetaTravel: React.FC = () => {
             />
             
             {/* Hero Section */}
-            <div className="relative min-h-[45vh] md:min-h-[60vh] flex flex-col justify-end pt-20 md:pt-32 pb-14 md:pb-24 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+            <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
                 <motion.div 
-                  className="absolute inset-0 z-0"
-                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+                  className="hidden"
                 >
                   <img
                     src="/images/v2_travel.webp"
@@ -92,19 +90,19 @@ export const BetaTravel: React.FC = () => {
                   <div className="absolute inset-0 z-10 hero-scrim" />
                 </motion.div>
 
-                <div className="max-w-5xl mx-auto w-full relative z-30 text-center text-white">
+                <div className="max-w-6xl mx-auto w-full text-foreground">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+                        <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
                             <PlaneIcon size={14} />
                             Business Travel Guide
                         </div>
-                        <h1 className="text-white text-[2.75rem] sm:text-[4rem] md:text-[6rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-                            Travel with <br className="hidden md:block"/><span className="text-accent italic">Confidence.</span>
+                        <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+                            Travel with confidence.
                         </h1>
-                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl mx-auto mb-12 leading-[1.8] drop-shadow-md">
+                        <p className="text-lg text-foreground/65 max-w-2xl mb-8 leading-relaxed">
                             We've negotiated direct VIP partnerships with the continent's finest business hotels to ensure your stays are secure, productive, and exceptionally comfortable.
                         </p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
+                        <div className="flex flex-col sm:flex-row gap-4">
                             <Link to="/request-consultation">
                                 <Button className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-widest text-[11px] px-10 py-6 bg-accent text-navy hover:brightness-110 shadow-[0_0_30px_rgba(201,168,76,0.3)] transition-all">
                                     Request Custom Itinerary
@@ -116,8 +114,8 @@ export const BetaTravel: React.FC = () => {
             </div>
 
             {/* Why Book With Us */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-16 relative z-30">
-                <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8 }} className="bg-card text-foreground rounded-3xl border border-foreground/10 shadow-2xl p-8 md:p-14 backdrop-blur-xl">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card text-foreground rounded-xl border border-foreground/10 p-8 md:p-10">
                     <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
                         <div className="px-6 py-4 md:py-0">
                             <StarIcon className="w-12 h-12 text-accent mx-auto mb-6" />
@@ -155,7 +153,7 @@ export const BetaTravel: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8 }}
-                            className="bg-card text-foreground rounded-3xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-all duration-500"
+                            className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
                         >
                             <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
                                 <div 

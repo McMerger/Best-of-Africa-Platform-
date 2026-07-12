@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '../../services/api';
 import { PlaneIcon, BriefcaseIcon, BuildingIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
 
 export const BetaConcierge: React.FC = () => {
-    const { scrollY } = useScroll();
     
     // Form State
     const [name, setName] = useState('');
@@ -58,10 +57,9 @@ export const BetaConcierge: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="relative min-h-[45vh] md:min-h-[50vh] flex flex-col justify-end pt-20 md:pt-32 pb-12 md:pb-20 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+            <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
                 <motion.div 
-                  className="absolute inset-0 z-0"
-                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+                  className="hidden"
                 >
                   <img
                     src="/images/v2_concierge.webp"
@@ -71,16 +69,16 @@ export const BetaConcierge: React.FC = () => {
                   <div className="absolute inset-0 z-10 hero-scrim" />
                 </motion.div>
 
-                <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
+                <div className="max-w-6xl mx-auto w-full text-foreground">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+                        <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
                             <BriefcaseIcon size={14} />
                             Private Client Services
                         </div>
-                        <h1 className="text-white text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-                            Concierge & <br className="hidden md:block"/>Corporate Services
+                        <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+                            Concierge & Corporate Services
                         </h1>
-                        <p className="text-[1.125rem] font-light text-white/70 max-w-2xl leading-[1.8] drop-shadow-md">
+                        <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
                             We facilitate seamless market entry, executive travel, and complex site visits across the continent. Flawless execution.
                         </p>
                     </motion.div>
@@ -133,7 +131,7 @@ export const BetaConcierge: React.FC = () => {
 
                 {/* Right Column: Booking Form */}
                 <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="lg:col-span-7">
-                    <div className="bg-card text-foreground rounded-3xl border border-foreground/10 p-10 md:p-14 shadow-2xl relative overflow-hidden">
+                    <div className="bg-card text-foreground rounded-xl border border-foreground/10 p-8 md:p-10 relative overflow-hidden">
                         {isSuccess ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center h-full">
                                 <CheckCircleIcon className="w-24 h-24 text-accent mb-8" />
