@@ -44,9 +44,9 @@ export const BetaIntelligence = () => {
       />
 
       {/* Header */}
-      <div className="relative min-h-[360px] md:min-h-[420px] max-h-[520px] flex flex-col justify-end pt-20 pb-12 px-4 sm:px-6 overflow-hidden border-b border-foreground/10">
+      <div className="relative bg-card py-12 md:py-16 px-4 sm:px-6 border-b border-border">
         <motion.div
-          className="absolute inset-0 z-0"
+          className="hidden"
           style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
         >
           <img
@@ -57,24 +57,24 @@ export const BetaIntelligence = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-6xl mx-auto w-full relative z-30 text-white">
+        <div className="max-w-6xl mx-auto w-full">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <motion.div initial={false}>
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
-                  <Activity size={14} className="animate-pulse" />
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink flex items-center gap-2">
+                  <Activity size={14} />
                   Live Data
                 </span>
               </div>
-              <h1 className="font-serif text-white text-[2.75rem] md:text-[4rem] leading-[0.98] tracking-tight mb-4">Market Intelligence</h1>
-              <p className="text-white/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
+              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4rem] leading-[1] tracking-tight mb-4">Market Intelligence</h1>
+              <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
                 The live shape of our reporting across 54 nations — what moved this week, where coverage runs thin, and the stories behind the numbers.
               </p>
             </motion.div>
             <motion.div initial={false}>
               <Link
                 to="/dashboards/overview"
-                className="flex items-center gap-3 bg-accent text-navy px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:brightness-110 transition-all w-fit shrink-0 shadow-[0_0_30px_rgba(201,168,76,0.3)]"
+                className="flex items-center gap-2 border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit shrink-0"
               >
                 <BarChart2 size={16} />
                 Continental Dashboard
@@ -128,7 +128,7 @@ export const BetaIntelligence = () => {
           {/* Computed editorial note — derived from the same real counts */}
           {!isLoading && pulse && topCountry && (
             <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-8 bg-card border border-accent/20 rounded-2xl p-6 text-foreground shadow-xl">
-              <p className="font-serif italic text-[1.0625rem] leading-relaxed text-foreground/70">
+              <p className="text-sm md:text-base leading-relaxed text-foreground/70">
                 Coverage concentrated on {topCountry.country_name} this week ({topCountry.this_week.toLocaleString()} briefings)
                 {pulse.thinnest_region ? <>; {pulse.thinnest_region.region} Africa ran thinnest at {pulse.thinnest_region.stories.toLocaleString()} — exactly where our underreported-nations desk aims next.</> : '.'}
               </p>

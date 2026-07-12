@@ -164,9 +164,9 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative h-[38vh] min-h-[320px] max-h-[460px] w-full flex flex-col justify-end pb-10 px-6 overflow-hidden border-b border-foreground/10">
+      <section className="relative bg-card w-full py-12 md:py-16 px-6 border-b border-border">
         <motion.div 
-          className="absolute inset-0 z-0"
+          className="hidden"
           initial={false}
         >
           <img
@@ -177,20 +177,20 @@ export const BetaStories = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="container mx-auto max-w-7xl relative z-30">
+        <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={false}
             className="flex flex-col md:flex-row md:items-end justify-between gap-8"
           >
             <div>
-              <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-6 backdrop-blur-md">
+              <div className="inline-flex items-center gap-2 text-accent-ink text-[11px] font-semibold uppercase tracking-[0.1em] mb-4">
                 <Sparkles size={14} />
                 {t('landing.original_reporting', 'Original Reporting')}
               </div>
-              <h1 className="font-serif text-white text-[2.75rem] md:text-[4rem] leading-[0.98] tracking-tight mb-3 max-w-3xl">
-                {t('stories.title_1', 'Stories from')}<br/>{t('stories.title_2', 'the Continent.')}
+              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4rem] leading-[1] tracking-tight mb-3 max-w-3xl">
+                {t('stories.title_1', 'Stories from')} {t('stories.title_2', 'the Continent.')}
               </h1>
-              <p className="text-base md:text-lg text-white/75 max-w-xl">
+              <p className="text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
                 {t('stories.subtitle', "Real, grounded accounts from across the continent, the kind of story you won't find in a headline.")}
               </p>
             </div>
@@ -213,9 +213,9 @@ export const BetaStories = () => {
               }}
               disabled={!displayArticles.some(a => a.audio_url)}
               title={displayArticles.some(a => a.audio_url) ? t('stories.play_title', 'Play the latest audio briefings') : t('stories.audio_soon', 'Audio briefings coming soon')}
-              className="group flex items-center justify-center gap-3 px-5 py-3 rounded-lg bg-accent text-navy border border-accent font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group flex items-center justify-center gap-3 px-5 py-3 rounded-md bg-navy text-white border border-navy font-medium transition-colors hover:bg-navy/90 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <div className="w-10 h-10 rounded-full bg-accent text-navy group-hover:bg-card group-hover:text-accent flex items-center justify-center transition-colors">
+              <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
               </div>
               <span className="uppercase tracking-widest text-xs font-bold">{t('stories.listen_pulse', 'Listen to Daily Pulse')}</span>
