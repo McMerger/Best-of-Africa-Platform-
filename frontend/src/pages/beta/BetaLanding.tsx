@@ -1,538 +1,163 @@
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { ChevronDown, ChevronUp, Lock, Globe, Wrench, PenLine, Coffee } from 'lucide-react';
+import { ArrowRight, Headphones, Map, Newspaper, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
-import { GoldButton,
-  SectionLabel,
-  CardReveal,
-  MembershipTiersGrid
-} from '../../components/beta';
+import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { CountryFlag } from '../../components/CountryFlag';
-import { WorldCupFeature } from '../../components/beta/WorldCupFeature';
 import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
-import { useLanguage } from '@/context/LanguageContext';
-import { useSystemConfig } from '@/hooks/useSystemConfig';
-import { stripMarkdown, heroThumb } from '@/lib/utils';
-import React from 'react';
+import { heroThumb, stripMarkdown } from '@/lib/utils';
 
-const ParallaxOrbs = ({ scrollY }: { scrollY: any }) => {
-  const y1 = useTransform(scrollY, [0, 1000], [0, -300]);
-  const y2 = useTransform(scrollY, [0, 1000], [0, -500]);
-  const y3 = useTransform(scrollY, [0, 1000], [0, -200]);
-
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-      <motion.div 
-        style={{ y: y1 }}
-        className="absolute top-[20%] left-[10%] w-[40vw] h-[40vw] max-w-[600px] max-h-[600px] rounded-full bg-accent/10 blur-[100px] mix-blend-screen opacity-60"
-      />
-      <motion.div 
-        style={{ y: y2 }}
-        className="absolute top-[40%] right-[5%] w-[30vw] h-[30vw] max-w-[400px] max-h-[400px] rounded-full bg-[#C9A84C]/5 blur-[120px] mix-blend-screen opacity-50"
-      />
-      <motion.div 
-        style={{ y: y3 }}
-        className="absolute -bottom-[10%] left-[40%] w-[50vw] h-[50vw] max-w-[800px] max-h-[800px] rounded-full bg-foreground/5 blur-[150px] mix-blend-screen opacity-30"
-      />
-    </div>
-  );
-};
-
-const MagneticButton = ({ children, className = '' }: { children: React.ReactNode, className?: string }) => {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  const handleMouse = (e: React.MouseEvent<HTMLDivElement>) => {
-    const { clientX, clientY } = e;
-    const { height, width, left, top } = ref.current!.getBoundingClientRect();
-    const middleX = clientX - (left + width / 2);
-    const middleY = clientY - (top + height / 2);
-    setPosition({ x: middleX * 0.15, y: middleY * 0.15 });
-  };
-
-  const reset = () => {
-    setPosition({ x: 0, y: 0 });
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouse}
-      onMouseLeave={reset}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-      className={`inline-block ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-
-function RotatingSubheadline() {
-  const { t } = useLanguage();
-  const SUBHEADLINES = [
-    t('landing.sub_cities', 'Cities.'),
-    t('landing.sub_creators', 'Creators.'),
-    t('landing.sub_culture', 'Culture.'),
-    t('landing.sub_stories', 'Stories.'),
-  ];
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    // Spec §2.2: slow rotation to 2.5s per word
-    const id = setInterval(() => setIndex(i => (i + 1) % SUBHEADLINES.length), 2500);
-    return () => clearInterval(id);
-  }, [SUBHEADLINES.length]);
-
-  return (
-    <div className="h-9 flex items-center justify-center mb-4 overflow-hidden">
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={SUBHEADLINES[index]}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
-          transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="text-accent font-serif italic text-2xl font-semibold tracking-wide"
-        >
-          {SUBHEADLINES[index]}
-        </motion.span>
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function FAQItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border-b border-primary/8 last:border-0">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between py-5 text-left gap-4 group"
-        aria-expanded={open}
-      >
-        <span className="font-medium text-primary/90 group-hover:text-primary transition-colors text-base">{q}</span>
-        {open
-          ? <ChevronUp size={16} className="text-accent shrink-0" />
-          : <ChevronDown size={16} className="text-primary/40 shrink-0 group-hover:text-primary/70 transition-colors" />
-        }
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <p className="text-primary/60 text-sm leading-relaxed pb-5">{a}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+const StoryMeta = ({ article }: { article: ArticleListItem }) => (
+  <div className="flex items-center gap-3 text-xs text-white/75">
+    {article.country_code && (
+      <CountryFlag code={article.country_code} title={article.country_name} size={22} />
+    )}
+    <span>{article.country_name}</span>
+    {article.sector_name && <><span aria-hidden="true">·</span><span>{article.sector_name}</span></>}
+  </div>
+);
 
 export const BetaLanding = () => {
-  const prefersReducedMotion = useReducedMotion();
-  const { scrollY } = useScroll();
-  const { t } = useLanguage();
-
-  const faqItems = [
-    { q: t('landing.faq1_q', 'Is this finished?'), a: t('landing.faq1_a', 'No. The platform is currently in prototype and pre-launch stage. I am building this iteratively in public. Your early support makes the full launch possible.') },
-    { q: t('landing.faq2_q', 'Can I cancel?'), a: t('landing.faq2_a', 'Yes, you can cancel at any time from your Ko-fi dashboard, no lock-in periods.') },
-    { q: t('landing.faq3_q', 'Why now?'), a: t('landing.faq3_a', 'Because the continent deserves better stories than headlines about crisis and chaos. The real day-to-day energy deserves a platform built for it, and it needs independent backing to stay authentic.') },
-  ];
-
-  const transparencyItems = [
-    { Icon: Globe, label: t('landing.t_domain', 'Domain & Hosting'), desc: t('landing.t_domain_d', 'Keeping the platform live and performant globally.') },
-    { Icon: Wrench, label: t('landing.t_tools', 'Platform Tools'), desc: t('landing.t_tools_d', 'Building independently without VC funding constraints.') },
-    { Icon: PenLine, label: t('landing.t_research', 'Research Time'), desc: t('landing.t_research_d', 'Funding deep dives into underreported markets.') },
-    { Icon: Coffee, label: t('landing.t_fuel', 'Founder Fuel'), desc: t('landing.t_fuel_d', 'Direct support for an independent African creator.') },
-  ];
-
-  useEffect(() => {
-    // Optional: Add scroll listeners if needed in future
-  }, []);
-
-
-
-  const { data: featuredData } = useQuery({
+  const { data } = useQuery({
     queryKey: ['featured-articles'],
     queryFn: api.getFeaturedArticles,
-    staleTime: 5 * 60 * 1000 });
-
-  const previewArticles: ArticleListItem[] = featuredData?.data?.slice(0, 3) || FALLBACK_ARTICLES.slice(0, 3);
-
-  // Live funding progress (system_config, updated by the Ko-fi webhook).
-  const { data: sysConfig } = useSystemConfig();
-  const fundGoal = Number(sysConfig?.['funding_goal']) || 800;
-  const fundRaised = Number(sysConfig?.['funding_raised']) || 304;
-  const fundCoffees = Number(sysConfig?.['funding_coffees']) || 62;
-  const fundPct = Math.min(100, Math.round((fundRaised / fundGoal) * 100));
-
-  // Showcase cards for the "Platform Experience" marquee. Each premium image
-  // gets a distinct label instead of the old repeated "Cinematic Intelligence".
-  const platformPreviews = [
-    { src: '/images/v2_concierge.webp', eyebrow: t('landing.pv_concierge_k', 'Concierge'), label: t('landing.pv_concierge_v', 'White-glove access') },
-    { src: '/images/v2_events.webp', eyebrow: t('landing.pv_events_k', 'Summits & Events'), label: t('landing.pv_events_v', 'Where Africa connects') },
-    { src: '/images/v2_travel.webp', eyebrow: t('landing.pv_travel_k', 'Business Travel'), label: t('landing.pv_travel_v', 'Beyond the boardroom') },
-    { src: '/images/v2_hero_kigali.webp', eyebrow: t('landing.pv_hubs_k', 'Country Hubs'), label: t('landing.pv_hubs_v', 'Every nation, in depth') },
-    { src: '/images/v2_intel.webp', eyebrow: t('landing.pv_intel_k', 'Market Intelligence'), label: t('landing.pv_intel_v', 'Data with real context') },
-  ];
+    staleTime: 5 * 60 * 1000,
+  });
+  const stories: ArticleListItem[] = data?.data?.slice(0, 4) || FALLBACK_ARTICLES.slice(0, 4);
+  const lead = stories[0];
+  const secondary = stories.slice(1, 4);
 
   return (
-    <div className="selection:bg-accent selection:text-primary overflow-x-hidden">
-      <SEO 
-        title="BOA-Story" 
-        description="A digital home for real, thoughtful stories about African lives, cities, and ideas."
+    <div className="selection:bg-accent selection:text-navy">
+      <SEO
+        title="BOA-Story"
+        description="Independent reporting and intelligence from across Africa."
       />
-      
 
-      {/* 1. HERO SECTION, full navy band (spec §2.2) */}
-      <section className="relative min-h-[68vh] md:min-h-[72vh] max-h-[760px] flex items-center justify-center pt-24 pb-20 overflow-hidden border-b border-white/10 bg-navy text-white">
-        {/* Parallax Background */}
-        <motion.div
-          className="absolute inset-0 z-0"
-          style={{ scale: 1.01 }}
-        >
-          {/* Breakpoints must stay identical to the prerendered hero + preload
-              in index.html (≤768 / ≤1280 CSS px) so the React swap is a cache
-              hit, not a second download. Media queries, not srcset — srcset's
-              DPR factor made the preload and the img disagree on the variant. */}
-          <picture>
-            <source media="(max-width: 768px)" srcSet="/images/v2_hero_kigali_768.webp" />
-            <source media="(max-width: 1280px)" srcSet="/images/v2_hero_kigali_1280.webp" />
-            <img
-              src="/images/v2_hero_kigali.webp"
-              alt="Modern African Metropolis"
-              fetchPriority="high"
-              decoding="async"
-              className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
-            />
-          </picture>
-          {/* Navy wash keeps the band on-brand and the white headline legible */}
-          <div className="absolute inset-0 z-10 hero-scrim" />
-        </motion.div>
-
-        <div className="container mx-auto px-6 relative z-10 text-left max-w-6xl">
-          <SectionLabel text={t('landing.early_access', 'Early Access')} />
-
-          {/* Static (non-animated) hero headline, this is the LCP element, so it
-              must paint on first render rather than fading in from opacity:0. */}
-          <h1 className="font-serif text-white text-[clamp(3rem,7vw,5.75rem)] leading-[0.98] tracking-tight mb-6 max-w-4xl">
-            {t('landing.hero_title', 'Africa without the filter.')}
-          </h1>
-
-          <p className="text-accent text-sm font-semibold uppercase tracking-[0.12em] mb-5">Cities. Creators. Culture. Stories.</p>
-
-          <motion.p
-            initial={false}
-            className="text-white/80 text-[clamp(1rem,1.5vw,1.25rem)] max-w-2xl leading-relaxed mb-9"
-          >
-            {t('landing.hero_sub', 'A digital home for real, thoughtful stories about African lives, cities, and ideas, beyond charity ads and disaster headlines.')}
-          </motion.p>
-
-          <motion.div
-            initial={false}
-            className="flex flex-col sm:flex-row items-start gap-4 relative z-20"
-          >
-            <div>
-              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
-                <GoldButton variant="primary" className="w-full sm:w-auto text-sm py-3.5 px-7">
-                  {t('landing.cta_founding', 'Become a Founding Member')}
-                </GoldButton>
-              </a>
+      <section className="bg-navy text-white border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20 grid lg:grid-cols-[1.05fr_.95fr] gap-10 lg:gap-16 items-center">
+          <div>
+            <p className="text-accent text-xs font-semibold uppercase tracking-[0.12em] mb-5">
+              Independent African reporting
+            </p>
+            <h1 className="font-serif text-white text-[clamp(3rem,6vw,5.5rem)] leading-[0.98] tracking-tight max-w-3xl mb-6">
+              Africa, reported with context.
+            </h1>
+            <p className="text-white/75 text-lg md:text-xl leading-relaxed max-w-2xl mb-8">
+              Stories, country briefings and market intelligence that treat the continent as a place of consequence—not a collection of crisis headlines.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link to="/posts" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">
+                Read the latest <ArrowRight size={16} />
+              </Link>
+              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+                Explore intelligence
+              </Link>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </div>
 
-      {/* TEMPORARY: World Cup feature band (config/worldCup.ts) */}
-      <WorldCupFeature />
-
-      {/* 2. CONTENT PREVIEW — the product leads; the ask comes after. */}
-      <section className="py-14 md:py-20 lg:py-32 px-6 container mx-auto max-w-7xl">
-        <div className="text-center mb-10 md:mb-16">
-          <SectionLabel text={t('landing.original_reporting', 'Original Reporting')} />
-          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight text-foreground mb-4">{t('landing.stories_ground', 'Stories from the ground')}</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {previewArticles.length > 0 ? (
-            previewArticles.map((article, index) => {
-              const isFeatured = index === 0;
-              return (
-                <motion.div 
-                  key={article.slug}
-                  initial={false}
-                  className={isFeatured ? "md:col-span-2" : ""}
-                >
-                  <motion.div
-                    className={`group block bg-navy rounded-xl border border-white/10 overflow-hidden relative shadow-sm ${isFeatured ? 'h-[380px] md:h-[500px]' : 'h-[340px] md:h-[420px]'}`}
-                  >
-                    {/* Background Image */}
-                    <div className="absolute inset-0 z-0">
-                      <img
-                        src={heroThumb(article.hero_image_url) || `/images/v2_editorial_${(index % 2) + 1}.webp`}
-                        alt={article.title}
-                        loading="lazy"
-                        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = `/images/v2_editorial_${(index % 2) + 1}.webp`; } }}
-                        className="w-full h-full object-cover opacity-90"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/55 to-navy/10" />
-                    </div>
-
-                    {/* FREE READ badge on the first (unlocked) card, spec §2.4 */}
-                    {isFeatured && (
-                      <span className="absolute top-6 right-6 z-30 text-[10px] font-bold tracking-[0.2em] uppercase text-navy bg-accent px-4 py-2 rounded-full shadow-lg">
-                        {t('landing.free_read', 'Free Read')}
-                      </span>
-                    )}
-
-                    <div className="p-6 md:p-8 h-full flex flex-col justify-between relative z-10">
-                      <div className="mt-auto">
-                        <div className="flex justify-between items-center mb-6">
-                          <div>
-                            <CountryFlag code={article.country_code} title={article.country_name} size={48} className="!rounded-lg shadow-lg" />
-                            {article.country_name && (
-                              <p className="text-[11px] text-accent font-bold uppercase tracking-widest mt-3 drop-shadow-md">{article.country_name}</p>
-                            )}
-                          </div>
-                          <span className="text-[10px] font-bold tracking-[0.2em] text-navy uppercase bg-accent px-4 py-2 rounded-full shadow-lg">{article.sector_name}</span>
-                        </div>
-                        <h3 className={`font-serif leading-[1.08] mb-4 text-white ${isFeatured ? 'text-[2.25rem] md:text-[3.5rem] max-w-4xl' : 'text-[1.75rem] md:text-[2.125rem]'}`}>
-                          {stripMarkdown(article.title)}
-                        </h3>
-                        <p className={`text-white/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>
-                          {stripMarkdown(article.summary)}
-                        </p>
-                        {isFeatured && (
-                          <a href={`/posts/${article.slug}`} className="inline-flex items-center gap-2 mt-8 text-accent font-semibold uppercase tracking-[0.12em] text-sm hover:gap-3 transition-all">
-                            {t('landing.read_story', 'Read story →')}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                    {/* PAYWALL OVERLAY, only on gated (non-featured) cards */}
-                    {!isFeatured && (
-                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-navy/70 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        <div className="bg-navy-card/90 border border-accent/30 p-8 rounded-3xl w-full max-w-sm flex flex-col items-center transform translate-y-8 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                          <Lock className="text-accent mb-6" size={40} />
-                          <h4 className="font-serif text-2xl mb-3 text-white">{t('landing.members_only', 'Founding Members Only')}</h4>
-                          <p className="text-[1.125rem] font-light text-white/70 mb-8 leading-relaxed">{t('landing.unlock_note', 'Support the project on Ko-fi to unlock the full narrative feed.')}</p>
-                          <MagneticButton className="w-full">
-                            <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full inline-block">
-                              <GoldButton variant="primary" className="w-full text-base py-4 shadow-[0_0_20px_rgba(201,168,76,0.3)]">
-                                {t('landing.unlock_access', 'Unlock Access')}
-                              </GoldButton>
-                            </a>
-                          </MagneticButton>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                </motion.div>
-              );
-            })
-          ) : (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-20 md:py-32 text-foreground/40 border border-foreground/5 rounded-3xl bg-card">
-              <div className="animate-pulse text-2xl font-serif">{t('landing.curating', 'Curating stories...')}</div>
-            </div>
+          {lead && (
+            <Link to={`/posts/${lead.slug}`} className="group relative min-h-[360px] md:min-h-[430px] overflow-hidden rounded-xl border border-white/15 bg-navy block">
+              <img
+                src={heroThumb(lead.hero_image_url) || '/images/v2_editorial_1.webp'}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                fetchPriority="high"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/45 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                <StoryMeta article={lead} />
+                <h2 className="font-serif text-white text-3xl md:text-4xl leading-tight mt-4 group-hover:text-accent transition-colors">
+                  {stripMarkdown(lead.title)}
+                </h2>
+                <p className="text-white/75 mt-3 line-clamp-2 leading-relaxed">
+                  {stripMarkdown(lead.summary)}
+                </p>
+              </div>
+            </Link>
           )}
         </div>
       </section>
 
-      {/* 3. FUND THE PLATFORM — single funding moment: live status + tiers.
-          (Was two separate sections, with the money ask ABOVE the stories.) */}
-      <section className="py-14 md:py-20 lg:py-32 bg-background border-y border-foreground/10 px-6">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight mb-6 text-foreground">{t('landing.fund_platform', 'Fund the platform')}</h2>
-            <p className="text-ink-blue text-[1.25rem] font-light max-w-3xl mx-auto leading-relaxed">
-              {t('landing.fund_note', 'This is a student-built, narrative correction project. It only exists through the direct support of readers who want better stories.')}
-            </p>
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20">
+        <div className="flex items-end justify-between gap-6 mb-8 border-b border-border pb-5">
+          <div>
+            <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-2">Latest reporting</p>
+            <h2 className="font-serif text-3xl md:text-4xl text-navy">Stories worth your time</h2>
           </div>
-          <div className="max-w-4xl mx-auto mb-12 md:mb-16">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="glass-panel p-10 rounded-3xl border border-accent/20 flex flex-col items-center"
-          >
-            <h3 className="font-sans text-[10px] font-bold uppercase tracking-[0.2em] text-accent mb-8 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent animate-pulse" /> {t('landing.funding_label', 'Live Funding Progress')}
-            </h3>
+          <Link to="/posts" className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-navy hover:text-accent-ink">
+            All stories <ArrowRight size={15} />
+          </Link>
+        </div>
 
-            <div className="w-full max-w-2xl mb-6 text-foreground font-serif">
-              <p className="text-[1.25rem] md:text-[1.5rem] font-light leading-snug">
-                {t('landing.page_status', 'Page Status:')} <span className="text-accent italic font-medium">{t('landing.active', 'Active')}</span>, {fundPct}% of ${fundGoal.toLocaleString()} goal funded, {fundCoffees} coffees received
+        <div className="grid md:grid-cols-3 gap-px bg-border border border-border rounded-xl overflow-hidden">
+          {secondary.map((article, index) => (
+            <Link key={article.slug} to={`/posts/${article.slug}`} className="group bg-card p-5 md:p-6 min-w-0">
+              <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted mb-5">
+                <img
+                  src={heroThumb(article.hero_image_url) || `/images/v2_editorial_${(index % 2) + 1}.webp`}
+                  alt=""
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
+                {article.country_code && <CountryFlag code={article.country_code} title={article.country_name} size={20} />}
+                <span>{article.country_name}</span>
+                {article.sector_name && <><span>·</span><span>{article.sector_name}</span></>}
+              </div>
+              <h3 className="font-serif text-xl md:text-2xl leading-snug text-navy group-hover:text-accent-ink transition-colors">
+                {stripMarkdown(article.title)}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3 line-clamp-3">
+                {stripMarkdown(article.summary)}
               </p>
-              <div className="w-full bg-foreground/5 rounded-full h-4 overflow-hidden border border-foreground/10 mt-8 relative shadow-inner">
-                <motion.div
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${fundPct}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="bg-accent h-full rounded-full relative shadow-[0_0_20px_rgba(201,168,76,0.5)]"
-                >
-                  <div className="absolute inset-0 bg-foreground/20 animate-pulse" />
-                </motion.div>
-              </div>
-            </div>
-
-            <p className="mt-8 text-[1.125rem] font-light text-foreground/50 max-w-xl leading-relaxed">
-              {t('landing.funding_note', 'BOA-Story is small and self-funded. Your support directly pays for domain hosting, platform tools, and research time to surface these stories.')}
-            </p>
-          </motion.div>
-          </div>
-          <MembershipTiersGrid />
-        </div>
-      </section>
-
-      {/* 5. IMMERSIVE VISUAL MARQUEE (Replacing Static Previews) */}
-      <section className="py-20 md:py-32 bg-background overflow-hidden border-b border-foreground/10 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
-        <div className="text-center mb-16 relative z-10 px-6">
-          <SectionLabel text={t('landing.platform_experience', 'Platform Experience')} />
-          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] leading-tight text-foreground mb-6">{t('landing.premium_interface', 'A Premium Interface')}</h2>
-          <p className="text-ink-blue text-[1.25rem] font-light max-w-2xl mx-auto">
-            {t('landing.premium_note', 'Immersive, cinematic, and deeply analytical. Designed specifically for the nuances of African markets.')}
-          </p>
-        </div>
-        
-        {/* Animated Infinite Marquee */}
-        <div className="relative w-full h-[400px] md:h-[500px] flex items-center overflow-hidden z-10">
-          <motion.div
-            className="flex gap-8 px-8 absolute left-0 whitespace-nowrap"
-            animate={prefersReducedMotion ? undefined : { x: ["0%", "-50%"] }}
-            transition={prefersReducedMotion ? undefined : { ease: "linear", duration: 40, repeat: Infinity }}
-          >
-            {[...platformPreviews, ...platformPreviews].map((item, idx) => (
-              <div key={idx} className="relative w-[300px] md:w-[450px] h-[300px] md:h-[400px] rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_24px_60px_-20px_rgba(15,31,61,0.5)] flex-shrink-0 group">
-                {/* The panel strip sits below the fold — always lazy, or it doubles
-                    the landing page's image payload and tanks mobile LCP. */}
-                <img src={item.src} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1200ms]" alt={item.label} />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/30 to-transparent" />
-                <div className="absolute top-6 left-6">
-                  <div className="w-9 h-9 rounded-full bg-navy/40 backdrop-blur-md border border-accent/40 flex items-center justify-center text-accent"><Lock size={14}/></div>
-                </div>
-                <div className="absolute bottom-7 left-7 right-7">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">{item.eyebrow}</span>
-                  <div className="font-serif text-2xl md:text-[1.9rem] leading-tight text-white mt-1.5">{item.label}</div>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-          {/* Edge gradients to fade out marquee */}
-          <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-page to-transparent z-20 pointer-events-none" />
-          <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-page to-transparent z-20 pointer-events-none" />
-        </div>
-      </section>
-
-      {/* 6. MISSION BLOCK, full navy band, gold italic "Properly." (spec §2.7) */}
-      <section className="py-14 md:py-24 lg:py-40 px-6 relative text-white text-center border-y border-white/10 overflow-hidden bg-navy">
-        <div className="absolute inset-0 z-0">
-          <motion.img
-            style={{ y: useTransform(scrollY, [2000, 4000], [0, 200]) }}
-            src="/images/v2_real_background.webp"
-            alt="Real African Street Night"
-            loading="lazy"
-            decoding="async"
-            className="w-full h-[120%] object-cover opacity-60 absolute top-[-10%]"
-          />
-          <div className="absolute inset-0 z-10 bg-gradient-to-t from-navy/90 via-navy/65 to-navy/75" />
-        </div>
-        <div className="container mx-auto max-w-4xl relative z-20">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1 }}
-          >
-            <span className="text-6xl mb-8 block opacity-90 drop-shadow-2xl">🌍</span>
-            <h2 className="font-serif text-white text-[2.5rem] sm:text-[3.5rem] md:text-[5rem] leading-[1] mb-8 drop-shadow-xl tracking-tighter">
-              {t('landing.mission_title', "We're building Africa's story.")} <span className="italic text-accent">{t('landing.mission_properly', 'Properly.')}</span>
-            </h2>
-            <p className="text-white/80 text-2xl font-serif italic mx-auto leading-relaxed mb-12 drop-shadow-md">
-              {t('landing.mission_note', 'The continent deserves better than headlines about crisis and chaos. The real day-to-day energy, the businesses being built, the cultures thriving, deserves a platform built for it.')}
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 7. TRANSPARENCY SECTION, gold SVG icons on navy circles (spec §2.8) */}
-      <section className="py-20 md:py-32 px-6 container mx-auto max-w-6xl text-center">
-        <h3 className="font-sans font-bold text-accent-ink uppercase tracking-[0.2em] text-[11px] mb-16">{t('landing.money_goes', 'Where your money goes')}</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-          {transparencyItems.map((item, i) => (
-            <CardReveal key={item.label} delay={i * 0.1}>
-              <div className="bg-white rounded-3xl h-full p-8 border border-border shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)] transition-shadow">
-                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-navy">
-                  <item.Icon className="text-accent" size={24} />
-                </div>
-                <div className="text-[1.125rem] font-serif font-semibold mb-3 text-ink">{item.label}</div>
-                <div className="text-[0.9rem] font-light text-ink-blue leading-relaxed">{item.desc}</div>
-              </div>
-            </CardReveal>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* 8. FAQ */}
-      <section className="py-20 md:py-32 px-6 border-t border-foreground/5 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
-        <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="font-serif text-[2.25rem] sm:text-[3rem] md:text-[4rem] text-foreground mb-16 text-center leading-tight">{t('landing.faq_title', 'Frequently Asked Questions')}</h2>
-          <div className="glass-panel rounded-3xl border border-foreground/10 px-8 md:px-10 shadow-2xl">
-            {faqItems.map(item => <FAQItem key={item.q} q={item.q} a={item.a} />)}
+      <section className="border-y border-border bg-card">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-16">
+          <div className="max-w-2xl mb-10">
+            <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-3">Use BOA-Story</p>
+            <h2 className="font-serif text-3xl md:text-4xl text-navy mb-4">Follow the story. Understand the landscape.</h2>
+            <p className="text-muted-foreground leading-relaxed">Move from daily reporting to country context and continent-wide coverage signals without switching products.</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 border border-border rounded-xl overflow-hidden divide-y md:divide-y-0 md:divide-x divide-border">
+            {[
+              { Icon: Newspaper, title: 'Reporting', copy: 'Original stories and concise daily briefings.', to: '/posts' },
+              { Icon: Map, title: 'Country hubs', copy: 'Coverage, sectors and context for all 54 nations.', to: '/countries' },
+              { Icon: TrendingUp, title: 'Intelligence', copy: 'Real coverage momentum and market signals.', to: '/intelligence' },
+              { Icon: Headphones, title: 'Listen', copy: 'Human-sounding audio briefings for reading on the move.', to: '/posts' },
+            ].map(({ Icon, title, copy, to }) => (
+              <Link key={title} to={to} className="group p-6 bg-card hover:bg-secondary/60 transition-colors">
+                <Icon size={20} className="text-accent-ink mb-5" />
+                <h3 className="text-base font-semibold text-navy mb-2">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-5">{copy}</p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy group-hover:text-accent-ink">Explore <ArrowRight size={14} /></span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 9. FOOTER CTA */}
-      <section className="py-14 md:py-24 lg:py-40 px-6 text-center bg-background relative overflow-hidden">
-        <div className="max-w-4xl mx-auto relative z-10">
-           <motion.h2 
-             initial={{ opacity: 0, y: 30 }}
-             whileInView={{ opacity: 1, y: 0 }}
-             viewport={{ once: true }}
-             transition={{ duration: 1 }}
-             className="font-serif text-[2.5rem] sm:text-[3.5rem] md:text-[5rem] leading-[1] tracking-tighter mb-10 text-foreground"
-           >
-             {t('landing.join_title_1', 'Join before the')} <br/>{t('landing.join_title_2', 'official launch.')}
-           </motion.h2>
-           <motion.p 
-             initial={{ opacity: 0, y: 30 }}
-             whileInView={{ opacity: 1, y: 0 }}
-             viewport={{ once: true }}
-             transition={{ duration: 1, delay: 0.2 }}
-             className="text-ink-blue mb-16 text-[1.25rem] md:text-[1.5rem] font-light max-w-2xl mx-auto"
-           >
-             {t('landing.join_note', 'Your support at this quiet, early stage is what turns an idea into reality.')}
-           </motion.p>
-           <motion.div
-             initial={{ opacity: 0, scale: 0.95 }}
-             whileInView={{ opacity: 1, scale: 1 }}
-             viewport={{ once: true }}
-             transition={{ duration: 1, delay: 0.4 }}
-           >
-             <MagneticButton>
-               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block">
-                 <GoldButton variant="primary" className="text-xl py-5 px-12 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
-                   {t('landing.support_kofi', 'Support on Ko-fi')}
-                 </GoldButton>
-               </a>
-             </MagneticButton>
-           </motion.div>
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20">
+        <div className="bg-navy text-white rounded-xl px-6 py-10 md:px-10 md:py-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="max-w-2xl">
+            <p className="text-accent text-xs font-semibold uppercase tracking-[0.1em] mb-3">Independent by design</p>
+            <h2 className="font-serif text-white text-3xl md:text-4xl mb-3">Support reporting built for the long view.</h2>
+            <p className="text-white/70 leading-relaxed">Membership funds the reporting, infrastructure and research behind BOA-Story.</p>
+          </div>
+          <div className="flex flex-wrap gap-3 shrink-0">
+            <Link to="/membership" className="rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">View membership</Link>
+            <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">Support once</a>
+          </div>
         </div>
       </section>
-
     </div>
   );
 };
+
+export default BetaLanding;
