@@ -202,7 +202,7 @@ export const BetaMemberAccess = () => {
             />
         </div>
       ) : (
-        <div className="flex-1 bg-background">
+        <div className="flex-1 min-w-0 overflow-hidden bg-background">
           
           {/* Left Side Cover */}
           <div className="hidden">
@@ -229,8 +229,8 @@ export const BetaMemberAccess = () => {
           </div>
 
           {/* Right Side Auth Flow */}
-          <div className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-16 sm:px-10">
-            <div className="max-w-md w-full mx-auto">
+          <div className="mx-auto flex min-h-[70vh] min-w-0 max-w-xl flex-col justify-center px-6 py-16 sm:px-10">
+            <div className="max-w-md min-w-0 w-full mx-auto">
 
               {phase === 'otp' ? (
                 // ── OTP Form State ─────────────────────────────────────────────────

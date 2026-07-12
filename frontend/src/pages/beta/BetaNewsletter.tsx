@@ -78,7 +78,7 @@ export const BetaNewsletter = () => {
   }
 
   return (
-    <div className="flex flex-col selection:bg-accent selection:text-navy">
+    <div className="flex min-w-0 flex-col overflow-hidden selection:bg-accent selection:text-navy">
       <SEO 
         title="Newsletter | BOA-Story" 
         description="Weekly dispatches on African business, culture, and emerging stories, no noise, no filter."
@@ -86,7 +86,7 @@ export const BetaNewsletter = () => {
       
 
       <div className="flex-1 py-14 md:py-20 px-6">
-        <div className="max-w-2xl mx-auto w-full">
+        <div className="max-w-2xl min-w-0 mx-auto w-full">
 
           {justUnsubscribed && (
             <div className="mb-8 w-full rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 text-sm text-primary/80" role="status">
@@ -94,7 +94,7 @@ export const BetaNewsletter = () => {
             </div>
           )}
 
-          <div className="mb-10 w-full">
+          <div className="mb-10 min-w-0 w-full">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Weekly briefing</p>
             <h1 className="font-serif text-ink text-[40px] md:text-[52px] leading-tight mb-4">
               Stay close to Africa's story.
@@ -131,8 +131,8 @@ export const BetaNewsletter = () => {
           </form>
 
           {/* Sample dispatch preview, shows readers exactly what they'll get (spec §3.9) */}
-          <div className="bg-card rounded-xl border border-border p-8 md:p-10 mb-12 w-full text-left">
-            <div className="flex items-center justify-between mb-6">
+          <div className="min-w-0 overflow-hidden bg-card rounded-xl border border-border p-6 md:p-10 mb-12 w-full text-left">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Sample Dispatch</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-blue">Sunday · 5 min read</span>
             </div>
@@ -151,7 +151,7 @@ export const BetaNewsletter = () => {
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent-ink">{item.sector}</span>
                   </div>
-                  <p className="font-serif text-lg text-ink leading-snug">{item.headline}</p>
+                  <p className="break-words font-serif text-lg text-ink leading-snug">{item.headline}</p>
                 </li>
               ))}
             </ul>
