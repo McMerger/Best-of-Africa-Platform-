@@ -85,8 +85,8 @@ export const BetaNewsletter = () => {
       />
       
 
-      <div className="flex-1 flex flex-col justify-center py-20 px-6">
-        <div className="max-w-md mx-auto w-full flex flex-col items-center text-center">
+      <div className="flex-1 py-14 md:py-20 px-6">
+        <div className="max-w-2xl mx-auto w-full">
 
           {justUnsubscribed && (
             <div className="mb-8 w-full rounded-2xl border border-accent/30 bg-accent/10 px-5 py-4 text-sm text-primary/80" role="status">
@@ -95,10 +95,11 @@ export const BetaNewsletter = () => {
           )}
 
           <div className="mb-10 w-full">
-            <h1 className="font-serif text-ink text-[40px] md:text-[48px] leading-tight mb-4">
-              Stay close to Africa's <span className="italic text-accent">story.</span>
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Weekly briefing</p>
+            <h1 className="font-serif text-ink text-[40px] md:text-[52px] leading-tight mb-4">
+              Stay close to Africa's story.
             </h1>
-            <p className="text-lg text-ink-blue max-w-sm mx-auto leading-relaxed">
+            <p className="text-lg text-ink-blue max-w-xl leading-relaxed">
               Free weekly dispatches, cities, founders, opportunities. No noise. Unsubscribe anytime.
             </p>
           </div>
@@ -114,7 +115,7 @@ export const BetaNewsletter = () => {
               required
               disabled={status === 'loading'}
               autoComplete="email"
-              className="w-full bg-white border border-border rounded-xl px-4 py-4 text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all shadow-sm"
+              className="w-full bg-card border border-border rounded-lg px-4 py-4 text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
             />
             <p className="text-xs text-ink-blue text-left">No spam. Unsubscribe anytime.</p>
             {status === 'error' && (
@@ -123,14 +124,14 @@ export const BetaNewsletter = () => {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full bg-accent text-accent-foreground font-medium font-sans px-8 py-4 rounded-lg hover:brightness-110 shadow-[0_0_15px_rgba(201,168,76,0.2)] transition-transform hover:-translate-y-0.5 text-lg disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="w-full bg-accent text-accent-foreground font-medium font-sans px-8 py-4 rounded-lg hover:brightness-105 transition-colors text-base disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {status === 'loading' ? 'Subscribing...' : 'Get the weekly dispatch'}
             </button>
           </form>
 
           {/* Sample dispatch preview, shows readers exactly what they'll get (spec §3.9) */}
-          <div className="bg-white rounded-xl border border-border p-8 md:p-10 mb-12 shadow-[0_1px_6px_rgba(0,0,0,0.08)] w-full text-left">
+          <div className="bg-card rounded-xl border border-border p-8 md:p-10 mb-12 w-full text-left">
             <div className="flex items-center justify-between mb-6">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">Sample Dispatch</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-blue">Sunday · 5 min read</span>

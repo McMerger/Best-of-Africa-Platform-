@@ -52,24 +52,25 @@ export const ContactPage: React.FC = () => {
     return (
         <>
             <SEO title="Contact" description="Reach Best of Africa for media inquiries, partnership opportunities, or support." />
-            <div className="container py-20 max-w-4xl">
-                <div className="mb-12 text-center">
-                    <h1 className="mb-4 text-4xl font-serif font-extrabold text-foreground md:text-5xl">
+            <div className="container py-14 md:py-20 max-w-5xl">
+                <div className="mb-10 max-w-2xl">
+                    <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Contact</p>
+                    <h1 className="mb-4 text-4xl font-serif font-semibold text-foreground md:text-5xl">
                         {config?.['contact_headline'] || "Contact Best of Africa"}
                     </h1>
-                    <p className="text-xl text-ink-blue">
+                    <p className="text-lg leading-relaxed text-ink-blue">
                         For media inquiries, partnership opportunities, or support.
                     </p>
                 </div>
 
                 {status === 'success' ? (
-                    <Card className="border-white/10 bg-navy text-center text-white shadow-lg">
+                    <Card className="rounded-xl border-border bg-card text-center text-foreground shadow-none">
                         <CardContent className="flex flex-col items-center py-12">
-                            <div className="mb-6 rounded-full bg-navy-card p-4">
+                            <div className="mb-6 rounded-full bg-accent/10 p-4">
                                 <PaperPlaneIcon className="h-12 w-12 text-accent" />
                             </div>
                             <h2 className="mb-2 text-2xl font-bold">Message Sent</h2>
-                            <p className="mb-8 text-white/60">Thank you for reaching out. We will review your inquiry shortly.</p>
+                            <p className="mb-8 text-muted-foreground">Thank you for reaching out. We will review your inquiry shortly.</p>
                             <Button
                                 className="bg-accent text-navy hover:bg-gold-italic font-bold"
                                 onClick={() => {
@@ -82,14 +83,14 @@ export const ContactPage: React.FC = () => {
                         </CardContent>
                     </Card>
                 ) : (
-                    <Card className="border-white/10 bg-navy text-white shadow-lg">
+                    <Card className="rounded-xl border-border bg-card text-foreground shadow-none">
                         <CardHeader>
-                            <CardTitle className="text-white">Send us a message</CardTitle>
-                            <CardDescription className="text-white/60">We typically respond within 24 business hours.</CardDescription>
+                            <CardTitle className="text-foreground">Send us a message</CardTitle>
+                            <CardDescription>We typically respond within 24 business hours.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {error && (
-                                <div className="mb-6 rounded-3xl bg-destructive/10 p-4 text-sm text-destructive border border-destructive/20">
+                                <div className="mb-6 rounded-lg bg-destructive/10 p-4 text-sm text-destructive border border-destructive/20">
                                     {error}
                                 </div>
                             )}
@@ -103,7 +104,7 @@ export const ContactPage: React.FC = () => {
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="Your Name"
-                                            className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
+                                            className="bg-background text-ink border-border placeholder:text-ink-mute focus-visible:ring-accent"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -113,7 +114,7 @@ export const ContactPage: React.FC = () => {
                                             value={formData.organization}
                                             onChange={e => setFormData({ ...formData, organization: e.target.value })}
                                             placeholder="Company / Institution"
-                                            className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
+                                            className="bg-background text-ink border-border placeholder:text-ink-mute focus-visible:ring-accent"
                                         />
                                     </div>
                                 </div>
@@ -127,7 +128,7 @@ export const ContactPage: React.FC = () => {
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
                                         placeholder="official@organization.com"
-                                        className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
+                                        className="bg-background text-ink border-border placeholder:text-ink-mute focus-visible:ring-accent"
                                     />
                                 </div>
 
@@ -137,7 +138,7 @@ export const ContactPage: React.FC = () => {
                                         value={formData.inquiry_type}
                                         onValueChange={(value) => setFormData({ ...formData, inquiry_type: value })}
                                     >
-                                        <SelectTrigger id="type" className="bg-white text-ink border-[#3A5070]">
+                                        <SelectTrigger id="type" className="bg-background text-ink border-border">
                                             <SelectValue placeholder="Select Inquiry Type" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -159,7 +160,7 @@ export const ContactPage: React.FC = () => {
                                         value={formData.message}
                                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData({ ...formData, message: e.target.value })}
                                         placeholder="How can we assist you?"
-                                        className="bg-white text-ink border-[#3A5070] placeholder:text-ink-mute focus-visible:ring-accent"
+                                        className="bg-background text-ink border-border placeholder:text-ink-mute focus-visible:ring-accent"
                                     />
                                 </div>
 
@@ -184,12 +185,12 @@ export const ContactPage: React.FC = () => {
                 )}
 
                 <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div className="flex flex-col items-center rounded-3xl bg-white border border-border p-8 text-center shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+                    <div className="flex flex-col items-start rounded-xl bg-card border border-border p-7 text-left">
                         <ChatBubbleIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">Press Inquiries</h3>
                         <p className="text-sm text-muted-foreground font-medium">press@bestofafrica.com</p>
                     </div>
-                    <div className="flex flex-col items-center rounded-3xl bg-white border border-border p-8 text-center shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+                    <div className="flex flex-col items-start rounded-xl bg-card border border-border p-7 text-left">
                         <EnvelopeClosedIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">General Support</h3>
                         <p className="text-sm text-muted-foreground font-medium">support@bestofafrica.com</p>

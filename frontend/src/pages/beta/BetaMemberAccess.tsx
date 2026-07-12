@@ -202,10 +202,10 @@ export const BetaMemberAccess = () => {
             />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 bg-background">
           
           {/* Left Side Cover */}
-          <div className="hidden lg:block lg:w-1/2 relative">
+          <div className="hidden">
             <img
               src="/images/v2_editorial_1.webp"
               alt="Premium Access"
@@ -229,7 +229,7 @@ export const BetaMemberAccess = () => {
           </div>
 
           {/* Right Side Auth Flow */}
-          <div className="flex-1 lg:w-1/2 flex flex-col justify-center py-20 px-6 sm:px-12 lg:px-24 bg-card relative z-40 lg:-ml-6 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-foreground/5">
+          <div className="mx-auto flex min-h-[70vh] max-w-xl flex-col justify-center px-6 py-16 sm:px-10">
             <div className="max-w-md w-full mx-auto">
 
               {phase === 'otp' ? (

@@ -14,14 +14,14 @@ export const PrivacyPage: React.FC = () => {
     return (
         <>
             <SEO title="Privacy Policy" description="How Best of Africa collects, uses, and protects your personal information, including PIPEDA rights for Canadian users." />
-            <div className="container py-20 max-w-3xl">
+            <div className="container py-14 md:py-20 max-w-3xl">
                 <header className="mb-10 border-b border-border pb-8">
-                    <h1 className="mb-4 text-4xl font-serif font-extrabold tracking-tight text-ink md:text-5xl">Privacy Policy</h1>
+                    <h1 className="mb-4 text-4xl font-serif font-semibold tracking-tight text-ink md:text-5xl">Privacy Policy</h1>
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Last Updated: June 2026</p>
                 </header>
 
                 {/* Table of contents */}
-                <nav aria-label="On this page" className="mb-12 rounded-2xl border border-border bg-white p-6 shadow-[0_1px_6px_rgba(0,0,0,0.06)]">
+                <nav aria-label="On this page" className="mb-12 rounded-xl border border-border bg-card p-6">
                     <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-blue">On this page</h2>
                     <ul className="space-y-2">
                         {SECTIONS.map(s => (
