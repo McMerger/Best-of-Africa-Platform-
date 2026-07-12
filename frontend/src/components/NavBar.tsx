@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Coffee } from 'lucide-react';
 import { KO_FI_URL } from '../constants/beta';
 
@@ -73,7 +72,7 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-2xl border-b border-border shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300">
+        <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80">
             {/* Pre-header utilities. Signed-in only: for visitors it held nothing
                 but the language button — a dead 44px strip on every page. Their
                 LanguageSelector lives in the main navbar row instead. */}
@@ -115,11 +114,7 @@ export const NavBar: React.FC = () => {
                                 className={cn("relative px-2.5 xl:px-4 py-2 transition-colors whitespace-nowrap z-10", isActive ? "text-navy" : "hover:text-accent")}
                             >
                                 {isActive && (
-                                    <motion.div
-                                        layoutId="nav-pill"
-                                        className="absolute inset-0 bg-accent/15 rounded-full -z-10"
-                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                    />
+                                    <span className="absolute inset-x-3 -bottom-[9px] h-0.5 bg-accent -z-10" />
                                 )}
                                 {item.label}
                             </Link>

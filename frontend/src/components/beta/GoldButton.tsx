@@ -14,7 +14,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-gradient-to-br from-[#C9A84C] to-[#E8C96A] text-navy shadow-[0_4px_24px_rgba(201,168,76,0.3)]",
+        primary: "bg-accent text-navy hover:bg-[#b99a43]",
         ghost: "bg-transparent border border-accent/40 text-accent hover:bg-accent/10",
       },
       size: {
@@ -39,9 +39,6 @@ export const GoldButton = React.forwardRef<HTMLButtonElement, GoldButtonProps>(
       <motion.button
         ref={ref}
         className={cn(buttonVariants({ variant, size, className }))}
-        whileHover={{ scale: 1.02, boxShadow: variant === 'primary' ? '0 8px 32px rgba(201,168,76,0.4)' : '0 4px 16px rgba(201,168,76,0.15)' }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
         {...props}
       >
         {children}

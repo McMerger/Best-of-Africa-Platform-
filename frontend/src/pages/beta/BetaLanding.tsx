@@ -194,11 +194,11 @@ export const BetaLanding = () => {
       
 
       {/* 1. HERO SECTION, full navy band (spec §2.2) */}
-      <section className="relative min-h-[100vh] flex items-center justify-center pt-24 pb-32 overflow-hidden border-b border-white/10 bg-navy text-white">
+      <section className="relative min-h-[68vh] md:min-h-[72vh] max-h-[760px] flex items-center justify-center pt-24 pb-20 overflow-hidden border-b border-white/10 bg-navy text-white">
         {/* Parallax Background */}
         <motion.div
           className="absolute inset-0 z-0"
-          style={{ y: prefersReducedMotion ? 0 : useTransform(scrollY, [0, 1000], [0, 400]), scale: 1.05 }}
+          style={{ scale: 1.01 }}
         >
           {/* Breakpoints must stay identical to the prerendered hero + preload
               in index.html (≤768 / ≤1280 CSS px) so the React swap is a cache
@@ -219,37 +219,35 @@ export const BetaLanding = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <ParallaxOrbs scrollY={scrollY} />
-
-        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
+        <div className="container mx-auto px-6 relative z-10 text-left max-w-6xl">
           <SectionLabel text={t('landing.early_access', 'Early Access')} />
 
           {/* Static (non-animated) hero headline, this is the LCP element, so it
               must paint on first render rather than fading in from opacity:0. */}
-          <h1 className="font-serif text-white text-[clamp(2.5rem,10vw,8rem)] leading-[1.02] sm:leading-[0.95] tracking-tighter mb-8 drop-shadow-2xl">
+          <h1 className="font-serif text-white text-[clamp(3rem,7vw,5.75rem)] leading-[0.98] tracking-tight mb-6 max-w-4xl">
             {t('landing.hero_title', 'Africa without the filter.')}
           </h1>
 
-          <RotatingSubheadline />
+          <p className="text-accent text-sm font-semibold uppercase tracking-[0.12em] mb-5">Cities. Creators. Culture. Stories.</p>
 
           <motion.p
             initial={false}
-            className="text-white/80 text-[clamp(1.125rem,2vw,1.5rem)] max-w-2xl mx-auto leading-relaxed mb-12"
+            className="text-white/80 text-[clamp(1rem,1.5vw,1.25rem)] max-w-2xl leading-relaxed mb-9"
           >
             {t('landing.hero_sub', 'A digital home for real, thoughtful stories about African lives, cities, and ideas, beyond charity ads and disaster headlines.')}
           </motion.p>
 
           <motion.div
             initial={false}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20"
+            className="flex flex-col sm:flex-row items-start gap-4 relative z-20"
           >
-            <MagneticButton>
+            <div>
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto inline-block">
-                <GoldButton variant="primary" className="w-full sm:w-auto text-lg py-4 px-8 shadow-[0_0_40px_rgba(201,168,76,0.4)] hover:shadow-[0_0_60px_rgba(201,168,76,0.6)]">
+                <GoldButton variant="primary" className="w-full sm:w-auto text-sm py-3.5 px-7">
                   {t('landing.cta_founding', 'Become a Founding Member')}
                 </GoldButton>
               </a>
-            </MagneticButton>
+            </div>
           </motion.div>
         </div>
       </section>
@@ -267,20 +265,15 @@ export const BetaLanding = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {previewArticles.length > 0 ? (
             previewArticles.map((article, index) => {
-              const delays = [0, 0.15, 0.3];
               const isFeatured = index === 0;
               return (
                 <motion.div 
                   key={article.slug}
-                  initial={{ opacity: 0, y: 50, rotateX: 10 }}
-                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.8, delay: delays[index], type: "spring", bounce: 0.2 }}
+                  initial={false}
                   className={isFeatured ? "md:col-span-2" : ""}
                 >
                   <motion.div
-                    whileHover={{ scale: 1.02, y: -8 }}
-                    className={`group block bg-navy rounded-[2rem] border border-white/10 overflow-hidden relative shadow-2xl hover:shadow-[0_20px_60px_-15px_rgba(201,168,76,0.25)] transition-all duration-500 ${isFeatured ? 'h-[400px] md:h-[500px] lg:h-[650px]' : 'h-[360px] sm:h-[440px] md:h-[500px]'}`}
+                    className={`group block bg-navy rounded-xl border border-white/10 overflow-hidden relative shadow-sm ${isFeatured ? 'h-[380px] md:h-[500px]' : 'h-[340px] md:h-[420px]'}`}
                   >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
@@ -289,7 +282,7 @@ export const BetaLanding = () => {
                         alt={article.title}
                         loading="lazy"
                         onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = `/images/v2_editorial_${(index % 2) + 1}.webp`; } }}
-                        className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110 opacity-90"
+                        className="w-full h-full object-cover opacity-90"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/55 to-navy/10" />
                     </div>
@@ -301,7 +294,7 @@ export const BetaLanding = () => {
                       </span>
                     )}
 
-                    <div className="p-10 h-full flex flex-col justify-between relative z-10 transition-all duration-300">
+                    <div className="p-6 md:p-8 h-full flex flex-col justify-between relative z-10">
                       <div className="mt-auto">
                         <div className="flex justify-between items-center mb-6">
                           <div>
@@ -312,7 +305,7 @@ export const BetaLanding = () => {
                           </div>
                           <span className="text-[10px] font-bold tracking-[0.2em] text-navy uppercase bg-accent px-4 py-2 rounded-full shadow-lg">{article.sector_name}</span>
                         </div>
-                        <h3 className={`font-serif leading-[1.05] mb-5 text-white group-hover:text-accent transition-colors drop-shadow-lg ${isFeatured ? 'text-[2.5rem] md:text-[4.5rem]' : 'text-[2rem] md:text-[2.5rem]'}`}>
+                        <h3 className={`font-serif leading-[1.08] mb-4 text-white ${isFeatured ? 'text-[2.25rem] md:text-[3.5rem] max-w-4xl' : 'text-[1.75rem] md:text-[2.125rem]'}`}>
                           {stripMarkdown(article.title)}
                         </h3>
                         <p className={`text-white/80 font-light leading-relaxed line-clamp-3 drop-shadow-md ${isFeatured ? 'text-[1.25rem] md:text-[1.5rem] max-w-3xl' : 'text-[1.125rem]'}`}>

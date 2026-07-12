@@ -86,7 +86,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 // long task that delays mobile LCP. They lazy-load and mount after first idle.
 const BetaGlobalPlayer = lazyWithRetry(() => import('./components/beta/BetaGlobalPlayer').then(m => ({ default: m.BetaGlobalPlayer })));
 const BetaChatWidget   = lazyWithRetry(() => import('./components/beta/BetaChatWidget').then(m => ({ default: m.BetaChatWidget })));
-const CustomCursor     = lazyWithRetry(() => import('./components/CustomCursor').then(m => ({ default: m.CustomCursor })));
 const ToasterDeferred  = lazyWithRetry(() => import('@/components/ui/sonner').then(m => ({ default: m.Toaster })));
 const CommandMenuDeferred = lazyWithRetry(() => import('@/components/CommandMenu').then(m => ({ default: m.CommandMenu })));
 
@@ -105,7 +104,6 @@ const DeferredChrome = () => {
     <Suspense fallback={null}>
       <BetaGlobalPlayer />
       <BetaChatWidget />
-      <CustomCursor />
       <ToasterDeferred />
       <CommandMenuDeferred />
     </Suspense>

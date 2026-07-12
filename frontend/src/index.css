@@ -6,7 +6,7 @@
   /* ── Combined light-first navy system (Combination of both.md §1) ──
      Page bg is light grey; cards/navbar are pure white; navy is reserved
      for hero bands, footer, login, admin via the explicit `navy*` colours. */
-  --background: 0 0% 100%;     /* pure white page bg */
+  --background: 210 20% 98%;   /* quiet editorial canvas */
   --foreground: 219 60% 15%;   /* #0F1F3D navy text-primary */
 
   --primary: 219 60% 15%;      /* #0F1F3D navy — high-contrast elements */
@@ -140,11 +140,11 @@ body {
      but explicit specificity here ensures it survives dark-mode cascades. */
   .font-serif, [class*="font-serif"] {
     font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: -0.04em; /* Tighter tracking for high-end editorial feel */
+    letter-spacing: -0.025em;
   }
 
   .uppercase {
-    letter-spacing: 0.12em; /* Wider tracking for uppercase labels */
+    letter-spacing: 0.08em;
   }
 
 
@@ -154,11 +154,11 @@ body {
   }
 
   h1 {
-    @apply text-4xl font-black md:text-5xl lg:text-6xl;
+    @apply text-4xl font-bold md:text-5xl;
   }
 
   h2 {
-    @apply text-3xl font-bold md:text-4xl;
+    @apply text-3xl font-semibold md:text-4xl;
   }
 
   h3 {
@@ -268,9 +268,7 @@ body {
     100% { box-shadow: 0 0 0px rgba(201,168,76,0); }
   }
 
-  .locked-card-shimmer {
-    animation: shimmer-border 3.5s ease-in-out infinite;
-  }
+  .locked-card-shimmer { animation: none; }
   .locked-card-shimmer:hover {
     animation: none;
     box-shadow: 0 0 28px rgba(201,168,76,0.2);
@@ -353,4 +351,14 @@ textarea:focus-visible,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+.rounded-3xl { border-radius: 0.875rem !important; }
+.rounded-2xl { border-radius: 0.75rem !important; }
+.shadow-2xl { box-shadow: 0 12px 32px -24px rgba(15, 31, 61, 0.28) !important; }
+.glass-panel,
+.glass-panel-light {
+  background: hsl(var(--card) / 0.96) !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 8px 24px -20px rgba(15, 31, 61, 0.22) !important;
 }
