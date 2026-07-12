@@ -35,6 +35,7 @@ export const BetaIntelligence = () => {
   const maxWeek = Math.max(1, ...countries.map(c => c.this_week));
   const movers = countries.slice(0, 12);
   const topCountry = countries[0];
+  const apiDocsUrl = `${(import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1').replace(/\/$/, '')}/docs`;
 
   return (
     <div className="pb-24 bg-background text-foreground min-h-screen">
@@ -109,6 +110,49 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
+        <section className="border-b border-border pb-12">
+          <div className="mb-8 max-w-3xl">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational workflow</p>
+            <h2 className="font-serif text-3xl md:text-4xl text-navy">Move from question to monitored decision.</h2>
+            <p className="mt-3 text-muted-foreground">These capabilities are live in the current platform—not roadmap promises.</p>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Search', 'Research countries, sectors and related reporting.', '/search'],
+              ['Compare', 'Read continental, regional and country evidence together.', '/dashboards/overview'],
+              ['Map', 'Open geographic coverage and navigate directly to country hubs.', '#coverage-map'],
+              ['Save', 'Build a persistent library of decision-relevant briefings.', '/library'],
+              ['Monitor', 'Set country, sector and delivery preferences for alerts.', '/settings'],
+              ['Brief', 'Use the daily intelligence feed and narrated briefings.', '/feed'],
+              ['Calendar', 'Track summits, forums and scheduled professional events.', '/events'],
+            ].map(([title, copy, to]) => (
+              <Link key={title} to={to} className="bg-card p-5 hover:bg-accent/5">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink">Live</span>
+                <h3 className="mt-2 font-semibold text-navy">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy}</p>
+              </Link>
+            ))}
+            <a href={apiDocsUrl} target="_blank" rel="noopener noreferrer" className="bg-card p-5 hover:bg-accent/5">
+              <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink">Live</span>
+              <h3 className="mt-2 font-semibold text-navy">Developer API</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Inspect the current documented API surface.</p>
+            </a>
+          </div>
+        </section>
+
+        <section className="grid gap-8 rounded-xl border border-border bg-card p-7 md:grid-cols-2 md:p-9">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational foundation</p>
+            <ul className="mt-5 grid gap-3 text-sm text-navy sm:grid-cols-2">
+              {['Source-linked reporting', 'Country and sector records', 'Semantic and full-text search', 'Interactive coverage maps', 'Bookmarks and preferences', 'Events and daily briefings', 'Documented API', 'Historical sector trends'].map(item => <li key={item} className="flex gap-2"><span className="text-accent-ink">●</span>{item}</li>)}
+            </ul>
+          </div>
+          <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Institutional data build</p>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">The next defensibility layer is structured company, project, people, procurement and infrastructure data; version history; validated rankings; configurable alerts; team workspaces; and governed export/connectors. These modules remain labelled as in development until their datasets and methodologies are production-ready.</p>
+          </div>
+        </section>
+
         {/* Free-preview banner */}
         {!isMember && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
@@ -165,7 +209,7 @@ export const BetaIntelligence = () => {
         </section>
 
         {/* Coverage heatmap */}
-        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+        <motion.section id="coverage-map" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
           <div className="flex items-center gap-4 mb-4">
             <Activity size={24} className="text-accent" />
             <h2 className="font-serif text-[2rem] text-foreground">Coverage Heatmap — Last 7 Days</h2>

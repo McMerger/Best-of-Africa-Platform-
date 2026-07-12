@@ -12,7 +12,7 @@ const openApiSpec = {
     info: {
         title: 'BOA-Story API',
         version: '1.0.0',
-        description: 'Pan-African narrative diplomacy and market intelligence platform API',
+        description: 'Africa business intelligence API for sourced reporting, country records, coverage analytics, search, dashboards and events.',
     },
     servers: [
         { url: '/api/v1', description: 'Production API v1' }
@@ -31,6 +31,42 @@ const openApiSpec = {
                 responses: {
                     200: { description: 'Paginated list of articles' }
                 }
+            }
+        },
+        '/countries': {
+            get: {
+                summary: 'List African country intelligence records',
+                responses: { 200: { description: 'Country directory grouped by region' } }
+            }
+        },
+        '/search': {
+            get: {
+                summary: 'Search the BOA intelligence corpus',
+                parameters: [{ name: 'q', in: 'query', required: true, schema: { type: 'string' }, description: 'Country, sector, company, project or decision query' }],
+                responses: { 200: { description: 'Ranked intelligence results and optional synthesis' } }
+            }
+        },
+        '/market-intel/coverage-pulse': {
+            get: {
+                summary: 'Get the verified seven-day BOA coverage pulse',
+                description: 'Reporting activity metrics; not market-performance, return or sovereign-risk indicators.',
+                responses: { 200: { description: 'Weekly story volume, country coverage, leading sector, regional gap and timestamp' } }
+            }
+        },
+        '/dashboards/continental/overview': {
+            get: {
+                summary: 'Get the continental intelligence overview',
+                responses: { 200: { description: 'Thirty-day coverage, regions, countries, sectors, narrated briefings and highlights' } }
+            }
+        },
+        '/events': {
+            get: {
+                summary: 'List professional and country events',
+                parameters: [
+                    { name: 'country', in: 'query', schema: { type: 'string' } },
+                    { name: 'type', in: 'query', schema: { type: 'string' } }
+                ],
+                responses: { 200: { description: 'Current events and calendar records' } }
             }
         },
         '/dashboards': {
