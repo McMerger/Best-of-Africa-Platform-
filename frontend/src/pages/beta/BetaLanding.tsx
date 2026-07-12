@@ -24,7 +24,8 @@ export const BetaLanding = () => {
     queryFn: api.getFeaturedArticles,
     staleTime: 5 * 60 * 1000,
   });
-  const stories: ArticleListItem[] = data?.data?.slice(0, 4) || FALLBACK_ARTICLES.slice(0, 4);
+  const liveStories = data?.data?.slice(0, 4) || [];
+  const stories: ArticleListItem[] = liveStories.length > 0 ? liveStories : FALLBACK_ARTICLES.slice(0, 4);
   const lead = stories[0];
   const secondary = stories.slice(1, 4);
 

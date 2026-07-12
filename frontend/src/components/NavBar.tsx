@@ -166,9 +166,6 @@ export const NavBar: React.FC = () => {
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
-                        <Button size="sm" asChild className="rounded font-bold px-4 h-8 bg-accent text-accent-foreground hover:bg-accent/90 text-xs shadow-none uppercase tracking-wider">
-                            <Link to="/login">Sign In</Link>
-                        </Button>
                         <Sheet>
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full ml-1">

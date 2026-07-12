@@ -113,8 +113,10 @@ const DeferredChrome = () => {
 const queryClient = new QueryClient();
 
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[60vh]">
-    <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+  <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12" aria-label="Loading page">
+    <div className="h-3 w-28 rounded bg-muted mb-5 animate-pulse" />
+    <div className="h-10 w-2/3 max-w-xl rounded bg-muted mb-3 animate-pulse" />
+    <div className="h-5 w-1/2 max-w-md rounded bg-muted animate-pulse" />
   </div>
 );
 
