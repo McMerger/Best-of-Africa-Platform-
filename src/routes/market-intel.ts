@@ -95,7 +95,7 @@ router.get('/sector/:id', async (c) => {
     ]);
 
     const evidence = (recentArticles.results as any[]).map((article, index) =>
-        `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+        `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
     ).join('\n---\n');
     const sectorAnalysis = await getCached(
         c.env,
@@ -104,7 +104,7 @@ router.get('/sector/:id', async (c) => {
             if (!evidence) return 'Insufficient evidence for a current sector analysis.';
             try {
                 const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered records, cite them inline, distinguish facts from analysis, and explain cross-country differences, chronology, actors, operational and policy implications, counter-signals, limitations and next diligence steps. Never infer market growth from reporting or engagement volume.\nUser: Produce a complete evidence analysis for Africa's ${(sector as Record<string, any>).name} sector.\n\nRecords:\n${evidence}`;
-                return await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
+                return await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
             } catch (error) {
                 console.error('Sector evidence analysis failed', error);
                 return null;
@@ -437,7 +437,7 @@ router.get('/performance', async (c) => {
 router.get('/founder-log', async (c) => {
     return c.json(await getCached(
         c.env,
-        'founder-log:weekly:depth-v2',
+        'founder-log:weekly:depth-v3',
         async () => {
             // Fetch articles from the last 14 days
             const recentArticles = await c.env.DB.prepare(`
@@ -465,12 +465,12 @@ Write the update. Format it exactly as a JSON array of 3 objects, where each obj
 - date: "Month Year" (e.g., "${new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())}")
 - tag: a short 1-2 word tag (e.g., "Research Log", "Platform Update", "Founder Note")
 - title: A punchy, conversational title for the paragraph
-- body: A developed 150-220 word entry explaining the reporting work, specific countries or sectors covered, what was learned, what remains uncertain, and what happens next. Do not pretend that publication volume proves market impact.
+- body: A developed 300-450 word entry explaining the reporting work, specific countries or sectors covered, source discoveries, what was learned, what remains uncertain, editorial tradeoffs, and what happens next. Do not pretend that publication volume proves market impact.
 
 Return ONLY the raw JSON array.`;
 
             try {
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 2200, temperature: 0.4, response_profile: 'decision-brief' });
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'decision-brief' });
                 const match = text.match(/\[.*\]/s);
                 if (match) {
                     return JSON.parse(match[0]);
@@ -819,7 +819,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v2',
+        'strategic-opportunities:depth-v3',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
@@ -847,7 +847,7 @@ router.get('/opportunities', async (c) => {
                 const recentArticles = await c.env.DB.prepare(`
                     SELECT id, slug, title, summary, published_at, source_title, source_url FROM articles
                     WHERE country_code = ? AND sector_id = ? AND status = 'published'
-                    ORDER BY published_at DESC LIMIT 8
+                    ORDER BY published_at DESC LIMIT 12
                 `).bind(o.country_code, o.sector_id).all();
 
                 const evidence = (recentArticles.results || []).map((article: any, index: number) =>
@@ -860,6 +860,7 @@ router.get('/opportunities', async (c) => {
                 let evidencePoints: string[] = [];
                 let counterSignals: string[] = ['Coverage volume and audience activity do not establish market growth or investment readiness.'];
                 let diligenceQuestions: string[] = ['Which primary financial, regulatory and operating records can substantiate the reported developments?'];
+                let claimLedger: string[] = [];
                 
                 try {
                     const prompt = `System: You are BOA-Story's evidence desk. Assess a reporting-led watchlist item using only the numbered records. This is not a recommendation. Never infer growth, deal flow, stability, investability or future returns from coverage volume or audience engagement. Cite record numbers inline and separate reported facts from analysis.
@@ -867,25 +868,27 @@ router.get('/opportunities', async (c) => {
 User: Build a detailed watchlist brief for ${o.sector_name} in ${o.country_name}. Return ONLY valid JSON with this exact schema:
 {
   "title": "specific 5-10 word evidence-led title",
-  "executive_summary": "180-260 words covering chronology, actors, mechanisms and implications with inline [n] citations",
-  "why_it_matters": "100-160 words clearly labeled as analysis",
-  "evidence_points": ["3-6 specific dated, cited findings"],
-  "counter_signals": ["2-4 contradictions, constraints or source limitations"],
-  "diligence_questions": ["3-5 concrete questions requiring primary-source verification"]
+  "executive_summary": "350-500 words covering chronology, actors, documented mechanisms, stakeholder effects and implications with inline [n] citations",
+  "why_it_matters": "250-350 words clearly labeled as analysis, including immediate, medium-term and conditional implications",
+  "evidence_points": ["6-10 specific dated, cited findings"],
+  "counter_signals": ["4-7 contradictions, alternative explanations, constraints or source limitations"],
+  "diligence_questions": ["5-8 concrete questions requiring primary-source verification"],
+  "claim_ledger": ["major conclusion — supporting [n] records — evidence that would change the conclusion"]
 }
 
 RECORDS:
 ${evidence}`;
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 2600, temperature: 0.2, response_profile: 'decision-brief' });
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis' });
                     const match = text.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
                         if (parsed.title) generatedTitle = parsed.title;
                         if (parsed.executive_summary) generatedSummary = parsed.executive_summary;
                         if (parsed.why_it_matters) whyItMatters = parsed.why_it_matters;
-                        if (Array.isArray(parsed.evidence_points)) evidencePoints = parsed.evidence_points.slice(0, 6);
-                        if (Array.isArray(parsed.counter_signals)) counterSignals = parsed.counter_signals.slice(0, 4);
-                        if (Array.isArray(parsed.diligence_questions)) diligenceQuestions = parsed.diligence_questions.slice(0, 5);
+                        if (Array.isArray(parsed.evidence_points)) evidencePoints = parsed.evidence_points.slice(0, 10);
+                        if (Array.isArray(parsed.counter_signals)) counterSignals = parsed.counter_signals.slice(0, 7);
+                        if (Array.isArray(parsed.diligence_questions)) diligenceQuestions = parsed.diligence_questions.slice(0, 8);
+                        if (Array.isArray(parsed.claim_ledger)) claimLedger = parsed.claim_ledger.slice(0, 10);
                     }
                 } catch (e) {
                     // Preserve the evidence-limited fallback rather than inventing a thesis.
@@ -902,6 +905,7 @@ ${evidence}`;
                     evidence_points: evidencePoints,
                     counter_signals: counterSignals,
                     diligence_questions: diligenceQuestions,
+                    claim_ledger: claimLedger,
                     coverage_stories: Number(o.article_count || 0),
                     audience_response: Math.round(o.avg_score || 0),
                     latest_reported_at: o.latest_reported_at,

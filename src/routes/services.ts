@@ -69,7 +69,7 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
 
         if (context) {
             const prompt = `System: You are BOA-Story's concierge research desk. Use only the numbered records and the request details. Cite records inline, separate documented facts from suggested questions, and never promise availability, pricing, safety, access or outcomes that are not supplied.\nUser request: Service ${service_type}; destination ${destination_country || 'not specified'}; dates ${JSON.stringify(dates || null)}; budget ${budget_range || 'not specified'}; urgency ${urgency || 'normal'}; requirements ${requirements || 'not specified'}.\n\nRelevant records:\n${context}`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3400, temperature: 0.2, response_profile: 'decision-brief' });
             // Coalesce to null — D1 .bind() throws on undefined, which would
             // fail the whole booking over an optional nicety.
             preliminaryNote = aiResponse?.trim() || null;
@@ -249,7 +249,7 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
                         if (!context) return "No source-linked context records are currently available for this event.";
 
                         const prompt = `System: You are BOA-Story's event evidence desk. Use only the event record and numbered reporting records. Explain relevance, affected sectors and institutions, practical questions, contradictions and evidence gaps. Cite records inline and do not invent speakers, agenda items or outcomes.\nUser: Event: ${data.title}. Description: ${data.description || 'unavailable'}. Country: ${data.country_name || 'not specified'}. Dates: ${data.date_start || 'unavailable'} to ${data.date_end || 'unavailable'}.\n\nRelevant records:\n${context}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3400, temperature: 0.2, response_profile: 'decision-brief' });
                         return aiResponse?.trim();
                     } catch (e) { return null; }
                 },

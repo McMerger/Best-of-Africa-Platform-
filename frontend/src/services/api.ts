@@ -277,9 +277,9 @@ export const api = {
             article_id: string;
             title: string;
             briefing: {
-                investor: { summary: string; verdict: string; classification: string; margin_of_safety: string };
-                government: { summary: string; verdict: string; classification: string; development_impact: string };
-                explorer: { summary: string; verdict: string; classification: string; signature_experience: string };
+                investor: { summary: string; verdict: null; classification: null; margin_of_safety: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
+                government: { summary: string; engagement: null; development_impact: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
+                explorer: { summary: string; rating: null; safety: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
             };
         }>('/intel/synthesize-unified', {
             method: 'POST',
@@ -435,6 +435,7 @@ export const api = {
             evidence_points: string[];
             counter_signals: string[];
             diligence_questions: string[];
+            claim_ledger: string[];
             coverage_stories: number;
             audience_response: number;
             latest_reported_at: string | null;

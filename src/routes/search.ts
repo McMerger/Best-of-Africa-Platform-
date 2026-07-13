@@ -138,13 +138,13 @@ router.get('/', async (c) => {
             // Generate Answer (The "Refined Delivery")
             let aiAnswer = null;
             if (searchResults.length > 0) {
-                const context = searchResults.slice(0, 8).map((r, index) => {
+                const context = searchResults.slice(0, 12).map((r, index) => {
                     const article = (articles.results || []).find((item: any) => item.id === r.article.id) as any;
-                    return `[${index + 1}] Title: ${r.article.title}\nPublished: ${r.article.published_at || 'date unavailable'}\nCountry: ${r.article.country_name || 'not specified'}\nSource URL: ${article?.source_url || 'unavailable'}\nEvidence: ${(r.article.match_context || r.article.summary || '').slice(0, 700)}`;
+                    return `[${index + 1}] Title: ${r.article.title}\nPublished: ${r.article.published_at || 'date unavailable'}\nCountry: ${r.article.country_name || 'not specified'}\nSource URL: ${article?.source_url || 'unavailable'}\nEvidence: ${(r.article.match_context || r.article.summary || '').slice(0, 1200)}`;
                 }).join('\n---\n');
                 try {
                     const prompt = `System: Produce a detailed evidence-grounded research answer using only the supplied records. Cite titles inline, separate facts from implications, identify contradictions and missing evidence, and never pad thin context with general knowledge.\nUser: Query: ${q}\n\nContext:\n${context}`;
-                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 2600, temperature: 0.2, response_profile: 'evidence-brief' });
+                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                     aiAnswer = ansRes?.trim();
                 } catch (e) { /* Ignore */ }
             }
@@ -248,14 +248,14 @@ router.get('/', async (c) => {
         // ═══════════════════════════════════════════════════════════════════════════
         // RAG: Generate summary from top results using Workers (CACHED)
         // ═══════════════════════════════════════════════════════════════════════════
-        const topResults = resolvedResults.slice(0, 8);
+        const topResults = resolvedResults.slice(0, 12);
         let aiSummary: string | null = null;
 
         if (topResults.length > 0) {
             // Cache summaries for 10 minutes to avoid repeated expensive calls
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(`${q}:depth-v2`),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v3`),
                 async () => {
                     try {
                         const briefsContext = topResults.map((item: any, i: number) => {
@@ -263,11 +263,11 @@ router.get('/', async (c) => {
                             // Use match_context (specific chunk) if available, otherwise summary
                             const content = item.match_context || item.summary || '';
                             const country = (item.country_name && item.country_name !== 'null') ? item.country_name : 'Region';
-                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 700)}`;
+                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 1200)}`;
                         }).join('\n\n');
 
                         const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], and distinguish reported facts from analysis. Do not make an investment recommendation or estimate missing figures.\nUser: Answer the research query "${q}" based on these records:\n${briefsContext}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2800, temperature: 0.2, response_profile: 'evidence-brief' });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('AI summary generation failed:', aiError);
@@ -437,12 +437,12 @@ router.get('/semantic', async (c) => {
 
         // 4. (Optional) Pass chunks to LLM for summary generation
         let aiSummary: string | null = null;
-        const topResults = sorted.slice(0, 8);
+        const topResults = sorted.slice(0, 12);
 
         if (topResults.length > 0) {
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(`${q}:depth-v2`),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v3`),
                 async () => {
                     try {
                         const contextChunks = topResults.map((item: any, i: number) => {
@@ -450,11 +450,11 @@ router.get('/semantic', async (c) => {
                             // Use specific chunk text if available
                             const content = bestMatches.get(item.id)?.text || item.summary || '';
                             const country = item.country_name || 'Africa';
-                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 700)}`;
+                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 1200)}`;
                         }).join('\n\n');
 
                         const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], separate facts from analysis, and surface contradictions and gaps.\nUser: Research query: "${q}"\n\nRelevant records:\n${contextChunks}\n\nProvide a complete synthesis:`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3000, temperature: 0.2, response_profile: 'evidence-brief' });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('RAG summary generation failed:', aiError);

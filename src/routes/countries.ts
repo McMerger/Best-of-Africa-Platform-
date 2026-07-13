@@ -53,7 +53,7 @@ router.get('/', async (c) => {
 
         await Promise.all(regions.map(async (region) => {
             // Check cache for insight
-            const cacheKey = `insight:region:v2:${region}`;
+            const cacheKey = `insight:region:v3:${region}`;
             const cachedInsight = await c.env.CACHE.get(cacheKey);
 
             if (cachedInsight) {
@@ -68,15 +68,15 @@ router.get('/', async (c) => {
                     JOIN countries c ON c.code = a.country_code
                     WHERE c.region = ? AND a.status = 'published'
                     ORDER BY a.published_at DESC
-                    LIMIT 8
+                    LIMIT 12
                 `).bind(region).all();
                 const context = (relevant.results || []).map((article: any, index) =>
-                    `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 650)}`
+                    `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1100)}`
                 ).join('\n---\n');
 
                 if (context) {
-                    const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts from analysis.\nUser: Produce a decision brief for ${region} Africa.\n\nRecords:\n${context}`;
-                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
+                    const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts, supported interpretation, uncertainty and gaps.\nUser: Produce a full regional evidence brief for ${region} Africa covering chronology, actors, documented mechanisms, country and sector differences, stakeholder effects, practical implications, counter-signals, alternative explanations, source limitations, claim ledger and verification priorities.\n\nRecords:\n${context}`;
+                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                     const text = aiRes?.trim();
                     if (text) {
                         insights[region] = text;
@@ -225,15 +225,15 @@ router.get('/:code', async (c) => {
         recent_articles: stats.recent_articles,
         ai_situation_report: await getCached(
             c.env,
-            `country-situation:v2:${code}`,
+            CACHE_KEYS.countrySituation(code),
             async () => {
                 const evidence = (stats.recent_articles as any[]).map((article, index) =>
-                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
                 ).join('\n---\n');
                 if (!evidence) return "No source-linked country reporting is currently available.";
                 try {
-                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from analysis, identify contradictions and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a current situation brief for ${country.name}.\n\nRecords:\n${evidence}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2000, temperature: 0.2, response_profile: 'evidence-brief' });
+                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from supported interpretation, identify contradictions, alternative explanations and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a complete current situation dossier for ${country.name}, including scope, chronology, actors, documented mechanisms, stakeholder impacts, sector interactions, policy and operating implications, counter-signals, source limitations, a claim ledger and prioritized verification steps.\n\nRecords:\n${evidence}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'deep-analysis' });
                     return aiResponse?.trim();
                 } catch { return "The source-linked country briefing is temporarily unavailable."; }
             },
@@ -383,7 +383,7 @@ router.get('/:code/relationships', async (c) => {
             const query = `diplomatic relations trade agreement partnership ${data.name}`;
             const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
             const vector = (embedding as Record<string, any>).data[0];
-            const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+            const relevant = await c.env.VECTORS.query(vector, { topK: 8, returnMetadata: true });
 
             const context = relevant.matches.map((match, index) => {
                 const metadata = match.metadata as Record<string, any>;
@@ -396,13 +396,13 @@ router.get('/:code/relationships', async (c) => {
                 const prompt = `System: You are BOA-Story's diplomatic and trade evidence desk. Use only the numbered records. Do not infer a formal relationship from co-mention, and do not assign partnership strength, sentiment or strategic importance without explicit evidence. Cite records inline.
 
 User: Extract the documented relationships involving ${data.name}. Return ONLY a valid JSON array with this schema:
-[{"partner":"named country, institution or bloc","type":"documented relationship type","context":"120-180 words covering the dated event, actors, terms or mechanism, implications, counter-signals, source limitation and [n] citations"}]
+[{"partner":"named country, institution or bloc","type":"documented relationship type","context":"250-400 words covering the dated event, actors, terms, documented mechanism, stakeholder effects, immediate and conditional implications, counter-signals, alternative explanations, source limitations, verification priorities and [n] citations"}]
 
 Exclude any relationship that cannot be supported. Return [] when evidence is insufficient.
 
 RECORDS:
 ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2400, temperature: 0.2 });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis' });
                 const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {

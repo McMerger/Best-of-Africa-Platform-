@@ -558,6 +558,63 @@ export const BetaArticle = () => {
             )}
           </div>
 
+          {!isPaywalled && article.ai_context && (
+            <section className="mt-12 overflow-hidden rounded-2xl border border-accent/25 bg-card">
+              <div className="border-b border-border bg-navy px-6 py-6 text-white md:px-8">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Evidence and implications</p>
+                <h2 className="mt-2 font-serif text-2xl md:text-3xl">The deeper decision brief</h2>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">A source-bounded reading of the article’s established facts, implications, limitations and unresolved verification questions.</p>
+              </div>
+              <div className="space-y-9 px-6 py-7 md:px-8 md:py-9">
+                {article.ai_context.key_takeaways?.length > 0 && (
+                  <div>
+                    <h3 className="font-serif text-xl text-foreground">Supported takeaways</h3>
+                    <ol className="mt-4 space-y-4">
+                      {article.ai_context.key_takeaways.map((item, index) => (
+                        <li key={index} className="flex gap-4 text-[15px] leading-7 text-foreground/75">
+                          <span className="mt-0.5 font-serif text-lg text-accent-ink">{String(index + 1).padStart(2, '0')}</span>
+                          <span>{stripMarkdown(item)}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {article.ai_context.strategic_implication && (
+                  <div className="border-l-2 border-accent/50 pl-5">
+                    <h3 className="font-serif text-xl text-foreground">Strategic implication</h3>
+                    <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-foreground/75">{stripMarkdown(article.ai_context.strategic_implication)}</p>
+                  </div>
+                )}
+                <div className="grid gap-8 md:grid-cols-2">
+                  {article.ai_context.limitations && article.ai_context.limitations.length > 0 && (
+                    <div>
+                      <h3 className="font-serif text-lg text-foreground">Limits and counter-signals</h3>
+                      <ul className="mt-3 list-disc space-y-3 pl-5 text-sm leading-6 text-foreground/70">
+                        {article.ai_context.limitations.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  {article.ai_context.diligence_questions && article.ai_context.diligence_questions.length > 0 && (
+                    <div>
+                      <h3 className="font-serif text-lg text-foreground">What still needs verification</h3>
+                      <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-6 text-foreground/70">
+                        {article.ai_context.diligence_questions.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+                {article.ai_context.claim_ledger && article.ai_context.claim_ledger.length > 0 && (
+                  <details className="rounded-xl border border-border bg-background/40 px-5 py-4">
+                    <summary className="cursor-pointer text-[11px] font-bold uppercase tracking-[0.16em] text-accent-ink">Open claim ledger</summary>
+                    <ul className="mt-4 space-y-3 text-sm leading-6 text-foreground/65">
+                      {article.ai_context.claim_ledger.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Paywall, premium, value-forward membership prompt */}
           {isPaywalled && (
             <div className="relative mt-2">

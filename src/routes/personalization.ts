@@ -327,7 +327,7 @@ router.get('/feed/ai-curated', async (c) => {
     // For now, simpler time-based cache is sufficient
     return c.json(await getCached(
         c.env,
-        `feed:ai-curated:${sessionId}`,
+        `feed:ai-curated:depth-v3:${sessionId}`,
         async () => {
             // 1. Fetch Top 15 Candidates (SQL)
             const candidates = await c.env.DB.prepare(`
@@ -351,13 +351,13 @@ router.get('/feed/ai-curated', async (c) => {
 
             // 2. Curation Logic
             const context = (candidates.results as any[]).map((a, i) =>
-                `[${i}] ID:${a.id} | Title: ${a.title} | Context: ${a.country}, ${a.sector}`
+                `[${i + 1}] ID:${a.id} | Title: ${a.title} | Country: ${a.country || 'unavailable'} | Sector: ${a.sector || 'unavailable'}\nEvidence: ${(a.summary || 'Summary unavailable.').slice(0, 900)}`
             ).join('\n');
 
             const prompt = `
                 User Profile: Interested in ${countries.join(', ')} and ${sectors.join(', ')}.
-                Task: Select the top 5 most critical articles from the list below.
-                For each, write a 1-sentence "relevance_note" explaining EXACTLY why it matters to this user.
+                Task: Select the top 5 most relevant articles from the list below.
+                For each, write a 140-220 word "relevance_note" explaining the documented facts, connection to the stated interests, named actors or places, practical significance, evidence limitations, and one question the reader should verify. Do not infer relevance from engagement or popularity.
                 
                 Articles:
                 ${context}
@@ -368,7 +368,7 @@ router.get('/feed/ai-curated', async (c) => {
 
             try {
                 const aiPrompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${prompt}`;
-                const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 500, temperature: 0.2 });
+                const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief' });
                 const jsonMatch = (rawText || '[]').match(/\[.*\]/s);
                 const selections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
@@ -381,7 +381,7 @@ router.get('/feed/ai-curated', async (c) => {
                             ...original,
                             ai_curation: {
                                 relevance_note: sel.relevance_note,
-                                score: 0.95 // Synthetic relevance score
+                                score: null
                             }
                         });
                     }
@@ -399,7 +399,7 @@ router.get('/feed/ai-curated', async (c) => {
                 console.error('AI Curation Failed', e);
                 // Fallback to top 5 raw
                 return {
-                    data: candidates.results.slice(0, 5).map(c => ({ ...c, ai_curation: { relevance_note: "Top match for your profile." } })),
+                    data: candidates.results.slice(0, 5).map(c => ({ ...c, ai_curation: { relevance_note: `This report matches the selected country or sector interests. The detailed relevance analysis is temporarily unavailable; review the article's cited reporting before drawing conclusions.`, score: null } })),
                     meta: { mode: 'fallback' }
                 };
             }

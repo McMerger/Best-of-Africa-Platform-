@@ -215,14 +215,14 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
         c.env,
         CACHE_KEYS.globalBriefing,
         async () => {
-            const evidence = (articles as unknown as ArticleListItem[]).slice(0, 8).map((article, index) =>
+            const evidence = (articles as unknown as ArticleListItem[]).slice(0, 12).map((article, index) =>
                 `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
             ).join('\n\n');
             if (!evidence) return "No source-linked briefing is currently available.";
 
             try {
                 const prompt = `System: You are BOA-Story's front-page evidence editor. Use only the numbered records, cite them inline and distinguish facts from synthesis. Coverage volume is editorial activity, not a market indicator.\nUser: Write a substantive briefing that connects the leading records across countries and sectors. Cover chronology, named actors, mechanisms, practical implications, counter-signals, source limitations and what readers should verify next.\n\nRecords:\n${evidence}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2200, temperature: 0.2, response_profile: 'evidence-brief' });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
                 return "The source-linked briefing is temporarily unavailable.";
@@ -374,7 +374,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
 
             try {
                 const prompt = `System: You are BOA-Story's sector evidence editor. Use only the numbered records and cite them inline. Do not infer growth, stability or investability from coverage or engagement.\nUser: Produce a detailed sector outlook covering the direct finding, chronology, named actors, cross-country differences, mechanisms, operating and policy implications, counter-signals, limitations and next diligence steps.\n\nRecords:\n${evidence}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2600, temperature: 0.2, response_profile: 'evidence-brief' });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
                 return "The source-linked sector outlook is temporarily unavailable.";
@@ -508,18 +508,19 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
                 ${(article.content || '').slice(0, 9000)}
                 
                 Task: Generate a source-disciplined executive brief. Do not turn one article into a continent-wide conclusion or investment recommendation.
-                1. Four detailed key takeaways, each identifying the supported fact, actor, date or figure and why it matters.
-                2. A 150-250 word strategic implication explicitly labeled as analysis.
-                3. Two to four evidence limitations or counter-signals.
-                4. Three concrete diligence questions.
+                1. Six detailed key takeaways, each identifying the supported fact, actor, date or figure, mechanism, affected stakeholder and why it matters.
+                2. A 350-500 word strategic implication explicitly labeled as analysis and separated into immediate, medium-term and conditional implications.
+                3. Four to six evidence limitations, counter-signals or alternative explanations.
+                4. Five concrete diligence questions ordered by decision importance.
+                5. A claim ledger linking each major conclusion to a passage or supplied fact.
                 
                 Output JSON format:
-                { "key_takeaways": ["..."], "strategic_implication": "...", "limitations": ["..."], "diligence_questions": ["..."] }
+                { "key_takeaways": ["..."], "strategic_implication": "...", "limitations": ["..."], "diligence_questions": ["..."], "claim_ledger": ["..."] }
              `;
 
             try {
                 const aiPrompt = `System: You are BOA-Story's evidence editor. Use only the supplied article, distinguish facts from analysis and preserve the requested JSON schema.\nUser: ${prompt}`;
-                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
+                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief' });
                 const match = (rawResponse || '').match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : null;
             } catch (e) {

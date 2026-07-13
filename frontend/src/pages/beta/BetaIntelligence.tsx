@@ -307,6 +307,7 @@ export const BetaIntelligence = () => {
                         {opp.evidence_points?.length > 0 && <div><p className="font-bold text-foreground mb-2">Reported evidence</p><ul className="space-y-2 list-disc pl-5">{opp.evidence_points.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ul></div>}
                         {opp.counter_signals?.length > 0 && <div><p className="font-bold text-foreground mb-2">Counter-signals and limits</p><ul className="space-y-2 list-disc pl-5">{opp.counter_signals.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ul></div>}
                         {opp.diligence_questions?.length > 0 && <div><p className="font-bold text-foreground mb-2">What to verify next</p><ol className="space-y-2 list-decimal pl-5">{opp.diligence_questions.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ol></div>}
+                        {opp.claim_ledger?.length > 0 && <div><p className="font-bold text-foreground mb-2">Claim ledger</p><ul className="space-y-2 border-l border-accent/30 pl-4">{opp.claim_ledger.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ul></div>}
                         <p className="text-xs text-foreground/45 pt-2 border-t border-foreground/10">{opp.methodology}</p>
                       </div>
                     </details>

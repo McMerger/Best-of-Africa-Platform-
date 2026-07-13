@@ -11,6 +11,7 @@ import { CountryFlag } from '../../components/CountryFlag';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
@@ -21,6 +22,15 @@ export const BetaContinentalOverview: React.FC = () => {
     queryKey: ['continental-overview'],
     queryFn: api.getContinentalOverview,
     staleTime: 5 * 60 * 1000,
+  });
+  const {
+    data: platformAnalytics,
+    isLoading: isAnalyticsLoading,
+    isError: isAnalyticsError,
+  } = useQuery({
+    queryKey: ['platform-analytics', 'investor'],
+    queryFn: () => api.getPlatformAnalytics('investor'),
+    staleTime: 10 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -155,6 +165,40 @@ export const BetaContinentalOverview: React.FC = () => {
             </motion.div>
           ))}
         </div>
+
+        <motion.section
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16 overflow-hidden rounded-2xl border border-accent/25 bg-card shadow-[0_24px_70px_-40px_rgba(15,31,61,0.45)]"
+        >
+          <div className="border-b border-border bg-navy px-7 py-7 text-white md:px-10">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Continental evidence briefing</p>
+            <h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight md:text-4xl">What the latest reporting establishes—and what it does not</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70">A long-form, source-bounded synthesis of current actors, chronology, mechanisms, cross-country differences, counter-signals, evidence gaps and verification priorities.</p>
+          </div>
+          <div className="px-7 py-8 md:px-10 md:py-10">
+            {isAnalyticsLoading && (
+              <div className="space-y-4 animate-pulse" aria-label="Generating continental evidence briefing">
+                <div className="h-5 w-3/4 rounded bg-foreground/10" />
+                <div className="h-4 w-full rounded bg-foreground/5" />
+                <div className="h-4 w-11/12 rounded bg-foreground/5" />
+                <div className="h-32 w-full rounded-xl bg-foreground/5" />
+                <p className="pt-2 text-xs text-muted-foreground">Preparing the full evidence analysis. First generation can take about a minute; subsequent reads are cached.</p>
+              </div>
+            )}
+            {isAnalyticsError && <p className="text-sm text-muted-foreground">The source-linked continental briefing is temporarily unavailable. Coverage statistics below remain current.</p>}
+            {platformAnalytics?.market_summary && (
+              <>
+                <MarkdownRenderer content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />
+                <div className="mt-8 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
+                  <p>{platformAnalytics.methodology}</p>
+                  <p className="mt-1">Updated {new Date(platformAnalytics.updated_at).toLocaleString()} · {platformAnalytics.total_articles_7d.toLocaleString()} reports across {platformAnalytics.coverage.countries_7d} countries in the seven-day evidence window.</p>
+                </div>
+              </>
+            )}
+          </div>
+        </motion.section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">
           {/* Chart: Regional Breakdown */}

@@ -31,8 +31,8 @@ export const MODELS = {
 // Stored on the article row so we can evaluate prompt quality over time.
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
-export const ARTICLE_PROMPT_VERSION = 'v1.3-depth-contract';
-export const AI_RESPONSE_VERSION = 'depth-v2';
+export const ARTICLE_PROMPT_VERSION = 'v1.4-longform-evidence';
+export const AI_RESPONSE_VERSION = 'depth-v3';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Enforced Information Generation
@@ -49,24 +49,28 @@ export interface AICallOptions {
     response_profile?: AIResponseProfile;
 }
 
-export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'decision-brief';
+export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'decision-brief' | 'spoken-brief';
 
 const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instructions: string }> = {
     'editorial-article': {
-        minimumWords: 700,
-        instructions: `Write a complete 700-1,000 word narrative, not a synopsis. Develop the people, place, chronology, mechanisms, competing perspectives and consequences using only the supplied source material. Include concrete names, locations, dates and figures where supplied. Preserve the required output schema. Never add generic filler to reach length.`,
+        minimumWords: 1100,
+        instructions: `Write a complete 1,100-1,600 word reported narrative, not a synopsis or lightly expanded rewrite. Develop the people, place, chronology, documented mechanisms, competing perspectives, material consequences and unresolved questions using only the supplied source material. Include every relevant name, institution, location, date, quotation and figure supplied. Explain technical or policy context in plain language, distinguish allegation from established fact, and preserve the required output schema. Never add generic filler or invented scene-setting to reach length.`,
     },
     'evidence-brief': {
-        minimumWords: 700,
-        instructions: `Produce a substantive 700-1,000 word evidence brief when the records support it. Include a direct finding, dated evidence, named actors and places, chronology, causal mechanisms, stakeholder effects, cross-country or sector differences, operational and policy implications, counter-signals, source limitations, and concrete verification questions. Attribute every material claim to the supplied records. Do not invent figures, scores, forecasts or certainty.`,
+        minimumWords: 1100,
+        instructions: `Produce a substantive 1,100-1,700 word evidence brief when the records support it. Include an executive finding, scope and time window, dated evidence, named actors and places, chronology, documented mechanisms, stakeholder effects, cross-country or sector differences, operational and policy implications, counter-signals, contradictions, source-by-source limitations, and concrete verification questions. Add a compact claim ledger linking each major conclusion to its supplied record identifiers. Attribute every material claim to the supplied records. Do not invent figures, scores, forecasts, motives, causality or certainty.`,
     },
     'deep-analysis': {
-        minimumWords: 1000,
-        instructions: `Produce a rigorous 1,000-1,600 word analysis when the evidence supports that depth. Begin with a precise answer, then separate reported facts from analysis; cite supplied source identifiers inline; explain chronology, mechanisms, named stakeholders, cross-country or sector differences, second-order implications, implementation constraints, counter-evidence, uncertainty, source gaps, and prioritized diligence steps. Do not pad thin evidence or introduce outside facts.`,
+        minimumWords: 1600,
+        instructions: `Produce a rigorous 1,600-2,400 word analysis when the evidence supports that depth. Begin with a precise answer and an explicit evidence boundary. Separate reported facts, supported interpretation and unresolved questions; cite supplied source identifiers inline. Explain chronology, documented mechanisms, named stakeholders, country and sector differences, first- and second-order implications, implementation constraints, dependencies, counter-evidence, alternative explanations, uncertainty, source gaps, and prioritized diligence steps. End with a claim ledger showing which records support each major conclusion and what evidence would change it. Do not pad thin evidence or introduce outside facts.`,
     },
     'decision-brief': {
-        minimumWords: 500,
-        instructions: `Produce a 500-800 word decision-useful brief when evidence permits, not a promotional summary. State the decision context, what is known, why it matters, who is affected, chronology, practical constraints, implementation considerations, contrary evidence, information gaps, and prioritized verification steps. Distinguish evidence from judgment and do not manufacture recommendations or facts.`,
+        minimumWords: 800,
+        instructions: `Produce an 800-1,200 word decision-useful brief when evidence permits, not a promotional summary. State the decision context, evidence boundary, what is known, why it matters, who is affected, chronology, practical constraints, dependencies, implementation considerations, contrary evidence, alternative explanations, information gaps, and prioritized verification steps. Tie each action or conclusion to supplied evidence, distinguish evidence from judgment, and do not manufacture recommendations or facts.`,
+    },
+    'spoken-brief': {
+        minimumWords: 450,
+        instructions: `Write a complete 450-650 word spoken briefing for the ear. Use natural sentence rhythm, short transitions and pronunciation-friendly wording while retaining dates, names, figures, chronology, documented mechanisms, implications, counter-signals, evidence limits and a concrete watchlist. Do not use markdown, tables, citation symbols or generic presenter filler. Do not invent facts to make the script longer.`,
     },
 };
 
@@ -186,7 +190,7 @@ export async function generateArticle(
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.7, response_profile: 'editorial-article' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4800, temperature: 0.7, response_profile: 'editorial-article' });
     return parseArticleResponse(text);
 }
 
@@ -531,7 +535,7 @@ Also provide a one - word label: "Bullish", "Bearish", or "Neutral".
 // Fill Narrative Gap - Generate Article for Underrepresented Topic
 // ───────────────────────────────────────────────────────────────────────────────
 export async function fillNarrativeGap(
-    env: Env,
+    _env: Env,
     countryName: string,
     sectorName: string
 ): Promise<{
@@ -541,6 +545,10 @@ export async function fillNarrativeGap(
     summary: string;
     tags: string[];
 }> {
+    // Country and sector labels are not reporting evidence. Refuse the former
+    // auto-publish path until callers provide source-linked records.
+    return Promise.reject(new Error(`Narrative-gap generation for ${countryName}/${sectorName} requires source-linked reporting evidence`));
+
     const prompt = `You are an independent writer for BOA-Story, a small, self-funded narrative correction project built by a student writer. Your mission is to surface real, grounded stories about African lives, cities, creators, and everyday opportunity — explicitly against the framing of Africa as a place of crisis, charity, and disaster.
 
 Write a grounded, human-focused article about the ${sectorName} sector in ${countryName}.
@@ -552,7 +560,7 @@ Requirements:
 - Do NOT frame this as an investment pitch or tourism guide.
 - Do NOT use hedging language ("might", "could", "potentially").
 - Do NOT use NGO, corporate, or intelligence jargon.
-- Honest, grounded, relatable tone. 700-1,000 words when the source supports it; never pad thin evidence.
+- Honest, grounded, relatable tone. 1,100-1,600 words when the source supports it; never pad thin evidence.
 
 Structure your response EXACTLY as follows:
 
@@ -567,7 +575,7 @@ SUMMARY: [2-3 sentence human-focused summary, no markdown]
 
 TAGS: [comma-separated list of 3-5 relevant tags]`;
 
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.8, response_profile: 'editorial-article' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4800, temperature: 0.8, response_profile: 'editorial-article' });
     return parseArticleResponse(text);
 }
 
@@ -586,7 +594,7 @@ function buildArticlePrompt(
 Transform this source news into a grounded, human-focused story:
 
 Source Title: ${sourceTitle}
-Source Content: ${sourceContent.slice(0, 2000)}
+Source Content: ${sourceContent.slice(0, 12000)}
 ${countryName ? `Country: ${countryName}` : ''}
 ${sectorName ? `Sector: ${sectorName}` : ''}
 
@@ -608,7 +616,7 @@ Requirements:
   "pave the way", "melting pot", "treasure trove", "game-changer", "microcosm",
   "the fabric of", "lasting legacy", "speaks volumes", "in essence". Prefer
   concrete nouns and verbs over these.
-- Honest, grounded tone. Aim for 700-1000 words organised under 3-5 descriptive
+- Honest, grounded tone. Aim for 1,100-1,600 words organised under 4-7 descriptive
   subheadings (### in markdown) — enough depth to genuinely inform the reader,
   with concrete detail and context, not a brief.
 
@@ -842,7 +850,7 @@ ${contextBlock}`;
     const userPrompt = `Analyze the following intelligence through your specific lens and analytical framework.
 
 SOURCE MATERIAL:
-${content.slice(0, 4000)}
+${content.slice(0, 12000)}
 
 Produce your analysis now. Be definitive. No hedging.`;
 
@@ -851,7 +859,7 @@ Produce your analysis now. Be definitive. No hedging.`;
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
         ],
-        max_tokens: 4000,
+        max_tokens: 4800,
         temperature: 0.4,
         response_profile: 'deep-analysis',
     });
@@ -972,7 +980,7 @@ ${ASSERTIVE_RULES}`;
     const userPrompt = `Transform the following source material into the required format.
 
 SOURCE MATERIAL:
-${content.slice(0, 4000)}
+${content.slice(0, 12000)}
 
 Produce the output now. Follow the structure exactly. Be definitive.`;
 
@@ -981,7 +989,7 @@ Produce the output now. Follow the structure exactly. Be definitive.`;
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
         ],
-        max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
+        max_tokens: format === 'long-form' ? 4800 : format === 'bullet' ? 1600 : 1000,
         temperature: 0.3,
         response_profile: format === 'long-form' ? 'deep-analysis' : undefined,
     });
@@ -1040,7 +1048,7 @@ Structure your response EXACTLY as:
         - [Risk 2]
         - [Risk 3]`;
 
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 3500, temperature: 0.2, response_profile: 'deep-analysis' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
     return parseIntelligenceReport(text);
 }
 
@@ -1084,19 +1092,31 @@ function parseIntelligenceReport(text: string): {
 export interface UnifiedBriefing {
     investor: {
         summary: string;
-        verdict: 'ACCUMULATE' | 'HOLD' | 'AVOID';
-        classification: 'DEFENSIVE VALUE' | 'ENTERPRISING VALUE' | 'SPECULATIVE' | 'OVERVALUED';
-        margin_of_safety: string;
+        verdict: null;
+        classification: null;
+        margin_of_safety: null;
+        supported_findings: string[];
+        implications: string[];
+        limitations: string[];
+        verification_questions: string[];
     };
     government: {
         summary: string;
-        engagement: 'PRIORITY ENGAGEMENT' | 'STRATEGIC PARTNERSHIP' | 'MONITOR & REVIEW' | 'DIPLOMATIC CAUTION';
-        development_impact: 'High' | 'Medium' | 'Low';
+        engagement: null;
+        development_impact: null;
+        supported_findings: string[];
+        implications: string[];
+        limitations: string[];
+        verification_questions: string[];
     };
     explorer: {
         summary: string;
-        rating: 'UNMISSABLE' | 'HIGHLY RECOMMENDED' | 'WORTH EXPLORING' | 'SKIP FOR NOW';
-        safety: 'Level 1 - Safe' | 'Level 2 - Caution' | 'Level 3 - Restricted' | 'Level 4 - Avoid';
+        rating: null;
+        safety: null;
+        supported_findings: string[];
+        implications: string[];
+        limitations: string[];
+        verification_questions: string[];
     };
 }
 
@@ -1109,46 +1129,51 @@ export async function synthesizeUnifiedBriefing(
         ? `Market: ${context.countryName || 'Pan-Africa'}, Sector: ${context.sectorName || 'Cross-Sector'}, GDP: ${context.gdp || 'N/A'}`
         : 'Pan-African context';
 
-    const systemPrompt = `You are the LEAD EDITOR at BOA-Story Intelligence.
-You produce unified 3-lens briefings for premium subscribers.
+    const systemPrompt = `You are BOA-Story's lead evidence editor. Produce a unified three-lens briefing using only the supplied source material. Separate reported facts, supported interpretation and missing evidence. Do not invent financial metrics, governance indicators, official travel advisories, safety conditions, ratings, recommendations or scores. Every major conclusion must identify its supporting source detail.
 
-${ASSERTIVE_RULES}
+For each lens, provide a 350-500 word summary plus detailed supported findings, conditional implications, limitations and verification questions:
 
-For each lens, produce analysis grounded in the specific framework:
+INVESTOR AND OPERATOR LENS:
+- Explain only documented commercial activity, operating mechanisms, dependencies, counterparties and unresolved diligence needs.
+- Do not estimate intrinsic value, margin of safety, earnings quality or returns.
 
-INVESTOR LENS (Benjamin Graham):
-- Evaluate intrinsic value, margin of safety, earnings stability
-- Classify as DEFENSIVE VALUE, ENTERPRISING VALUE, SPECULATIVE, or OVERVALUED
-- State margin of safety as a percentage estimate
-- Verdict: ACCUMULATE / HOLD / AVOID
+GOVERNMENT AND POLICY LENS:
+- Explain only documented institutions, policy actions, implementation mechanisms, affected stakeholders and unanswered policy questions.
+- Do not infer governance quality, fiscal sustainability or development impact.
 
-GOVERNMENT & POLICY LENS:
-- Assess governance quality, fiscal sustainability, development impact
-- Use specific indicators (Debt-to-GDP, CPI score, Mo Ibrahim index)
-- Engagement: PRIORITY ENGAGEMENT / STRATEGIC PARTNERSHIP / MONITOR & REVIEW / DIPLOMATIC CAUTION
-
-EXPLORER LENS:
-- Assess destination appeal, safety, hospitality infrastructure
-- Reference FCO/State Dept advisory levels
-- Rating: UNMISSABLE / HIGHLY RECOMMENDED / WORTH EXPLORING / SKIP FOR NOW
+EXPLORER AND PLACE LENS:
+- Explain only documented visitor, cultural, transport or place-relevant facts and practical uncertainties.
+- Do not infer safety, accessibility or destination quality and do not cite an advisory unless it appears in the source.
 
 OUTPUT FORMAT (JSON - follow EXACTLY):
 {
   "investor": {
-    "summary": "[2-3 sentences: intrinsic value assessment, earnings quality, financial strength]",
-    "verdict": "[ACCUMULATE|HOLD|AVOID]",
-    "classification": "[DEFENSIVE VALUE|ENTERPRISING VALUE|SPECULATIVE|OVERVALUED]",
-    "margin_of_safety": "[e.g. '35% below intrinsic value' or 'Insufficient data']"
+    "summary": "[350-500 word source-bounded analysis]",
+    "verdict": null,
+    "classification": null,
+    "margin_of_safety": null,
+    "supported_findings": ["specific supported finding"],
+    "implications": ["conditional implication clearly labeled as analysis"],
+    "limitations": ["source or evidence limitation"],
+    "verification_questions": ["primary-source question"]
   },
   "government": {
-    "summary": "[2-3 sentences: governance, fiscal health, development impact, trade position]",
-    "engagement": "[PRIORITY ENGAGEMENT|STRATEGIC PARTNERSHIP|MONITOR & REVIEW|DIPLOMATIC CAUTION]",
-    "development_impact": "[High|Medium|Low]"
+    "summary": "[350-500 word source-bounded analysis]",
+    "engagement": null,
+    "development_impact": null,
+    "supported_findings": ["specific supported finding"],
+    "implications": ["conditional implication clearly labeled as analysis"],
+    "limitations": ["source or evidence limitation"],
+    "verification_questions": ["primary-source question"]
   },
   "explorer": {
-    "summary": "[2-3 sentences: destination appeal, safety profile, signature experience]",
-    "rating": "[UNMISSABLE|HIGHLY RECOMMENDED|WORTH EXPLORING|SKIP FOR NOW]",
-    "safety": "[Level 1 - Safe|Level 2 - Caution|Level 3 - Restricted|Level 4 - Avoid]"
+    "summary": "[350-500 word source-bounded analysis]",
+    "rating": null,
+    "safety": null,
+    "supported_findings": ["specific supported finding"],
+    "implications": ["conditional implication clearly labeled as analysis"],
+    "limitations": ["source or evidence limitation"],
+    "verification_questions": ["primary-source question"]
   }
 }`;
 
@@ -1157,7 +1182,7 @@ OUTPUT FORMAT (JSON - follow EXACTLY):
 CONTEXT: ${contextInfo}
 
 SOURCE MATERIAL:
-${content.slice(0, 4000)}
+${content.slice(0, 12000)}
 
 Return ONLY valid JSON. No markdown, no explanation.`;
 
@@ -1167,8 +1192,9 @@ Return ONLY valid JSON. No markdown, no explanation.`;
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: userPrompt },
             ],
-            max_tokens: 1200,
+            max_tokens: 4800,
             temperature: 0.2,
+            response_profile: 'deep-analysis',
         });
 
         const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -1186,20 +1212,23 @@ Return ONLY valid JSON. No markdown, no explanation.`;
 function getDefaultBriefing(): UnifiedBriefing {
     return {
         investor: {
-            summary: 'Insufficient data for Graham-style intrinsic value assessment. Awaiting earnings and book value data.',
-            verdict: 'HOLD',
-            classification: 'SPECULATIVE',
-            margin_of_safety: 'Insufficient data'
+            summary: 'The source material is insufficient for a supported investor and operator analysis.',
+            verdict: null,
+            classification: null,
+            margin_of_safety: null,
+            supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         },
         government: {
-            summary: 'Policy environment under evaluation. Governance indicators pending review.',
-            engagement: 'MONITOR & REVIEW',
-            development_impact: 'Medium'
+            summary: 'The source material is insufficient for a supported government and policy analysis.',
+            engagement: null,
+            development_impact: null,
+            supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         },
         explorer: {
-            summary: 'Destination assessment pending. Safety and infrastructure data required.',
-            rating: 'WORTH EXPLORING',
-            safety: 'Level 2 - Caution'
+            summary: 'The source material is insufficient for a supported explorer and place analysis.',
+            rating: null,
+            safety: null,
+            supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         }
     };
 }

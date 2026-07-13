@@ -20,6 +20,7 @@ import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
@@ -398,7 +399,7 @@ export const BetaCountryHub = () => {
               <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
                 {t('hub.situation_report', 'Situation Report')}
               </div>
-              <p className="text-foreground/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
+              <MarkdownRenderer content={country.ai_situation_report} className="relative max-w-4xl text-[15px] leading-7 text-foreground/80 md:text-base" />
             </div>
           </motion.section>
         )}

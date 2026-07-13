@@ -181,13 +181,13 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         CACHE_KEYS.intelSectorAnalysis(sectorId),
         async () => {
           const evidence = (topArticles.results as any[]).slice(0, 10).map((article, index) =>
-            `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nCoverage engagement: ${article.engagement_score ?? 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+            `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nCoverage engagement: ${article.engagement_score ?? 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
           ).join('\n---\n');
           if (!evidence) return "Insufficient evidence for deep analysis.";
 
           try {
             const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered reporting records. Cite records inline, distinguish facts from analysis, and treat engagement as audience activity rather than market performance. Do not call a development a growth signal or regulatory risk unless the record supports that classification.\nUser: Produce a sector evidence analysis with chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next diligence steps.\n\nRecords:\n${evidence}`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
             return aiResponse?.trim();
           } catch (e) {
             return "Analysis currently unavailable.";
@@ -412,13 +412,13 @@ Use this structure when the evidence supports it:
 5. Counter-evidence and uncertainty — contradictions, missing records and source limitations.
 6. What to verify next — concrete primary documents or data needed for diligence.
 
-Aim for 700-1,100 words when evidence is sufficiently rich. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
+Aim for 1,600-2,400 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, named stakeholders, alternative explanations, counter-evidence, source limitations, claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
     
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
 
     return c.json({
       response: llmResponse,
@@ -527,18 +527,18 @@ router.post('/reformat', validate('json', AiReformatSchema), async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 async function generateAIRecommendations(env: Env, countryName: string, articles: any[]): Promise<string[]> {
   try {
-    const evidence = articles.slice(0, 8).map((article, index) =>
+    const evidence = articles.slice(0, 12).map((article, index) =>
       `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
     ).join('\n\n');
     if (!evidence) return [];
 
     const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records. Do not infer market growth, investment readiness, political stability or tourism appeal from article volume or engagement. Distinguish reported facts from analysis and cite record numbers inline.
 
-User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 140-220 words and contain: the supported finding, named actors and dates, why it matters, a counter-signal or limitation, and a concrete verification step. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
+User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 300-450 words and contain: the supported finding, named actors and dates, documented mechanism, affected stakeholders, immediate and conditional implications, a counter-signal or alternative explanation, evidence limitations, and concrete primary-source verification steps. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
 
 RECORDS:
 ${evidence}`;
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 2200, temperature: 0.2, response_profile: 'decision-brief' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis' });
 
     const jsonMatch = (text || '').match(/\[[\s\S]*\]/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : [];

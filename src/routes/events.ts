@@ -58,7 +58,7 @@ router.get('/:id', async (c) => {
     if (!eventData.ai_value_proposition) {
         try {
             const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;
-            const generated = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nExplain in detail who should attend, the documented agenda, relevant sectors, decision value, logistical facts, uncertainties and what the organiser should confirm. Do not invent speakers or outcomes.`, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' }).then(res => res?.trim());
+            const generated = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProduce a complete event dossier: documented purpose and agenda, organiser, intended participants, relevant sectors, decision value, dates and logistics, preparation guidance, dependencies, uncertainties, source limitations, and a verification checklist. Distinguish confirmed details from organiser claims and do not invent speakers or outcomes.`, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief' }).then(res => res?.trim());
 
             if (generated) {
                 eventData.ai_value_proposition = generated;

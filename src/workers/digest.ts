@@ -86,8 +86,8 @@ export async function generateDailyDigest(
     // Generate summary of the day's news
     let aiSummary = '';
     try {
-        const briefContext = articleList.slice(0, 5).map((a, i) =>
-            `${i + 1}. "${a.title}" (${a.country_name}): ${a.summary?.slice(0, 150) || ''}`
+        const briefContext = articleList.slice(0, 10).map((a, i) =>
+            `${i + 1}. "${a.title}" (${a.country_name}, ${a.published_at || 'date unavailable'}): ${a.summary?.slice(0, 800) || 'summary unavailable'}`
         ).join('\n');
 
         // RAG: Get Global Context
@@ -108,7 +108,7 @@ Internal Coverage:
 ${briefContext}
 
 Write a detailed daily briefing with: a direct lead; the most consequential dated developments and named actors; connections and tensions across countries or sectors; practical implications; counter-signals; coverage gaps; and three questions to verify next. Cite the numbered internal records inline. If the evidence is thin, identify exactly what is missing.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 2400, temperature: 0.2, response_profile: 'evidence-brief' })) || '';
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for digest:', error);
     }
@@ -162,7 +162,7 @@ export async function generateWeeklyDigest(
     let aiSummary = '';
     try {
         const sectorSummaries = Object.entries(bySector).map(([sector, arts]) =>
-            `${sector}: ${arts.length} articles\n${arts.slice(0, 4).map((article, index) => `  ${index + 1}. ${article.title} (${article.country_name || 'country unavailable'}, ${article.published_at || 'date unavailable'}): ${article.summary || 'summary unavailable'}`).join('\n')}`
+            `${sector}: ${arts.length} articles\n${arts.slice(0, 6).map((article, index) => `  ${index + 1}. ${article.title} (${article.country_name || 'country unavailable'}, ${article.published_at || 'date unavailable'}): ${(article.summary || 'summary unavailable').slice(0, 900)}`).join('\n')}`
         ).join('\n');
 
         // RAG: Get Weekly Global Context
@@ -183,7 +183,7 @@ Our Sector Coverage:
 ${sectorSummaries}
 
 Write a rigorous Week in Review covering: the week's central finding; a dated chronology; country and sector differences; named actors; mechanisms and consequences; counter-evidence; what BOA-Story covered heavily or missed; implications for operators and policymakers; source limitations; and a prioritized verification agenda. Cite the supplied story titles inline.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for weekly digest:', error);
     }

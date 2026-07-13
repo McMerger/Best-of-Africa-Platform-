@@ -99,19 +99,19 @@ router.get('/insight', requireAuth, async (c) => {
             WHERE e.created_at > datetime('now', '-24 hours')
             GROUP BY a.id
             ORDER BY views DESC
-            LIMIT 3
+            LIMIT 8
         `).all()
     ]);
 
     // 2. Generate Explanation
     let insight = "No evidence-based audience briefing is currently available.";
     const topContext = (topArticles.results as any[]).map((article, index) =>
-        `[${index + 1}] ${article.title}\nObserved page views: ${article.views || 0}\nArticle summary: ${(article.summary || '').slice(0, 600)}`
+        `[${index + 1}] ${article.title}\nObserved page views: ${article.views || 0}\nArticle summary: ${(article.summary || '').slice(0, 900)}`
     ).join('\n---\n');
 
     try {
         const prompt = `System: You are BOA-Story's audience analyst. Explain only the observed 24-hour platform activity. Do not claim causation from page-view counts, do not call traffic stable without a comparison period, and clearly separate observations from hypotheses.\nUser: Total observed views: ${(traffic as Record<string, any>).views || 0}. Distinct visitors: ${(traffic as Record<string, any>).visitors || 0}.\n\nTop records:\n${topContext || 'No article-level traffic records.'}`;
-        const response = await callConfiguredAI(c.env, { prompt, max_tokens: 1600, temperature: 0.2, response_profile: 'decision-brief' });
+        const response = await callConfiguredAI(c.env, { prompt, max_tokens: 3400, temperature: 0.2, response_profile: 'decision-brief' });
         insight = response?.trim() || insight;
     } catch (e) { /* Ignore */ }
 

@@ -1,20 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-import { callConfiguredAI, countResponseWords, extractAIText, shouldExpandAIResponse } from '../../src/lib/ai';
+import { callConfiguredAI, countResponseWords, extractAIText, fillNarrativeGap, shouldExpandAIResponse } from '../../src/lib/ai';
 import { createMockEnv } from '../mocks/env';
 
 describe('AI response depth contract', () => {
     it('counts words and flags an underdeveloped reader-facing analysis', () => {
         expect(countResponseWords('one two\nthree')).toBe(3);
         expect(shouldExpandAIResponse('A short unsupported answer.', 'deep-analysis')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 999 }, () => 'word').join(' '), 'deep-analysis')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 1000 }, () => 'word').join(' '), 'deep-analysis')).toBe(false);
-        expect(shouldExpandAIResponse(Array.from({ length: 699 }, () => 'word').join(' '), 'evidence-brief')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 700 }, () => 'word').join(' '), 'evidence-brief')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 1599 }, () => 'word').join(' '), 'deep-analysis')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 1600 }, () => 'word').join(' '), 'deep-analysis')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 1099 }, () => 'word').join(' '), 'evidence-brief')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 1100 }, () => 'word').join(' '), 'evidence-brief')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 449 }, () => 'word').join(' '), 'spoken-brief')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 450 }, () => 'word').join(' '), 'spoken-brief')).toBe(false);
     });
 
     it('does not force padding when the model identifies thin evidence', () => {
         const response = 'Insufficient evidence to substantiate the requested analysis. The source record lacks dates and primary documents.';
         expect(shouldExpandAIResponse(response, 'deep-analysis')).toBe(false);
+    });
+
+    it('refuses to auto-publish a narrative gap without source evidence', async () => {
+        const env = createMockEnv();
+        await expect(fillNarrativeGap(env, 'Ghana', 'Technology')).rejects.toThrow('requires source-linked reporting evidence');
     });
 
     it('normalizes legacy, Chat Completions and Responses API output shapes', () => {
@@ -27,7 +34,7 @@ describe('AI response depth contract', () => {
     });
 
     it('runs one evidence-preserving expansion pass for a minimal first draft', async () => {
-        const expanded = Array.from({ length: 720 }, (_, index) => `word${index}`).join(' ');
+        const expanded = Array.from({ length: 1120 }, (_, index) => `word${index}`).join(' ');
         const run = vi.fn()
             .mockResolvedValueOnce({ response: 'The evidence shows a material change.' })
             .mockResolvedValueOnce({ response: expanded });
