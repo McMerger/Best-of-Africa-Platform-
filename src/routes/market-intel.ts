@@ -819,7 +819,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v4',
+        'strategic-opportunities:depth-v5',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
@@ -843,24 +843,40 @@ router.get('/opportunities', async (c) => {
             
             if (items.length === 0) return { data: [] };
 
-            const formatted = await Promise.all(items.map(async (o: any) => {
+            const formatOpportunity = async (o: any) => {
                 const recentArticles = await c.env.DB.prepare(`
                     SELECT id, slug, title, summary, published_at, source_title, source_url FROM articles
                     WHERE country_code = ? AND sector_id = ? AND status = 'published'
                     ORDER BY published_at DESC LIMIT 12
                 `).bind(o.country_code, o.sector_id).all();
 
-                const evidence = (recentArticles.results || []).map((article: any, index: number) =>
+                const sourceRecords = recentArticles.results || [];
+                const evidence = sourceRecords.map((article: any, index: number) =>
                     `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}\nSource: ${article.source_title || 'source unavailable'} | ${article.source_url || 'URL unavailable'}`
                 ).join('\n\n');
                 
-                let generatedTitle = `${o.sector_name} reporting watch`;
-                let generatedSummary = `BOA-Story has ${o.article_count} recent reports at this country-sector intersection. The available records are not sufficient for an investment conclusion without further verification.`;
-                let whyItMatters = 'This intersection warrants further reporting because it is prominent in the current BOA-Story coverage set.';
-                let evidencePoints: string[] = [];
-                let counterSignals: string[] = ['Coverage volume and audience activity do not establish market growth or investment readiness.'];
-                let diligenceQuestions: string[] = ['Which primary financial, regulatory and operating records can substantiate the reported developments?'];
-                let claimLedger: string[] = [];
+                let generatedTitle = `${o.country_name} ${o.sector_name} evidence brief`;
+                let generatedSummary = sourceRecords.slice(0, 6).map((article: any, index: number) =>
+                    `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}. ${article.summary || 'The record does not include a usable summary.'}`
+                ).join('\n\n') || 'No source-linked records are available for a substantive brief.';
+                let whyItMatters = `This is a reporting-led watchlist, not an investment recommendation. BOA-Story recorded ${Number(o.article_count || 0)} published items at this country-sector intersection during the measured window. The records identify developments requiring primary-source verification, but coverage volume, recency and audience activity cannot establish market size, profitability, policy durability, investability or future returns. Readers should use the dated findings below to locate the responsible institutions, operating entities and original documents before drawing a decision.`;
+                let evidencePoints: string[] = sourceRecords.slice(0, 8).map((article: any, index: number) =>
+                    `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}; source: ${article.source_title || article.source_url || 'not supplied'}.`
+                );
+                let counterSignals: string[] = [
+                    'Coverage volume and audience activity do not establish market growth, profitability or investment readiness.',
+                    'The records may repeat the same underlying announcement and therefore may not represent independent confirmation.',
+                    'Article summaries do not replace audited financial statements, regulatory filings, contracts or implementation data.',
+                    'The current reporting window can omit slower-moving constraints, failed projects and developments that received little coverage.',
+                ];
+                let diligenceQuestions: string[] = [
+                    'Which primary financial statements, regulatory filings and official notices substantiate the reported developments?',
+                    'Which named entity is legally responsible for delivery, financing, oversight and performance reporting?',
+                    'What dated implementation milestones have been completed, delayed, revised or cancelled?',
+                    'Which claims are independently corroborated rather than repeated from a single announcement or press release?',
+                    'What evidence would contradict the apparent direction of the current reporting record?',
+                ];
+                let claimLedger: string[] = [`This intersection is prominent in BOA-Story's current reporting set; records [1-${Math.max(1, Math.min(sourceRecords.length, 8))}] support that coverage observation, which changes if deduplication or a wider reporting window materially alters the count.`];
                 
                 try {
                     const prompt = `System: You are BOA-Story's evidence desk. Assess a reporting-led watchlist item using only the numbered records. This is not a recommendation. Never infer growth, deal flow, stability, investability or future returns from coverage volume or audience engagement. Cite record numbers inline and separate reported facts from analysis.
@@ -912,7 +928,14 @@ ${evidence}`;
                     score: Math.round(o.avg_score || 0),
                     methodology: 'Ranked by BOA-Story reporting volume and recency. Audience response is descriptive platform activity, not an opportunity score.'
                 };
-            }));
+            };
+
+            // Keep long structured generations below the shared model's
+            // concurrency pressure point so cards do not fall into fallback.
+            const formatted: any[] = [];
+            for (let index = 0; index < items.length; index += 2) {
+                formatted.push(...await Promise.all(items.slice(index, index + 2).map(formatOpportunity)));
+            }
 
             return { data: formatted, updated_at: new Date().toISOString() };
         },
