@@ -95,7 +95,7 @@ export const BetaChatWidget = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[350px] sm:w-[400px] h-[500px] max-h-[80vh] bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[calc(100vw-2rem)] sm:w-[560px] h-[min(760px,82vh)] bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-background text-foreground p-4 flex justify-between items-center shrink-0">
@@ -103,7 +103,7 @@ export const BetaChatWidget = () => {
                 <Sparkles size={18} className="text-accent" />
                 <div>
                   <h3 className="font-serif text-lg leading-tight">Ask the Analyst</h3>
-                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">AI-Powered Research</p>
+                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">Evidence-grounded synthesis</p>
                 </div>
               </div>
               <button 
@@ -121,7 +121,7 @@ export const BetaChatWidget = () => {
                   key={msg.id} 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl p-3 ${
+                  <div className={`max-w-[92%] rounded-2xl p-4 ${
                     msg.role === 'user' 
                       ? 'bg-background text-foreground rounded-br-sm' 
                       : msg.isError 

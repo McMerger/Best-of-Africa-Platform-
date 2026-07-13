@@ -410,7 +410,7 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     // 2. Search Vector Database (RAG)
     // Query best-of-africa-content index
     const vectorResults = await c.env.VECTORS.query(queryVector, {
-      topK: 5,
+      topK: 10,
       returnMetadata: true
     });
 
@@ -418,21 +418,29 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     const matches = vectorResults.matches || [];
     const contextDocs = matches.map(m => {
       const meta = m.metadata as Record<string, any>;
-      return `Title: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nDate: ${meta.published_at}`;
+      return `[Source ${m.id}]\nTitle: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nPublished: ${meta.published_at || 'date unavailable'}\nURL: ${meta.source_url || meta.url || 'URL unavailable'}`;
     }).join('\n---\n');
 
     // 4. Generate Response with Gemini
-    const systemPrompt = `You are the AI Market Consultant for "BOA-Story", a strategic storytelling platform. 
-    Current Date: ${new Date().toLocaleDateString()}.
-    Use the provided Real-Time Context to answer the user's question about African markets. 
-    If the context is relevant, cite it. If not, rely on your general knowledge but mention you are missing specific real-time data on that niche.
-    Be professional, concise, and investor-focused.
+    const systemPrompt = `You are the research synthesis layer for BOA-Story. Current date: ${new Date().toISOString().slice(0, 10)}.
+
+Write a detailed, decision-useful answer using ONLY the supplied evidence. Never fill gaps with general knowledge, invented figures, assumed market conditions, or generic claims such as "the outlook remains stable". Cite claims inline as [Source ID]. Distinguish reported facts from your synthesis.
+
+Use this structure when the evidence supports it:
+1. Direct answer — a precise 2-4 sentence conclusion.
+2. Evidence — dated facts, actors, amounts and locations, each with citations.
+3. Context and chronology — what changed and when.
+4. Implications — separately for investors/operators and government/policy users; label these as analysis.
+5. Counter-evidence and uncertainty — contradictions, missing records and source limitations.
+6. What to verify next — concrete primary documents or data needed for diligence.
+
+Aim for 700-1,100 words when evidence is sufficiently rich. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
     
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2 });
 
     return c.json({
       response: llmResponse,
