@@ -130,7 +130,7 @@ router.get('/:region', async (c) => {
                 `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nEvidence: ${(article.summary || '').slice(0, 650)}`
             ).join('\n---\n');
             const prompt = `System: You are BOA-Story's regional evidence desk. Use only the supplied records and coverage counts. ${lensInstruction} Distinguish facts from analysis and state limitations.\n\nRegion: ${region}\nCountry coverage counts: ${JSON.stringify(trendingCountries.results || [])}\nSector coverage counts: ${JSON.stringify(sectorBreakdown.results || [])}\nReporting records:\n${articleEvidence || 'No current reporting records.'}`;
-            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3400, temperature: 0.2, response_profile: 'decision-brief' });
+            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' });
             aiInsight = text || aiInsight;
             await c.env.CACHE.put(cacheKey, aiInsight, { expirationTtl: 3600 });
         }
@@ -327,7 +327,7 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
 
         if (context) {
             const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered source records and cite them inline. Separate facts from analysis, do not infer regional conditions from coverage volume, and do not create scores, forecasts or recommendations.\nUser: Produce a complete evidence briefing for ${region} Africa covering the last seven days. Include chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next verification steps.\n\nRecords:\n${context}`;
-            const text = await callConfiguredAI(env, { prompt: `${prompt}\n\nWrite a complete evidence dossier covering chronology, named actors, documented mechanisms, cross-country differences, stakeholder effects, first- and second-order implications, dependencies, counter-signals, alternative explanations, limitations, claim ledger and next verification steps. Do not create scores or forecasts.`, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
+            const text = await callConfiguredAI(env, { prompt: `${prompt}\n\nWrite a complete evidence dossier covering chronology, named actors, documented mechanisms, cross-country differences, stakeholder effects, first- and second-order implications, dependencies, counter-signals, alternative explanations, limitations, claim ledger and next verification steps. Do not create scores or forecasts.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
             executiveBrief = text || executiveBrief;
         }
     } catch (e) { /* Fallback */ }
@@ -415,7 +415,7 @@ router.get('/analytics/summary', async (c) => {
 
     const marketSummary = await getCached(
         c.env,
-        `dashboard:coverage-brief:depth-v4:${activeLens}`,
+        `dashboard:coverage-brief:depth-v5:${activeLens}`,
         async () => {
             if (!evidence) return 'No source-linked continental briefing is currently available.';
             const audience = activeLens === 'government'
@@ -425,11 +425,11 @@ router.get('/analytics/summary', async (c) => {
                     : 'investor and operator readers';
             const prompt = `System: You are BOA-Story's continental evidence editor writing for ${audience}. Use only the numbered records, cite them inline and separate facts from analysis. Do not use outside knowledge, fill evidence gaps, infer unstated causes, or turn allegations into facts. When causality, scale or outcome is unavailable, say so plainly. Coverage and audience activity are not proxies for economic performance, stability, sentiment, investability or tourism safety.
 
-User: Produce a rigorous 1,600–2,200 word continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, documented mechanisms, operational or policy implications, counter-signals, alternative explanations, source limitations, under-covered regions or questions, a claim ledger, and prioritized verification steps. Keep the analysis readable and avoid repeating duplicate records.
+User: Produce a rigorous 2,200–3,400 word continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, documented mechanisms, implementation status, first-, second- and conditional-order implications, counter-signals, alternative explanations, source limitations, under-covered regions or questions, a full claim ledger, and prioritized verification steps. Keep the analysis readable and avoid repeating duplicate records.
 
 RECORDS:
 ${evidence}`;
-            return callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.15, response_profile: 'deep-analysis' });
+            return callConfiguredAI(c.env, { prompt, max_tokens: 6500, temperature: 0.15, response_profile: 'deep-analysis' });
         },
         { ttl: CACHE_TTL.DASHBOARD }
     );

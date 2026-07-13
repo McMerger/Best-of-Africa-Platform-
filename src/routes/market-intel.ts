@@ -104,7 +104,7 @@ router.get('/sector/:id', async (c) => {
             if (!evidence) return 'Insufficient evidence for a current sector analysis.';
             try {
                 const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered records, cite them inline, distinguish facts from analysis, and explain cross-country differences, chronology, actors, operational and policy implications, counter-signals, limitations and next diligence steps. Never infer market growth from reporting or engagement volume.\nUser: Produce a complete evidence analysis for Africa's ${(sector as Record<string, any>).name} sector.\n\nRecords:\n${evidence}`;
-                return await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
+                return await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
             } catch (error) {
                 console.error('Sector evidence analysis failed', error);
                 return null;
@@ -211,7 +211,7 @@ router.get('/country/:code/outlook', async (c) => {
         return c.json({ error: 'not_found', message: 'Country not found' }, 404);
     }
 
-    const [sectorOpportunities, articleStats, narrativeStrength] = await Promise.all([
+    const [sectorOpportunities, articleStats, narrativeStrength, recentRecords] = await Promise.all([
         c.env.DB.prepare(`
             SELECT s.id, s.name, s.icon, COUNT(a.id) as articles,
                    AVG(a.engagement_score) as avg_engagement
@@ -236,9 +236,38 @@ router.get('/country/:code/outlook', async (c) => {
             FROM narrative_strategies
             WHERE country_code = ? AND status = 'active'
         `).bind(code).first(),
+        c.env.DB.prepare(`
+            SELECT a.title, a.summary, a.published_at, a.source_title, a.source_url,
+                   s.name AS sector_name
+            FROM articles a
+            LEFT JOIN sectors s ON s.id = a.sector_id
+            WHERE a.country_code = ? AND a.status = 'published'
+            ORDER BY a.published_at DESC
+            LIMIT 15
+        `).bind(code).all<Record<string, any>>(),
     ]);
 
     const countryData = country as Record<string, any>;
+    const sourceRecords = recentRecords.results || [];
+    const evidenceContext = sourceRecords.map((record, index) =>
+        `[${index + 1}] ${record.published_at || 'date unavailable'} — ${record.title}\nSector: ${record.sector_name || 'unavailable'}\n${(record.summary || 'Summary unavailable.').slice(0, 1200)}\nSource: ${record.source_title || 'unavailable'} | ${record.source_url || 'URL unavailable'}`
+    ).join('\n\n');
+
+    const evidenceBriefing = await getCached(
+        c.env,
+        CACHE_KEYS.countryOutlook(code),
+        async () => {
+            if (!evidenceContext) return 'No source-linked country evidence briefing is currently available.';
+            const prompt = `System: You are BOA-Story's country evidence editor. Use only the numbered records. This is not an investment rating. Do not infer economic performance, political stability, policy quality, tourism safety or investability from article volume, engagement or narrative fields. Cite records inline and distinguish reported fact, supported interpretation and unresolved question.
+
+User: Produce a complete evidence briefing for ${countryData.name}. Cover the reporting window, dated chronology, named institutions and decision-makers, sector-by-sector developments, documented mechanisms, implementation status, affected stakeholders, cross-record connections, immediate and conditional implications, counter-signals, alternative explanations, source limitations, missing primary documents, a claim ledger and prioritized verification steps. Explain technical or policy details in plain language.
+
+RECORDS:
+${evidenceContext}`;
+            return callConfiguredAI(c.env, { prompt, max_tokens: 6500, temperature: 0.15, response_profile: 'evidence-brief' });
+        },
+        { ttl: CACHE_TTL.INTEL }
+    );
 
     return c.json({
         country: countryData,
@@ -247,16 +276,28 @@ router.get('/country/:code/outlook', async (c) => {
             narrative_strength: null,
             media_presence: null,
             engagement_level: null,
-            investment_commentary: null,
-            methodology: 'No investment, stability or risk conclusion is inferred from article engagement, imagery or headline synthesis.'
+            investment_commentary: evidenceBriefing,
+            methodology: 'This source-linked briefing analyzes BOA-Story reporting records. It does not infer investment readiness, stability, safety or economic performance from coverage or engagement.'
         },
         sector_opportunities: [],
         sector_coverage: sectorOpportunities.results || [],
         evidence: {
             published_articles: Number((articleStats as Record<string, any>)?.total_articles || 0),
             reviewed_strategies: Number((narrativeStrength as Record<string, any>)?.strategies || 0),
-            status: 'limited',
-            limitations: ['Article volume is reporting coverage, not market opportunity.', 'Structured investment evidence is not yet sufficient for a country score.']
+            status: sourceRecords.length > 0 ? 'source-linked' : 'unavailable',
+            source_records: sourceRecords.map((record, index) => ({
+                record: index + 1,
+                title: record.title,
+                published_at: record.published_at || null,
+                source_title: record.source_title || null,
+                source_url: record.source_url || null,
+            })),
+            limitations: [
+                'Article volume is reporting coverage, not market opportunity or country performance.',
+                'The briefing is bounded by the latest 15 published records and can omit developments outside that window.',
+                'Article summaries do not replace audited accounts, legal instruments, regulatory filings or implementation data.',
+                'Every consequential conclusion requires verification against the primary documents identified in the briefing.',
+            ]
         },
         stats: articleStats,
     });

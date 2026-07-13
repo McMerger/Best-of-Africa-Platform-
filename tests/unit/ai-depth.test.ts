@@ -6,10 +6,12 @@ describe('AI response depth contract', () => {
     it('counts words and flags an underdeveloped reader-facing analysis', () => {
         expect(countResponseWords('one two\nthree')).toBe(3);
         expect(shouldExpandAIResponse('A short unsupported answer.', 'deep-analysis')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 1599 }, () => 'word').join(' '), 'deep-analysis')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 1600 }, () => 'word').join(' '), 'deep-analysis')).toBe(false);
-        expect(shouldExpandAIResponse(Array.from({ length: 1099 }, () => 'word').join(' '), 'evidence-brief')).toBe(true);
-        expect(shouldExpandAIResponse(Array.from({ length: 1100 }, () => 'word').join(' '), 'evidence-brief')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 2199 }, () => 'word').join(' '), 'deep-analysis')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 2200 }, () => 'word').join(' '), 'deep-analysis')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 1499 }, () => 'word').join(' '), 'evidence-brief')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 1500 }, () => 'word').join(' '), 'evidence-brief')).toBe(false);
+        expect(shouldExpandAIResponse(Array.from({ length: 499 }, () => 'word').join(' '), 'reader-explainer')).toBe(true);
+        expect(shouldExpandAIResponse(Array.from({ length: 500 }, () => 'word').join(' '), 'reader-explainer')).toBe(false);
         expect(shouldExpandAIResponse(Array.from({ length: 449 }, () => 'word').join(' '), 'spoken-brief')).toBe(true);
         expect(shouldExpandAIResponse(Array.from({ length: 450 }, () => 'word').join(' '), 'spoken-brief')).toBe(false);
     });
@@ -34,7 +36,7 @@ describe('AI response depth contract', () => {
     });
 
     it('runs one evidence-preserving expansion pass for a minimal first draft', async () => {
-        const expanded = Array.from({ length: 1120 }, (_, index) => `word${index}`).join(' ');
+        const expanded = Array.from({ length: 1520 }, (_, index) => `word${index}`).join(' ');
         const run = vi.fn()
             .mockResolvedValueOnce({ response: 'The evidence shows a material change.' })
             .mockResolvedValueOnce({ response: expanded });

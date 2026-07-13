@@ -205,11 +205,18 @@ export const api = {
             narrative_strength: number | null;
             media_presence: number | null;
             engagement_level: number | null;
+            investment_commentary: string | null;
             methodology: string;
         };
         sector_opportunities: { id: string; name: string; articles: number; avg_engagement: number }[];
         sector_coverage: { id: string; name: string; articles: number; avg_engagement: number }[];
-        evidence: { published_articles: number; reviewed_strategies: number; status: string; limitations: string[] };
+        evidence: {
+            published_articles: number;
+            reviewed_strategies: number;
+            status: string;
+            limitations: string[];
+            source_records: { record: number; title: string; published_at: string | null; source_title: string | null; source_url: string | null }[];
+        };
     }>(`/market-intel/country/${code}/outlook`),
     getCountryRelationships: (code: string) => request<{
         country_code: string;

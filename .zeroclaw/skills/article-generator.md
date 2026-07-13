@@ -84,7 +84,7 @@ TITLE: [Compelling headline for the narrative story, max 80 characters]
 SUBTITLE: [Secondary headline adding human context, max 120 characters]
 
 CONTENT:
-[Full narrative article in markdown format with subheadings. Focus on the human element, the creators, and the streets. Develop chronology, documented mechanisms, competing perspectives, consequences, unresolved questions, and all supplied names, dates, places and figures in 1,100-1,600 words when the supplied reporting supports that depth. Distinguish allegations from established facts and never pad thin evidence.]
+[Full narrative article in markdown format with subheadings. Focus on the human element, the creators, and the streets. Develop chronology, documented mechanisms, competing perspectives, consequences, unresolved questions, and all supplied names, dates, places and figures in 1,400-2,200 words when the supplied reporting supports that depth. Distinguish allegations from established facts and never pad thin evidence.]
 
 SUMMARY: [2-3 sentence grounded summary capturing the human reality and opportunity of the story]
 

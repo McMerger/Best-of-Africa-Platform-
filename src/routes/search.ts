@@ -144,7 +144,7 @@ router.get('/', async (c) => {
                 }).join('\n---\n');
                 try {
                     const prompt = `System: Produce a detailed evidence-grounded research answer using only the supplied records. Cite titles inline, separate facts from implications, identify contradictions and missing evidence, and never pad thin context with general knowledge.\nUser: Query: ${q}\n\nContext:\n${context}`;
-                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                     aiAnswer = ansRes?.trim();
                 } catch (e) { /* Ignore */ }
             }
@@ -255,7 +255,7 @@ router.get('/', async (c) => {
             // Cache summaries for 10 minutes to avoid repeated expensive calls
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(`${q}:depth-v3`),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v4`),
                 async () => {
                     try {
                         const briefsContext = topResults.map((item: any, i: number) => {
@@ -267,7 +267,7 @@ router.get('/', async (c) => {
                         }).join('\n\n');
 
                         const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], and distinguish reported facts from analysis. Do not make an investment recommendation or estimate missing figures.\nUser: Answer the research query "${q}" based on these records:\n${briefsContext}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('AI summary generation failed:', aiError);
@@ -442,7 +442,7 @@ router.get('/semantic', async (c) => {
         if (topResults.length > 0) {
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(`${q}:depth-v3`),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v4`),
                 async () => {
                     try {
                         const contextChunks = topResults.map((item: any, i: number) => {
@@ -454,7 +454,7 @@ router.get('/semantic', async (c) => {
                         }).join('\n\n');
 
                         const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], separate facts from analysis, and surface contradictions and gaps.\nUser: Research query: "${q}"\n\nRelevant records:\n${contextChunks}\n\nProvide a complete synthesis:`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('RAG summary generation failed:', aiError);

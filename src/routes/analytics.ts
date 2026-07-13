@@ -111,7 +111,7 @@ router.get('/insight', requireAuth, async (c) => {
 
     try {
         const prompt = `System: You are BOA-Story's audience analyst. Explain only the observed 24-hour platform activity. Do not claim causation from page-view counts, do not call traffic stable without a comparison period, and clearly separate observations from hypotheses.\nUser: Total observed views: ${(traffic as Record<string, any>).views || 0}. Distinct visitors: ${(traffic as Record<string, any>).visitors || 0}.\n\nTop records:\n${topContext || 'No article-level traffic records.'}`;
-        const response = await callConfiguredAI(c.env, { prompt, max_tokens: 3400, temperature: 0.2, response_profile: 'decision-brief' });
+        const response = await callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' });
         insight = response?.trim() || insight;
     } catch (e) { /* Ignore */ }
 

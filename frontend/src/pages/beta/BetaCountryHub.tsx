@@ -312,6 +312,31 @@ export const BetaCountryHub = () => {
               </div>
               <p className="mt-6 text-sm leading-relaxed text-muted-foreground">{outlook.methodology}</p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">{evidence.limitations.map(item => <li key={item} className="flex gap-3"><span className="text-accent-ink">•</span>{item}</li>)}</ul>
+              {outlook.investment_commentary && (
+                <div className="mt-10 border-t border-border pt-8">
+                  <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-ink">Member evidence dossier</p>
+                      <h3 className="mt-2 font-serif text-2xl text-navy">Country reporting brief</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{evidence.source_records.length} source records reviewed</p>
+                  </div>
+                  <MarkdownRenderer content={outlook.investment_commentary} className="prose-sm max-w-none text-foreground/80" />
+                  {evidence.source_records.length > 0 && (
+                    <details className="mt-8 rounded-xl border border-border bg-background p-5">
+                      <summary className="cursor-pointer text-sm font-semibold text-navy">Inspect source window</summary>
+                      <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
+                        {evidence.source_records.map(source => (
+                          <li key={`${source.record}-${source.title}`} className="flex gap-3">
+                            <span className="font-semibold text-accent-ink">[{source.record}]</span>
+                            <span>{source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className="hover:text-navy hover:underline">{source.title}</a> : source.title}{source.published_at ? ` · ${new Date(source.published_at).toLocaleDateString()}` : ''}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center text-foreground/40 text-lg">

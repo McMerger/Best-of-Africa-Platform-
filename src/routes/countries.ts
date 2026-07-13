@@ -76,7 +76,7 @@ router.get('/', async (c) => {
 
                 if (context) {
                     const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts, supported interpretation, uncertainty and gaps.\nUser: Produce a full regional evidence brief for ${region} Africa covering chronology, actors, documented mechanisms, country and sector differences, stakeholder effects, practical implications, counter-signals, alternative explanations, source limitations, claim ledger and verification priorities.\n\nRecords:\n${context}`;
-                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                     const text = aiRes?.trim();
                     if (text) {
                         insights[region] = text;
@@ -233,7 +233,7 @@ router.get('/:code', async (c) => {
                 if (!evidence) return "No source-linked country reporting is currently available.";
                 try {
                     const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from supported interpretation, identify contradictions, alternative explanations and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a complete current situation dossier for ${country.name}, including scope, chronology, actors, documented mechanisms, stakeholder impacts, sector interactions, policy and operating implications, counter-signals, source limitations, a claim ledger and prioritized verification steps.\n\nRecords:\n${evidence}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'deep-analysis' });
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
                     return aiResponse?.trim();
                 } catch { return "The source-linked country briefing is temporarily unavailable."; }
             },

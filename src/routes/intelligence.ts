@@ -187,7 +187,7 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
 
           try {
             const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered reporting records. Cite records inline, distinguish facts from analysis, and treat engagement as audience activity rather than market performance. Do not call a development a growth signal or regulatory risk unless the record supports that classification.\nUser: Produce a sector evidence analysis with chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next diligence steps.\n\nRecords:\n${evidence}`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
             return aiResponse?.trim();
           } catch (e) {
             return "Analysis currently unavailable.";
@@ -412,13 +412,13 @@ Use this structure when the evidence supports it:
 5. Counter-evidence and uncertainty — contradictions, missing records and source limitations.
 6. What to verify next — concrete primary documents or data needed for diligence.
 
-Aim for 1,600-2,400 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, named stakeholders, alternative explanations, counter-evidence, source limitations, claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
+Aim for 2,200-3,400 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, implementation status, named stakeholders, first-, second- and conditional-order implications, alternative explanations, counter-evidence, source limitations, a full claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
     
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
 
     return c.json({
       response: llmResponse,

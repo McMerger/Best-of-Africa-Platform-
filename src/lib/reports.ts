@@ -78,7 +78,7 @@ export async function generateCountryBrief(
 User: Write a full country evidence brief for ${c.name} based on recent coverage:
 
 ${articleContext}`;
-        aiSummary = (await callConfiguredAI(env, { prompt: `${prompt}\n\nUse only this evidence. Include chronology, exact named actors and figures, documented mechanisms, stakeholder effects, policy and operating implications, alternative explanations, counter-evidence, limitations, a claim ledger, and prioritized verification steps. Do not invent missing facts.`, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
+        aiSummary = (await callConfiguredAI(env, { prompt: `${prompt}\n\nUse only this evidence. Include chronology, exact named actors and figures, documented mechanisms, stakeholder effects, policy and operating implications, alternative explanations, counter-evidence, limitations, a claim ledger, and prioritized verification steps. Do not invent missing facts.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (e) {
         console.error('AI summary failed:', e);
     }
@@ -174,7 +174,7 @@ export async function generateSectorAnalysis(
 
 User: Write a sector analysis for "${s.name}" across Africa based on:
 ${context}`;
-        aiAnalysis = (await callConfiguredAI(env, { prompt: `${prompt}\n\nProduce a detailed evidence record: market context, dated developments, actors, documented mechanisms, country differences, regulatory implications, operational constraints, dependencies, counter-evidence, alternative explanations, limitations, claim ledger and further diligence. Do not estimate absent figures.`, max_tokens: 4800, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
+        aiAnalysis = (await callConfiguredAI(env, { prompt: `${prompt}\n\nProduce a detailed evidence record: market context, dated developments, actors, documented mechanisms, country differences, regulatory implications, operational constraints, dependencies, counter-evidence, alternative explanations, limitations, claim ledger and further diligence. Do not estimate absent figures.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (e) {
         console.error('AI analysis failed:', e);
     }

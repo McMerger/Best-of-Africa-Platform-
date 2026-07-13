@@ -222,7 +222,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
 
             try {
                 const prompt = `System: You are BOA-Story's front-page evidence editor. Use only the numbered records, cite them inline and distinguish facts from synthesis. Coverage volume is editorial activity, not a market indicator.\nUser: Write a substantive briefing that connects the leading records across countries and sectors. Cover chronology, named actors, mechanisms, practical implications, counter-signals, source limitations and what readers should verify next.\n\nRecords:\n${evidence}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
                 return "The source-linked briefing is temporarily unavailable.";
@@ -374,7 +374,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
 
             try {
                 const prompt = `System: You are BOA-Story's sector evidence editor. Use only the numbered records and cite them inline. Do not infer growth, stability or investability from coverage or engagement.\nUser: Produce a detailed sector outlook covering the direct finding, chronology, named actors, cross-country differences, mechanisms, operating and policy implications, counter-signals, limitations and next diligence steps.\n\nRecords:\n${evidence}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4000, temperature: 0.2, response_profile: 'evidence-brief' });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
                 return "The source-linked sector outlook is temporarily unavailable.";
