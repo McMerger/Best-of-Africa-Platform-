@@ -327,7 +327,7 @@ router.get('/feed/ai-curated', async (c) => {
     // For now, simpler time-based cache is sufficient
     return c.json(await getCached(
         c.env,
-        `feed:ai-curated:depth-v4:${sessionId}`,
+        `feed:ai-curated:depth-v5:${sessionId}`,
         async () => {
             // 1. Fetch Top 15 Candidates (SQL)
             const candidates = await c.env.DB.prepare(`
@@ -368,7 +368,7 @@ router.get('/feed/ai-curated', async (c) => {
 
             try {
                 const aiPrompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${prompt}`;
-                const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief', structured_output: true });
+                const rawText = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
                 const jsonMatch = (rawText || '[]').match(/\[.*\]/s);
                 const selections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 

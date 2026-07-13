@@ -62,7 +62,7 @@ describe('AI response depth contract', () => {
         const result = await callConfiguredAI(env, {
             prompt: 'Return ONLY valid JSON using the supplied evidence.',
             max_tokens: 3200,
-            response_profile: 'deep-analysis',
+            response_profile: 'structured-analysis',
             structured_output: true,
         });
 

@@ -134,14 +134,14 @@ export const CACHE_KEYS = {
     analyticsDashboard: (period: string) => `analytics:dashboard:${period}`,
 
     // Intelligence API keys
-    intelCountryReport: (code: string) => `intel:country:${code}:report:depth-v4`,
+    intelCountryReport: (code: string) => `intel:country:${code}:report:depth-v5`,
     intelSectorTrends: (id: string) => `intel:sector:${id}:trends:depth-v3`,
     intelAudienceReach: () => 'intel:audience:reach',
     countryOutlook: (code: string) => `country:${code}:outlook:depth-v3`,
-    articleContext: (id: string) => `article:${id}:ai_context:depth-v4`,
+    articleContext: (id: string) => `article:${id}:ai_context:depth-v5`,
     narrativeSynthesis: (code: string) => `narrative:synthesis:${code}:depth-v3`,
     sectorOutlook: (id: string) => `sector:${id}:outlook:depth-v3`,
-    countryRelationships: (code: string) => `country:${code}:relationships:depth-v4`,
+    countryRelationships: (code: string) => `country:${code}:relationships:depth-v5`,
     countrySituation: (code: string) => `country:${code}:situation:depth-v3`,
     globalBriefing: 'home:global-briefing:depth-v3',
     intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis:depth-v3`,

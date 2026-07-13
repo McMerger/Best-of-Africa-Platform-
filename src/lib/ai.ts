@@ -32,7 +32,7 @@ export const MODELS = {
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
 export const ARTICLE_PROMPT_VERSION = 'v1.4-longform-evidence';
-export const AI_RESPONSE_VERSION = 'depth-v3.1-structured';
+export const AI_RESPONSE_VERSION = 'depth-v3.2-structured';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Enforced Information Generation
@@ -51,7 +51,7 @@ export interface AICallOptions {
     structured_output?: boolean;
 }
 
-export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'decision-brief' | 'spoken-brief';
+export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'structured-analysis' | 'decision-brief' | 'spoken-brief';
 
 const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instructions: string }> = {
     'editorial-article': {
@@ -65,6 +65,10 @@ const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instr
     'deep-analysis': {
         minimumWords: 1600,
         instructions: `Produce a rigorous 1,600-2,400 word analysis when the evidence supports that depth. Begin with a precise answer and an explicit evidence boundary. Separate reported facts, supported interpretation and unresolved questions; cite supplied source identifiers inline. Explain chronology, documented mechanisms, named stakeholders, country and sector differences, first- and second-order implications, implementation constraints, dependencies, counter-evidence, alternative explanations, uncertainty, source gaps, and prioritized diligence steps. End with a claim ledger showing which records support each major conclusion and what evidence would change it. Do not pad thin evidence or introduce outside facts.`,
+    },
+    'structured-analysis': {
+        minimumWords: 700,
+        instructions: `Return exactly the requested JSON or structured schema with no prose outside it. Make every substantive field evidence-dense while respecting its stated field length and item-count limits. Across the schema, preserve dates, names, institutions, locations, figures, chronology, documented mechanisms, stakeholder effects, implications, counter-signals, alternative explanations, source limitations, verification questions and claim-to-record links wherever requested. Never leave a requested evidence, limitation, diligence or claim-ledger array empty when the supplied records support entries. Do not invent facts, scores, forecasts, causality or certainty. Ensure the response is complete, valid and closed within the token budget.`,
     },
     'decision-brief': {
         minimumWords: 800,
@@ -1200,7 +1204,7 @@ Return ONLY valid JSON. No markdown, no explanation.`;
             ],
             max_tokens: 4800,
             temperature: 0.2,
-            response_profile: 'deep-analysis',
+            response_profile: 'structured-analysis',
             structured_output: true,
         });
 

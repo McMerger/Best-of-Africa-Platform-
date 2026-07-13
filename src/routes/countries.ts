@@ -402,7 +402,7 @@ Exclude any relationship that cannot be supported. Return [] when evidence is in
 
 RECORDS:
 ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis', structured_output: true });
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
                 const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {

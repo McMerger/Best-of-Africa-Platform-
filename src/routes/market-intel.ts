@@ -437,7 +437,7 @@ router.get('/performance', async (c) => {
 router.get('/founder-log', async (c) => {
     return c.json(await getCached(
         c.env,
-        'founder-log:weekly:depth-v4',
+        'founder-log:weekly:depth-v5',
         async () => {
             // Fetch articles from the last 14 days
             const recentArticles = await c.env.DB.prepare(`
@@ -470,7 +470,7 @@ Write the update. Format it exactly as a JSON array of 3 objects, where each obj
 Return ONLY the raw JSON array.`;
 
             try {
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'decision-brief', structured_output: true });
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'structured-analysis', structured_output: true });
                 const match = text.match(/\[.*\]/s);
                 if (match) {
                     return JSON.parse(match[0]);
@@ -819,7 +819,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v5',
+        'strategic-opportunities:depth-v6',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
@@ -894,17 +894,17 @@ User: Build a detailed watchlist brief for ${o.sector_name} in ${o.country_name}
 
 RECORDS:
 ${evidence}`;
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis', structured_output: true });
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
                     const match = text.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
                         if (parsed.title) generatedTitle = parsed.title;
-                        if (parsed.executive_summary) generatedSummary = parsed.executive_summary;
-                        if (parsed.why_it_matters) whyItMatters = parsed.why_it_matters;
-                        if (Array.isArray(parsed.evidence_points)) evidencePoints = parsed.evidence_points.slice(0, 10);
-                        if (Array.isArray(parsed.counter_signals)) counterSignals = parsed.counter_signals.slice(0, 7);
-                        if (Array.isArray(parsed.diligence_questions)) diligenceQuestions = parsed.diligence_questions.slice(0, 8);
-                        if (Array.isArray(parsed.claim_ledger)) claimLedger = parsed.claim_ledger.slice(0, 10);
+                        if (typeof parsed.executive_summary === 'string' && parsed.executive_summary.trim().split(/\s+/).length >= 250) generatedSummary = parsed.executive_summary;
+                        if (typeof parsed.why_it_matters === 'string' && parsed.why_it_matters.trim().split(/\s+/).length >= 150) whyItMatters = parsed.why_it_matters;
+                        if (Array.isArray(parsed.evidence_points) && parsed.evidence_points.length >= 4) evidencePoints = parsed.evidence_points.slice(0, 10);
+                        if (Array.isArray(parsed.counter_signals) && parsed.counter_signals.length >= 3) counterSignals = parsed.counter_signals.slice(0, 7);
+                        if (Array.isArray(parsed.diligence_questions) && parsed.diligence_questions.length >= 4) diligenceQuestions = parsed.diligence_questions.slice(0, 8);
+                        if (Array.isArray(parsed.claim_ledger) && parsed.claim_ledger.length >= 1) claimLedger = parsed.claim_ledger.slice(0, 10);
                     }
                 } catch (e) {
                     // Preserve the evidence-limited fallback rather than inventing a thesis.
