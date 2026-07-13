@@ -290,13 +290,21 @@ Headlines: ${context || 'General economic outlook stable.'}`;
     return c.json({
         country: countryData,
         outlook: {
-            investment_readiness: Math.round((countryData.image_strength_score || 50) * 2),
-            narrative_strength: (narrativeStrength as Record<string, any>)?.avg_effectiveness || 0,
-            media_presence: (articleStats as Record<string, any>)?.total_articles || 0,
-            engagement_level: (articleStats as Record<string, any>)?.avg_engagement || 0,
-            investment_commentary: investmentCommentary
+            investment_readiness: null,
+            narrative_strength: null,
+            media_presence: null,
+            engagement_level: null,
+            investment_commentary: null,
+            methodology: 'No investment, stability or risk conclusion is inferred from article engagement, imagery or headline synthesis.'
         },
-        sector_opportunities: sectorOpportunities.results || [],
+        sector_opportunities: [],
+        sector_coverage: sectorOpportunities.results || [],
+        evidence: {
+            published_articles: Number((articleStats as Record<string, any>)?.total_articles || 0),
+            reviewed_strategies: Number((narrativeStrength as Record<string, any>)?.strategies || 0),
+            status: 'limited',
+            limitations: ['Article volume is reporting coverage, not market opportunity.', 'Structured investment evidence is not yet sufficient for a country score.']
+        },
         stats: articleStats,
     });
 });

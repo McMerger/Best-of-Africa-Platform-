@@ -333,16 +333,16 @@ router.get('/:code/economics', async (c) => {
 
     // Calculate derived metrics
     const gdpGrowth = null; // No mocked data
-    const stability = (data.image_strength_score || 0.5) > 0.6 ? 'Stable'
-        : (data.image_strength_score || 0.5) > 0.4 ? 'Moderate' : 'Volatile';
+    const stability = null;
 
     return c.json({
         code: data.code,
         name: data.name,
-        gdp_growth: gdpGrowth !== null ? `+${gdpGrowth}%` : 'N/A',
+        gdp_growth: gdpGrowth !== null ? `+${gdpGrowth}%` : null,
         stability: stability,
         gdp_usd: data.gdp_usd,
-        population: data.population
+        population: data.population,
+        methodology: 'No stability classification is inferred from media or image metrics. GDP growth is omitted until a dated official observation is available.'
     });
 });
 

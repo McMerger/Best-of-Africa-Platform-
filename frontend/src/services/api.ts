@@ -201,12 +201,15 @@ export const api = {
     getCountryOutlook: (code: string) => request<{
         country: Country;
         outlook: {
-            investment_readiness: number;
-            narrative_strength: number;
-            media_presence: number;
-            engagement_level: number;
+            investment_readiness: number | null;
+            narrative_strength: number | null;
+            media_presence: number | null;
+            engagement_level: number | null;
+            methodology: string;
         };
         sector_opportunities: { id: string; name: string; articles: number; avg_engagement: number }[];
+        sector_coverage: { id: string; name: string; articles: number; avg_engagement: number }[];
+        evidence: { published_articles: number; reviewed_strategies: number; status: string; limitations: string[] };
     }>(`/market-intel/country/${code}/outlook`),
     getCountryRelationships: (code: string) => request<{
         country_code: string;
@@ -479,7 +482,7 @@ export const api = {
     }>('/analytics/intelligence'),
 
     // Country Economics
-    getCountryEconomics: (code: string) => request<{ gdp_growth: string; stability: string }>(`/countries/${code}/economics`),
+    getCountryEconomics: (code: string) => request<{ gdp_growth: string | null; stability: string | null; methodology: string }>(`/countries/${code}/economics`),
 
     // Administrative Intelligence & Moderation
     getAdminArticles: () => request<{ data: ArticleListItem[] }>('/admin/articles'),

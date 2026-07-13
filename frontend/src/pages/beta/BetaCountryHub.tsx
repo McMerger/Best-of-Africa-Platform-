@@ -151,6 +151,7 @@ export const BetaCountryHub = () => {
   const country = countryQuery.data?.country;
   const stats = countryQuery.data?.stats;
   const outlook = outlookQuery.data?.outlook;
+  const evidence = outlookQuery.data?.evidence;
   const sectorOpportunities = outlookQuery.data?.sector_opportunities ?? [];
   const narratives = narrativeQuery.data?.narratives ?? [];
   const sectorCoverage = narrativeQuery.data?.sector_coverage ?? [];
@@ -275,34 +276,12 @@ export const BetaCountryHub = () => {
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
-            <h2 className="font-serif text-[2rem] text-foreground leading-none">{t('hub.sentiment', 'Sentiment Scores')}</h2>
+            <h2 className="font-serif text-[2rem] text-foreground leading-none">Evidence quality</h2>
           </div>
 
           {!isMember ? (
-            <div className="relative bg-card rounded-2xl border border-foreground/5 p-8 overflow-hidden">
-              {/* blurred placeholder preview */}
-              <div className="space-y-6 blur-md pointer-events-none select-none opacity-40" aria-hidden="true">
-                {[t('hub.score_investment', 'Investment Readiness'), t('hub.score_narrative', 'Narrative Strength'), t('hub.score_media', 'Media Presence'), t('hub.score_engagement', 'Engagement Level')].map((l, i) => (
-                  <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
-                ))}
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
-                <ScrollReveal className="flex flex-col items-center" intensity={0.7}>
-                <Lock size={32} className="text-accent mb-4" />
-                  <p className="font-serif text-3xl font-semibold text-foreground mb-2">{t('hub.backer_only', 'Backer-Only Data')}</p>
-                  <p className="text-lg text-foreground/50 mb-8 max-w-sm text-center">
-                    {t('hub.backer_desc', 'Full sentiment scores, perception gaps, and sector signals.')}
-                  </p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-accent text-navy font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(201,168,76,0.3)]"
-                >
-                  {t('article.become_member', 'Become a Founding Member')}
-                </a>
-                </ScrollReveal>
-              </div>
+            <div className="rounded-xl border border-border bg-background p-6 text-sm leading-relaxed text-muted-foreground">
+              Sign in to inspect source coverage, review status, methodology and known evidence limitations. BOA does not display fabricated preview scores.
             </div>
           ) : outlookQuery.isLoading ? (
             <div className="space-y-6 animate-pulse">
@@ -316,12 +295,15 @@ export const BetaCountryHub = () => {
                 </div>
               ))}
             </div>
-          ) : outlook ? (
-            <div className="space-y-6">
-              <ScoreBar label={t('hub.score_investment', 'Investment Readiness')} value={outlook.investment_readiness} delay={0} />
-              <ScoreBar label={t('hub.score_narrative', 'Narrative Strength')} value={outlook.narrative_strength} delay={0.1} />
-              <ScoreBar label={t('hub.score_media', 'Media Presence')} value={outlook.media_presence} delay={0.2} />
-              <ScoreBar label={t('hub.score_engagement', 'Engagement Level')} value={outlook.engagement_level} delay={0.3} />
+          ) : evidence && outlook ? (
+            <div>
+              <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Published evidence</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.published_articles}</p></div>
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reviewed strategies</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.reviewed_strategies}</p></div>
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Evidence status</p><p className="mt-2 font-serif text-2xl capitalize text-navy">{evidence.status}</p></div>
+              </div>
+              <p className="mt-6 text-sm leading-relaxed text-muted-foreground">{outlook.methodology}</p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">{evidence.limitations.map(item => <li key={item} className="flex gap-3"><span className="text-accent-ink">•</span>{item}</li>)}</ul>
             </div>
           ) : (
             <div className="text-center text-foreground/40 text-lg">
