@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SearchIcon, SparklesIcon, GlobeIcon, FileTextIcon, LayersIcon, ArrowRightIcon, XIcon } from 'lucide-react';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
 const FILTER_TABS = [
     { id: 'all', label: 'All Results', icon: LayersIcon },
@@ -184,9 +185,7 @@ export const BetaSearch: React.FC = () => {
                             </div>
                             <h3 className="font-serif text-[2rem] text-foreground">Analyst Synthesis</h3>
                         </div>
-                        <p className="text-foreground/80 leading-[1.8] text-[1.125rem] font-light relative z-10">
-                            {analystAnswer}
-                        </p>
+                        <MarkdownRenderer content={analystAnswer} className="relative z-10 text-foreground/80" />
                     </motion.div>
                 )}
 

@@ -2,80 +2,113 @@ import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface MarkdownRendererProps {
-    content: string;
-    className?: string;
+  content: string;
+  className?: string;
+  variant?: 'brief' | 'article';
 }
 
-export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className }) => {
-    const htmlContent = useMemo(() => {
-        if (!content) return '';
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
-        let processed = content
-            // Step 1: HTML-encode ALL raw < and > characters first.
-            // This ensures any HTML that may exist in the raw content is neutralised
-            // before our controlled replacements below re-introduce only safe, known tags.
-            // dangerouslySetInnerHTML is therefore safe here, we are the only source of HTML.
-            .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const renderInline = (value: string) => escapeHtml(value)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  .replace(/__(.+?)__/g, '<strong>$1</strong>')
+  .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>')
+  .replace(/`([^`]+)`/g, '<span class="inline-term">$1</span>');
 
-            // 2. Headers with IDs
-            .replace(/^### (.*$)/gm, (_, text) => {
-                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                return `<h3 id="${id}" class="text-xl font-bold mt-6 mb-3 text-foreground scroll-mt-24">${text}</h3>`;
-            })
-            .replace(/^## (.*$)/gm, (_, text) => {
-                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                return `<h2 id="${id}" class="text-2xl font-bold mt-8 mb-4 text-primary scroll-mt-24">${text}</h2>`;
-            })
-            .replace(/^# (.*$)/gm, (_, text) => {
-                const id = text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-                return `<h1 id="${id}" class="text-3xl font-bold mt-10 mb-6 text-foreground scroll-mt-24">${text}</h1>`;
-            })
+const splitTableRow = (line: string) => line.trim().replace(/^\|/, '').replace(/\|$/, '')
+  .split('|').map(cell => cell.trim());
 
-            // 3. Horizontal Rules
-            .replace(/^---$/gm, '<hr class="my-8 border-border"/>')
+const isTableDivider = (line: string) => {
+  const cells = splitTableRow(line);
+  return cells.length > 1 && cells.every(cell => /^:?-{3,}:?$/.test(cell));
+};
 
-            // 4. Bold (Double Asterisk)
-            .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>')
+const isBlockStart = (lines: string[], index: number) => {
+  const line = lines[index] || '';
+  return /^#{1,6}\s+/.test(line) || /^\s*[-*+]\s+/.test(line)
+    || /^\s*\d+[.)]\s+/.test(line) || /^>\s?/.test(line)
+    || /^\s*(---+|___+|\*\*\*+)\s*$/.test(line) || /^```/.test(line)
+    || (line.includes('|') && isTableDivider(lines[index + 1] || ''));
+};
 
-            // 5. Italic (Single Asterisk)
-            .replace(/\*(.*?)\*/g, '<em class="italic text-foreground">$1</em>')
+function renderStructuredContent(content: string): string {
+  const lines = content.replace(/\r\n?/g, '\n').split('\n');
+  const blocks: string[] = [];
+  let index = 0;
 
-            // 6. Lists (Unordered)
-            .replace(/^\s*-\s+(.*$)/gm, '<li class="ml-4 list-disc pl-1 mb-1">$1</li>')
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) { index += 1; continue; }
 
-            // 7. Blockquotes
-            .replace(/^>\s+(.*$)/gm, '<blockquote class="border-l-4 border-primary/50 pl-4 py-1 my-4 italic text-muted-foreground bg-muted/20">$1</blockquote>')
+    if (/^```/.test(line)) {
+      index += 1;
+      const code: string[] = [];
+      while (index < lines.length && !/^```/.test(lines[index])) code.push(lines[index++]);
+      if (index < lines.length) index += 1;
+      blocks.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
+      continue;
+    }
 
-            // 8. Links
-            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-primary hover:underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>');
+    const heading = line.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      const level = Math.min(heading[1].length + 1, 4);
+      blocks.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+      index += 1;
+      continue;
+    }
 
-        // 9. Wrap Lists in <ul> (Naive approach: adjacent <li>s need wrapping, or just let them float as items in styling)
-        // A better approach for lists without full parser:
-        // We will just let them be <li>s and the container will handle them if we can, or we replace paragraphs around them.
-        // Actually, valid HTML requires <ul>. Let's try a regex for grouping.
-        // For simplicity in this "fix", we might leave them as styled divs if <ul> wrapping is too complex for regex.
-        // Let's settle for simple paragraph handling first.
+    if (/^\s*(---+|___+|\*\*\*+)\s*$/.test(line)) {
+      blocks.push('<hr />'); index += 1; continue;
+    }
 
-        // 10. Paragraphs: Double newline to <p>
-        processed = processed.split(/\n\n+/).map(block => {
-            if (block.trim().startsWith('<h') || block.trim().startsWith('<li') || block.trim().startsWith('<blockquote') || block.trim().startsWith('<hr')) {
-                return block;
-            }
-            return `<p class="mb-4 leading-relaxed text-foreground/90">${block.replace(/\n/g, '<br/>')}</p>`;
-        }).join('\n');
+    if (line.includes('|') && isTableDivider(lines[index + 1] || '')) {
+      const headers = splitTableRow(line);
+      index += 2;
+      const rows: string[][] = [];
+      while (index < lines.length && lines[index].includes('|') && lines[index].trim()) {
+        rows.push(splitTableRow(lines[index++]));
+      }
+      const head = headers.map(cell => `<th scope="col">${renderInline(cell)}</th>`).join('');
+      const body = rows.map(row => `<tr>${headers.map((_, cellIndex) => `<td>${renderInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('');
+      blocks.push(`<div class="structured-table" role="region" aria-label="Data table" tabindex="0"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`);
+      continue;
+    }
 
-        // Wrap consecutive <li> elements in a single <ul>.
-        // The regex matches one or more adjacent <li>...</li> blocks (including newlines) and
-        // wraps the entire run, avoids creating multiple nested or sibling <ul> tags.
-        processed = processed.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\s*)+)/g, '<ul class="my-4 space-y-2 list-none pl-4">$1</ul>');
+    const listMatch = line.match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
+    if (listMatch) {
+      const ordered = /^\d/.test(listMatch[1]);
+      const items: string[] = [];
+      const pattern = ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/;
+      while (index < lines.length) {
+        const match = lines[index].match(pattern);
+        if (!match) break;
+        items.push(match[1]); index += 1;
+      }
+      const tag = ordered ? 'ol' : 'ul';
+      blocks.push(`<${tag}>${items.map(item => `<li>${renderInline(item)}</li>`).join('')}</${tag}>`);
+      continue;
+    }
 
-        return processed;
-    }, [content]);
+    if (/^>\s?/.test(line)) {
+      const quote: string[] = [];
+      while (index < lines.length && /^>\s?/.test(lines[index])) quote.push(lines[index++].replace(/^>\s?/, ''));
+      blocks.push(`<blockquote>${renderInline(quote.join(' '))}</blockquote>`);
+      continue;
+    }
 
-    return (
-        <div
-            className={cn("markdown-content", className)}
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
-    );
+    const paragraph: string[] = [line.trim()]; index += 1;
+    while (index < lines.length && lines[index].trim() && !isBlockStart(lines, index)) {
+      paragraph.push(lines[index++].trim());
+    }
+    blocks.push(`<p>${renderInline(paragraph.join(' '))}</p>`);
+  }
+  return blocks.join('');
+}
+
+export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className, variant = 'brief' }) => {
+  const htmlContent = useMemo(() => renderStructuredContent(content || ''), [content]);
+  return <div className={cn('structured-content', `structured-content--${variant}`, className)} dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 };

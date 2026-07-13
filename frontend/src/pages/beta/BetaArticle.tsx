@@ -13,6 +13,7 @@ import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { heroThumb, stripMarkdown } from '@/lib/utils';
+import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import type { Article, ArticleListItem, Country } from '../../types';
 
@@ -175,7 +176,7 @@ const ArticleSkeleton = () => (
 // were the article page's heaviest bundle and tanked LCP). Raw < > are encoded
 // first, so only the known tags we inject below are emitted (XSS-safe for our
 // AI-generated content).
-function renderArticleHtml(md: string): string {
+export function renderArticleHtml(md: string): string {
   if (!md) return '';
   let s = md.replace(/</g, '&lt;').replace(/>/g, '&gt;');
   s = s.replace(/^#{4,6}\s+(.*)$/gm, '<h4 class="font-serif text-[1.375rem] md:text-[1.625rem] text-foreground mt-10 mb-4 leading-snug">$1</h4>');
@@ -205,9 +206,7 @@ function renderArticleHtml(md: string): string {
 }
 
 function ArticleMarkdown({ content }: { content: string }) {
-  // .article-body drives the editorial typography extras (drop cap on the
-  // opening paragraph, ornamented rules) defined in index.css.
-  return <div className="article-body" dangerouslySetInnerHTML={{ __html: renderArticleHtml(content) }} />;
+  return <MarkdownRenderer content={content} variant="article" className="article-body" />;
 }
 
 export const BetaArticle = () => {

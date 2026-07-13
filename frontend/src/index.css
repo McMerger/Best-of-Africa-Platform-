@@ -375,6 +375,119 @@ body {
     margin-left: 0.6em; /* optically recenter (tracking adds trailing space) */
   }
 
+  /* User-facing generated content is presented as native editorial UI. The
+     source may contain lightweight authoring notation, but syntax characters
+     and pipe-delimited tables must never reach the interface. */
+  .structured-content {
+    color: hsl(var(--foreground) / 0.86);
+  }
+
+  .structured-content > :first-child { margin-top: 0; }
+  .structured-content > :last-child { margin-bottom: 0; }
+
+  .structured-content h2,
+  .structured-content h3,
+  .structured-content h4 {
+    margin-top: 2.25rem;
+    margin-bottom: 0.8rem;
+    color: hsl(var(--primary));
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+  }
+
+  .structured-content h2 { font-size: clamp(1.65rem, 3vw, 2.25rem); }
+  .structured-content h3 { font-size: clamp(1.35rem, 2.3vw, 1.75rem); }
+  .structured-content h4 { font-size: 1.2rem; }
+
+  .structured-content p {
+    margin-bottom: 1.15rem;
+    line-height: 1.75;
+  }
+
+  .structured-content strong { color: hsl(var(--primary)); font-weight: 700; }
+  .structured-content em { font-style: italic; }
+  .structured-content a { color: hsl(var(--accent-ink)); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+
+  .structured-content ul,
+  .structured-content ol {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1.25rem 0 1.5rem;
+    padding-inline-start: 1.35rem;
+  }
+
+  .structured-content ul { list-style: disc; }
+  .structured-content ol { list-style: decimal; }
+  .structured-content li { padding-inline-start: 0.35rem; line-height: 1.65; }
+  .structured-content li::marker { color: hsl(var(--accent-ink)); font-weight: 700; }
+
+  .structured-content blockquote {
+    margin: 2rem 0;
+    border-inline-start: 3px solid hsl(var(--accent));
+    background: hsl(var(--secondary) / 0.72);
+    padding: 1.25rem 1.5rem;
+    color: hsl(var(--primary));
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
+
+  .structured-content hr { margin: 2.5rem 0; border: 0; border-top: 1px solid hsl(var(--border)); }
+  .structured-content .inline-term { border-radius: 0.3rem; background: hsl(var(--secondary)); padding: 0.12rem 0.35rem; font-size: 0.92em; }
+
+  .structured-content pre {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.65rem;
+    background: hsl(var(--navy));
+    padding: 1.25rem;
+    color: white;
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+
+  .structured-table {
+    margin: 1.75rem 0 2rem;
+    overflow-x: auto;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    background: hsl(var(--card));
+    box-shadow: 0 16px 45px -40px rgba(15, 31, 61, 0.55);
+  }
+
+  .structured-table table { width: 100%; min-width: 38rem; border-collapse: collapse; text-align: start; }
+  .structured-table th {
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--navy));
+    padding: 0.85rem 1rem;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-align: start;
+    text-transform: uppercase;
+  }
+  .structured-table td { border-bottom: 1px solid hsl(var(--border)); padding: 0.9rem 1rem; vertical-align: top; line-height: 1.5; }
+  .structured-table tbody tr:last-child td { border-bottom: 0; }
+  .structured-table tbody tr:nth-child(even) { background: hsl(var(--secondary) / 0.45); }
+
+  .structured-content--article p,
+  .structured-content--article li { font-size: clamp(1.08rem, 1.8vw, 1.25rem); line-height: 1.82; }
+  .structured-content--article h2 { margin-top: 4rem; font-size: clamp(2rem, 5vw, 3.35rem); }
+  .structured-content--article h3 { margin-top: 3rem; font-size: clamp(1.65rem, 3.5vw, 2.2rem); }
+  .structured-content--article blockquote { margin: 2.5rem 0; font-size: clamp(1.25rem, 2.5vw, 1.55rem); }
+
+  .structured-content-compact p { margin-bottom: 0.65rem; line-height: 1.6; }
+  .structured-content-compact h2,
+  .structured-content-compact h3,
+  .structured-content-compact h4 { margin-top: 1rem; font-size: 1rem; }
+  .structured-content-compact ul,
+  .structured-content-compact ol { margin: 0.65rem 0; gap: 0.35rem; }
+  .structured-content-compact .structured-table { margin: 0.85rem 0; font-size: 0.75rem; }
+
   /* Force High Contrast Prose for Reading */
   .prose p {
     @apply text-foreground font-medium text-base leading-relaxed;

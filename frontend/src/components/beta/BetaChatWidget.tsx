@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { MarkdownRenderer } from '../MarkdownRenderer';
 
 type Message = {
   id: string;
@@ -61,7 +62,7 @@ export const BetaChatWidget = () => {
       };
       
       setMessages(prev => [...prev, analystMessage]);
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'analyst',
@@ -129,7 +130,9 @@ export const BetaChatWidget = () => {
                         : 'bg-background border border-primary/10 text-primary rounded-bl-sm shadow-sm'
                   }`}>
                     {msg.isError && <AlertCircle size={14} className="inline mr-1.5 mb-0.5" />}
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    {msg.role === 'user' || msg.isError
+                      ? <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                      : <MarkdownRenderer content={msg.content} className="structured-content-compact text-sm" />}
                     
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-primary/10">
