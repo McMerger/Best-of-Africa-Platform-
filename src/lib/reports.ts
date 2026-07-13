@@ -78,7 +78,7 @@ export async function generateCountryBrief(
 User: Write a 3-4 paragraph executive summary for ${c.name} based on recent coverage:
 
 ${articleContext}`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
+        aiSummary = (await callConfiguredAI(env, { prompt: `${prompt}\n\nUse only this evidence. Include chronology, exact named actors and figures, implications, counter-evidence, limitations, and source titles. Do not invent missing facts.`, max_tokens: 3500, temperature: 0.2 })) || '';
     } catch (e) {
         console.error('AI summary failed:', e);
     }
@@ -174,7 +174,7 @@ export async function generateSectorAnalysis(
 
 User: Write a sector analysis for "${s.name}" across Africa based on:
 ${context}`;
-        aiAnalysis = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
+        aiAnalysis = (await callConfiguredAI(env, { prompt: `${prompt}\n\nProduce a detailed evidence record: market context, dated developments, actors, regulatory implications, operational constraints, counter-evidence, limitations, and further diligence. Do not estimate absent figures.`, max_tokens: 3500, temperature: 0.2 })) || '';
     } catch (e) {
         console.error('AI analysis failed:', e);
     }

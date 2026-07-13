@@ -140,8 +140,8 @@ router.get('/', async (c) => {
             if (searchResults.length > 0) {
                 const context = searchResults.slice(0, 3).map(r => `Title: ${r.article.title}\nSummary: ${r.article.summary}`).join('\n---\n');
                 try {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Query: ${q}\n\nContext:\n${context}`;
-                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                    const prompt = `System: Produce a detailed evidence-grounded research answer using only the supplied records. Cite titles inline, separate facts from implications, identify contradictions and missing evidence, and never pad thin context with general knowledge.\nUser: Query: ${q}\n\nContext:\n${context}`;
+                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 2400, temperature: 0.2 });
                     aiAnswer = ansRes?.trim();
                 } catch (e) { /* Ignore */ }
             }
@@ -264,7 +264,7 @@ router.get('/', async (c) => {
                         }).join('\n\n');
 
                         const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2400, temperature: 0.2 });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('AI summary generation failed:', aiError);
@@ -451,7 +451,7 @@ router.get('/semantic', async (c) => {
                         }).join('\n\n');
 
                         const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: User Query: "${q}"\n\nRelevant Intelligence Briefs:\n${contextChunks}\n\nProvide a synthesis:`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.5 });
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2800, temperature: 0.2 });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('RAG summary generation failed:', aiError);

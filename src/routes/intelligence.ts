@@ -440,7 +440,7 @@ Aim for 700-1,100 words when evidence is sufficiently rich. If the retrieved rec
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2 });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3000, temperature: 0.2 });
 
     return c.json({
       response: llmResponse,

@@ -330,7 +330,7 @@ Be concise and high-level.
 
 Context:
 ${context}`;
-            const text = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.3 });
+            const text = await callConfiguredAI(env, { prompt: `${prompt}\n\nWrite a detailed evidence brief covering chronology, named actors, cross-country differences, implications, counter-signals, limitations, and next verification steps. Do not create scores or forecasts.`, max_tokens: 2800, temperature: 0.2 });
             executiveBrief = text || executiveBrief;
         }
     } catch (e) { /* Fallback */ }

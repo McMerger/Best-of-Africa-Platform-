@@ -110,7 +110,7 @@ router.get('/country/:code', async (c) => {
 
             try {
                 const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.7 });
+                const aiResponse = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProvide a detailed synthesis with dated evidence, competing narratives, source limitations, affected stakeholders, and what requires verification. Do not infer unsupported sentiment or impact.`, max_tokens: 2600, temperature: 0.2 });
                 return aiResponse?.trim() || "Narrative synthesis unavailable.";
             } catch (e) {
                 return "Narrative synthesis unavailable.";

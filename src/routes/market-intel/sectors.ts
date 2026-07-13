@@ -100,7 +100,7 @@ router.get('/sector/:id', async (c) => {
         const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
         try {
             const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Sector: ${sector.name}\nHeadlines: ${headlines}`;
-            const response = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+            const response = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nSynthesize only supported evidence in depth: dated developments, companies and institutions named, regulatory context, operational implications, counter-evidence, limitations, and diligence questions.`, max_tokens: 2600, temperature: 0.2 });
             aiOutlook = response?.trim() || aiOutlook;
         } catch (e) { /* Ignore */ }
     }
@@ -125,7 +125,7 @@ router.get('/sector/:id', async (c) => {
                     if (!context) return "Sector data currently being aggregated.";
 
                     const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                    const aiResponse = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProvide a detailed evidence synthesis with chronology, actors, implications, contradictions, limitations and source gaps.`, max_tokens: 2600, temperature: 0.2 });
                     return aiResponse?.trim();
                 } catch (e) { return null; }
             },
