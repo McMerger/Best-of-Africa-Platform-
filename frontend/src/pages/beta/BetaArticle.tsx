@@ -466,13 +466,13 @@ export const BetaArticle = () => {
               {[categoryLabel, countryLabel].filter(Boolean).join(' • ')}
             </span>
           )}
-          <h1 className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.04] tracking-tight mb-6 max-w-4xl">
+          <h1 data-source-language={article.title_language} className="font-serif text-[clamp(2.5rem,5vw,4rem)] leading-[1.04] tracking-tight mb-6 max-w-4xl">
             {stripMarkdown(article.title)}
           </h1>
 
           {/* Lede / standfirst, rendered from article.summary */}
           {article.summary && (
-            <p className="text-lg md:text-xl leading-relaxed text-foreground/70 mb-8 max-w-3xl">
+            <p data-source-language={article.title_language} className="text-lg md:text-xl leading-relaxed text-foreground/70 mb-8 max-w-3xl">
               {stripMarkdown(article.summary)}
             </p>
           )}
@@ -546,7 +546,7 @@ export const BetaArticle = () => {
           )}
 
           {/* Article content */}
-          <div dir={contentDir} className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
+          <div data-source-language={lens === 'original' ? article.content_language : 'en'} dir={contentDir} className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
             <ArticleMarkdown content={activeContent} />
             {/* End mark — the classic editorial "story ends here" slug. */}
             {!isPaywalled && (

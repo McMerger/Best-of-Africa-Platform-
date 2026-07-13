@@ -41,7 +41,7 @@ const isBlockStart = (lines: string[], index: number) => {
     || startsLooseTable(lines, index);
 };
 
-function renderStructuredContent(content: string): string {
+export function renderStructuredContent(content: string): string {
   const lines = stripProcessLeakage(content).replace(/\r\n?/g, '\n').split('\n');
   const blocks: string[] = [];
   let index = 0;
@@ -89,15 +89,29 @@ function renderStructuredContent(content: string): string {
     const listMatch = line.match(/^\s*([-*+]|\d+[.)])\s+(.+)$/);
     if (listMatch) {
       const ordered = /^\d/.test(listMatch[1]);
-      const items: string[] = [];
-      const pattern = ordered ? /^\s*\d+[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/;
+      const items: Array<{ content: string; value?: number }> = [];
+      const pattern = ordered ? /^\s*(\d+)[.)]\s+(.+)$/ : /^\s*[-*+]\s+(.+)$/;
       while (index < lines.length) {
         const match = lines[index].match(pattern);
         if (!match) break;
-        items.push(match[1]); index += 1;
+        items.push(ordered
+          ? { value: Number(match[1]), content: match[2] }
+          : { content: match[1] });
+        index += 1;
+
+        // Blank lines between numbered entries are valid loose-list spacing.
+        // Keep the run intact so the browser does not restart every item at 1.
+        let next = index;
+        while (next < lines.length && !lines[next].trim()) next += 1;
+        if (next > index && next < lines.length && pattern.test(lines[next])) index = next;
       }
       const tag = ordered ? 'ol' : 'ul';
-      blocks.push(`<${tag}>${items.map(item => `<li>${renderInline(item)}</li>`).join('')}</${tag}>`);
+      const start = ordered && items[0]?.value && items[0].value !== 1 ? ` start="${items[0].value}"` : '';
+      const rendered = items.map(item => {
+        const value = ordered && item.value ? ` value="${item.value}"` : '';
+        return `<li${value}>${renderInline(item.content)}</li>`;
+      }).join('');
+      blocks.push(`<${tag}${start}>${rendered}</${tag}>`);
       continue;
     }
 

@@ -1,19 +1,21 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // TRANSLATION SERVICE
-// Multi-language content support for Francophone, Arabic, and Lusophone Africa
-// Uses Workers m2m100 model for translation
+// Multi-language content support for every language exposed by the reader UI.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
 
 // Supported target languages for African audiences
-export type SupportedLanguage = 'en' | 'fr' | 'ar' | 'pt';
+export type SupportedLanguage = 'en' | 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh';
 
 export const LANGUAGE_CONFIG: Record<SupportedLanguage, { name: string; regions: string[] }> = {
     en: { name: 'English', regions: ['Southern', 'East', 'West'] },
     fr: { name: 'French', regions: ['West', 'Central', 'North'] },
     ar: { name: 'Arabic', regions: ['North'] },
     pt: { name: 'Portuguese', regions: ['Southern'] },
+    de: { name: 'German', regions: [] },
+    hi: { name: 'Hindi', regions: [] },
+    zh: { name: 'Simplified Chinese', regions: [] },
 };
 
 // Countries by primary language
@@ -22,6 +24,9 @@ export const LANGUAGE_COUNTRIES: Record<SupportedLanguage, string[]> = {
     fr: ['SN', 'CI', 'CM', 'CD', 'CG', 'GA', 'BF', 'ML', 'NE', 'TG', 'BJ', 'GN', 'MR', 'DZ', 'TN', 'MA'],
     ar: ['EG', 'MA', 'DZ', 'TN', 'LY', 'SD'],
     pt: ['AO', 'MZ', 'CV', 'GW', 'ST'],
+    de: [],
+    hi: [],
+    zh: [],
 };
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -165,7 +170,10 @@ export async function getTranslation(
 // serving English rather than store garbage.
 // ───────────────────────────────────────────────────────────────────────────────
 
-const LANG_NAMES: Record<string, string> = { fr: 'French', ar: 'Modern Standard Arabic', pt: 'Portuguese' };
+const LANG_NAMES: Record<string, string> = {
+    fr: 'French', ar: 'Modern Standard Arabic', pt: 'Portuguese',
+    de: 'German', hi: 'Hindi', zh: 'Simplified Chinese',
+};
 
 /** Max recurrence of any 24-char window (sampled every 12 chars). */
 function maxWindowRepeat(text: string): number {

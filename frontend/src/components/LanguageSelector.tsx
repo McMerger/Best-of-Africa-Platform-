@@ -30,7 +30,7 @@ export function LanguageSelector() {
             onSelect={() => setLanguage(item.code)}
             className="flex cursor-pointer items-center justify-between gap-4"
           >
-            <span>{item.name}</span>
+            <span data-no-translate>{item.name}</span>
             {item.code === language && <CheckIcon className="h-4 w-4 text-accent-ink" />}
           </DropdownMenuItem>
         ))}

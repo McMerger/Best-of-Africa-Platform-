@@ -2,12 +2,16 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { request } from '../services/api';
+import { TRANSLATIONS } from '../i18n/dict';
 
 type TranslationResponse = { translations: string[] };
 const originalText = new WeakMap<Text, string>();
 const originalAttributes = new WeakMap<Element, Map<string, string>>();
 const cache = new Map<string, string>();
 const SKIP = 'script,style,code,pre,textarea,[contenteditable="true"],[data-no-translate]';
+const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'alt'];
+const MAX_BATCH_ITEMS = 24;
+const MAX_BATCH_CHARS = 12000;
 
 export function InterfaceTranslator() {
   const { language } = useLanguage();
@@ -17,6 +21,12 @@ export function InterfaceTranslator() {
     let cancelled = false;
     let timer = 0;
 
+    // Resolve maintained interface strings locally; only dynamic copy needs AI.
+    for (const [key, english] of Object.entries(TRANSLATIONS.en || {})) {
+      const translated = TRANSLATIONS[language]?.[key];
+      if (translated) cache.set(`${language}:${english}`, translated);
+    }
+
     const restore = () => {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       let node: Node | null;
@@ -25,7 +35,7 @@ export function InterfaceTranslator() {
         const original = originalText.get(text);
         if (original !== undefined) text.data = original;
       }
-      document.querySelectorAll('[placeholder],[aria-label],[title]').forEach(element => {
+      document.querySelectorAll('[placeholder],[aria-label],[title],[alt]').forEach(element => {
         const originals = originalAttributes.get(element);
         originals?.forEach((value, name) => element.setAttribute(name, value));
       });
@@ -37,7 +47,8 @@ export function InterfaceTranslator() {
         acceptNode(node) {
           const parent = node.parentElement;
           const value = node.textContent?.trim() || '';
-          if (!parent || parent.closest(SKIP) || !value || !/[A-Za-z]/.test(value)) return NodeFilter.FILTER_REJECT;
+          const sourceLanguage = parent?.closest<HTMLElement>('[data-source-language]')?.dataset.sourceLanguage;
+          if (!parent || parent.closest(SKIP) || sourceLanguage === language || !value || !/[A-Za-z]/.test(value)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         },
       });
@@ -48,11 +59,13 @@ export function InterfaceTranslator() {
         const value = originalText.get(text)!;
         items.push({ value: value.trim(), apply: translated => { text.data = value.replace(value.trim(), translated); } });
       }
-      document.querySelectorAll('[placeholder],[aria-label],[title]').forEach(element => {
+      document.querySelectorAll('[placeholder],[aria-label],[title],[alt]').forEach(element => {
         if (element.closest(SKIP)) return;
+        const sourceLanguage = element.closest<HTMLElement>('[data-source-language]')?.dataset.sourceLanguage;
+        if (sourceLanguage === language) return;
         let originals = originalAttributes.get(element);
         if (!originals) { originals = new Map(); originalAttributes.set(element, originals); }
-        for (const name of ['placeholder', 'aria-label', 'title']) {
+        for (const name of TRANSLATABLE_ATTRIBUTES) {
           const current = element.getAttribute(name);
           if (!current || !/[A-Za-z]/.test(current)) continue;
           if (!originals.has(name)) originals.set(name, current);
@@ -63,13 +76,28 @@ export function InterfaceTranslator() {
       return items;
     };
 
+    const batchesFor = (values: string[]) => {
+      const batches: string[][] = [];
+      let batch: string[] = [];
+      let characters = 0;
+      for (const value of values) {
+        if (batch.length && (batch.length >= MAX_BATCH_ITEMS || characters + value.length > MAX_BATCH_CHARS)) {
+          batches.push(batch); batch = []; characters = 0;
+        }
+        batch.push(value); characters += value.length;
+      }
+      if (batch.length) batches.push(batch);
+      return batches;
+    };
+
     const translate = async () => {
       if (cancelled) return;
-      if (language === 'en') { restore(); return; }
+      if (language === 'en') { restore(); document.documentElement.dataset.translationState = 'source'; return; }
+      document.documentElement.dataset.translationState = 'translating';
       const items = collect();
       const unique = [...new Set(items.map(item => item.value))];
-      for (let offset = 0; offset < unique.length && !cancelled; offset += 60) {
-        const batch = unique.slice(offset, offset + 60);
+      for (const batch of batchesFor(unique)) {
+        if (cancelled) break;
         const missing = batch.filter(text => !cache.has(`${language}:${text}`));
         if (missing.length) {
           try {
@@ -77,19 +105,57 @@ export function InterfaceTranslator() {
               method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' },
               body: JSON.stringify({ language, texts: missing }),
             });
-            missing.forEach((text, index) => cache.set(`${language}:${text}`, result.translations[index] || text));
+            missing.forEach((text, index) => {
+              const translated = result.translations[index];
+              if (translated) cache.set(`${language}:${text}`, translated);
+            });
           } catch { /* Keep the original text when translation is temporarily unavailable. */ }
         }
         if (!cancelled) items.filter(item => batch.includes(item.value)).forEach(item => item.apply(cache.get(`${language}:${item.value}`) || item.value));
       }
+      if (!cancelled) document.documentElement.dataset.translationState = 'translated';
     };
 
     const schedule = () => { window.clearTimeout(timer); timer = window.setTimeout(translate, 120); };
     restore();
     schedule();
-    const observer = new MutationObserver(schedule);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => { cancelled = true; window.clearTimeout(timer); observer.disconnect(); restore(); };
+    const observer = new MutationObserver(mutations => {
+      let needsTranslation = false;
+      for (const mutation of mutations) {
+        if (mutation.type === 'childList') { needsTranslation = true; continue; }
+        if (mutation.type === 'characterData') {
+          const text = mutation.target as Text;
+          const current = text.data;
+          const original = originalText.get(text);
+          const expected = original ? cache.get(`${language}:${original.trim()}`) : undefined;
+          if (!expected || current.trim() !== expected) {
+            originalText.set(text, current);
+            needsTranslation = true;
+          }
+          continue;
+        }
+        if (mutation.type === 'attributes') {
+          const element = mutation.target as Element;
+          const name = mutation.attributeName;
+          if (!name) continue;
+          const current = element.getAttribute(name) || '';
+          let originals = originalAttributes.get(element);
+          if (!originals) { originals = new Map(); originalAttributes.set(element, originals); }
+          const original = originals.get(name);
+          const expected = original ? cache.get(`${language}:${original}`) : undefined;
+          if (!expected || current !== expected) {
+            originals.set(name, current);
+            needsTranslation = true;
+          }
+        }
+      }
+      if (needsTranslation) schedule();
+    });
+    observer.observe(document.body, { childList: true, characterData: true, attributes: true, attributeFilter: TRANSLATABLE_ATTRIBUTES, subtree: true });
+    return () => {
+      cancelled = true; window.clearTimeout(timer); observer.disconnect(); restore();
+      delete document.documentElement.dataset.translationState;
+    };
   }, [language, location.pathname]);
 
   return null;

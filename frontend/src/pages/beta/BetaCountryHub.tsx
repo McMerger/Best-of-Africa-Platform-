@@ -325,7 +325,7 @@ export const BetaCountryHub = () => {
                   {evidence.source_records.length > 0 && (
                     <details className="mt-8 rounded-xl border border-border bg-background p-5">
                       <summary className="cursor-pointer text-sm font-semibold text-navy">Inspect source window</summary>
-                      <ol className="mt-4 space-y-3 text-sm text-muted-foreground">
+                      <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm text-muted-foreground marker:font-bold marker:text-accent-ink">
                         {evidence.source_records.map(source => (
                           <li key={`${source.record}-${source.title}`} className="flex gap-3">
                             <span className="font-semibold text-accent-ink">[{source.record}]</span>

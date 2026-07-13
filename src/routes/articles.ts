@@ -427,7 +427,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     const a = article as unknown as Record<string, unknown>;
     a.author_name = a.curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
 
-    // Serve stored translations when the reader's UI language is fr/ar/pt and
+    // Serve a quality-approved stored translation for every reader language
     // one exists (the pipeline auto-translates by country). ONLY the short
     // fields (title/subtitle/summary) are overlaid: m2m100 translates those
     // acceptably, but its BODY translations are truncated stumps and
@@ -438,9 +438,9 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     const reqLang = (c.req.query('lang') || 'en').toLowerCase();
     a.title_language = 'en';
     a.content_language = 'en';
-    if (reqLang === 'fr' || reqLang === 'ar' || reqLang === 'pt') {
+    if (['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(reqLang)) {
         const { getTranslation } = await import('../lib/translate');
-        const tr = await getTranslation(c.env, article.id, reqLang as 'fr' | 'ar' | 'pt');
+        const tr = await getTranslation(c.env, article.id, reqLang as 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh');
         // Shorts serve at any quality (even -1 rows keep usable m2m100 shorts —
         // -1 only means the BODY regeneration failed its gate).
         if (tr) {

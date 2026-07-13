@@ -352,9 +352,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // legacy inline dict (current lang) → shared chrome dict (English) → fallback → key.
     const t = (key: string, fallback?: string) => {
         return (
-            TRANSLATIONS[language]?.[key] ??
-            translations[language]?.[key] ??
             TRANSLATIONS.en?.[key] ??
+            translations.en?.[key] ??
             fallback ??
             key
         );
