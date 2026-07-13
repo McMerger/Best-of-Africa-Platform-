@@ -82,7 +82,7 @@ export const BetaCountryTeaser = () => {
   const [search, setSearch] = useState('');
   const { t } = useLanguage();
 
-  const { data, isLoading } = useQuery<CountriesApiResponse>({
+  const { data, isLoading, isError } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
     queryFn: api.getCountries,
     staleTime: 24 * 60 * 60 * 1000 });
@@ -170,12 +170,12 @@ export const BetaCountryTeaser = () => {
 
         {/* Regional Tabs */}
         {!search && (
-          <div className="flex overflow-x-auto gap-2 mb-10 pb-1 justify-start sm:justify-center flex-nowrap scrollbar-hide">
+          <div className="grid grid-cols-2 gap-2 mb-10 sm:flex sm:flex-wrap sm:justify-center">
             {REGIONS.map(region => (
               <button
                 key={region}
                 onClick={() => setActiveRegion(region)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`min-h-11 px-3 py-2 rounded-lg sm:rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
                     ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
                     : 'bg-background/5 text-primary/70 hover:bg-foreground/10 hover:text-primary border border-primary/8'
@@ -205,6 +205,17 @@ export const BetaCountryTeaser = () => {
           <AnimatePresence mode="popLayout">
             {isLoading
               ? Array.from({ length: 54 }).map((_, i) => <CountryCardSkeleton key={i} />)
+              : isError
+                ? (
+                  <div className="col-span-full rounded-xl border border-border bg-card px-5 py-10 text-center">
+                    <p className="font-serif text-2xl text-navy">Continue through the continental index</p>
+                    <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">The directory request did not complete. The continental evidence dashboard and source-linked search remain open.</p>
+                    <div className="mt-6 grid gap-3 min-[420px]:grid-cols-2">
+                      <Link to="/dashboards/overview" className="rounded-md bg-navy px-4 py-3 text-sm font-semibold text-white">Continental dashboard</Link>
+                      <Link to="/search" className="rounded-md border border-border px-4 py-3 text-sm font-semibold text-navy">Search evidence</Link>
+                    </div>
+                  </div>
+                )
               : filtered.length > 0
                 ? filtered.map(country => (
                     <CountryCard
@@ -219,7 +230,7 @@ export const BetaCountryTeaser = () => {
                     className="col-span-full text-center py-20 text-primary/40"
                   >
                     <Globe size={40} className="mx-auto mb-4 opacity-30" />
-                    <p className="text-lg">{t('countries.none_found', 'No countries found for')} "{search}"</p>
+                    <p className="text-lg">{search ? `${t('countries.none_found', 'No countries found for')} “${search}”` : 'No country records matched the selected region.'}</p>
                   </motion.div>
                 )
             }

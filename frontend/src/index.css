@@ -313,8 +313,35 @@ body {
   @media (max-width: 639px) {
     .page-stack { gap: var(--page-section-gap); }
     .section-rule { padding-top: 2.75rem; }
-    .dashboard-rail nav { padding-block: 0.55rem; }
-    .dashboard-rail a { min-height: 2.75rem; display: inline-flex; align-items: center; }
+    .mobile-scroll-strip {
+      flex-wrap: wrap;
+      margin-inline: 0 !important;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    .mobile-scroll-strip > * { flex: 0 1 auto; }
+    .dashboard-rail {
+      position: relative;
+      top: auto;
+      margin-inline: 0;
+      padding: 0;
+      background: transparent;
+      backdrop-filter: none;
+    }
+    .dashboard-rail nav {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      overflow: visible;
+      padding: 0.55rem;
+    }
+    .dashboard-rail a {
+      min-height: 2.75rem;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      white-space: normal;
+    }
+    .dashboard-rail a:last-child { grid-column: 1 / -1; }
   }
 
   .fade-in-up {

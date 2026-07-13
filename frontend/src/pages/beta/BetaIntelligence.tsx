@@ -210,7 +210,7 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
           </div>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-8">
+          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-8">
             {isLoading || !pulse ? (
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
             ) : (
@@ -220,7 +220,7 @@ export const BetaIntelligence = () => {
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
                   { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector.name, sub: `${pulse.top_sector.stories.toLocaleString()} stories this week`, small: true },
                 ].map(({ Icon, label, value, sub, small }) => (
-                  <motion.div key={label} initial={false} className={`group relative overflow-hidden rounded-xl border border-foreground/10 bg-card p-5 md:p-6 ${small ? 'col-span-2 md:col-span-1' : ''}`}>
+                  <motion.div key={label} initial={false} className={`group relative overflow-hidden rounded-xl border border-foreground/10 bg-card p-5 md:p-6 ${small ? 'min-[480px]:col-span-2 md:col-span-1' : ''}`}>
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-center gap-3 mb-6 text-foreground/70">
                       <Icon size={20} />

@@ -155,7 +155,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
 
         {/* Top KPI Cards */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5">
+        <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-5">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
@@ -166,7 +166,7 @@ export const BetaContinentalOverview: React.FC = () => {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-              className={`group relative overflow-hidden bg-card rounded-xl p-4 md:p-7 border border-foreground/10 flex flex-col min-[460px]:flex-row items-start min-[460px]:items-center gap-3 md:gap-6 hover:border-accent/40 transition-colors ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}
+              className={`group relative overflow-hidden bg-card rounded-xl p-5 md:p-7 border border-foreground/10 flex flex-row items-center gap-4 md:gap-6 hover:border-accent/40 transition-colors ${i === 2 ? 'min-[480px]:col-span-2 md:col-span-1' : ''}`}
             >
               <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />

@@ -101,7 +101,7 @@ export const BetaSearch: React.FC = () => {
                                     value={inputValue}
                                     onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true); }}
                                     onFocus={() => setShowSuggestions(true)}
-                                    placeholder="Search Africa intelligence, countries, sectors..."
+                                    placeholder="Search countries, sectors or companies"
                                     className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-foreground/40 text-base md:text-lg outline-none"
                                     autoComplete="off"
                                 />
