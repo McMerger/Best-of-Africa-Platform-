@@ -819,7 +819,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v6',
+        'strategic-opportunities:depth-v7',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
@@ -859,7 +859,9 @@ router.get('/opportunities', async (c) => {
                 let generatedSummary = sourceRecords.slice(0, 6).map((article: any, index: number) =>
                     `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}. ${article.summary || 'The record does not include a usable summary.'}`
                 ).join('\n\n') || 'No source-linked records are available for a substantive brief.';
-                let whyItMatters = `This is a reporting-led watchlist, not an investment recommendation. BOA-Story recorded ${Number(o.article_count || 0)} published items at this country-sector intersection during the measured window. The records identify developments requiring primary-source verification, but coverage volume, recency and audience activity cannot establish market size, profitability, policy durability, investability or future returns. Readers should use the dated findings below to locate the responsible institutions, operating entities and original documents before drawing a decision.`;
+                let whyItMatters = `This is a reporting-led watchlist, not an investment recommendation. BOA-Story recorded ${Number(o.article_count || 0)} published items at this country-sector intersection during the measured window. The records identify developments requiring primary-source verification, but coverage volume, recency and audience activity cannot establish market size, profitability, policy durability, investability or future returns. Readers should use the dated findings below to locate the responsible institutions, operating entities and original documents before drawing a decision.
+
+The decision value lies in the record trail, not the ranking. A reader can compare announcement dates with later implementation evidence, identify which institution owns each obligation, distinguish a financing commitment from a disbursement, and test whether reported activity has reached affected businesses, workers or communities. The current window can reveal where scrutiny should begin, but it cannot show the full operating history or the developments that attracted little coverage. Before treating any pattern as durable, verify the legal instrument, funding source, delivery timetable, counterparties, audited performance and current regulatory position. Compare those primary materials with contrary records, delayed milestones and independent reporting. If the evidence remains announcement-led, the responsible conclusion is that the intersection requires further reporting rather than that it represents a validated opportunity.`;
                 let evidencePoints: string[] = sourceRecords.slice(0, 8).map((article: any, index: number) =>
                     `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}; source: ${article.source_title || article.source_url || 'not supplied'}.`
                 );
