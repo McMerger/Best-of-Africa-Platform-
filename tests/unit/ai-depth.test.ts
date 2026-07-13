@@ -18,6 +18,8 @@ describe('AI response depth contract', () => {
         expect(extractAIText({ choices: [{ message: { content: 'chat completion' } }] })).toBe('chat completion');
         expect(extractAIText({ output_text: 'responses api' })).toBe('responses api');
         expect(extractAIText({ output: [{ content: [{ type: 'output_text', text: 'nested response' }] }] })).toBe('nested response');
+        expect(extractAIText({ choices: [{ message: { content: 'private planning\nassistantfinal## Published answer' } }] })).toBe('## Published answer');
+        expect(extractAIText('hidden reasoning<|channel|>final<|message|>Visible answer')).toBe('Visible answer');
     });
 
     it('runs one evidence-preserving expansion pass for a minimal first draft', async () => {

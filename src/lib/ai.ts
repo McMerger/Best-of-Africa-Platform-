@@ -82,18 +82,27 @@ export function countResponseWords(text: string): number {
 }
 
 export function extractAIText(response: unknown): string {
-    if (typeof response === 'string') return response.trim();
+    const finalOnly = (text: string): string => {
+        const harmonyMarker = '<|channel|>final<|message|>';
+        const harmonyIndex = text.lastIndexOf(harmonyMarker);
+        if (harmonyIndex >= 0) return text.slice(harmonyIndex + harmonyMarker.length).trim();
+        const assistantFinalIndex = text.toLowerCase().lastIndexOf('assistantfinal');
+        if (assistantFinalIndex >= 0) return text.slice(assistantFinalIndex + 'assistantfinal'.length).trim();
+        return text.trim();
+    };
+
+    if (typeof response === 'string') return finalOnly(response);
     if (!response || typeof response !== 'object') return '';
     const data = response as Record<string, any>;
-    if (typeof data.response === 'string') return data.response.trim();
-    if (typeof data.output_text === 'string') return data.output_text.trim();
+    if (typeof data.response === 'string') return finalOnly(data.response);
+    if (typeof data.output_text === 'string') return finalOnly(data.output_text);
 
     const choice = Array.isArray(data.choices) ? data.choices[0] : null;
     const choiceContent = choice?.message?.content ?? choice?.text;
-    if (typeof choiceContent === 'string') return choiceContent.trim();
+    if (typeof choiceContent === 'string') return finalOnly(choiceContent);
     if (Array.isArray(choiceContent)) {
         const joined = choiceContent.map((part: any) => part?.text || part?.content || '').filter(Boolean).join('\n');
-        if (joined) return joined.trim();
+        if (joined) return finalOnly(joined);
     }
 
     if (Array.isArray(data.output)) {
@@ -101,7 +110,7 @@ export function extractAIText(response: unknown): string {
             .map((part: any) => part?.text || part?.output_text || '')
             .filter(Boolean)
             .join('\n');
-        if (joined) return joined.trim();
+        if (joined) return finalOnly(joined);
     }
     return '';
 }
