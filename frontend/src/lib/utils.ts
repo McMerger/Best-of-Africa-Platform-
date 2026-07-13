@@ -54,7 +54,15 @@ export function stripMarkdown(text?: string | null): string {
         .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
         .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
     t = t.replace(/^📰\s*/, '');
-    t = t.replace(/\*\*/g, '').replace(/(^|\s)#{1,6}\s+/g, '$1').replace(/[`>]/g, '');
+    t = t.replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/```[^\n]*\n?/g, ' ')
+        .replace(/^\s*\|?\s*:?-{3,}:?(?:\s*\|\s*:?-{3,}:?)+\s*\|?\s*$/gm, ' ')
+        .replace(/^\s*[-+*]\s+/gm, '')
+        .replace(/^\s*\d+[.)]\s+/gm, '')
+        .replace(/\s*\|\s*/g, ' · ');
+    t = t.replace(/\*\*|__/g, '').replace(/(^|\s)#{1,6}\s+/g, '$1').replace(/[`>]/g, '');
+    t = t.replace(/(^|\s)[*_]([^*_\n]+)[*_](?=\s|$|[.,;:!?])/g, '$1$2');
     t = t.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '');
     if (t.startsWith('"') && t.endsWith('"') && t.length > 2) t = t.slice(1, -1);
     return t.replace(/\s+/g, ' ').trim();

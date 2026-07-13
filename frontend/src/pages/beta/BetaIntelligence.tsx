@@ -51,7 +51,7 @@ export const BetaIntelligence = () => {
       />
 
       {/* Header */}
-      <div className="relative bg-card py-12 md:py-16 px-4 sm:px-6 border-b border-border">
+      <div className="relative border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-12 md:py-16">
         <motion.div
           className="hidden"
         >
@@ -64,7 +64,7 @@ export const BetaIntelligence = () => {
         </motion.div>
 
         <div className="max-w-6xl mx-auto w-full">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end md:gap-8">
             <motion.div initial={false}>
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink flex items-center gap-2">
@@ -72,17 +72,17 @@ export const BetaIntelligence = () => {
                   Africa Decision Intelligence
                 </span>
               </div>
-              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4.5rem] leading-[0.96] tracking-tight mb-4">Market Intelligence</h1>
+              <h1 className="max-w-full break-words font-serif text-navy text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight mb-4">Market Intelligence</h1>
               <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
                 The institutional entry point for understanding markets, sectors and decision signals across all 54 African nations.
               </p>
             </motion.div>
             <motion.div initial={false}>
-              <div className="flex flex-wrap gap-3">
-                <Link to="/dashboards/overview" className="flex items-center gap-2 bg-navy text-white px-5 py-3 rounded-md font-semibold text-sm hover:bg-navy/90 transition-colors w-fit shrink-0">
+              <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:flex md:flex-wrap">
+                <Link to="/dashboards/overview" className="flex min-h-12 items-center justify-center gap-2 rounded-md bg-navy px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-navy/90 md:w-fit md:px-5">
                   <BarChart2 size={16} /> Open Continental Dashboard
                 </Link>
-                <Link to="/search" className="flex items-center border border-border bg-white text-navy px-5 py-3 rounded-md font-semibold text-sm hover:border-accent transition-colors w-fit">Search Intelligence</Link>
+                <Link to="/search" className="flex min-h-12 items-center justify-center rounded-md border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-navy transition-colors hover:border-accent md:w-fit md:px-5">Search Intelligence</Link>
               </div>
             </motion.div>
           </div>
@@ -90,7 +90,7 @@ export const BetaIntelligence = () => {
       </div>
 
       <div className="border-b border-border bg-navy text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap gap-x-8 gap-y-2 text-xs font-medium text-white/70">
+        <div className="mobile-scroll-strip max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 text-xs font-medium text-white/70">
           {['Investors & asset managers', 'Banks & DFIs', 'Corporate strategy', 'Governments & policymakers', 'Private capital', 'Research institutions'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
@@ -210,7 +210,7 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-8">
             {isLoading || !pulse ? (
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
             ) : (
@@ -220,13 +220,13 @@ export const BetaIntelligence = () => {
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
                   { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector.name, sub: `${pulse.top_sector.stories.toLocaleString()} stories this week`, small: true },
                 ].map(({ Icon, label, value, sub, small }) => (
-                  <motion.div key={label} initial={false} className="group bg-card rounded-xl border border-foreground/10 p-6 relative overflow-hidden">
+                  <motion.div key={label} initial={false} className={`group relative overflow-hidden rounded-xl border border-foreground/10 bg-card p-5 md:p-6 ${small ? 'col-span-2 md:col-span-1' : ''}`}>
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-center gap-3 mb-6 text-foreground/70">
                       <Icon size={20} />
                       <span className="text-[11px] font-bold uppercase tracking-widest">{label}</span>
                     </div>
-                    <div className={`${small ? 'text-[1.75rem] leading-tight' : 'text-[3rem] leading-none'} font-serif text-foreground mb-2`}>{value}</div>
+                    <div className={`${small ? 'text-[1.55rem] md:text-[1.75rem] leading-tight' : 'text-[2.35rem] md:text-[3rem] leading-none'} font-serif text-foreground mb-2 break-words`}>{value}</div>
                     <div className="text-sm text-foreground/70 font-light">{sub}</div>
                   </motion.div>
                 ))}
@@ -370,7 +370,7 @@ export const BetaIntelligence = () => {
                 <div className="h-[500px] bg-foreground/5 animate-pulse" />
               ) : movers.length > 0 ? (
                 <div className="divide-y divide-foreground/5">
-                  <div className="grid grid-cols-12 gap-4 p-6 bg-foreground/5 text-[10px] font-bold uppercase tracking-widest text-foreground/70">
+                  <div className="hidden md:grid grid-cols-12 gap-4 p-6 bg-foreground/5 text-[10px] font-bold uppercase tracking-widest text-foreground/70">
                     <div className="col-span-5">Nation</div>
                     <div className="col-span-4">This week</div>
                     <div className="col-span-2 text-right">Last week</div>
@@ -385,21 +385,22 @@ export const BetaIntelligence = () => {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.04 }}
-                        className="grid grid-cols-12 gap-4 p-5 items-center hover:bg-foreground/5 transition-colors border-l-2 border-transparent hover:border-accent"
+                        className="grid grid-cols-2 gap-3 border-l-2 border-transparent p-4 transition-colors hover:border-accent hover:bg-foreground/5 md:grid-cols-12 md:items-center md:gap-4 md:p-5"
                       >
-                        <div className="col-span-5">
+                        <div className="col-span-1 md:col-span-5">
                           <Link to={`/countries/${c.country_code}`} className="font-serif text-lg text-foreground hover:text-accent transition-colors">
                             {c.country_name}
                           </Link>
                         </div>
-                        <div className="col-span-4 flex items-center gap-3">
+                        <div className="col-span-2 order-3 flex items-center gap-3 md:order-none md:col-span-4">
                           <div className="flex-1 h-2 bg-foreground/5 rounded-full overflow-hidden">
                             <div className="h-full bg-accent rounded-full" style={{ width: `${Math.round((c.this_week / maxWeek) * 100)}%` }} />
                           </div>
                           <span className="text-xs font-mono text-foreground/70 w-8 text-right tabular-nums">{c.this_week}</span>
                         </div>
-                        <div className="col-span-2 text-right text-xs font-mono text-foreground/70 tabular-nums">{c.last_week}</div>
-                        <div className="col-span-1 flex justify-end">
+                        <div className="hidden text-right text-xs font-mono text-foreground/70 tabular-nums md:col-span-2 md:block">{c.last_week}</div>
+                        <div className="col-span-1 flex items-center justify-end gap-2 md:col-span-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/45 md:hidden">vs {c.last_week}</span>
                           {delta > 0 ? (
                             <span className="inline-flex items-center gap-0.5 text-[12px] font-bold text-accent-ink"><ArrowUpRight size={12} />{delta}</span>
                           ) : delta < 0 ? (

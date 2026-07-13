@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
+import { stripMarkdown } from '@/lib/utils';
 
 // Local fallback imagery rotated by index so events without a hero_image_url
 // don't all share one (previously external, washed-out) photo.
@@ -138,7 +139,7 @@ export const BetaEvents: React.FC = () => {
                                     </div>
                                     <h2 className="text-[2.5rem] font-serif leading-none text-foreground mb-6">{event.title}</h2>
                                     <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8] line-clamp-3">
-                                        {event.description}
+                                        {stripMarkdown(event.description)}
                                     </p>
                                     
                                     <div className="grid grid-cols-2 gap-6 mb-10 bg-foreground/5 border border-foreground/10 rounded-2xl p-6">

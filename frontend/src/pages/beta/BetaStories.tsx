@@ -11,7 +11,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { stripMarkdown, stripProcessLeakage, heroThumb } from '@/lib/utils';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
@@ -165,7 +165,7 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative bg-card w-full py-12 md:py-16 px-6 border-b border-border">
+      <section className="relative w-full border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-12 md:py-16">
         <motion.div 
           className="hidden"
           initial={false}
@@ -181,14 +181,14 @@ export const BetaStories = () => {
         <div className="page-container">
           <motion.div
             initial={false}
-            className="flex flex-col md:flex-row md:items-end justify-between gap-8"
+            className="flex flex-col justify-between gap-7 md:flex-row md:items-end md:gap-8"
           >
             <div>
               <div className="inline-flex items-center gap-2 text-accent-ink text-[11px] font-semibold uppercase tracking-[0.1em] mb-4">
                 <Sparkles size={14} />
                 {t('landing.original_reporting', 'Original Reporting')}
               </div>
-              <h1 className="font-serif text-navy text-[2.75rem] md:text-[4rem] leading-[1] tracking-tight mb-3 max-w-3xl">
+              <h1 className="max-w-3xl break-words font-serif text-navy text-[clamp(2.35rem,11vw,4rem)] leading-[1] tracking-tight mb-3">
                 {t('stories.title_1', 'Stories from')} {t('stories.title_2', 'the Continent.')}
               </h1>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
@@ -214,7 +214,7 @@ export const BetaStories = () => {
               }}
               disabled={!displayArticles.some(a => a.audio_url)}
               title={displayArticles.some(a => a.audio_url) ? t('stories.play_title', 'Play the latest audio briefings') : t('stories.audio_soon', 'Audio briefings coming soon')}
-              className="group flex items-center justify-center gap-3 px-5 py-3 rounded-md bg-navy text-white border border-navy font-medium transition-colors hover:bg-navy/90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="group flex min-h-12 w-full items-center justify-center gap-3 rounded-md border border-navy bg-navy px-5 py-3 font-medium text-white transition-colors hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-40 sm:w-fit"
             >
               <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
@@ -225,9 +225,9 @@ export const BetaStories = () => {
         </div>
       </section>
 
-      <div className="page-container py-10 md:py-16">
+      <div className="page-container py-7 sm:py-10 md:py-16">
 
-        <div className="control-deck mb-10 md:mb-12">
+        <div className="control-deck mb-8 md:mb-12">
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (
@@ -288,7 +288,7 @@ export const BetaStories = () => {
         {/* Feed Summary */}
         {feedMode === 'foryou' && curatedData?.ai_feed_summary && (
           <div className="mb-8 p-4 bg-accent/10 border border-accent/20 rounded-xl text-center text-accent/90 text-sm font-medium italic">
-            {stripProcessLeakage(curatedData.ai_feed_summary)}
+            {stripMarkdown(curatedData.ai_feed_summary)}
           </div>
         )}
 
@@ -326,7 +326,7 @@ export const BetaStories = () => {
 
         {/* Category Filter Tabs, hidden in search mode */}
         {!isSearchMode && sectorTabs.length > 1 && (
-          <div className="flex gap-2 flex-wrap mb-10">
+          <div className="mobile-scroll-strip -mx-4 mb-8 gap-2 px-4 pb-2 sm:mx-0 sm:flex-wrap sm:px-0 md:mb-10">
             {sectorTabs.map(tab => (
               <button
                 key={tab.id}
@@ -464,7 +464,7 @@ export const BetaStories = () => {
                         <div className="bg-accent/5 border-l-2 border-accent pl-3 py-1 mb-3">
                           <p className="text-xs text-accent/90 font-medium italic">
                             <Sparkles size={10} className="inline mr-1" />
-                            {stripProcessLeakage((article as any).ai_curation.relevance_note)}
+                            {stripMarkdown((article as any).ai_curation.relevance_note)}
                           </p>
                         </div>
                       ) : (

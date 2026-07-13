@@ -6,6 +6,7 @@ import { SearchIcon, SparklesIcon, GlobeIcon, FileTextIcon, LayersIcon, ArrowRig
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { stripMarkdown } from '@/lib/utils';
 
 const FILTER_TABS = [
     { id: 'all', label: 'All Results', icon: LayersIcon },
@@ -249,18 +250,18 @@ export const BetaSearch: React.FC = () => {
                                                         </div>
                                                     )}
                                                     <h3 className="font-serif text-[1.75rem] leading-snug text-foreground mb-4 group-hover:text-accent transition-colors">
-                                                        {title}
+                                                        {stripMarkdown(title)}
                                                     </h3>
                                                     {summary && (
                                                         <p className="text-[1.125rem] font-light text-foreground/50 line-clamp-2 leading-[1.8]">
-                                                            {summary}
+                                                            {stripMarkdown(summary)}
                                                         </p>
                                                     )}
                                                     {relevanceNote && (
                                                         <div className="mt-6 flex items-center gap-3 bg-background/50 p-4 rounded-xl border border-accent/20">
                                                             <SparklesIcon className="text-accent w-4 h-4 shrink-0" />
                                                             <p className="text-[13px] text-foreground/80 font-light italic">
-                                                                {relevanceNote}
+                                                                {stripMarkdown(relevanceNote)}
                                                             </p>
                                                         </div>
                                                     )}

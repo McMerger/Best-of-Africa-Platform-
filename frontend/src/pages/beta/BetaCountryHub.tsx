@@ -252,7 +252,7 @@ export const BetaCountryHub = () => {
                   </div>
                   <h1 className="font-serif text-navy text-[2.75rem] md:text-[4.5rem] leading-[1] tracking-tight mb-4">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">{country.description}</p>
+                    <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">{stripMarkdown(country.description)}</p>
                   )}
                 </motion.div>
               )}

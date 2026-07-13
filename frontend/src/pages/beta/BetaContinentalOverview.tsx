@@ -79,7 +79,7 @@ export const BetaContinentalOverview: React.FC = () => {
       />
       
       {/* Header */}
-      <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+      <div className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
         <motion.div
           className="hidden"
         >
@@ -98,22 +98,22 @@ export const BetaContinentalOverview: React.FC = () => {
               Continental Intelligence Command Centre
             </div>
 
-            <h1 className="max-w-3xl font-serif text-foreground text-[2.75rem] md:text-[4.5rem] leading-[0.96] tracking-tight mb-6">
+            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight mb-6">
               Africa at decision scale.
             </h1>
             <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
               A continent-wide evidence layer for institutions monitoring where attention, research and reporting activity are concentrating across African markets.
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/intelligence" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
-              <Link to="/search" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy hover:border-accent">Search Intelligence</Link>
+            <div className="mt-7 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
+              <Link to="/intelligence" className="flex min-h-12 items-center justify-center rounded-md bg-navy px-5 py-3 text-center text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
+              <Link to="/search" className="flex min-h-12 items-center justify-center rounded-md border border-border bg-white px-5 py-3 text-center text-sm font-semibold text-navy hover:border-accent">Search Intelligence</Link>
             </div>
           </motion.div>
         </div>
       </div>
 
       <div className="border-b border-border bg-navy text-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap gap-x-8 gap-y-2 text-xs font-medium text-white/70">
+        <div className="mobile-scroll-strip max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 text-xs font-medium text-white/70">
           {['Continental allocation', 'Country comparison', 'Sector monitoring', 'Coverage gaps', 'Executive briefing', 'Research prioritisation'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
@@ -155,7 +155,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
 
         {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
@@ -166,16 +166,16 @@ export const BetaContinentalOverview: React.FC = () => {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-              className="group relative overflow-hidden bg-card rounded-xl p-7 border border-foreground/10 flex items-center gap-6 hover:border-accent/40 transition-colors"
+              className={`group relative overflow-hidden bg-card rounded-xl p-4 md:p-7 border border-foreground/10 flex flex-col min-[460px]:flex-row items-start min-[460px]:items-center gap-3 md:gap-6 hover:border-accent/40 transition-colors ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}
             >
               <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />
-              <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-accent/15 transition-all">
+              <div className="w-11 h-11 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-accent/15 transition-all">
                 <Icon className="text-accent w-7 h-7" />
               </div>
               <div className="relative">
                 <div className="text-foreground/70 text-[11px] font-bold uppercase tracking-widest mb-2">{label}</div>
-                <div className="text-[2.75rem] font-serif text-foreground leading-none">{value}</div>
+                <div className="text-[2.1rem] md:text-[2.75rem] font-serif text-foreground leading-none">{value}</div>
               </div>
             </motion.div>
           ))}

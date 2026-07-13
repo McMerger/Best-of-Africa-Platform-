@@ -26,12 +26,19 @@ const isTableDivider = (line: string) => {
   return cells.length > 1 && cells.every(cell => /^:?-{3,}:?$/.test(cell));
 };
 
+const isPipeRow = (line: string) => line.includes('|') && splitTableRow(line).length > 1;
+
+const startsLooseTable = (lines: string[], index: number) => {
+  if (!isPipeRow(lines[index] || '') || !isPipeRow(lines[index + 1] || '')) return false;
+  return splitTableRow(lines[index]).length === splitTableRow(lines[index + 1]).length;
+};
+
 const isBlockStart = (lines: string[], index: number) => {
   const line = lines[index] || '';
   return /^#{1,6}\s+/.test(line) || /^\s*[-*+]\s+/.test(line)
     || /^\s*\d+[.)]\s+/.test(line) || /^>\s?/.test(line)
     || /^\s*(---+|___+|\*\*\*+)\s*$/.test(line) || /^```/.test(line)
-    || (line.includes('|') && isTableDivider(lines[index + 1] || ''));
+    || startsLooseTable(lines, index);
 };
 
 function renderStructuredContent(content: string): string {
@@ -48,7 +55,8 @@ function renderStructuredContent(content: string): string {
       const code: string[] = [];
       while (index < lines.length && !/^```/.test(lines[index])) code.push(lines[index++]);
       if (index < lines.length) index += 1;
-      blocks.push(`<pre><code>${escapeHtml(code.join('\n'))}</code></pre>`);
+      const body = code.map(item => item.trim()).filter(Boolean).map(item => `<p>${renderInline(item)}</p>`).join('');
+      if (body) blocks.push(`<aside class="structured-callout">${body}</aside>`);
       continue;
     }
 
@@ -64,12 +72,13 @@ function renderStructuredContent(content: string): string {
       blocks.push('<hr />'); index += 1; continue;
     }
 
-    if (line.includes('|') && isTableDivider(lines[index + 1] || '')) {
+    if (startsLooseTable(lines, index)) {
       const headers = splitTableRow(line);
-      index += 2;
+      index += isTableDivider(lines[index + 1] || '') ? 2 : 1;
       const rows: string[][] = [];
-      while (index < lines.length && lines[index].includes('|') && lines[index].trim()) {
-        rows.push(splitTableRow(lines[index++]));
+      while (index < lines.length && isPipeRow(lines[index]) && lines[index].trim()) {
+        const row = splitTableRow(lines[index++]);
+        if (!isTableDivider(row.join('|'))) rows.push(row);
       }
       const head = headers.map(cell => `<th scope="col">${renderInline(cell)}</th>`).join('');
       const body = rows.map(row => `<tr>${headers.map((_, cellIndex) => `<td>${renderInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('');

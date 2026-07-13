@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
-import { stripMarkdown, stripProcessLeakage } from '@/lib/utils';
+import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import type { ArticleListItem } from '../../types';
@@ -185,7 +185,7 @@ export const BetaFeed: React.FC = () => {
 
                         {editorialSummary && (
                             <div className="p-5 bg-accent/5 border border-accent/20 rounded-2xl mb-6 text-sm text-primary/70 italic leading-relaxed">
-                                {stripProcessLeakage(editorialSummary)}
+                                {stripMarkdown(editorialSummary)}
                             </div>
                         )}
 

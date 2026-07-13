@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, MixerVerticalIcon, RocketIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
-import { stripProcessLeakage } from '@/lib/utils';
+import { stripMarkdown } from '@/lib/utils';
 
 interface CountryEventsProps {
     countryCode: string;
@@ -85,7 +85,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                             {event.ai_context_brief && (
                                 <div className="mt-4 pt-4 border-t border-border/50 text-[11px] text-muted-foreground italic flex gap-2 items-start">
                                     <RocketIcon className="h-3 w-3 mt-0.5 text-primary shrink-0" />
-                                    <span>{stripProcessLeakage(event.ai_context_brief)}</span>
+                                    <span>{stripMarkdown(event.ai_context_brief)}</span>
                                 </div>
                             )}
                         </CardContent>
