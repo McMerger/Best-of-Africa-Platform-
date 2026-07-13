@@ -391,7 +391,7 @@ router.get('/analytics/summary', async (c) => {
             LEFT JOIN sectors s ON s.id = a.sector_id
             WHERE a.status = 'published'
             ORDER BY a.published_at DESC
-            LIMIT 14
+            LIMIT 12
         `).all<Record<string, any>>(),
     ]);
 
@@ -410,12 +410,12 @@ router.get('/analytics/summary', async (c) => {
     });
 
     const evidence = (recentRecords.results || []).map((record, index) =>
-        `[${index + 1}] ${record.published_at || 'date unavailable'} — ${record.title}\nCountry: ${record.country_name || 'unavailable'} | Sector: ${record.sector_name || 'unavailable'}\n${record.summary || 'Summary unavailable.'}\nSource: ${record.source_title || 'unavailable'} | ${record.source_url || 'URL unavailable'}`
+        `[${index + 1}] ${record.published_at || 'date unavailable'} — ${record.title}\nCountry: ${record.country_name || 'unavailable'} | Sector: ${record.sector_name || 'unavailable'}\n${(record.summary || 'Summary unavailable.').slice(0, 900)}\nSource: ${record.source_title || 'unavailable'} | ${record.source_url || 'URL unavailable'}`
     ).join('\n\n');
 
     const marketSummary = await getCached(
         c.env,
-        `dashboard:coverage-brief:depth-v2:${activeLens}`,
+        `dashboard:coverage-brief:depth-v3:${activeLens}`,
         async () => {
             if (!evidence) return 'No source-linked continental briefing is currently available.';
             const audience = activeLens === 'government'
@@ -423,13 +423,13 @@ router.get('/analytics/summary', async (c) => {
                 : activeLens === 'explorer'
                     ? 'travel, culture and place-focused readers'
                     : 'investor and operator readers';
-            const prompt = `System: You are BOA-Story's continental evidence editor writing for ${audience}. Use only the numbered records, cite them inline and separate facts from analysis. Coverage and audience activity are not proxies for economic performance, stability, sentiment, investability or tourism safety.
+            const prompt = `System: You are BOA-Story's continental evidence editor writing for ${audience}. Use only the numbered records, cite them inline and separate facts from analysis. Do not use outside knowledge, fill evidence gaps, infer unstated causes, or turn allegations into facts. When causality, scale or outcome is unavailable, say so plainly. Coverage and audience activity are not proxies for economic performance, stability, sentiment, investability or tourism safety.
 
-User: Produce a rigorous continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, causal mechanisms, operational or policy implications, counter-signals, source limitations, under-covered regions or questions, and prioritized verification steps.
+User: Produce a rigorous 1,000–1,400 word continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, documented mechanisms, operational or policy implications, counter-signals, source limitations, under-covered regions or questions, and prioritized verification steps. Keep the analysis readable and avoid repeating duplicate records.
 
 RECORDS:
 ${evidence}`;
-            return callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.2, response_profile: 'deep-analysis' });
+            return callConfiguredAI(c.env, { prompt, max_tokens: 2400, temperature: 0.15, response_profile: 'deep-analysis' });
         },
         { ttl: CACHE_TTL.DASHBOARD }
     );
