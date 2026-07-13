@@ -437,7 +437,7 @@ router.get('/performance', async (c) => {
 router.get('/founder-log', async (c) => {
     return c.json(await getCached(
         c.env,
-        'founder-log:weekly:depth-v3',
+        'founder-log:weekly:depth-v4',
         async () => {
             // Fetch articles from the last 14 days
             const recentArticles = await c.env.DB.prepare(`
@@ -470,7 +470,7 @@ Write the update. Format it exactly as a JSON array of 3 objects, where each obj
 Return ONLY the raw JSON array.`;
 
             try {
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'decision-brief' });
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'decision-brief', structured_output: true });
                 const match = text.match(/\[.*\]/s);
                 if (match) {
                     return JSON.parse(match[0]);
@@ -819,7 +819,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v3',
+        'strategic-opportunities:depth-v4',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
@@ -878,7 +878,7 @@ User: Build a detailed watchlist brief for ${o.sector_name} in ${o.country_name}
 
 RECORDS:
 ${evidence}`;
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis' });
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis', structured_output: true });
                     const match = text.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);

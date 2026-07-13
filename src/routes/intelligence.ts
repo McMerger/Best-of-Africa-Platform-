@@ -538,7 +538,7 @@ User: Produce exactly three substantive next-step recommendations for a reader r
 
 RECORDS:
 ${evidence}`;
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'deep-analysis', structured_output: true });
 
     const jsonMatch = (text || '').match(/\[[\s\S]*\]/);
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : [];

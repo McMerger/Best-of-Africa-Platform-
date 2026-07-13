@@ -520,7 +520,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
 
             try {
                 const aiPrompt = `System: You are BOA-Story's evidence editor. Use only the supplied article, distinguish facts from analysis and preserve the requested JSON schema.\nUser: ${prompt}`;
-                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief' });
+                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 3200, temperature: 0.2, response_profile: 'decision-brief', structured_output: true });
                 const match = (rawResponse || '').match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : null;
             } catch (e) {

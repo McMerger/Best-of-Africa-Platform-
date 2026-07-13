@@ -32,7 +32,7 @@ export const MODELS = {
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
 export const ARTICLE_PROMPT_VERSION = 'v1.4-longform-evidence';
-export const AI_RESPONSE_VERSION = 'depth-v3';
+export const AI_RESPONSE_VERSION = 'depth-v3.1-structured';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Enforced Information Generation
@@ -47,6 +47,8 @@ export interface AICallOptions {
     max_tokens?: number;
     temperature?: number;
     response_profile?: AIResponseProfile;
+    /** Preserve an exact JSON/schema response and skip prose-length expansion. */
+    structured_output?: boolean;
 }
 
 export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'decision-brief' | 'spoken-brief';
@@ -135,6 +137,10 @@ function applyResponseProfile(options: AICallOptions): AICallOptions {
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
     const prepared = applyResponseProfile(options);
     const first = await callConfiguredAIOnce(env, prepared);
+    // A schema can carry substantial depth across multiple fields without
+    // reaching a prose profile's word floor. Re-expanding it risks truncating
+    // the closing braces and silently sending callers into thin fallbacks.
+    if (options.structured_output) return first;
     if (!shouldExpandAIResponse(first, options.response_profile)) return first;
 
     const contract = RESPONSE_PROFILES[options.response_profile!];
@@ -535,7 +541,7 @@ Also provide a one - word label: "Bullish", "Bearish", or "Neutral".
 // Fill Narrative Gap - Generate Article for Underrepresented Topic
 // ───────────────────────────────────────────────────────────────────────────────
 export async function fillNarrativeGap(
-    _env: Env,
+    env: Env,
     countryName: string,
     sectorName: string
 ): Promise<{
@@ -1195,6 +1201,7 @@ Return ONLY valid JSON. No markdown, no explanation.`;
             max_tokens: 4800,
             temperature: 0.2,
             response_profile: 'deep-analysis',
+            structured_output: true,
         });
 
         const jsonMatch = text.match(/\{[\s\S]*\}/);

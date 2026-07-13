@@ -54,6 +54,23 @@ describe('AI response depth contract', () => {
         expect(run.mock.calls[1][1].prompt).toContain('never pad or invent');
     });
 
+    it('preserves structured responses without a prose expansion pass', async () => {
+        const json = JSON.stringify({ summary: 'Detailed evidence', limitations: ['Source window'] });
+        const run = vi.fn().mockResolvedValue({ response: json });
+        const env = createMockEnv({ AI: { run } as any });
+
+        const result = await callConfiguredAI(env, {
+            prompt: 'Return ONLY valid JSON using the supplied evidence.',
+            max_tokens: 3200,
+            response_profile: 'deep-analysis',
+            structured_output: true,
+        });
+
+        expect(result).toBe(json);
+        expect(run).toHaveBeenCalledOnce();
+        expect(run.mock.calls[0][1].prompt).toContain('DEPTH AND EVIDENCE CONTRACT');
+    });
+
     it('cannot be downgraded by stale provider config or external credentials', async () => {
         const run = vi.fn().mockResolvedValue({ response: 'Verified information.' });
         const env = createMockEnv({
