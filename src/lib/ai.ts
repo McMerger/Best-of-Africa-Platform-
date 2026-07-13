@@ -13,7 +13,11 @@ import { getProviderToken } from './provider-tokens';
 // Models Configuration
 // ───────────────────────────────────────────────────────────────────────────────
 export const MODELS = {
-    TEXT_GENERATION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+    // Cloudflare describes GPT-OSS 120B as its production, general-purpose,
+    // high-reasoning Workers AI model. Reader-facing synthesis always uses it;
+    // compact classification keeps the faster Llama model below.
+    TEXT_GENERATION: '@cf/openai/gpt-oss-120b',
+    FAST_TEXT_GENERATION: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
     EMBEDDINGS: '@cf/baai/bge-base-en-v1.5',
     // Lightning is a few-step distilled SDXL — comparable quality at a fraction
     // of the neuron cost vs base SDXL (20 steps), to stretch the daily AI budget.
@@ -30,7 +34,7 @@ export const MODELS = {
 // Stored on the article row so we can evaluate prompt quality over time.
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
-export const ARTICLE_PROMPT_VERSION = 'v1.2';
+export const ARTICLE_PROMPT_VERSION = 'v1.3-depth-contract';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Provider-Aware Call
@@ -47,11 +51,79 @@ export interface AICallOptions {
     messages?: { role: string; content: string }[];
     max_tokens?: number;
     temperature?: number;
+    response_profile?: AIResponseProfile;
+}
+
+export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'decision-brief';
+
+const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instructions: string }> = {
+    'editorial-article': {
+        minimumWords: 400,
+        instructions: `Write a complete 400-600 word narrative, not a synopsis. Develop the people, place, chronology and consequences using only the supplied source material. Preserve the required output schema. Never add generic filler to reach length.`,
+    },
+    'evidence-brief': {
+        minimumWords: 450,
+        instructions: `Produce a substantive evidence brief. Include a direct finding, dated evidence, named actors and places, chronology, operational or policy implications, counter-signals, source limitations, and concrete verification questions. Attribute claims to the supplied records. Do not invent figures, scores, forecasts or certainty.`,
+    },
+    'deep-analysis': {
+        minimumWords: 700,
+        instructions: `Produce a rigorous 700-1,100 word analysis when the evidence supports that depth. Separate reported facts from analysis; cite supplied source identifiers inline; explain chronology, mechanisms, stakeholders, cross-country or sector differences, implications, counter-evidence, uncertainty, and next diligence steps. Do not pad thin evidence or introduce outside facts.`,
+    },
+    'decision-brief': {
+        minimumWords: 300,
+        instructions: `Produce a decision-useful brief, not a promotional summary. State what is known, why it matters, who is affected, practical constraints, contrary evidence, information gaps, and what the reader should verify next. Do not manufacture recommendations or facts.`,
+    },
+};
+
+const THIN_EVIDENCE_LANGUAGE = /\b(insufficient (?:data|evidence|context)|no (?:relevant|supporting) (?:data|evidence|records)|evidence (?:is|was) too thin|unable to substantiate)\b/i;
+
+export function countResponseWords(text: string): number {
+    return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+export function shouldExpandAIResponse(text: string, profile?: AIResponseProfile): boolean {
+    if (!profile || !text.trim() || THIN_EVIDENCE_LANGUAGE.test(text)) return false;
+    return countResponseWords(text) < RESPONSE_PROFILES[profile].minimumWords;
+}
+
+function applyResponseProfile(options: AICallOptions): AICallOptions {
+    if (!options.response_profile) return options;
+    const contract = RESPONSE_PROFILES[options.response_profile].instructions;
+    if (options.messages) {
+        const messages = options.messages.map(message => ({ ...message }));
+        const systemIndex = messages.findIndex(message => message.role === 'system');
+        if (systemIndex >= 0) messages[systemIndex].content += `\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}`;
+        else messages.unshift({ role: 'system', content: `DEPTH AND EVIDENCE CONTRACT:\n${contract}` });
+        return { ...options, messages };
+    }
+    return { ...options, prompt: `${options.prompt || ''}\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}` };
 }
 
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
+    const prepared = applyResponseProfile(options);
+    const first = await callConfiguredAIOnce(env, prepared);
+    if (!shouldExpandAIResponse(first, options.response_profile)) return first;
+
+    const contract = RESPONSE_PROFILES[options.response_profile!];
+    const expansionPrompt = `The draft below is materially underdeveloped (${countResponseWords(first)} words; the requested analytical floor is ${contract.minimumWords} words when evidence permits).
+
+Rewrite it as a complete response under the original instructions and schema. Add depth only from the original supplied evidence. Preserve every supported detail, make reasoning explicit, add counter-evidence and limitations, and never pad or invent. If the evidence genuinely cannot support the requested depth, state the precise missing evidence instead.
+
+DRAFT TO REWRITE:
+${first}`;
+    return callConfiguredAIOnce(env, applyResponseProfile({
+        ...options,
+        prompt: options.messages ? undefined : `${options.prompt || ''}\n\n${expansionPrompt}`,
+        messages: options.messages
+            ? [...options.messages, { role: 'assistant', content: first }, { role: 'user', content: expansionPrompt }]
+            : undefined,
+        temperature: Math.min(options.temperature ?? 0.3, 0.3),
+    }));
+}
+
+async function callConfiguredAIOnce(env: Env, options: AICallOptions): Promise<string> {
     let provider = 'workers_ai';
-    let model = '@cf/meta/llama-3.1-70b-instruct';
+    let model = MODELS.TEXT_GENERATION;
     let apiKey: string | undefined;
     let baseUrl = 'https://api.openai.com/v1';
 
@@ -81,6 +153,10 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
         else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
         else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter./api/v1'; }
     }
+
+    // Do not allow a stale workspace provider config to silently downgrade the
+    // built-in Workers AI path. External providers remain configurable above.
+    if (provider === 'workers_ai') model = MODELS.TEXT_GENERATION;
 
     // ── Auto-detect from OAuth tokens (Gemini / Moonshot subscription auth) ──
     if (provider === 'workers_ai') {
@@ -238,7 +314,7 @@ export async function generateArticle(
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.7 });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.7, response_profile: 'editorial-article' });
     return parseArticleResponse(text);
 }
 
@@ -372,7 +448,7 @@ Reply with ONLY the sector name, nothing else.`;
     const response = await withCircuitBreaker(
         env,
         'ai-text-gen',
-        () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+        () => (env.AI as Record<string, any>).run(MODELS.FAST_TEXT_GENERATION, {
             prompt,
             max_tokens: 20,
             temperature: 0.2,
@@ -518,7 +594,7 @@ If no specific country, reply "NONE".`;
         const response = await withCircuitBreaker(
             env,
             'ai-text-gen',
-            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            () => (env.AI as Record<string, any>).run(MODELS.FAST_TEXT_GENERATION, {
                 prompt,
                 max_tokens: 10,
                 temperature: 0.2,
@@ -556,7 +632,7 @@ Also provide a one - word label: "Bullish", "Bearish", or "Neutral".
         const response = await withCircuitBreaker(
             env,
             'ai-text-gen',
-            () => (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            () => (env.AI as Record<string, any>).run(MODELS.FAST_TEXT_GENERATION, {
                 prompt,
                 max_tokens: 50,
                 temperature: 0.1, // Deterministic
@@ -619,7 +695,7 @@ SUMMARY: [2-3 sentence human-focused summary, no markdown]
 
 TAGS: [comma-separated list of 3-5 relevant tags]`;
 
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.8 });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4000, temperature: 0.8, response_profile: 'editorial-article' });
     return parseArticleResponse(text);
 }
 
@@ -905,6 +981,7 @@ Produce your analysis now. Be definitive. No hedging.`;
         ],
         max_tokens: 4000,
         temperature: 0.4,
+        response_profile: 'deep-analysis',
     });
     return text || content;
 }
@@ -1034,6 +1111,7 @@ Produce the output now. Follow the structure exactly. Be definitive.`;
         ],
         max_tokens: format === 'long-form' ? 2500 : format === 'bullet' ? 1000 : 600,
         temperature: 0.3,
+        response_profile: format === 'long-form' ? 'deep-analysis' : undefined,
     });
     return text || content;
 }
@@ -1090,7 +1168,7 @@ Structure your response EXACTLY as:
         - [Risk 2]
         - [Risk 3]`;
 
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 2500, temperature: 0.7 });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 3500, temperature: 0.2, response_profile: 'deep-analysis' });
     return parseIntelligenceReport(text);
 }
 

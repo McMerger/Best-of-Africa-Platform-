@@ -107,12 +107,12 @@ router.get('/:region', async (c) => {
     `).bind(region).all();
 
     // Regional Insight (RAG)
-    let aiInsight = "Region is stable.";
+    let aiInsight = "No current source-linked regional briefing is available.";
     // Parse lens for context
     const lensParam = (c.req.query('lens') || 'investor') as string;
     const activeLens = ['investor', 'government', 'explorer'].includes(lensParam) ? lensParam : 'investor';
 
-    const cacheKey = `insight:region:${region}:${activeLens}`;
+    const cacheKey = `insight:region:v2:${region}:${activeLens}`;
     try {
         const cached = await c.env.CACHE.get(cacheKey);
         if (cached) {
@@ -121,15 +121,17 @@ router.get('/:region', async (c) => {
             // Generate if missing
             // We reuse the logic from countries.ts efficiently via cache check or generate
             // For now, simpler fallback or quick gen
-            const systemPrompt = activeLens === 'investor'
-                ? 'You are a Business Observer. Write 1 sentence on this region\'s intrinsic value and margin of safety for investors.'
+            const lensInstruction = activeLens === 'investor'
+                ? 'Explain documented commercial activity, operating constraints and missing diligence evidence. Do not estimate intrinsic value or issue a recommendation.'
                 : activeLens === 'government'
-                    ? 'You are a Policy Observer advising heads of state. Write 1 sentence on this region\'s governance quality, fiscal outlook, and policy priorities.'
-                    : 'You are a Culture Observer. Write 1 sentence on this region\'s tourism appeal, safety profile, and signature experiences.';
-            
-            const prompt = `${systemPrompt}\n\nRegion: ${region}. Trends: ${JSON.stringify(trendingCountries)}`;
-            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.3 });
-            aiInsight = text || "Monitoring regional trends.";
+                    ? 'Explain documented policy relevance, affected institutions and unresolved implementation questions. Do not infer governance quality from article volume.'
+                    : 'Explain documented cultural or visitor relevance and practical gaps. Do not invent safety ratings or destination conditions.';
+            const articleEvidence = (featuredArticles as any[]).slice(0, 6).map((article, index) =>
+                `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nEvidence: ${(article.summary || '').slice(0, 650)}`
+            ).join('\n---\n');
+            const prompt = `System: You are BOA-Story's regional evidence desk. Use only the supplied records and coverage counts. ${lensInstruction} Distinguish facts from analysis and state limitations.\n\nRegion: ${region}\nCountry coverage counts: ${JSON.stringify(trendingCountries.results || [])}\nSector coverage counts: ${JSON.stringify(sectorBreakdown.results || [])}\nReporting records:\n${articleEvidence || 'No current reporting records.'}`;
+            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
+            aiInsight = text || aiInsight;
             await c.env.CACHE.put(cacheKey, aiInsight, { expirationTtl: 3600 });
         }
     } catch { }
@@ -317,20 +319,15 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
         });
         const context = relevant.matches
             .filter(m => (m.metadata as any).published_at > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-            .map(m => (m.metadata as Record<string, any>).title)
-            .join('\n');
+            .map((match, index) => {
+                const metadata = match.metadata as Record<string, any>;
+                return `[${index + 1}] ${metadata.title || 'Untitled record'}\nPublished: ${metadata.published_at || 'date unavailable'}\nSource URL: ${metadata.source_url || metadata.url || 'unavailable'}\nEvidence: ${(metadata.text || metadata.summary || '').slice(0, 700)}`;
+            })
+            .join('\n---\n');
 
         if (context) {
-            const prompt = `You are the Regional Director for ${region} Africa. 
-Write a strict 3-bullet Executive Brief for the last 24 hours.
-1. Major Development
-2. Key Risk
-3. Strategic Opportunity
-Be concise and high-level.
-
-Context:
-${context}`;
-            const text = await callConfiguredAI(env, { prompt: `${prompt}\n\nWrite a detailed evidence brief covering chronology, named actors, cross-country differences, implications, counter-signals, limitations, and next verification steps. Do not create scores or forecasts.`, max_tokens: 2800, temperature: 0.2 });
+            const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered source records and cite them inline. Separate facts from analysis, do not infer regional conditions from coverage volume, and do not create scores, forecasts or recommendations.\nUser: Produce a complete evidence briefing for ${region} Africa covering the last seven days. Include chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next verification steps.\n\nRecords:\n${context}`;
+            const text = await callConfiguredAI(env, { prompt: `${prompt}\n\nWrite a detailed evidence brief covering chronology, named actors, cross-country differences, implications, counter-signals, limitations, and next verification steps. Do not create scores or forecasts.`, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
             executiveBrief = text || executiveBrief;
         }
     } catch (e) { /* Fallback */ }

@@ -53,7 +53,7 @@ router.get('/', async (c) => {
 
         await Promise.all(regions.map(async (region) => {
             // Check cache for insight
-            const cacheKey = `insight:region:${region}`;
+            const cacheKey = `insight:region:v2:${region}`;
             const cachedInsight = await c.env.CACHE.get(cacheKey);
 
             if (cachedInsight) {
@@ -62,16 +62,21 @@ router.get('/', async (c) => {
             }
 
             try {
-                // RAG Search
-                const query = `${region} Africa business investment stability trends`;
-                const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                const vector = (embedding as Record<string, any>).data[0];
-                const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
+                const relevant = await c.env.DB.prepare(`
+                    SELECT a.title, a.summary, a.published_at, a.source_url, c.name AS country_name
+                    FROM articles a
+                    JOIN countries c ON c.code = a.country_code
+                    WHERE c.region = ? AND a.status = 'published'
+                    ORDER BY a.published_at DESC
+                    LIMIT 8
+                `).bind(region).all();
+                const context = (relevant.results || []).map((article: any, index) =>
+                    `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 650)}`
+                ).join('\n---\n');
 
                 if (context) {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Region: ${region}. News: ${context}`;
-                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
+                    const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts from analysis.\nUser: Produce a decision brief for ${region} Africa.\n\nRecords:\n${context}`;
+                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
                     const text = aiRes?.trim();
                     if (text) {
                         insights[region] = text;
@@ -88,7 +93,7 @@ router.get('/', async (c) => {
             by_region: Object.fromEntries(
                 Object.entries(grouped).map(([r, countries]) => [
                     r,
-                    { countries, ai_insight: insights[r] || "Stable business environment." }
+                    { countries, ai_insight: insights[r] || "No current source-linked regional briefing is available." }
                 ])
             ),
             total: cachedResult.length,
@@ -183,7 +188,7 @@ router.get('/:code', async (c) => {
                     "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
                 ).bind(code).first<{ total: number }>(),
                 c.env.DB.prepare(`
-                    SELECT id, slug, title, summary, sector_id, published_at
+                    SELECT id, slug, title, summary, sector_id, published_at, source_url
                     FROM articles
                     WHERE country_code = ? AND status = 'published'
                     ORDER BY published_at DESC
@@ -220,15 +225,17 @@ router.get('/:code', async (c) => {
         recent_articles: stats.recent_articles,
         ai_situation_report: await getCached(
             c.env,
-            CACHE_KEYS.countrySituation(code),
+            `country-situation:v2:${code}`,
             async () => {
-                const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
-                if (!headlines) return "Monitoring situation.";
+                const evidence = (stats.recent_articles as any[]).map((article, index) =>
+                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+                ).join('\n---\n');
+                if (!evidence) return "No source-linked country reporting is currently available.";
                 try {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.5 });
+                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from analysis, identify contradictions and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a current situation brief for ${country.name}.\n\nRecords:\n${evidence}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2000, temperature: 0.2, response_profile: 'evidence-brief' });
                     return aiResponse?.trim();
-                } catch { return "Status Normal."; }
+                } catch { return "The source-linked country briefing is temporarily unavailable."; }
             },
             { ttl: CACHE_TTL.DASHBOARD }
         )

@@ -76,13 +76,13 @@ router.get('/sector/:id', async (c) => {
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code,
+            SELECT a.id, a.slug, a.title, a.summary, a.source_url, a.country_code,
                    c.name as country_name, a.published_at
             FROM articles a
             JOIN countries c ON a.country_code = c.code
             WHERE a.sector_id = ? AND a.status = 'published'
             ORDER BY a.published_at DESC
-            LIMIT 5
+            LIMIT 10
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
@@ -94,46 +94,32 @@ router.get('/sector/:id', async (c) => {
         `).bind(sectorId).all(),
     ]);
 
-    // Generate Sector Outlook
-    let aiOutlook = "Sector performance is stable.";
-    if (recentArticles.results && recentArticles.results.length > 0) {
-        const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
-        try {
-            const prompt = `You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.
-Sector: ${sector.name}
-Headlines: ${headlines}`;
-            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-            aiOutlook = text || aiOutlook;
-        } catch (e) { /* Ignore */ }
-    }
+    const evidence = (recentArticles.results as any[]).map((article, index) =>
+        `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+    ).join('\n---\n');
+    const sectorAnalysis = await getCached(
+        c.env,
+        `sector:${sectorId}:evidence-analysis:v2`,
+        async () => {
+            if (!evidence) return 'Insufficient evidence for a current sector analysis.';
+            try {
+                const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered records, cite them inline, distinguish facts from analysis, and explain cross-country differences, chronology, actors, operational and policy implications, counter-signals, limitations and next diligence steps. Never infer market growth from reporting or engagement volume.\nUser: Produce a complete evidence analysis for Africa's ${(sector as Record<string, any>).name} sector.\n\nRecords:\n${evidence}`;
+                return await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
+            } catch (error) {
+                console.error('Sector evidence analysis failed', error);
+                return null;
+            }
+        },
+        { ttl: 3600 * 24 }
+    );
 
     return c.json({
-        sector: { ...sector, ai_outlook: aiOutlook },
+        sector: { ...sector, ai_outlook: sectorAnalysis },
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         recent_articles: recentArticles.results || [],
         top_performers: topPerformers.results || [],
-        ai_trend_analysis: await getCached(
-            c.env,
-            `sector:${sectorId}:trend_analysis`,
-            async () => {
-                try {
-                    const query = `${(sector as Record<string, any>).name} Africa sector trends outlook`;
-                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as Record<string, any>).data[0];
-                    const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-                    const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
-
-                    if (!context) return "Sector data currently being aggregated.";
-
-                    const prompt = `Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.
-Sector: ${(sector as Record<string, any>).name}. recent Context:
-${context}`;
-                    return await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-                } catch (e) { return null; }
-            },
-            { ttl: 3600 * 24 } // Cache for 24h
-        )
+        ai_trend_analysis: sectorAnalysis,
     });
 });
 
@@ -253,39 +239,6 @@ router.get('/country/:code/outlook', async (c) => {
     ]);
 
     const countryData = country as Record<string, any>;
-
-    // Generate Investment Commentary
-    const investmentCommentary = await getCached(
-        c.env,
-        CACHE_KEYS.countryOutlook(code),
-        async () => {
-            // Retrieve recent headlines
-            const recent = await c.env.DB.prepare(`SELECT title FROM articles WHERE country_code = ? ORDER BY published_at DESC LIMIT 3`).bind(code).all();
-            const context = (recent.results || []).map((a: any) => a.title).join('; ');
-
-            try {
-                const prompt = `You are a Strategic Investment Analyst for ${countryData.name}. 
-Write a 3-sentence "Investment Thesis" based on these recent headlines.
-Highlight one key opportunity and one potential risk.
-Tone: Professional, direct, balance sheet focused.
-
-Headlines: ${context || 'General economic outlook stable.'}`;
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-                // Models often open with "Here is a 3-sentence Investment
-                // Thesis…:" — assistant scaffolding, not analysis. Drop any
-                // such preface so only the thesis reaches readers.
-                const clean = (text || '')
-                    .replace(/^\s*(sure|certainly|of course)[,!.]?\s*/i, '')
-                    .replace(/^\s*here(?:'s| is| are)\b[^:\n]*:\s*/i, '')
-                    .trim();
-                return clean || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
-            } catch (e) {
-                console.error('AI Commentary Failed', e);
-                return `Investment outlook for ${countryData.name} remains stable.`;
-            }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
 
     return c.json({
         country: countryData,

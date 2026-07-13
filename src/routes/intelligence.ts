@@ -181,7 +181,7 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
-          SELECT a.id, a.slug, a.title, a.country_code, c.name as country_name,
+          SELECT a.id, a.slug, a.title, a.summary, a.source_url, a.country_code, c.name as country_name,
                  a.view_count, a.engagement_score, a.published_at
           FROM articles a
           JOIN countries c ON a.country_code = c.code
@@ -204,12 +204,14 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         c.env,
         CACHE_KEYS.intelSectorAnalysis(sectorId),
         async () => {
-          const headlines = (topArticles.results as any[]).slice(0, 10).map(a => `- ${a.title} (Engagement: ${a.engagement_score})`).join('\n');
-          if (!headlines) return "Insufficient data for deep analysis.";
+          const evidence = (topArticles.results as any[]).slice(0, 10).map((article, index) =>
+            `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nCoverage engagement: ${article.engagement_score ?? 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 700)}`
+          ).join('\n---\n');
+          if (!evidence) return "Insufficient evidence for deep analysis.";
 
           try {
-            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
+            const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered reporting records. Cite records inline, distinguish facts from analysis, and treat engagement as audience activity rather than market performance. Do not call a development a growth signal or regulatory risk unless the record supports that classification.\nUser: Produce a sector evidence analysis with chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next diligence steps.\n\nRecords:\n${evidence}`;
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
             return aiResponse?.trim();
           } catch (e) {
             return "Analysis currently unavailable.";
@@ -440,7 +442,7 @@ Aim for 700-1,100 words when evidence is sufficiently rich. If the retrieved rec
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3000, temperature: 0.2 });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' });
 
     return c.json({
       response: llmResponse,

@@ -61,12 +61,15 @@ router.post('/booking', validate('json', BookingRequestSchema), async (c) => {
         const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [keywords] });
         const vector = (embedding as Record<string, any>).data[0];
 
-        const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
+        const relevant = await c.env.VECTORS.query(vector, { topK: 6, returnMetadata: true });
+        const context = relevant.matches.map((match, index) => {
+            const metadata = match.metadata as Record<string, any>;
+            return `[${index + 1}] ${metadata.title || 'Untitled record'}\nPublished: ${metadata.published_at || 'date unavailable'}\nSource URL: ${metadata.source_url || metadata.url || 'unavailable'}\nEvidence: ${(metadata.text || metadata.summary || '').slice(0, 650)}`;
+        }).join('\n---\n');
 
         if (context) {
-            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Request: ${keywords}. News: ${context}`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.6 });
+            const prompt = `System: You are BOA-Story's concierge research desk. Use only the numbered records and the request details. Cite records inline, separate documented facts from suggested questions, and never promise availability, pricing, safety, access or outcomes that are not supplied.\nUser request: Service ${service_type}; destination ${destination_country || 'not specified'}; dates ${JSON.stringify(dates || null)}; budget ${budget_range || 'not specified'}; urgency ${urgency || 'normal'}; requirements ${requirements || 'not specified'}.\n\nRelevant records:\n${context}`;
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
             // Coalesce to null — D1 .bind() throws on undefined, which would
             // fail the whole booking over an optional nicety.
             preliminaryNote = aiResponse?.trim() || null;
@@ -231,19 +234,22 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
             event_type: data.category, // Alias for frontend
             ai_context_brief: await getCached(
                 c.env,
-                `event:${id}:context`,
+                `event:${id}:context:v2`,
                 async () => {
                     const topic = `${data.title} ${data.country_name || ''} business`;
                     try {
                         const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [topic] });
                         const vector = (embedding as Record<string, any>).data[0];
-                        const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                        const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
+                        const relevant = await c.env.VECTORS.query(vector, { topK: 6, returnMetadata: true });
+                        const context = relevant.matches.map((match, index) => {
+                            const metadata = match.metadata as Record<string, any>;
+                            return `[${index + 1}] ${metadata.title || 'Untitled record'}\nPublished: ${metadata.published_at || 'date unavailable'}\nSource URL: ${metadata.source_url || metadata.url || 'unavailable'}\nEvidence: ${(metadata.text || metadata.summary || '').slice(0, 650)}`;
+                        }).join('\n---\n');
 
-                        if (!context) return "Connecting event to regional trends...";
+                        if (!context) return "No source-linked context records are currently available for this event.";
 
-                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${data.title}. News: ${context}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.6 });
+                        const prompt = `System: You are BOA-Story's event evidence desk. Use only the event record and numbered reporting records. Explain relevance, affected sectors and institutions, practical questions, contradictions and evidence gaps. Cite records inline and do not invent speakers, agenda items or outcomes.\nUser: Event: ${data.title}. Description: ${data.description || 'unavailable'}. Country: ${data.country_name || 'not specified'}. Dates: ${data.date_start || 'unavailable'} to ${data.date_end || 'unavailable'}.\n\nRelevant records:\n${context}`;
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
                         return aiResponse?.trim();
                     } catch (e) { return null; }
                 },

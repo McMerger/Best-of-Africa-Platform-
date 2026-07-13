@@ -400,7 +400,7 @@ export async function backfillSectors(env: Env, batch = 8): Promise<number> {
     for (const a of rows.results || []) {
         try {
             const { MODELS } = await import('../lib/ai');
-            const res = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            const res = await (env.AI as Record<string, any>).run(MODELS.FAST_TEXT_GENERATION, {
                 messages: [
                     { role: 'system', content: 'Classify the news item into exactly one sector id from: tourism, energy, agriculture, technology, infrastructure, finance, manufacturing, healthcare. If none fits (sports, culture, politics, human interest), reply none. Reply with the single word only.' },
                     { role: 'user', content: `${a.title}\n\n${(a.summary || '').slice(0, 300)}` },
