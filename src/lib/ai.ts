@@ -81,6 +81,31 @@ export function countResponseWords(text: string): number {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
+export function extractAIText(response: unknown): string {
+    if (typeof response === 'string') return response.trim();
+    if (!response || typeof response !== 'object') return '';
+    const data = response as Record<string, any>;
+    if (typeof data.response === 'string') return data.response.trim();
+    if (typeof data.output_text === 'string') return data.output_text.trim();
+
+    const choice = Array.isArray(data.choices) ? data.choices[0] : null;
+    const choiceContent = choice?.message?.content ?? choice?.text;
+    if (typeof choiceContent === 'string') return choiceContent.trim();
+    if (Array.isArray(choiceContent)) {
+        const joined = choiceContent.map((part: any) => part?.text || part?.content || '').filter(Boolean).join('\n');
+        if (joined) return joined.trim();
+    }
+
+    if (Array.isArray(data.output)) {
+        const joined = data.output.flatMap((item: any) => item?.content || [])
+            .map((part: any) => part?.text || part?.output_text || '')
+            .filter(Boolean)
+            .join('\n');
+        if (joined) return joined.trim();
+    }
+    return '';
+}
+
 export function shouldExpandAIResponse(text: string, profile?: AIResponseProfile): boolean {
     if (!profile || !text.trim() || THIN_EVIDENCE_LANGUAGE.test(text)) return false;
     return countResponseWords(text) < RESPONSE_PROFILES[profile].minimumWords;
@@ -183,7 +208,7 @@ async function callConfiguredAIOnce(env: Env, options: AICallOptions): Promise<s
                     : { prompt: options.prompt, max_tokens: options.max_tokens, temperature: options.temperature }
             )
         );
-        return ((response as Record<string, any>).response || '').trim();
+        return extractAIText(response);
     }
 
     // ── Moonshot (Kimi) — OAuth token → DB key → bootstrap → env var ─────

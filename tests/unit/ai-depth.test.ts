@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { callConfiguredAI, countResponseWords, shouldExpandAIResponse } from '../../src/lib/ai';
+import { callConfiguredAI, countResponseWords, extractAIText, shouldExpandAIResponse } from '../../src/lib/ai';
 import { createMockEnv } from '../mocks/env';
 
 describe('AI response depth contract', () => {
@@ -11,6 +11,13 @@ describe('AI response depth contract', () => {
     it('does not force padding when the model identifies thin evidence', () => {
         const response = 'Insufficient evidence to substantiate the requested analysis. The source record lacks dates and primary documents.';
         expect(shouldExpandAIResponse(response, 'deep-analysis')).toBe(false);
+    });
+
+    it('normalizes legacy, Chat Completions and Responses API output shapes', () => {
+        expect(extractAIText({ response: 'legacy' })).toBe('legacy');
+        expect(extractAIText({ choices: [{ message: { content: 'chat completion' } }] })).toBe('chat completion');
+        expect(extractAIText({ output_text: 'responses api' })).toBe('responses api');
+        expect(extractAIText({ output: [{ content: [{ type: 'output_text', text: 'nested response' }] }] })).toBe('nested response');
     });
 
     it('runs one evidence-preserving expansion pass for a minimal first draft', async () => {

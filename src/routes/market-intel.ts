@@ -99,7 +99,7 @@ router.get('/sector/:id', async (c) => {
     ).join('\n---\n');
     const sectorAnalysis = await getCached(
         c.env,
-        `sector:${sectorId}:evidence-analysis:v2`,
+        `sector:${sectorId}:evidence-analysis:v3`,
         async () => {
             if (!evidence) return 'Insufficient evidence for a current sector analysis.';
             try {
