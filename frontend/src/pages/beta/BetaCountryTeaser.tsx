@@ -9,6 +9,7 @@ import { KO_FI_URL } from '../../constants/beta';
 import { useLanguage } from '@/context/LanguageContext';
 import { CountryFlag } from '../../components/CountryFlag';
 import type { Country } from '../../types';
+import { MEMBER_PREVIEW_MODE } from '../../config/flags';
 
 // ─── Countries API response shape ────────────────────────────────────────────
 interface CountryEntry extends Partial<Country> {
@@ -126,7 +127,7 @@ export const BetaCountryTeaser = () => {
     <div className="selection:bg-accent selection:text-primary">
       
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-4 py-9 sm:px-6 sm:py-12 md:py-16">
 
         {/* Header */}
         <header className="mb-10 max-w-3xl">
@@ -134,11 +135,13 @@ export const BetaCountryTeaser = () => {
             <Globe size={12} />
             {t('countries.badge', '54 African Nations')}
           </div>
-          <h1 className="font-serif text-[40px] md:text-[52px] leading-tight mb-4">
+          <h1 className="break-words font-serif text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.04] mb-4">
             {t('countries.title', 'One Continent. Every Story.')}
           </h1>
           <p className="text-base md:text-lg text-primary/70 max-w-2xl leading-relaxed">
-            {t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
+            {MEMBER_PREVIEW_MODE
+              ? 'From the Atlantic to the Indian Ocean, open every country hub and move directly into its reporting record.'
+              : t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
 
@@ -197,7 +200,7 @@ export const BetaCountryTeaser = () => {
         {/* Country Grid */}
         <motion.div
           layout
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-16"
+          className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-16"
         >
           <AnimatePresence mode="popLayout">
             {isLoading
@@ -224,17 +227,24 @@ export const BetaCountryTeaser = () => {
         </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center">
-          <p className="text-primary/70 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
-          <a
-            href={KO_FI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
-          >
-            {t('countries.cta_btn', 'Unlock All 54 Country Hubs, Join as a Founding Member')}
-          </a>
-        </div>
+        {MEMBER_PREVIEW_MODE ? (
+          <div className="rounded-xl border border-accent/25 bg-accent/10 px-5 py-5 text-center">
+            <p className="font-serif text-xl text-navy">All 54 country hubs are open in member preview.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Choose any country above to inspect its full reporting and intelligence record.</p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-primary/70 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
+            <a
+              href={KO_FI_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+            >
+              {t('countries.cta_btn', 'Unlock All 54 Country Hubs, Join as a Founding Member')}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

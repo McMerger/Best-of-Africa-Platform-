@@ -76,11 +76,11 @@ export const BetaEvents: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+            <div className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-6xl mx-auto w-full">
                     <div>
                         <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story Network</p>
-                        <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+                        <h1 className="max-w-3xl break-words text-foreground text-[clamp(2.35rem,11vw,4.5rem)] font-serif leading-[0.96] tracking-tight mb-6">
                             Summits & Executive Forums
                         </h1>
                         <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
@@ -118,7 +118,7 @@ export const BetaEvents: React.FC = () => {
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
                                 className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
                             >
-                                <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
+                                <div className="relative h-56 overflow-hidden sm:h-72 md:h-auto md:w-5/12">
                                     <div 
                                         className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-1000"
                                         style={{ backgroundImage: `url(${event.hero_image_url || EVENT_FALLBACKS[index % EVENT_FALLBACKS.length]})` }}
@@ -126,7 +126,7 @@ export const BetaEvents: React.FC = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent md:hidden" />
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card hidden md:block" />
                                 </div>
-                                <div className="p-10 md:p-14 md:w-7/12 flex flex-col justify-center z-10">
+                                <div className="z-10 flex flex-col justify-center p-5 sm:p-8 md:w-7/12 md:p-14">
                                     <div className="flex flex-wrap items-center gap-4 mb-6">
                                         <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full">
                                             {event.event_type}
@@ -137,12 +137,12 @@ export const BetaEvents: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h2 className="text-[2.5rem] font-serif leading-none text-foreground mb-6">{event.title}</h2>
-                                    <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8] line-clamp-3">
+                                    <h2 className="mb-5 break-words font-serif text-[clamp(1.85rem,8vw,2.5rem)] leading-[1.05] text-foreground md:mb-6">{stripMarkdown(event.title)}</h2>
+                                    <p className="mb-7 text-base font-light leading-7 text-foreground/60 line-clamp-4 md:mb-10 md:text-[1.125rem] md:leading-[1.8]">
                                         {stripMarkdown(event.description)}
                                     </p>
                                     
-                                    <div className="grid grid-cols-2 gap-6 mb-10 bg-foreground/5 border border-foreground/10 rounded-2xl p-6">
+                                    <div className="mb-8 grid grid-cols-1 gap-4 rounded-xl border border-foreground/10 bg-foreground/5 p-4 min-[520px]:grid-cols-2 md:mb-10 md:gap-6 md:rounded-2xl md:p-6">
                                         <div className="flex items-center gap-3 text-[15px] font-light text-foreground/80">
                                             <CalendarIcon className="w-5 h-5 text-accent" />
                                             {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}

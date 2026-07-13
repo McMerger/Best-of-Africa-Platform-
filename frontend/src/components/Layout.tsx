@@ -19,8 +19,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex-1 flex flex-col min-h-screen min-w-0">
                 <NavBar />
                 {MEMBER_PREVIEW_MODE && (
-                    <div className="border-b border-accent/30 bg-accent/10 px-4 py-2 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink">
-                        Member preview mode — all subscription content is temporarily open
+                    <div className="border-b border-accent/30 bg-accent/10 px-4 py-2 text-center text-[9px] font-bold uppercase leading-4 tracking-[0.11em] text-accent-ink sm:text-[10px] sm:tracking-[0.16em]">
+                        <span className="sm:hidden">Member preview · Subscription content temporarily open</span>
+                        <span className="hidden sm:inline">Member preview mode — all subscription content is temporarily open</span>
                     </div>
                 )}
                 <Breadcrumbs />

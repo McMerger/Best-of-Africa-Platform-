@@ -20,11 +20,11 @@ export const BetaAbout = () => {
       />
       
       {/* 1. HERO, full navy band (spec §3.7) */}
-      <section className="border-b border-border bg-card px-6 py-14 md:py-20">
+      <section className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
         <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-[1fr_280px] md:items-end">
           <div>
             <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">About BOA-Story</p>
-            <h1 className="max-w-3xl font-serif text-foreground text-[2.75rem] sm:text-[3.5rem] md:text-[4.5rem] leading-[0.96] tracking-tight">
+            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight">
               {t('landing.mission_title', "We're building Africa's story.")}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-foreground/65">
@@ -38,7 +38,7 @@ export const BetaAbout = () => {
       {/* 1b. Live platform stats strip, proof, not aspiration */}
       {stats && (
         <section className="border-b border-border bg-background">
-          <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="max-w-5xl mx-auto grid grid-cols-2 gap-x-5 gap-y-8 px-4 py-8 sm:px-6 md:grid-cols-4 md:gap-8">
             {[
               { value: stats.total_articles.toLocaleString(), label: t('about.stat_published', 'Stories Published') },
               { value: stats.total_countries, label: t('about.stat_countries', 'Countries Covered') },
@@ -54,7 +54,7 @@ export const BetaAbout = () => {
         </section>
       )}
 
-      <main className="max-w-4xl mx-auto px-6">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6">
         
         {/* 2. THE FOUNDER & MISSION */}
         <section className="py-14 md:py-20 border-b border-foreground/10">

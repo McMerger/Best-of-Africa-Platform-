@@ -81,13 +81,13 @@ export const BetaSearch: React.FC = () => {
             />
 
             {/* Search Header, navy band (spec §3.1) */}
-            <div className="bg-card text-foreground px-4 py-14 sm:px-6 md:py-20 border-b border-border">
+            <div className="border-b border-border bg-card px-4 py-9 text-foreground sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">
                             <SparklesIcon size={14} /> Intelligence Search
                         </p>
-                        <h1 className="font-serif text-foreground text-[2.75rem] md:text-[4rem] leading-[0.96] tracking-tight mb-8">
+                        <h1 className="break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4rem)] leading-[0.96] tracking-tight mb-7 md:mb-8">
                             What are you researching?
                         </h1>
                         {/* Search Input, dark navy field with gold border */}
@@ -125,7 +125,7 @@ export const BetaSearch: React.FC = () => {
                                             <Link
                                                 key={i}
                                                 to={`/posts/${s.slug}`}
-                                                className="flex items-center gap-4 px-8 py-5 hover:bg-foreground/5 transition-colors border-b border-foreground/5 last:border-0 group"
+                                                className="group flex items-center gap-3 border-b border-foreground/5 px-4 py-4 transition-colors last:border-0 hover:bg-foreground/5 sm:gap-4 sm:px-8 sm:py-5"
                                                 onClick={() => setShowSuggestions(false)}
                                             >
                                                 <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
@@ -142,7 +142,7 @@ export const BetaSearch: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 py-16">
+            <div className="max-w-4xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
 
                 {/* Empty State */}
                 {!debouncedQ && (
@@ -178,13 +178,13 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Quick Answer Card */}
                 {analystAnswer && (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card text-foreground p-8 md:p-10 rounded-xl mb-12 border border-accent/20 relative overflow-hidden">
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative mb-10 overflow-hidden rounded-xl border border-accent/20 bg-card p-5 text-foreground sm:p-8 md:mb-12 md:p-10">
                         <div className="absolute inset-0 bg-accent/5 pointer-events-none" />
                         <div className="flex items-center gap-4 mb-6 relative z-10">
                             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center border border-accent/30">
                                 <SparklesIcon className="text-accent w-6 h-6" />
                             </div>
-                            <h3 className="font-serif text-[2rem] text-foreground">Research answer</h3>
+                            <h3 className="font-serif text-[1.65rem] text-foreground sm:text-[2rem]">Research answer</h3>
                         </div>
                         <MarkdownRenderer content={analystAnswer} className="relative z-10 text-foreground/80" />
                     </motion.div>
@@ -192,7 +192,7 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Filter Tabs */}
                 {results.length > 0 && !isLoading && (
-                    <div className="flex flex-wrap items-center gap-3 mb-10 pb-6 border-b border-foreground/10">
+                    <div className="mobile-scroll-strip -mx-4 mb-8 gap-2 border-b border-foreground/10 px-4 pb-5 sm:mx-0 sm:flex-wrap sm:px-0 md:mb-10 md:gap-3">
                         {FILTER_TABS.map(tab => (
                             <button
                                 key={tab.id}
@@ -238,7 +238,7 @@ export const BetaSearch: React.FC = () => {
                                     >
                                         <Link
                                             to={`/posts/${slug}`}
-                                            className="group block bg-card rounded-3xl border border-foreground/10 p-8 hover:border-accent/40 hover:bg-foreground/5 transition-all shadow-xl hover:shadow-[0_0_30px_rgba(201,168,76,0.1)]"
+                                        className="group block rounded-xl border border-foreground/10 bg-card p-5 transition-all hover:border-accent/40 hover:bg-foreground/5 sm:rounded-2xl sm:p-8"
                                         >
                                             <div className="flex items-start justify-between gap-6">
                                                 <div className="flex-1 min-w-0">
@@ -266,7 +266,7 @@ export const BetaSearch: React.FC = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="w-12 h-12 rounded-full bg-foreground/5 border border-foreground/10 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:border-accent transition-all mt-2">
+                                                <div className="mt-2 hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 transition-all group-hover:border-accent group-hover:bg-accent sm:flex">
                                                     <ArrowRightIcon className="w-5 h-5 text-foreground/50 group-hover:text-primary transition-colors" />
                                                 </div>
                                             </div>
@@ -279,8 +279,13 @@ export const BetaSearch: React.FC = () => {
                 )}
 
                 {isError && (
-                    <div className="py-14 md:py-24 text-center text-destructive/80">
-                        <p className="text-[1.125rem]">Search is temporarily unavailable. Please try again.</p>
+                    <div className="rounded-xl border border-border bg-card px-5 py-12 text-center md:py-16">
+                        <p className="font-serif text-2xl text-navy">Continue through the evidence index</p>
+                        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">This search request did not complete. Country records and the latest source-linked reporting remain available directly.</p>
+                        <div className="mt-6 flex flex-col justify-center gap-3 min-[420px]:flex-row">
+                            <Link to="/countries" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Browse countries</Link>
+                            <Link to="/posts" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy">Latest reporting</Link>
+                        </div>
                     </div>
                 )}
             </div>
