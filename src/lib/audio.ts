@@ -150,7 +150,7 @@ export async function generateBriefAudio(
     countryCode: string,
     date: string,
 ): Promise<{ audioUrl: string; transcript: string } | null> {
-    return getCached(env, `brief_audio:v4:${countryCode}:${date}`, async () => {
+    return getCached(env, `brief_audio:v5:${countryCode}:${date}`, async () => {
         const articles = await env.DB.prepare(`
             SELECT title, summary FROM articles
             WHERE country_code = ? AND status = 'published' AND date(published_at) = ?
@@ -167,7 +167,7 @@ export async function generateBriefAudio(
         const transcript = await callConfiguredAI(env, {
             prompt: `System: You are BOA-Story's audio briefing editor. Use only the numbered records. Write for the ear in natural, human sentences. Do not read citation symbols, markdown, URLs or section labels aloud. Do not infer national conditions, market growth or stability from the records.
 
-User: Write a 450-650 word spoken briefing for ${country?.name || countryCode} dated ${date}. Open with the date and direct lead, connect the stories through chronology and named actors, explain documented mechanisms and why the developments matter, distinguish allegations from established facts, include counter-signals and evidence limitations, and close with three specific things listeners should watch next. No preamble about being an AI.
+User: Write a 600-900 word spoken briefing for ${country?.name || countryCode} dated ${date}. Open with the date and direct lead, connect the stories through chronology and named actors, explain documented mechanisms and why the developments matter, distinguish allegations from established facts, include counter-signals and evidence limitations, and close with three specific things listeners should watch next. No preamble about being an AI.
 
 RECORDS:
 ${evidence}`,
@@ -183,7 +183,7 @@ ${evidence}`,
         await env.MEDIA.put(audioKey, generated.audio, { httpMetadata: { contentType: 'audio/mpeg' } });
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
         const path = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
-        return { audioUrl: `${path}?v=4`, transcript };
+        return { audioUrl: `${path}?v=5`, transcript };
     }, { ttl: 86400 });
 }
 

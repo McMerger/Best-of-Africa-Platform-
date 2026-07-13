@@ -36,11 +36,11 @@ TITLE: [Compelling headline for the narrative story, max 80 characters]
 SUBTITLE: [Secondary headline adding human context, max 120 characters]
 
 CONTENT:
-[Full narrative article in markdown format with subheadings. Focus on the human element, the creators, and the streets. 400-600 words.]
+[Full narrative article in markdown format with 6-10 descriptive subheadings. Develop the human element, place, chronology, documented mechanisms, competing perspectives, consequences and unresolved questions in 1,800-2,600 words when the supplied reporting supports that depth. Never invent scene-setting or pad thin evidence.]
 
-SUMMARY: [2-3 sentence grounded summary capturing the human reality and opportunity of the story]
+SUMMARY: [3-5 sentence grounded summary capturing the human reality, documented change and unresolved question]
 
-INVESTOR_BRIEF: [100-150 word highly analytical summary of market impact, geopolitical risk, and economic opportunity for the Intelligence Dashboard.]
+INVESTOR_BRIEF: [250-400 word source-bounded professional analysis of documented commercial mechanisms, named actors, operating constraints, counter-signals, diligence gaps and verification priorities. Do not issue a rating or invent financial metrics.]
 
 TAGS: [comma-separated list of 3-5 relevant tags]
 

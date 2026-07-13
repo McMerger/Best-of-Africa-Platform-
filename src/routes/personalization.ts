@@ -336,7 +336,7 @@ router.get('/feed/ai-curated', async (c) => {
     // For now, simpler time-based cache is sufficient
     return c.json(await getCached(
         c.env,
-        `feed:ai-curated:depth-v5:${sessionId}`,
+        `feed:ai-curated:depth-v6:${sessionId}`,
         async () => {
             // 1. Fetch Top 15 Candidates (SQL)
             const candidates = await c.env.DB.prepare(`

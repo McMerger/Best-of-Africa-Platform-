@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { generateArticleImage, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
+import { evaluateArticleDepth, generateArticleImage, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { autoTranslateArticle } from '../lib/translate';
 import { generateAudioNarration } from '../lib/audio';
@@ -342,6 +342,20 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
 
     if (!taskMeta) {
         return c.json({ error: 'not_found', message: 'Task not found' }, 404);
+    }
+
+    // A Worker/agent may report transport-level success while returning a thin
+    // draft. Treat that as a failed attempt so the existing retry/backoff path
+    // can request a substantive replacement instead of publishing it.
+    if (taskMeta.type === 'generate_article' && payload.status === 'completed') {
+        const generated = payload.result as Record<string, any> | undefined;
+        const professionalBrief = generated?.investor_brief || generated?.ai_investor_brief || '';
+        const depth = evaluateArticleDepth(generated?.content, professionalBrief);
+        if (!depth.publishable) {
+            payload.status = 'failed';
+            payload.errorMessage = `Depth quality gate: article ${depth.articleWords}/${MIN_PUBLISHABLE_ARTICLE_WORDS} words; professional brief ${depth.briefWords}/${MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS} words`;
+            payload.result = undefined;
+        }
     }
 
     let finalStatus = payload.status;

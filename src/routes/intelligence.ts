@@ -420,7 +420,7 @@ Use this structure when the evidence supports it:
 5. Counter-evidence and uncertainty — contradictions, missing records and source limitations.
 6. What to verify next — concrete primary documents or data needed for diligence.
 
-Aim for 2,200-3,400 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, implementation status, named stakeholders, first-, second- and conditional-order implications, alternative explanations, counter-evidence, source limitations, a full claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
+Aim for 3,200-4,800 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, implementation status, named stakeholders, first-, second- and conditional-order implications, alternative explanations, counter-evidence, source limitations, a full claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
     
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
@@ -542,7 +542,7 @@ async function generateAIRecommendations(env: Env, countryName: string, articles
 
     const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records. Do not infer market growth, investment readiness, political stability or tourism appeal from article volume or engagement. Distinguish reported facts from analysis and cite record numbers inline.
 
-User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 300-450 words and contain: the supported finding, named actors and dates, documented mechanism, affected stakeholders, immediate and conditional implications, a counter-signal or alternative explanation, evidence limitations, and concrete primary-source verification steps. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
+User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 500-700 words and contain: the supported finding, named actors and dates, documented mechanism, affected stakeholders, immediate and conditional implications, a counter-signal or alternative explanation, evidence limitations, and concrete primary-source verification steps. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
 
 RECORDS:
 ${evidence}`;

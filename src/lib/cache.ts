@@ -128,27 +128,27 @@ export const CACHE_KEYS = {
 
     // Search optimization keys
     searchSuggest: (q: string) => `search:suggest:${q.toLowerCase().substring(0, 20)}`,
-    searchAiSummary: (q: string) => `search:ai:depth-v4:${q.toLowerCase().trim().substring(0, 50)}`,
+    searchAiSummary: (q: string) => `search:ai:depth-v5:${q.toLowerCase().trim().substring(0, 50)}`,
 
     // Analytics dashboard keys
     analyticsDashboard: (period: string) => `analytics:dashboard:${period}`,
 
     // Intelligence API keys
-    intelCountryReport: (code: string) => `intel:country:${code}:report:depth-v6`,
-    intelSectorTrends: (id: string) => `intel:sector:${id}:trends:depth-v4`,
+    intelCountryReport: (code: string) => `intel:country:${code}:report:depth-v7`,
+    intelSectorTrends: (id: string) => `intel:sector:${id}:trends:depth-v5`,
     intelAudienceReach: () => 'intel:audience:reach',
-    countryOutlook: (code: string) => `country:${code}:outlook:depth-v5`,
-    articleContext: (id: string) => `article:${id}:ai_context:depth-v6`,
-    narrativeSynthesis: (code: string) => `narrative:synthesis:${code}:depth-v4`,
-    sectorOutlook: (id: string) => `sector:${id}:outlook:depth-v4`,
-    countryRelationships: (code: string) => `country:${code}:relationships:depth-v6`,
-    countrySituation: (code: string) => `country:${code}:situation:depth-v4`,
-    globalBriefing: 'home:global-briefing:depth-v4',
-    intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis:depth-v4`,
-    adminContentRecs: 'admin:content-recommendations:depth-v4',
-    analyticsContentStrategy: 'analytics:content-strategy:depth-v4',
-    marketSentiment: (code: string) => `market:sentiment:${code}:depth-v4`,
-    sectorSupplyChain: (id: string) => `market:supply-chain:${id}:depth-v4`,
+    countryOutlook: (code: string) => `country:${code}:outlook:depth-v6`,
+    articleContext: (id: string) => `article:${id}:ai_context:depth-v7`,
+    narrativeSynthesis: (code: string) => `narrative:synthesis:${code}:depth-v5`,
+    sectorOutlook: (id: string) => `sector:${id}:outlook:depth-v5`,
+    countryRelationships: (code: string) => `country:${code}:relationships:depth-v7`,
+    countrySituation: (code: string) => `country:${code}:situation:depth-v5`,
+    globalBriefing: 'home:global-briefing:depth-v5',
+    intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis:depth-v5`,
+    adminContentRecs: 'admin:content-recommendations:depth-v5',
+    analyticsContentStrategy: 'analytics:content-strategy:depth-v5',
+    marketSentiment: (code: string) => `market:sentiment:${code}:depth-v5`,
+    sectorSupplyChain: (id: string) => `market:supply-chain:${id}:depth-v5`,
 
 } as const;
 

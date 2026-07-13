@@ -31,8 +31,10 @@ export const MODELS = {
 // Stored on the article row so we can evaluate prompt quality over time.
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
-export const ARTICLE_PROMPT_VERSION = 'v1.5-full-reporting';
-export const AI_RESPONSE_VERSION = 'depth-v4-full-context';
+export const ARTICLE_PROMPT_VERSION = 'v1.6-depth-enforced';
+export const AI_RESPONSE_VERSION = 'depth-v5-structured-repair';
+export const MIN_PUBLISHABLE_ARTICLE_WORDS = 1600;
+export const MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS = 200;
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Enforced Information Generation
@@ -47,40 +49,47 @@ export interface AICallOptions {
     max_tokens?: number;
     temperature?: number;
     response_profile?: AIResponseProfile;
-    /** Preserve an exact JSON/schema response and skip prose-length expansion. */
+    /** Require valid JSON/schema output while retaining the depth repair pass. */
     structured_output?: boolean;
 }
 
 export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-analysis' | 'structured-analysis' | 'decision-brief' | 'reader-explainer' | 'spoken-brief';
 
-const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instructions: string }> = {
+const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; minimumTokens: number; instructions: string }> = {
     'editorial-article': {
-        minimumWords: 1400,
-        instructions: `Write a complete 1,400-2,200 word reported narrative, not a synopsis or lightly expanded rewrite. Develop the people, place, chronology, documented mechanisms, competing perspectives, material consequences and unresolved questions using only the supplied source material. Include every relevant name, institution, location, date, quotation and figure supplied. Explain technical or policy context in plain language, distinguish allegation from established fact, show what changed and what did not, and preserve the required output schema. Never add generic filler or invented scene-setting to reach length.`,
+        minimumWords: 1800,
+        minimumTokens: 9000,
+        instructions: `Write a complete 1,800-2,600 word reported narrative, not a synopsis or lightly expanded rewrite. Develop the people, place, chronology, documented mechanisms, competing perspectives, material consequences and unresolved questions using only the supplied source material. Include every relevant name, institution, location, date, quotation and figure supplied. Explain technical or policy context in plain language, distinguish allegation from established fact, show what changed and what did not, and preserve the required output schema. End the reporting body with what remains unresolved. Never add generic filler or invented scene-setting to reach length.`,
     },
     'evidence-brief': {
-        minimumWords: 1500,
-        instructions: `Produce a substantive 1,500-2,400 word evidence brief when the records support it. Include a direct finding, scope and time window, record-by-record chronology, named actors and places, documented mechanisms, stakeholder effects, cross-country or sector differences, implementation status, immediate and conditional implications, counter-signals, contradictions, source-by-source limitations, and concrete verification questions. Add a claim ledger linking every major conclusion to supplied record identifiers and specify what evidence would change it. Attribute every material claim to the supplied records. Do not invent figures, scores, forecasts, motives, causality or certainty.`,
+        minimumWords: 2200,
+        minimumTokens: 10000,
+        instructions: `Produce a substantive 2,200-3,200 word evidence brief when the records support it. Include a direct finding, scope and time window, record-by-record chronology, named actors and places, documented mechanisms, stakeholder effects, cross-country or sector differences, implementation status, immediate and conditional implications, counter-signals, contradictions, source-by-source limitations, and concrete verification questions. Add a claim ledger linking every major conclusion to supplied record identifiers and specify what evidence would change it. Attribute every material claim to the supplied records. Do not invent figures, scores, forecasts, motives, causality or certainty.`,
     },
     'deep-analysis': {
-        minimumWords: 2200,
-        instructions: `Produce a rigorous 2,200-3,400 word analysis when the evidence supports that depth. Begin with a precise answer, scope, time window and explicit evidence boundary. Separate reported facts, supported interpretation and unresolved questions; cite supplied source identifiers inline. Reconstruct chronology, explain documented mechanisms step by step, identify named decision-makers and affected stakeholders, compare countries and sectors, assess implementation status, and develop first-, second- and conditional-order implications. Examine constraints, dependencies, counter-evidence, alternative explanations, uncertainty, source quality, missing primary documents and prioritized diligence steps. End with a claim ledger showing which records support every major conclusion and what evidence would change it. Do not pad thin evidence or introduce outside facts.`,
+        minimumWords: 3200,
+        minimumTokens: 12000,
+        instructions: `Produce a rigorous 3,200-4,800 word analysis when the evidence supports that depth. Begin with a precise answer, scope, time window and explicit evidence boundary. Separate reported facts, supported interpretation and unresolved questions; cite supplied source identifiers inline. Reconstruct chronology, explain documented mechanisms step by step, identify named decision-makers and affected stakeholders, compare countries and sectors, assess implementation status, and develop first-, second- and conditional-order implications. Examine constraints, dependencies, counter-evidence, alternative explanations, uncertainty, source quality, missing primary documents and prioritized diligence steps. End with a claim ledger showing which records support every major conclusion and what evidence would change it. Do not pad thin evidence or introduce outside facts.`,
     },
     'structured-analysis': {
-        minimumWords: 700,
+        minimumWords: 900,
+        minimumTokens: 7000,
         instructions: `Return exactly the requested JSON or structured schema with no prose outside it. Make every substantive field evidence-dense while respecting its stated field length and item-count limits. Across the schema, preserve dates, names, institutions, locations, figures, chronology, documented mechanisms, stakeholder effects, implications, counter-signals, alternative explanations, source limitations, verification questions and claim-to-record links wherever requested. Never leave a requested evidence, limitation, diligence or claim-ledger array empty when the supplied records support entries. Do not invent facts, scores, forecasts, causality or certainty. Ensure the response is complete, valid and closed within the token budget.`,
     },
     'decision-brief': {
-        minimumWords: 1000,
-        instructions: `Produce a 1,000-1,600 word decision-useful brief when evidence permits, not a promotional summary. State the decision context, scope, evidence boundary, what is known, why it matters, who is affected, chronology, documented mechanisms, practical constraints, dependencies, implementation considerations, contrary evidence, alternative explanations, information gaps, and prioritized verification steps. Tie each action or conclusion to supplied evidence, distinguish evidence from judgment, and do not manufacture recommendations or facts.`,
+        minimumWords: 1600,
+        minimumTokens: 8000,
+        instructions: `Produce a 1,600-2,400 word decision-useful brief when evidence permits, not a promotional summary. State the decision context, scope, evidence boundary, what is known, why it matters, who is affected, chronology, documented mechanisms, practical constraints, dependencies, implementation considerations, contrary evidence, alternative explanations, information gaps, and prioritized verification steps. Tie each action or conclusion to supplied evidence, distinguish evidence from judgment, and do not manufacture recommendations or facts.`,
     },
     'reader-explainer': {
-        minimumWords: 500,
-        instructions: `Produce a clear 500-800 word reader explainer grounded only in supplied material. State the main finding, then explain the chronology, named actors, mechanism, affected people or institutions, concrete evidence, why it matters, counter-signals, limitations and what remains unresolved. Prefer plain language and specific nouns and verbs. Do not compress the answer into slogans, scores or unsupported recommendations.`,
+        minimumWords: 800,
+        minimumTokens: 5000,
+        instructions: `Produce a clear 800-1,200 word reader explainer grounded only in supplied material. State the main finding, then explain the chronology, named actors, mechanism, affected people or institutions, concrete evidence, why it matters, counter-signals, limitations and what remains unresolved. Prefer plain language and specific nouns and verbs. Do not compress the answer into slogans, scores or unsupported recommendations.`,
     },
     'spoken-brief': {
-        minimumWords: 450,
-        instructions: `Write a complete 450-650 word spoken briefing for the ear. Use natural sentence rhythm, short transitions and pronunciation-friendly wording while retaining dates, names, figures, chronology, documented mechanisms, implications, counter-signals, evidence limits and a concrete watchlist. Do not use markdown, tables, citation symbols or generic presenter filler. Do not invent facts to make the script longer.`,
+        minimumWords: 600,
+        minimumTokens: 3000,
+        instructions: `Write a complete 600-900 word spoken briefing for the ear. Use natural sentence rhythm, short transitions and pronunciation-friendly wording while retaining dates, names, figures, chronology, documented mechanisms, implications, counter-signals, evidence limits and a concrete watchlist. Do not use markdown, tables, citation symbols or generic presenter filler. Do not invent facts to make the script longer.`,
     },
 };
 
@@ -88,6 +97,20 @@ const THIN_EVIDENCE_LANGUAGE = /\b(insufficient (?:data|evidence|context)|no (?:
 
 export function countResponseWords(text: string): number {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+export function evaluateArticleDepth(content: unknown, investorBrief: unknown): {
+    articleWords: number;
+    briefWords: number;
+    publishable: boolean;
+} {
+    const articleWords = typeof content === 'string' ? countResponseWords(content) : 0;
+    const briefWords = typeof investorBrief === 'string' ? countResponseWords(investorBrief) : 0;
+    return {
+        articleWords,
+        briefWords,
+        publishable: articleWords >= MIN_PUBLISHABLE_ARTICLE_WORDS && briefWords >= MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS,
+    };
 }
 
 export function extractAIText(response: unknown): string {
@@ -129,42 +152,66 @@ export function shouldExpandAIResponse(text: string, profile?: AIResponseProfile
     return countResponseWords(text) < RESPONSE_PROFILES[profile].minimumWords;
 }
 
+export function isValidStructuredOutput(text: string): boolean {
+    try {
+        const parsed = JSON.parse(text);
+        return parsed !== null && (Array.isArray(parsed) || typeof parsed === 'object');
+    } catch {
+        return false;
+    }
+}
+
 function applyResponseProfile(options: AICallOptions): AICallOptions {
     if (!options.response_profile) return options;
-    const contract = RESPONSE_PROFILES[options.response_profile].instructions;
+    const profile = RESPONSE_PROFILES[options.response_profile];
+    const contract = profile.instructions;
+    const withBudget = { ...options, max_tokens: Math.max(options.max_tokens || 0, profile.minimumTokens) };
     if (options.messages) {
         const messages = options.messages.map(message => ({ ...message }));
         const systemIndex = messages.findIndex(message => message.role === 'system');
         if (systemIndex >= 0) messages[systemIndex].content += `\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}`;
         else messages.unshift({ role: 'system', content: `DEPTH AND EVIDENCE CONTRACT:\n${contract}` });
-        return { ...options, messages };
+        return { ...withBudget, messages };
     }
-    return { ...options, prompt: `${options.prompt || ''}\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}` };
+    return { ...withBudget, prompt: `${options.prompt || ''}\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}` };
 }
 
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
     const prepared = applyResponseProfile(options);
     const first = await callConfiguredAIOnce(env, prepared);
-    // A schema can carry substantial depth across multiple fields without
-    // reaching a prose profile's word floor. Re-expanding it risks truncating
-    // the closing braces and silently sending callers into thin fallbacks.
-    if (options.structured_output) return first;
-    if (!shouldExpandAIResponse(first, options.response_profile)) return first;
+    const malformedStructure = Boolean(options.structured_output && !isValidStructuredOutput(first));
+    if (!malformedStructure && !shouldExpandAIResponse(first, options.response_profile)) return first;
 
     const contract = RESPONSE_PROFILES[options.response_profile!];
+    const structuredInstruction = options.structured_output
+        ? 'Return one complete replacement JSON value matching the original schema. Output JSON only, with every brace and bracket closed.'
+        : 'Return the complete rewritten response under the original format.';
     const expansionPrompt = `The draft below is materially underdeveloped (${countResponseWords(first)} words; the requested analytical floor is ${contract.minimumWords} words when evidence permits).
 
 Rewrite it as a complete response under the original instructions and schema. Add depth only from the original supplied evidence. Preserve every supported detail, make reasoning explicit, add counter-evidence and limitations, and never pad or invent. If the evidence genuinely cannot support the requested depth, state the precise missing evidence instead.
 
+${structuredInstruction}
+
 DRAFT TO REWRITE:
 ${first}`;
-    return callConfiguredAIOnce(env, applyResponseProfile({
+    const expanded = await callConfiguredAIOnce(env, applyResponseProfile({
         ...options,
         prompt: options.messages ? undefined : `${options.prompt || ''}\n\n${expansionPrompt}`,
         messages: options.messages
             ? [...options.messages, { role: 'assistant', content: first }, { role: 'user', content: expansionPrompt }]
             : undefined,
         temperature: Math.min(options.temperature ?? 0.3, 0.3),
+    }));
+    if (!options.structured_output || isValidStructuredOutput(expanded)) return expanded;
+
+    const repairPrompt = `Repair the malformed structured response below. Preserve all substantive detail, but return exactly one valid JSON value matching the original requested schema. Do not summarize, omit fields, add commentary or use markdown fences.\n\nMALFORMED RESPONSE:\n${expanded}`;
+    return callConfiguredAIOnce(env, applyResponseProfile({
+        ...options,
+        prompt: options.messages ? undefined : `${options.prompt || ''}\n\n${repairPrompt}`,
+        messages: options.messages
+            ? [...options.messages, { role: 'assistant', content: expanded }, { role: 'user', content: repairPrompt }]
+            : undefined,
+        temperature: 0.1,
     }));
 }
 
@@ -201,11 +248,20 @@ export async function generateArticle(
     subtitle: string;
     content: string;
     summary: string;
+    investor_brief: string;
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 6500, temperature: 0.7, response_profile: 'editorial-article' });
-    return parseArticleResponse(text);
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 9000, temperature: 0.7, response_profile: 'editorial-article' });
+    const article = parseArticleResponse(text);
+    const depth = evaluateArticleDepth(article.content, article.investor_brief);
+    if (depth.articleWords < MIN_PUBLISHABLE_ARTICLE_WORDS) {
+        throw new Error(`Article quality gate rejected ${depth.articleWords} words; minimum publishable depth is ${MIN_PUBLISHABLE_ARTICLE_WORDS}`);
+    }
+    if (depth.briefWords < MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS) {
+        throw new Error(`Investor brief quality gate rejected ${depth.briefWords} words; minimum publishable depth is ${MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS}`);
+    }
+    return article;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -574,7 +630,7 @@ Requirements:
 - Do NOT frame this as an investment pitch or tourism guide.
 - Do NOT use hedging language ("might", "could", "potentially").
 - Do NOT use NGO, corporate, or intelligence jargon.
-- Honest, grounded, relatable tone. 1,400-2,200 words when the source supports it; never pad thin evidence.
+- Honest, grounded, relatable tone. 1,800-2,600 words when the source supports it; never pad thin evidence.
 
 Structure your response EXACTLY as follows:
 
@@ -630,7 +686,7 @@ Requirements:
   "pave the way", "melting pot", "treasure trove", "game-changer", "microcosm",
   "the fabric of", "lasting legacy", "speaks volumes", "in essence". Prefer
   concrete nouns and verbs over these.
-- Honest, grounded tone. Aim for 1,400-2,200 words organised under 5-8 descriptive
+- Honest, grounded tone. Aim for 1,800-2,600 words organised under 6-10 descriptive
   subheadings (### in markdown) — enough depth to genuinely inform the reader,
   with concrete detail and context, not a brief.
 
@@ -645,7 +701,9 @@ SUBTITLE: [Secondary headline adding context, max 120 characters]
 CONTENT:
 [Full article in markdown format with subheadings]
 
-SUMMARY: [2-3 sentence grounded human-focused summary]
+SUMMARY: [3-5 sentence grounded human-focused summary]
+
+INVESTOR_BRIEF: [250-400 word source-bounded professional analysis covering documented commercial mechanisms, named actors, constraints, counter-signals, diligence gaps and verification priorities. Do not issue a rating or invent financial metrics.]
 
 TAGS: [comma-separated list of 3-5 relevant tags]`;
 }
@@ -701,12 +759,14 @@ function parseArticleResponse(text: string): {
     subtitle: string;
     content: string;
     summary: string;
+    investor_brief: string;
     tags: string[];
 } {
     const titleMatch = text.match(/TITLE:\s*(.+?)(?=\n|SUBTITLE:)/s);
     const subtitleMatch = text.match(/SUBTITLE:\s*(.+?)(?=\n|CONTENT:)/s);
     const contentMatch = text.match(/CONTENT:\s*([\s\S]+?)(?=SUMMARY:)/s);
-    const summaryMatch = text.match(/SUMMARY:\s*(.+?)(?=\n|TAGS:)/s);
+    const summaryMatch = text.match(/SUMMARY:\s*([\s\S]+?)(?=INVESTOR_BRIEF:|TAGS:)/s);
+    const investorBriefMatch = text.match(/INVESTOR_BRIEF:\s*([\s\S]+?)(?=TAGS:)/s);
     const tagsMatch = text.match(/TAGS:\s*(.+?)$/s);
 
     // The model frequently ignores the "no markdown" instruction and wraps these
@@ -731,6 +791,7 @@ function parseArticleResponse(text: string): {
         subtitle: humanizeText(stripInline(subtitleMatch?.[1])),
         content,
         summary: humanizeText(stripInline(summaryMatch?.[1])),
+        investor_brief: humanizeText(stripInline(investorBriefMatch?.[1])),
         tags: tagsMatch?.[1]?.split(',').map(t => humanizeText(stripInline(t))).filter(Boolean) || [],
     };
 }
@@ -899,7 +960,7 @@ Follow this structure exactly:
 ## Source limitations and missing primary documents
 ## Claim ledger and verification priorities
 
-Write 2,200-3,400 words when the source supports that depth. Use only supplied evidence. Never manufacture a metric, comparison, verdict or recommendation. Retain uncertainty when evidence is incomplete.`,
+Write 3,200-4,800 words when the source supports that depth. Use only supplied evidence. Never manufacture a metric, comparison, verdict or recommendation. Retain uncertainty when evidence is incomplete.`,
     'summary': `You are producing a substantial reader explainer, not an abstract.
 
 Follow this structure:
@@ -909,7 +970,7 @@ Follow this structure:
 ## What remains uncertain
 ## What to verify next
 
-Write 500-800 words when evidence permits. Use supplied dates, names, places and figures. Do not turn coverage, engagement or a single announcement into a market conclusion.`,
+Write 800-1,200 words when evidence permits. Use supplied dates, names, places and figures. Do not turn coverage, engagement or a single announcement into a market conclusion.`,
     'bullet': `You are producing a detailed evidence sheet.
 
 Follow this structure:

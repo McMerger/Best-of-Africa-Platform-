@@ -419,7 +419,7 @@ router.get('/analytics/summary', async (c) => {
 
     const marketSummary = await getCached(
         c.env,
-        `dashboard:coverage-brief:depth-v5:${activeLens}`,
+        `dashboard:coverage-brief:depth-v6:${activeLens}`,
         async () => {
             if (!evidence) return 'No source-linked continental briefing is currently available.';
             const audience = activeLens === 'government'
@@ -429,7 +429,7 @@ router.get('/analytics/summary', async (c) => {
                     : 'investor and operator readers';
             const prompt = `System: You are BOA-Story's continental evidence editor writing for ${audience}. Use only the numbered records, cite them inline and separate facts from analysis. Do not use outside knowledge, fill evidence gaps, infer unstated causes, or turn allegations into facts. When causality, scale or outcome is unavailable, say so plainly. Coverage and audience activity are not proxies for economic performance, stability, sentiment, investability or tourism safety.
 
-User: Produce a rigorous 2,200–3,400 word continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, documented mechanisms, implementation status, first-, second- and conditional-order implications, counter-signals, alternative explanations, source limitations, under-covered regions or questions, a full claim ledger, and prioritized verification steps. Keep the analysis readable and avoid repeating duplicate records.
+User: Produce a rigorous 3,200-4,800 word continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, documented mechanisms, implementation status, first-, second- and conditional-order implications, counter-signals, alternative explanations, source limitations, under-covered regions or questions, a full claim ledger, and prioritized verification steps. Keep the analysis readable and avoid repeating duplicate records.
 
 RECORDS:
 ${evidence}`;

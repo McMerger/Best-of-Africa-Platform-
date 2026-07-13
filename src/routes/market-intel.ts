@@ -101,7 +101,7 @@ router.get('/sector/:id', async (c) => {
     ).join('\n---\n');
     const sectorAnalysis = await getCached(
         c.env,
-        `sector:${sectorId}:evidence-analysis:v4`,
+        `sector:${sectorId}:evidence-analysis:v5`,
         async () => {
             if (!evidence) return 'Insufficient evidence for a current sector analysis.';
             try {
@@ -257,7 +257,7 @@ router.get('/country/:code/outlook', async (c) => {
 
     const evidenceBriefing = await getCached(
         c.env,
-        `${CACHE_KEYS.countryOutlook(code)}:evidence-contract-v2`,
+        `${CACHE_KEYS.countryOutlook(code)}:evidence-contract-v3`,
         async () => {
             if (!evidenceContext) return `The current BOA-Story evidence window contains zero published records for ${countryData.name}. That observed zero is the finding: no country-level inference can be supported from this dataset until reporting records enter the window.`;
             const prompt = `System: You are BOA-Story's country evidence editor. Use only the numbered records. This is not an investment rating. Do not infer economic performance, political stability, policy quality, tourism safety or investability from article volume, engagement or narrative fields. Cite records inline and distinguish reported fact, supported interpretation and unresolved question.
@@ -481,7 +481,7 @@ router.get('/performance', async (c) => {
 router.get('/founder-log', async (c) => {
     return c.json(await getCached(
         c.env,
-        'founder-log:weekly:depth-v5',
+        'founder-log:weekly:depth-v6',
         async () => {
             // Fetch articles from the last 14 days
             const recentArticles = await c.env.DB.prepare(`
@@ -509,7 +509,7 @@ Write the update. Format it exactly as a JSON array of 3 objects, where each obj
 - date: "Month Year" (e.g., "${new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())}")
 - tag: a short 1-2 word tag (e.g., "Research Log", "Platform Update", "Founder Note")
 - title: A punchy, conversational title for the paragraph
-- body: A developed 300-450 word entry explaining the reporting work, specific countries or sectors covered, source discoveries, what was learned, what remains uncertain, editorial tradeoffs, and what happens next. Do not pretend that publication volume proves market impact.
+- body: A developed 500-700 word entry explaining the reporting work, specific countries or sectors covered, source discoveries, what was learned, what remains uncertain, editorial tradeoffs, and what happens next. Do not pretend that publication volume proves market impact.
 
 Return ONLY the raw JSON array.`;
 
@@ -857,7 +857,7 @@ router.get('/sector/:id/velocity', async (c) => {
 router.get('/opportunities', async (c) => {
     return c.json(await getCached(
         c.env,
-        'strategic-opportunities:depth-v7',
+        'strategic-opportunities:depth-v8',
         async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 

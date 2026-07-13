@@ -137,9 +137,9 @@ export async function generateArticleFromQueue(
                 id, slug, title, subtitle, content, summary,
                 country_code, sector_id, tags,
                 reading_time_minutes, source_url, source_title, source_published_at,
-                generation_model, generation_prompt_version,
+                generation_model, generation_prompt_version, ai_investor_brief,
                 status, published_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
         `).bind(
             articleId, slug,
             generated.title,
@@ -155,6 +155,7 @@ export async function generateArticleFromQueue(
             itemData.published_at  ?? null,
             MODELS.TEXT_GENERATION,
             ARTICLE_PROMPT_VERSION,
+            generated.investor_brief,
         ).run();
 
         // Mark as completed
