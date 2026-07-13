@@ -20,11 +20,11 @@ export const BetaAbout = () => {
       />
       
       {/* 1. HERO, full navy band (spec §3.7) */}
-      <section className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
+      <section className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
         <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-[1fr_280px] md:items-end">
           <div>
             <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">About BOA-Story</p>
-            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight">
+            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight">
               {t('landing.mission_title', "We're building Africa's story.")}
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-relaxed text-foreground/65">
@@ -54,7 +54,7 @@ export const BetaAbout = () => {
         </section>
       )}
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6">
+      <main className="max-w-4xl mx-auto px-5 sm:px-6">
         
         {/* 2. THE FOUNDER & MISSION */}
         <section className="py-14 md:py-20 border-b border-foreground/10">

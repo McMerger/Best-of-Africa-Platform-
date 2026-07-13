@@ -81,13 +81,13 @@ export const BetaSearch: React.FC = () => {
             />
 
             {/* Search Header, navy band (spec §3.1) */}
-            <div className="border-b border-border bg-card px-4 py-9 text-foreground sm:px-6 sm:py-14 md:py-20">
+            <div className="border-b border-border bg-card px-5 py-12 text-foreground sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">
                             <SparklesIcon size={14} /> Intelligence Search
                         </p>
-                        <h1 className="break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4rem)] leading-[0.96] tracking-tight mb-7 md:mb-8">
+                        <h1 className="break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-8">
                             What are you researching?
                         </h1>
                         {/* Search Input, dark navy field with gold border */}
@@ -142,7 +142,7 @@ export const BetaSearch: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-4 py-10 sm:px-6 sm:py-16">
+            <div className="max-w-4xl mx-auto px-5 py-14 sm:px-6 sm:py-16">
 
                 {/* Empty State */}
                 {!debouncedQ && (

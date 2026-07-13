@@ -127,7 +127,7 @@ export const BetaCountryTeaser = () => {
     <div className="selection:bg-accent selection:text-primary">
       
 
-      <div className="max-w-7xl mx-auto px-4 py-9 sm:px-6 sm:py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-5 py-12 sm:px-6 md:py-16">
 
         {/* Header */}
         <header className="mb-10 max-w-3xl">
@@ -135,7 +135,7 @@ export const BetaCountryTeaser = () => {
             <Globe size={12} />
             {t('countries.badge', '54 African Nations')}
           </div>
-          <h1 className="break-words font-serif text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.04] mb-4">
+          <h1 className="break-words font-serif text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.08] md:leading-[1.04] mb-5">
             {t('countries.title', 'One Continent. Every Story.')}
           </h1>
           <p className="text-base md:text-lg text-primary/70 max-w-2xl leading-relaxed">

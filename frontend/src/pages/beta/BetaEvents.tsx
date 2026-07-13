@@ -76,11 +76,11 @@ export const BetaEvents: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
+            <div className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-6xl mx-auto w-full">
                     <div>
                         <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story Network</p>
-                        <h1 className="max-w-3xl break-words text-foreground text-[clamp(2.35rem,11vw,4.5rem)] font-serif leading-[0.96] tracking-tight mb-6">
+                        <h1 className="max-w-3xl break-words text-foreground text-[clamp(2.35rem,11vw,4.5rem)] font-serif leading-[1.02] md:leading-[0.96] tracking-tight mb-6">
                             Summits & Executive Forums
                         </h1>
                         <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
@@ -91,7 +91,7 @@ export const BetaEvents: React.FC = () => {
             </div>
 
             {/* Event List */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6 mt-12 md:mt-14">
                 {isLoading ? (
                     <div className="rounded-xl border border-border bg-card p-8" role="status">
                         <p className="mb-6 text-sm font-medium text-foreground/60">Loading scheduled events…</p>

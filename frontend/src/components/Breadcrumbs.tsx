@@ -23,9 +23,9 @@ export const Breadcrumbs: React.FC = () => {
         s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
     return (
-        <div className="container py-2.5">
+        <div className="container overflow-x-auto py-3.5 sm:py-2.5">
             <Breadcrumb>
-                <BreadcrumbList>
+                <BreadcrumbList className="min-w-max">
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild>
                             <Link to="/" className="flex items-center">

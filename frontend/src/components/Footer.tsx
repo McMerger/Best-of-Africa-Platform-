@@ -10,15 +10,15 @@ const groups = [
 ] as const;
 
 export const Footer: React.FC = () => (
-  <footer className="mt-16 border-t border-white/10 bg-navy text-white">
-    <div className="container py-14 md:py-16">
+  <footer className="mt-20 border-t border-white/10 bg-navy text-white md:mt-16">
+    <div className="container py-16 md:py-16">
       <div className="grid gap-12 border-b border-white/10 pb-12 lg:grid-cols-[1.35fr_2fr]">
         <div>
           <Link to="/" className="font-serif text-2xl font-semibold tracking-tight">BOA<span className="text-accent">.</span></Link>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">Independent African reporting, country briefings and market intelligence built with context.</p>
           <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex border-b border-accent pb-1 text-sm font-medium text-accent hover:text-white">Support independent reporting</a>
         </div>
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-10 sm:grid-cols-4">
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-4 sm:gap-10">
           {groups.map(group => (
             <div key={group.title}>
               <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/40">{group.title}</h2>

@@ -51,7 +51,7 @@ export const BetaIntelligence = () => {
       />
 
       {/* Header */}
-      <div className="relative border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-12 md:py-16">
+      <div className="relative border-b border-border bg-card px-5 py-12 sm:px-6 md:py-16">
         <motion.div
           className="hidden"
         >
@@ -72,7 +72,7 @@ export const BetaIntelligence = () => {
                   Africa Decision Intelligence
                 </span>
               </div>
-              <h1 className="max-w-full break-words font-serif text-navy text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight mb-4">Market Intelligence</h1>
+              <h1 className="max-w-full break-words font-serif text-navy text-[clamp(2.35rem,11vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-5">Market Intelligence</h1>
               <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
                 The institutional entry point for understanding markets, sectors and decision signals across all 54 African nations.
               </p>
@@ -90,7 +90,7 @@ export const BetaIntelligence = () => {
       </div>
 
       <div className="border-b border-border bg-navy text-white">
-        <div className="mobile-scroll-strip max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 text-xs font-medium text-white/70">
+        <div className="mobile-scroll-strip max-w-6xl mx-auto px-5 sm:px-6 py-5 text-xs font-medium text-white/70">
           {['Investors & asset managers', 'Banks & DFIs', 'Corporate strategy', 'Governments & policymakers', 'Private capital', 'Research institutions'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
@@ -210,7 +210,7 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-8">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-8">
             {isLoading || !pulse ? (
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
             ) : (

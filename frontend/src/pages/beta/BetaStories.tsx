@@ -165,7 +165,7 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative w-full border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-12 md:py-16">
+      <section className="relative w-full border-b border-border bg-card px-5 py-12 sm:px-6 md:py-16">
         <motion.div 
           className="hidden"
           initial={false}
@@ -188,7 +188,7 @@ export const BetaStories = () => {
                 <Sparkles size={14} />
                 {t('landing.original_reporting', 'Original Reporting')}
               </div>
-              <h1 className="max-w-3xl break-words font-serif text-navy text-[clamp(2.35rem,11vw,4rem)] leading-[1] tracking-tight mb-3">
+              <h1 className="max-w-3xl break-words font-serif text-navy text-[clamp(2.35rem,11vw,4rem)] leading-[1.04] md:leading-[1] tracking-tight mb-4">
                 {t('stories.title_1', 'Stories from')} {t('stories.title_2', 'the Continent.')}
               </h1>
               <p className="text-base md:text-lg text-muted-foreground max-w-2xl leading-relaxed">
@@ -225,7 +225,7 @@ export const BetaStories = () => {
         </div>
       </section>
 
-      <div className="page-container py-7 sm:py-10 md:py-16">
+      <div className="page-container py-10 md:py-16">
 
         <div className="control-deck mb-8 md:mb-12">
 

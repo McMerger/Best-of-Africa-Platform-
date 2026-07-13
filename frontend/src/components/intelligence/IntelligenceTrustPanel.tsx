@@ -19,7 +19,7 @@ export const IntelligenceTrustPanel = ({ updatedAt, sourceLabel }: IntelligenceT
 
   return (
     <aside className="border-y border-border bg-card" aria-label="Intelligence trust protocol">
-      <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6 sm:py-7">
+      <div className="max-w-6xl mx-auto px-5 py-5 sm:px-6 sm:py-7">
         <details className="group sm:hidden">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
             <div>

@@ -84,7 +84,7 @@ export const NavBar: React.FC = () => {
                 </div>
             )}
 
-            <div className="flex h-16 items-center justify-between px-4 lg:px-8 max-w-[1400px] mx-auto">
+            <div className="mx-auto flex h-[4.5rem] max-w-[1400px] items-center justify-between px-5 sm:px-6 lg:h-16 lg:px-8">
                 {/* LEFT: Logo, "B BOA." lockup */}
                 <div className="flex items-center min-w-0 shrink-0 z-10">
                     <Link to="/" className="flex items-center gap-2 group shrink-0">

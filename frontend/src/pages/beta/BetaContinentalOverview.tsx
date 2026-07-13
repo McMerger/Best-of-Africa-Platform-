@@ -79,7 +79,7 @@ export const BetaContinentalOverview: React.FC = () => {
       />
       
       {/* Header */}
-      <div className="border-b border-border bg-card px-4 py-9 sm:px-6 sm:py-14 md:py-20">
+      <div className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
         <motion.div
           className="hidden"
         >
@@ -98,7 +98,7 @@ export const BetaContinentalOverview: React.FC = () => {
               Continental Intelligence Command Centre
             </div>
 
-            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[0.96] tracking-tight mb-6">
+            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-6">
               Africa at decision scale.
             </h1>
             <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
@@ -113,7 +113,7 @@ export const BetaContinentalOverview: React.FC = () => {
       </div>
 
       <div className="border-b border-border bg-navy text-white">
-        <div className="mobile-scroll-strip max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5 text-xs font-medium text-white/70">
+        <div className="mobile-scroll-strip max-w-6xl mx-auto px-5 sm:px-6 py-5 text-xs font-medium text-white/70">
           {['Continental allocation', 'Country comparison', 'Sector monitoring', 'Coverage gaps', 'Executive briefing', 'Research prioritisation'].map(label => <span key={label}>{label}</span>)}
         </div>
       </div>
@@ -155,7 +155,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
 
         {/* Top KPI Cards */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-5">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
