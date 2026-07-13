@@ -97,9 +97,20 @@ export const BetaIntelligence = () => {
 
       <IntelligenceTrustPanel updatedAt={pulse?.updated_at} sourceLabel="BOA publishing, country and sector records" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16 space-y-16 md:space-y-20">
+      <div className="page-container dashboard-shell py-10 md:py-16">
+        <aside className="dashboard-rail" aria-label="Intelligence sections">
+          <nav>
+            <a href="#live-coverage">Live coverage</a>
+            <a href="#coverage-map">Coverage map</a>
+            <a href="#decision-watch">Decision watch</a>
+            <a href="#sectors">Sectors</a>
+            <a href="#method">How it works</a>
+          </nav>
+        </aside>
 
-        <section className="border-b border-border pb-12">
+        <div className="page-stack">
+
+        <section id="method" className="page-section order-[6] section-rule">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Decision desk</p>
@@ -116,7 +127,7 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
-        <section className="border-b border-border pb-12">
+        <section className="page-section order-[7] section-rule">
           <div className="mb-8 max-w-3xl">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational workflow</p>
             <h2 className="font-serif text-3xl md:text-4xl text-navy">Move from question to monitored decision.</h2>
@@ -146,7 +157,7 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
-        <section className="grid gap-8 rounded-xl border border-border bg-card p-7 md:grid-cols-2 md:p-9">
+        <section className="page-section order-[8] grid gap-8 rounded-xl border border-border bg-card p-7 md:grid-cols-2 md:p-9">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational foundation</p>
             <ul className="mt-5 grid gap-3 text-sm text-navy sm:grid-cols-2">
@@ -159,7 +170,7 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
-        <section>
+        <section id="sectors" className="page-section order-[5]">
           <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Structured sector intelligence</p>
@@ -181,7 +192,7 @@ export const BetaIntelligence = () => {
 
         {/* Free-preview banner */}
         {!isMember && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
+          <div className="page-section order-[4] flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
             <p className="text-sm text-foreground/70 leading-relaxed">
               <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
               The weekly coverage pulse, the momentum table and the map are free for everyone — no account needed.
@@ -193,7 +204,7 @@ export const BetaIntelligence = () => {
         )}
 
         {/* Weekly coverage pulse — real numbers only */}
-        <section>
+        <section id="live-coverage" className="page-section order-1">
           <div className="mb-7 max-w-3xl">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Live evidence layer</p>
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
@@ -208,8 +219,8 @@ export const BetaIntelligence = () => {
                   { Icon: Newspaper, label: 'Stories this week', value: pulse.stories_7d.toLocaleString(), sub: 'Published in the last 7 days' },
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
                   { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector.name, sub: `${pulse.top_sector.stories.toLocaleString()} stories this week`, small: true },
-                ].map(({ Icon, label, value, sub, small }, i) => (
-                  <motion.div key={label} initial={false} className="bg-card rounded-xl border border-foreground/10 p-6 relative overflow-hidden">
+                ].map(({ Icon, label, value, sub, small }) => (
+                  <motion.div key={label} initial={false} className="group bg-card rounded-xl border border-foreground/10 p-6 relative overflow-hidden">
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-center gap-3 mb-6 text-foreground/70">
                       <Icon size={20} />
@@ -235,7 +246,7 @@ export const BetaIntelligence = () => {
         </section>
 
         {/* Coverage heatmap */}
-        <motion.section id="coverage-map" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+        <motion.section id="coverage-map" className="page-section order-2 section-frame" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
           <div className="flex items-center gap-4 mb-4">
             <Activity size={24} className="text-accent" />
             <h2 className="font-serif text-[2rem] text-foreground">Coverage Heatmap — Last 7 Days</h2>
@@ -262,7 +273,7 @@ export const BetaIntelligence = () => {
         </motion.section>
 
         {/* Deep analysis: Opportunities (members) + weekly momentum (free) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        <div id="decision-watch" className="page-section order-3 grid grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-12">
 
           {/* Strategic Opportunities — members only */}
           {isMember ? (
@@ -416,6 +427,7 @@ export const BetaIntelligence = () => {
             )}
           </motion.section>
 
+        </div>
         </div>
       </div>
     </div>

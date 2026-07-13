@@ -166,7 +166,7 @@ export const BetaMarketIntel = () => {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="bg-background text-foreground pt-8 pb-16 px-6">
-        <div className="max-w-5xl mx-auto">
+        <div className="page-container">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Heart size={12} />
             Supporter Feed
@@ -181,11 +181,11 @@ export const BetaMarketIntel = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-14">
+      <div className="page-container content-split py-12 md:py-16">
 
         {/* ── Project Stats ──────────────────────────────────────────────── */}
         {stats && (
-          <section>
+          <section className="lg:col-span-2">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { value: stats.total_articles?.toLocaleString() ?? '-', label: 'Stories published' },
@@ -203,7 +203,7 @@ export const BetaMarketIntel = () => {
         )}
 
         {/* ── Editorial Updates ─────────────────────────────────────────── */}
-        <section>
+        <section className="section-frame">
           <div className="flex items-center gap-3 mb-6">
             <BookOpen size={18} className="text-accent" />
             <h2 className="font-serif text-2xl text-primary">What I'm working on</h2>
@@ -245,7 +245,7 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── Coverage Breakdown (members only) ────────────────────────── */}
-        <section>
+        <section className="section-frame">
           <div className="flex items-center gap-3 mb-6">
             <MapPin size={18} className="text-accent" />
             <h2 className="font-serif text-2xl text-primary">Where we're reporting</h2>
@@ -257,7 +257,7 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── Ko-fi Progress ────────────────────────────────────────────── */}
-        <section className="bg-background rounded-2xl border border-primary/8 p-8">
+        <section className="section-frame">
           <div className="flex items-center gap-2 mb-5">
             <Coffee size={18} className="text-accent" />
             <h2 className="font-serif text-xl text-primary">Ko-fi goal progress</h2>
@@ -288,7 +288,7 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
-        <section className="bg-background rounded-2xl p-10 text-foreground text-center">
+        <section className="section-frame text-center lg:col-span-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-accent mb-4">Read the work</p>
           <h3 className="font-serif text-3xl mb-3">See the stories behind all of this.</h3>
           <p className="text-foreground/50 mb-8 max-w-md mx-auto">

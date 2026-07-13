@@ -177,7 +177,7 @@ export const BetaStories = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="container mx-auto max-w-7xl">
+        <div className="page-container">
           <motion.div
             initial={false}
             className="flex flex-col md:flex-row md:items-end justify-between gap-8"
@@ -224,7 +224,9 @@ export const BetaStories = () => {
         </div>
       </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-16">
+      <div className="page-container py-10 md:py-16">
+
+        <div className="control-deck mb-10 md:mb-12">
 
         {/* Notice when live content is unavailable */}
         {usingFallback && !isLoading && feedMode === 'latest' && (
@@ -348,6 +350,8 @@ export const BetaStories = () => {
               : `${t('stories.no_results_for', 'No results found for')} "${debouncedQuery}"`}
           </p>
         )}
+
+        </div>
 
         <motion.div 
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-20"

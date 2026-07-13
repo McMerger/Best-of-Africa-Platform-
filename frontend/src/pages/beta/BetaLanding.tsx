@@ -37,7 +37,7 @@ export const BetaLanding = () => {
       />
 
       <section className="bg-navy text-white border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20 grid lg:grid-cols-[1.05fr_.95fr] gap-10 lg:gap-16 items-center">
+        <div className="page-container py-14 md:py-20 grid lg:grid-cols-[1.05fr_.95fr] gap-10 lg:gap-16 items-center">
           <div>
             <p className="text-accent text-xs font-semibold uppercase tracking-[0.12em] mb-5">
               Africa business intelligence
@@ -82,7 +82,7 @@ export const BetaLanding = () => {
       </section>
 
       <section className="border-b border-border bg-card">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-6">
+        <div className="page-container py-6">
           <p className="mb-5 max-w-4xl font-serif text-xl text-navy">Best of Africa is Africa's intelligence infrastructure for business, investment and economic decision-making.</p>
           <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Built for consequential decisions</p>
           <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-navy">
@@ -91,7 +91,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20">
+      <section className="page-container py-14 md:py-20">
         <div className="flex items-end justify-between gap-6 mb-8 border-b border-border pb-5">
           <div>
             <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-2">Latest reporting</p>
@@ -130,7 +130,7 @@ export const BetaLanding = () => {
       </section>
 
       <section className="border-y border-border bg-card">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-16">
+        <div className="page-container py-14 md:py-16">
           <div className="max-w-2xl mb-10">
             <p className="text-accent-ink text-xs font-semibold uppercase tracking-[0.1em] mb-3">The intelligence platform</p>
             <h2 className="font-serif text-3xl md:text-4xl text-navy mb-4">From signal to continental context.</h2>
@@ -154,7 +154,7 @@ export const BetaLanding = () => {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-14 md:py-20">
+      <section className="page-container py-14 md:py-20">
         <div className="bg-navy text-white rounded-xl px-6 py-10 md:px-10 md:py-12 flex flex-col md:flex-row md:items-center justify-between gap-8">
           <div className="max-w-2xl">
             <p className="text-accent text-xs font-semibold uppercase tracking-[0.1em] mb-3">Independent by design</p>

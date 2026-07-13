@@ -120,7 +120,20 @@ export const BetaContinentalOverview: React.FC = () => {
 
       <IntelligenceTrustPanel updatedAt={dataUpdatedAt} sourceLabel="BOA continental dashboard and publishing records" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-10 md:mt-14">
+      <div className="page-container dashboard-shell mt-10 md:mt-14">
+        <aside className="dashboard-rail" aria-label="Continental dashboard sections">
+          <nav>
+            <a href="#continental-snapshot">Snapshot</a>
+            <a href="#continental-briefing">Evidence brief</a>
+            <a href="#regional-coverage">Regions</a>
+            <a href="#coverage-gaps">Coverage gaps</a>
+            <a href="#sector-highlights">Sectors & stories</a>
+          </nav>
+        </aside>
+
+        <div className="page-stack">
+
+        <section id="continental-snapshot" className="page-section">
 
         {/* Free-preview banner */}
         {!isMember && (
@@ -142,7 +155,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
 
         {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
@@ -167,12 +180,14 @@ export const BetaContinentalOverview: React.FC = () => {
             </motion.div>
           ))}
         </div>
+        </section>
 
         <motion.section
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-16 overflow-hidden rounded-2xl border border-accent/25 bg-card shadow-[0_24px_70px_-40px_rgba(15,31,61,0.45)]"
+          id="continental-briefing"
+          className="page-section overflow-hidden rounded-2xl border border-accent/25 bg-card shadow-[0_24px_70px_-40px_rgba(15,31,61,0.45)]"
         >
           <div className="border-b border-border bg-navy px-7 py-7 text-white md:px-10">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Continental evidence briefing</p>
@@ -202,7 +217,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </div>
         </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-16">
+        <div id="regional-coverage" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Chart: Regional Breakdown */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-card rounded-xl border border-foreground/10 p-8 md:p-10 flex flex-col">
             <h3 className="font-serif text-[2rem] text-foreground mb-8 flex items-center gap-4">
@@ -278,7 +293,8 @@ export const BetaContinentalOverview: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mb-16 bg-card rounded-xl border border-foreground/10 p-8 md:p-10"
+            id="coverage-gaps"
+            className="page-section bg-card rounded-xl border border-foreground/10 p-8 md:p-10"
           >
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
               <h3 className="font-serif text-[2rem] text-foreground flex items-center gap-4">
@@ -308,7 +324,7 @@ export const BetaContinentalOverview: React.FC = () => {
         )}
 
         {/* Sectors in focus + editor's highlights, free for everyone */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div id="sector-highlights" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* List: Top Sectors */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-xl border border-foreground/10 p-8 h-fit">
             <h3 className="font-serif text-[2rem] text-foreground mb-8">Sectors in Focus</h3>
@@ -400,6 +416,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </div>
         )}
 
+        </div>
       </div>
     </div>
   );

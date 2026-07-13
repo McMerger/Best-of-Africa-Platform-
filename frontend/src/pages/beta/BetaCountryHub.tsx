@@ -217,7 +217,7 @@ export const BetaCountryHub = () => {
           <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-5xl mx-auto w-full">
+        <div className="page-container">
           <Link
             to="/countries"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-navy text-sm transition-colors mb-8 group"
@@ -275,12 +275,12 @@ export const BetaCountryHub = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-16">
+      <div className="page-container page-stack py-12 md:py-16">
 
         {/* ── Sentiment Scores (members only) ────────────────────────────── */}
         <motion.section 
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className={`${!isMember ? 'hidden' : ''} bg-card rounded-xl border border-foreground/10 p-8 md:p-10 relative overflow-hidden`}
+          className={`${!isMember ? 'hidden' : ''} page-section section-frame relative overflow-hidden`}
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
