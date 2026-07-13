@@ -4,7 +4,7 @@ import { KO_FI_URL } from '../constants/beta';
 
 const groups = [
   { title: 'Read', links: [['Stories', '/posts'], ['Daily Briefing', '/feed'], ['Countries', '/countries'], ['Gallery', '/gallery']] },
-  { title: 'Intelligence', links: [['Market Intelligence', '/intelligence'], ['Continental Overview', '/dashboards/overview'], ['Saved Library', '/library']] },
+  { title: 'Intelligence', links: [['Market Intelligence', '/intelligence'], ['Continental Overview', '/dashboards/overview'], ['Decision Workspace', '/library']] },
   { title: 'Services', links: [['Events', '/events'], ['Consultation', '/request-consultation'], ['Business Travel', '/travel']] },
   { title: 'Account', links: [['Membership', '/membership'], ['Newsletter', '/newsletter'], ['Member Access', '/member-access'], ['Sign In', '/login']] },
 ] as const;

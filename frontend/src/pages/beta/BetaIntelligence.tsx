@@ -127,7 +127,7 @@ export const BetaIntelligence = () => {
               ['Search', 'Research countries, sectors and related reporting.', '/search'],
               ['Compare', 'Read continental, regional and country evidence together.', '/dashboards/overview'],
               ['Map', 'Open geographic coverage and navigate directly to country hubs.', '#coverage-map'],
-              ['Save', 'Build a persistent library of decision-relevant briefings.', '/library'],
+              ['Workspace', 'Build watchlists, preserve evidence and export a decision file.', '/library'],
               ['Monitor', 'Set country, sector and delivery preferences for alerts.', '/settings'],
               ['Brief', 'Use the daily intelligence feed and narrated briefings.', '/feed'],
               ['Calendar', 'Track summits, forums and scheduled professional events.', '/events'],

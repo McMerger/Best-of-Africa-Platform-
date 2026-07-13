@@ -49,7 +49,7 @@ export const NavBar: React.FC = () => {
             links: [
                 { href: "/intelligence", label: t("nav.intelligence", "Market Intelligence") },
                 { href: "/dashboards/overview", label: t("nav.dashboard", "Continental Dashboard") },
-                { href: "/library", label: t("nav.library", "Saved Library") },
+                { href: "/library", label: t("nav.library", "Decision Workspace") },
             ],
         },
         {
