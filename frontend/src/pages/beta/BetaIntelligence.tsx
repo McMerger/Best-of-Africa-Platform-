@@ -31,6 +31,12 @@ export const BetaIntelligence = () => {
     enabled: isMember,
   });
 
+  const { data: sectorCatalog } = useQuery({
+    queryKey: ['intelligence-sector-catalog'],
+    queryFn: api.getSectors,
+    staleTime: 30 * 60 * 1000,
+  });
+
   const countries = pulse?.countries || [];
   const maxWeek = Math.max(1, ...countries.map(c => c.this_week));
   const movers = countries.slice(0, 12);
@@ -150,6 +156,26 @@ export const BetaIntelligence = () => {
           <div className="border-t border-border pt-7 md:border-l md:border-t-0 md:pl-8 md:pt-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Institutional data build</p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">The next defensibility layer is structured company, project, people, procurement and infrastructure data; version history; validated rankings; configurable alerts; team workspaces; and governed export/connectors. These modules remain labelled as in development until their datasets and methodologies are production-ready.</p>
+          </div>
+        </section>
+
+        <section>
+          <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Structured sector intelligence</p>
+              <h2 className="font-serif text-3xl md:text-4xl text-navy">Follow markets through time.</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Open sector records with country distribution, market metrics, regulatory outlook, leading companies and historical trend data where available.</p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+            {(sectorCatalog?.data || []).slice(0, 12).map(sector => (
+              <Link key={sector.id} to={`/sectors/${sector.id}/trends`} className="group bg-card p-5 hover:bg-accent/5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Sector record</p>
+                <h3 className="mt-2 font-serif text-xl capitalize text-navy group-hover:text-accent-ink">{sector.name}</h3>
+                <span className="mt-4 inline-flex text-xs font-semibold text-navy">Open trends →</span>
+              </Link>
+            ))}
+            {!sectorCatalog?.data?.length && <div className="col-span-full bg-card p-6 text-sm text-muted-foreground">Sector catalogue is currently unavailable.</div>}
           </div>
         </section>
 

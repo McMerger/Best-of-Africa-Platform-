@@ -1,9 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { LanguageCode } from '../types';
-import { SUPPORTED_LANGUAGES } from '../types';
+import { SUPPORTED_LANGUAGES as CONTENT_LANGUAGES } from '../types';
 import { TRANSLATIONS } from '../i18n/dict';
-export { SUPPORTED_LANGUAGES };
+export const SUPPORTED_LANGUAGES = CONTENT_LANGUAGES.filter(language => language.code === 'en');
 
 interface LanguageContextType {
     language: LanguageCode;
@@ -27,13 +27,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     });
 
     const setLanguage = (lang: LanguageCode) => {
-        setLanguageState(lang);
+        const supported = SUPPORTED_LANGUAGES.some(language => language.code === lang) ? lang : 'en';
+        setLanguageState(supported);
         if (typeof window !== 'undefined') {
-            localStorage.setItem('boa_lang', lang);
+            localStorage.setItem('boa_lang', supported);
             // Update HTML dir attribute for global CSS support
-            const dir = SUPPORTED_LANGUAGES.find(l => l.code === lang)?.dir || 'ltr';
+            const dir = SUPPORTED_LANGUAGES.find(l => l.code === supported)?.dir || 'ltr';
             document.documentElement.dir = dir;
-            document.documentElement.lang = lang;
+            document.documentElement.lang = supported;
         }
     };
 

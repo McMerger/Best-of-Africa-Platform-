@@ -1,48 +1,14 @@
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { useLanguage, SUPPORTED_LANGUAGES } from "../context/LanguageContext";
-import { cn } from "@/lib/utils";
+import { GlobeIcon } from '@radix-ui/react-icons';
 
-import { GlobeIcon } from "@radix-ui/react-icons";
-
+// Interface languages are deliberately separate from translated article
+// content. Until another locale has complete, reviewed route coverage, the
+// chrome must not advertise a language switch that only translates fragments.
 export function LanguageSelector() {
-    const { language, setLanguage } = useLanguage();
-
-
-
-    // Emojis removed for a more professional look
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 rounded-full hover:bg-foreground/50 hover:text-primary transition-all px-2.5">
-                    <GlobeIcon className="h-3.5 w-3.5" />
-                    <span className="hidden lg:inline-block font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{language}</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 p-2 rounded-2xl border-primary/20 bg-background/95 backdrop-blur-xl shadow-2xl">
-                {SUPPORTED_LANGUAGES.map((lang) => (
-                    <DropdownMenuItem
-                        key={lang.code}
-                        onClick={() => setLanguage(lang.code)}
-                        className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors",
-                            language === lang.code
-                                ? "bg-background text-foreground font-bold"
-                                : "hover:bg-background/10 text-muted-foreground hover:text-primary"
-                        )}
-                    >
-                        <div className="flex flex-col">
-                            <span className="text-sm">{lang.name}</span>
-                            <span className="text-[9px] uppercase tracking-tighter opacity-70">{lang.code} • {lang.dir.toUpperCase()}</span>
-                        </div>
-                    </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
+  return (
+    <div title="Application interface currently available in English" className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-muted-foreground">
+      <GlobeIcon className="h-3.5 w-3.5" />
+      <span className="font-bold text-[10px] uppercase tracking-widest">EN</span>
+      <span className="sr-only">English interface. Additional interface languages are not yet available.</span>
+    </div>
+  );
 }
