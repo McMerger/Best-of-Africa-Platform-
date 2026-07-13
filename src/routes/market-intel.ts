@@ -783,7 +783,7 @@ router.get('/sector/:id/velocity', async (c) => {
         `sector-velocity-${sectorId}`,
         async () => {
             const metrics = await c.env.DB.prepare(`
-                SELECT year, growth_rate, investment_volume_usd, market_size_usd, source_urls
+                SELECT year, growth_rate, investment_volume_usd, market_size_usd
                 FROM market_metrics
                 WHERE sector_id = ?
                 ORDER BY year DESC
@@ -797,23 +797,15 @@ router.get('/sector/:id/velocity', async (c) => {
                 AND published_at > datetime('now', '-30 days')
             `).bind(sectorId).first() as Record<string, any>;
 
-            const cagr = typeof metrics?.growth_rate === 'number' ? metrics.growth_rate : null;
-            const dealFlow = typeof metrics?.investment_volume_usd === 'number' ? metrics.investment_volume_usd : null;
-            let sourceUrls: string[] = [];
-            try {
-                const parsedSources = metrics?.source_urls ? JSON.parse(metrics.source_urls) : [];
-                sourceUrls = Array.isArray(parsedSources) ? parsedSources.filter((url): url is string => typeof url === 'string') : [];
-            } catch { /* malformed legacy provenance is treated as unavailable */ }
-
             return {
                 sector_id: sectorId,
-                cagr_5yr: cagr === null ? null : Number(cagr.toFixed(1)),
-                deal_flow_usd: dealFlow,
+                cagr_5yr: null,
+                deal_flow_usd: null,
                 active_projects: null,
                 coverage_stories_30d: Number(articleStats?.count || 0),
                 data_year: metrics?.year || null,
-                source_urls: sourceUrls,
-                methodology: 'CAGR and deal flow are returned only from structured market records. Headlines and article counts are never used to estimate them; coverage_stories_30d is BOA-Story publishing activity.',
+                source_urls: [],
+                methodology: 'Legacy structured market records do not include source provenance, so CAGR, deal flow and active-project figures are withheld. Headlines and article counts are never used to estimate them; coverage_stories_30d is BOA-Story publishing activity.',
                 updated_at: new Date().toISOString()
             };
         },
