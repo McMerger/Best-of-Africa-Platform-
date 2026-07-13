@@ -24,7 +24,7 @@ export const MODELS = {
     // Gemini's "nano banana", but every FLUX.2 model rejects JSON input with
     // "required properties at '/' are 'multipart'" — a multipart-only schema
     // env.AI.run() can't express today. Revisit when the binding supports it.
-    IMAGE_GENERATION: '@cf/black-forest-labs/flux-1-schnell',
+    IMAGE_GENERATION: 'disabled-source-photography-only',
 };
 
 // Bump this string whenever the article generation prompt changes.
@@ -1278,6 +1278,11 @@ export async function generateArticleImage(
     env: Env,
     prompt: string
 ): Promise<ArrayBuffer | null> {
+    // Compatibility export only. This hard stop ensures no route, worker or
+    // older deployment can create synthetic editorial photography.
+    void env; void prompt;
+    return null;
+    /* compatibility implementation below is intentionally unreachable */
     const negative_prompt = "text, watermark, signature, caption, blurry, cartoon, illustration, low quality, distorted, bad anatomy, deformed, ugly, pixelated, grain, low resolution, superimposed text, logo, branding, writing";
     // Style suffix applied for every caller — pushes the model toward candid
     // photojournalism instead of the glossy AI-stock look.
@@ -1308,7 +1313,7 @@ export async function generateArticleImage(
         }
         // sdxl family returns a binary stream / ArrayBuffer
         if (response instanceof ReadableStream) {
-            return await new Response(response).arrayBuffer();
+            return await new Response(response as BodyInit).arrayBuffer();
         }
         return response as ArrayBuffer;
     } catch (error) {

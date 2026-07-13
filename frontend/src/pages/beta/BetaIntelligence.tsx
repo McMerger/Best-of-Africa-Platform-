@@ -82,7 +82,7 @@ export const BetaIntelligence = () => {
               </p>
             </motion.div>
             <motion.div initial={false}>
-              <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:flex md:flex-wrap">
+              <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Link to="/dashboards/overview" className="flex min-h-12 items-center justify-center gap-2 rounded-md bg-navy px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-navy/90 md:w-fit md:px-5">
                   <BarChart2 size={16} /> Open Continental Dashboard
                 </Link>
@@ -223,7 +223,7 @@ export const BetaIntelligence = () => {
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
           </div>
-          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-8">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-8">
             {isLoading || !pulse ? (
                [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
             ) : (
@@ -312,7 +312,7 @@ export const BetaIntelligence = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="bg-card rounded-2xl border border-foreground/10 p-8 hover:border-accent/40 transition-all duration-500 hover:-translate-y-1 shadow-xl group relative overflow-hidden"
+                    className="bg-card rounded-xl md:rounded-2xl border border-foreground/10 p-5 sm:p-6 md:p-8 hover:border-navy/35 transition-colors group relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-accent/20 to-transparent group-hover:from-accent group-hover:to-accent/50 transition-colors" />
                     <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -355,7 +355,7 @@ export const BetaIntelligence = () => {
             </div>
           </motion.section>
           ) : (
-          <div className="relative overflow-hidden rounded-3xl bg-navy text-white border border-accent/30 p-8 md:p-10 min-h-[22rem]">
+          <div className="relative overflow-hidden rounded-xl md:rounded-3xl bg-navy text-white border border-white/20 p-5 sm:p-7 md:p-10 min-h-[22rem]">
             <div aria-hidden="true" className="pointer-events-none select-none blur-[6px] opacity-40 space-y-4">
               <div className="font-serif text-xl mb-2">Country situation rooms</div>
               {[1,2,3].map(i => <div key={i} className="h-24 bg-white/10 rounded-2xl" />)}

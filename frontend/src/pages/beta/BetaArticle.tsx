@@ -16,6 +16,8 @@ import { heroThumb, stripMarkdown } from '@/lib/utils';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import type { Article, ArticleListItem, Country } from '../../types';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 interface ArticleResponse {
   article: Article;
@@ -377,13 +379,14 @@ export const BetaArticle = () => {
   const displayRelated = smartRelated.length > 0 ? smartRelated : relatedArticles;
 
   const articleUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const editorialImage = sourcedEditorialImage(article);
 
   return (
     <div id="article-root" className="bg-background text-primary font-sans selection:bg-accent selection:text-primary">
       <SEO 
         title={stripMarkdown(article.meta_title || article.title)}
         description={stripMarkdown(article.meta_description || article.summary || '')}
-        image={article.hero_image_url || undefined}
+        image={editorialImage || undefined}
         type="article"
         publishedTime={article.published_at || undefined}
         author={authorName}
@@ -499,14 +502,15 @@ export const BetaArticle = () => {
           </div>
         </header>
 
-        {article.hero_image_url && (
+        {editorialImage && (
           <figure className="mb-8 md:mb-10 overflow-hidden rounded-xl border border-border bg-muted">
             <img
-              src={heroThumb(article.hero_image_url)}
+              src={heroThumb(editorialImage)}
               alt={article.title}
               className="w-full aspect-[16/9] object-cover"
               loading="eager"
             />
+            <figcaption className="border-t border-border bg-white px-4 py-2 text-muted-foreground"><PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} /></figcaption>
           </figure>
         )}
 
@@ -516,7 +520,7 @@ export const BetaArticle = () => {
             slug={slug!}
             title={stripMarkdown(article.title)}
             subtitle={categoryLabel} 
-            imageUrl={article.hero_image_url} 
+            imageUrl={editorialImage || undefined}
           />
         </div>
 

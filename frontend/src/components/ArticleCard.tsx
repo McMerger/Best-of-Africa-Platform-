@@ -7,17 +7,11 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../services/api';
 import { CountryFlag } from './CountryFlag';
+import { sourcedEditorialImage } from '../lib/editorialImage';
+import { PhotoCredit } from './PhotoCredit';
 
 // Local editorial fallbacks, rotated deterministically per article so cards
 // without a hero_image_url don't all share one image.
-const CARD_FALLBACKS = [
-    '/images/v2_editorial_1.webp',
-    '/images/fallback_business.webp',
-    '/images/v2_editorial_2.webp',
-    '/images/fallback_culture.webp',
-    '/images/fallback_tech.webp',
-];
-
 const clean = (text?: string) =>
     (text || '').replace(/\*\*/g, '').replace(/##/g, '').replace(/^📰\s*/, '').replace(/^"|"$/g, '').trim();
 
@@ -34,41 +28,29 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
     });
 
     const title = clean(article.title) || 'Untitled Article';
-    const seed = article.slug || title;
-    const fbIndex = Math.abs([...seed].reduce((a, c) => a + c.charCodeAt(0), 0)) % CARD_FALLBACKS.length;
-    // Cards never render wider than ~600px, so request the 768w hero variant
-    // (?w=768 serves the pre-resized copy, or the original if none exists yet).
-    const imgSrc = article.hero_image_url
-        ? (article.hero_image_url.includes('/assets/') ? `${article.hero_image_url}?w=768` : article.hero_image_url)
-        : CARD_FALLBACKS[fbIndex];
+    const imgSrc = sourcedEditorialImage(article);
 
     return (
         <Link
             to={`/posts/${article.slug}`}
-            className="group flex h-full flex-col overflow-hidden rounded-2xl border border-foreground/10 bg-card transition-all duration-500 hover:-translate-y-1 hover:border-accent/40 hover:shadow-[0_24px_60px_-20px_rgba(15,31,61,0.45)]"
+            className="group flex h-full flex-col overflow-hidden rounded-xl border border-foreground/10 bg-card transition-all duration-300 hover:border-navy/35 hover:shadow-[0_18px_45px_-28px_rgba(15,31,61,0.45)]"
         >
             {/* Thumbnail — on a broken hero (e.g. dead /assets URL) fall back to a
                 local editorial image rather than a blank/branded placeholder. */}
-            <div className="relative h-44 shrink-0 overflow-hidden bg-navy-card">
-                <img
-                    src={imgSrc}
-                    alt={title}
-                    loading="lazy"
-                    onError={(e) => {
-                        const img = e.currentTarget;
-                        if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = CARD_FALLBACKS[fbIndex]; }
-                    }}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                />
+            <div className="relative min-h-28 shrink-0 overflow-hidden bg-navy sm:h-44">
+                {imgSrc ? <img src={imgSrc} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" /> : (
+                    <div className="flex h-full min-h-28 items-end p-4 text-white sm:min-h-44"><span className="max-w-[16rem] text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Source-linked reporting<br/><span className="text-white">{article.country_name || 'Africa'}</span></span></div>
+                )}
                 {featured && (
-                    <span className="absolute left-4 top-4 rounded-full bg-accent px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-navy shadow-lg">
+                    <span className="absolute left-3 top-3 rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-navy shadow-lg">
                         Featured
                     </span>
                 )}
+                {imgSrc && <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-3 rounded bg-navy/80 px-2 py-1 text-white" />}
             </div>
 
             {/* Body */}
-            <div className="flex flex-1 flex-col p-6">
+            <div className="flex flex-1 flex-col p-4 sm:p-6">
                 <div className="mb-3 flex items-center justify-between gap-2">
                     <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-accent-ink">
                         <CountryFlag code={article.country_code} title={article.country_name} size={20} />
@@ -114,7 +96,7 @@ export const ArticleCard: React.FC<{ article: ArticleListItem; featured?: boolea
                                     title: article.title,
                                     subtitle: article.sector_name || article.country_name,
                                     audioUrl: article.audio_url,
-                                    imageUrl: article.hero_image_url,
+                                    imageUrl: imgSrc || undefined,
                                     slug: article.slug
                                 });
                                 toast.success("Added to Queue");

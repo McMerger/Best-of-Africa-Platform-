@@ -12,6 +12,8 @@ export interface Country {
     tourism_highlights: string[];
     flag_emoji: string;
     hero_image_url: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     diplomacy_score: number;
     image_strength_score: number;
     fdi_inflow_usd?: number;
@@ -43,6 +45,8 @@ export interface Article {
     sector_id: string;
     tags: string[];
     hero_image_url: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     reading_time_minutes: number;
     view_count: number;
     engagement_score: number;
@@ -118,7 +122,8 @@ export interface ArticleListItem {
     sector_id: string;
     sector_name: string;
     hero_image_url: string;
-    ai_image_url?: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     ai_video_url?: string;
     audio_url?: string;
     audio_duration_seconds?: number;

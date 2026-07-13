@@ -16,15 +16,8 @@ import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
-
-/** Editorial fallback images, rotated by card index, for stories with no hero_image_url. */
-const STORY_FALLBACKS = [
-  '/images/v2_editorial_1.webp',
-  '/images/fallback_business.webp',
-  '/images/v2_editorial_2.webp',
-  '/images/fallback_culture.webp',
-  '/images/fallback_tech.webp',
-];
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 const StoryCardSkeleton = () => (
   <div className="bg-background rounded-xl border border-primary/8 h-[380px] animate-pulse">
@@ -204,7 +197,7 @@ export const BetaStories = () => {
                     title: a.title,
                     subtitle: a.sector_name,
                     audioUrl: a.audio_url!,
-                    imageUrl: a.hero_image_url,
+                    imageUrl: sourcedEditorialImage(a) || undefined,
                     durationSeconds: a.audio_duration_seconds,
                     slug: a.slug
                   }));
@@ -440,14 +433,11 @@ export const BetaStories = () => {
                         <span className="absolute top-5 right-5 z-30 text-[10px] font-bold tracking-[0.16em] uppercase text-navy bg-accent px-3 py-1.5 rounded-full shadow-lg">{t('stories.free_read', 'Free Read')}</span>
                       )}
                       {/* Hero thumbnail */}
-                    <div className={`overflow-hidden shrink-0 relative bg-navy-card ${isFeatured ? 'h-64 md:h-auto md:w-[55%]' : 'h-52'}`}>
-                      <img
-                        src={heroThumb(article.hero_image_url) || STORY_FALLBACKS[index % STORY_FALLBACKS.length]}
-                        alt={stripMarkdown(article.title)}
-                        loading="lazy"
-                        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = STORY_FALLBACKS[index % STORY_FALLBACKS.length]; } }}
-                        className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-700"
-                      />
+                    <div className={`overflow-hidden shrink-0 relative bg-navy ${isFeatured ? 'min-h-36 md:h-auto md:w-[55%]' : 'min-h-28 sm:h-52'}`}>
+                      {sourcedEditorialImage(article) ? <>
+                        <img src={heroThumb(sourcedEditorialImage(article)!)} alt={stripMarkdown(article.title)} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.025] transition-transform duration-500" />
+                        <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-3 rounded bg-navy/80 px-2 py-1 text-white" />
+                      </> : <div className="flex h-full min-h-28 items-end p-5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Verified source record</div>}
                     </div>
                     <div className={`flex flex-col flex-1 ${isFeatured ? 'md:justify-center' : ''}`}>
                     <div className={`flex-grow relative z-10 bg-card ${isFeatured ? 'p-7 md:p-10 lg:p-12 pb-4' : 'p-6 md:p-7 pb-4'}`}>
@@ -492,7 +482,7 @@ export const BetaStories = () => {
                                   title: article.title,
                                   subtitle: article.sector_name,
                                   audioUrl: article.audio_url!,
-                                  imageUrl: article.hero_image_url,
+                                  imageUrl: sourcedEditorialImage(article) || undefined,
                                   durationSeconds: article.audio_duration_seconds,
                                   slug: article.slug
                                 });

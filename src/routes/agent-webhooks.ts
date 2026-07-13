@@ -2,8 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { evaluateArticleDepth, generateArticleImage, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
-import { uploadImage } from '../lib/media';
+import { evaluateArticleDepth, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
 import { autoTranslateArticle } from '../lib/translate';
 import { generateAudioNarration } from '../lib/audio';
 
@@ -492,23 +491,6 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         });
                     } catch (translateError) {
                         console.error(`[enrichment] Translation failed for article ${articleId}:`, translateError);
-                    }
-
-                    try {
-                        const imagePrompt = `Professional editorial journalism photo for an article titled: "${generated.title}". Subject: ${originalPayload.country_name || 'Africa'} ${originalPayload.sector_name || 'Business'}. Photorealistic, high quality, 8k.`;
-                        const imageBuffer = await generateArticleImage(c.env, imagePrompt);
-
-                        if (imageBuffer) {
-                            const imageKey = `articles/${articleId}/hero.png`;
-                            const imageUrl = await uploadImage(c.env, imageKey, imageBuffer, 'image/png');
-                            await c.env.DB.prepare(
-                                'UPDATE articles SET hero_image_url = ? WHERE id = ?'
-                            ).bind(imageUrl, articleId).run();
-                        } else {
-                            console.warn(`[enrichment] Image generation returned null for article ${articleId}`);
-                        }
-                    } catch (imageError) {
-                        console.error(`[enrichment] Hero image failed for article ${articleId}:`, imageError);
                     }
 
                     try {

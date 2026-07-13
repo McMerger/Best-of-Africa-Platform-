@@ -12,6 +12,8 @@ import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
@@ -107,7 +109,7 @@ export const BetaContinentalOverview: React.FC = () => {
             <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
               A continent-wide evidence layer for institutions monitoring where attention, research and reporting activity are concentrating across African markets.
             </p>
-            <div className="mt-7 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
+            <div className="mt-7 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
               <Link to="/intelligence" className="flex min-h-12 items-center justify-center rounded-md bg-navy px-5 py-3 text-center text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
               <Link to="/search" className="flex min-h-12 items-center justify-center rounded-md border border-border bg-white px-5 py-3 text-center text-sm font-semibold text-navy hover:border-accent">Search Intelligence</Link>
             </div>
@@ -161,7 +163,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </div>
 
         {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 md:gap-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
@@ -172,7 +174,7 @@ export const BetaContinentalOverview: React.FC = () => {
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-              className={`group relative overflow-hidden bg-card rounded-xl p-5 md:p-7 border border-foreground/10 flex flex-row items-center gap-4 md:gap-6 hover:border-accent/40 transition-colors ${i === 2 ? 'min-[480px]:col-span-2 md:col-span-1' : ''}`}
+              className={`group relative overflow-hidden bg-card rounded-xl p-4 sm:p-5 md:p-7 border border-foreground/10 flex flex-row items-center gap-4 md:gap-6 hover:border-navy/35 transition-colors ${i === 2 ? 'sm:col-span-2 md:col-span-1' : ''}`}
             >
               <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />
@@ -368,14 +370,15 @@ export const BetaContinentalOverview: React.FC = () => {
                     to={`/posts/${article.slug}`}
                     className="flex flex-col sm:flex-row gap-6 bg-card rounded-2xl border border-foreground/5 p-6 hover:border-accent/30 hover:bg-foreground/5 transition-all group shadow-xl"
                   >
-                    {article.hero_image_url && (
+                    {sourcedEditorialImage(article) && (
                       <div className="w-full sm:w-48 h-36 shrink-0 rounded-xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-background/20 group-hover:bg-transparent transition-colors z-10" />
                         <img 
-                          src={heroThumb(article.hero_image_url)} 
+                          src={heroThumb(sourcedEditorialImage(article)!)}
                           alt={article.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
+                        <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-2 z-20 rounded bg-navy/80 px-2 py-1 text-white" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0 flex flex-col justify-center">

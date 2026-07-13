@@ -89,7 +89,7 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className={cn("sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80 transition-shadow duration-200", scrolled && "shadow-[0_8px_30px_-22px_rgba(15,31,61,0.65)]")}>
+        <header className={cn("site-header sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80 transition-shadow duration-200", scrolled && "shadow-[0_8px_30px_-22px_rgba(15,31,61,0.65)]")}>
             {/* Pre-header utilities. Signed-in only: for visitors it held nothing
                 but the language button — a dead 44px strip on every page. Their
                 LanguageSelector lives in the main navbar row instead. */}
@@ -190,7 +190,7 @@ export const NavBar: React.FC = () => {
                                     <span className="sr-only">Toggle menu</span>
                                 </Button>
                             </SheetTrigger>
-                            <SheetContent side="right" className="w-[85vw] max-w-sm bg-background border-l border-primary/20 p-0 flex flex-col">
+                            <SheetContent side="right" className="w-full max-w-none bg-white border-l border-primary/20 p-0 flex flex-col sm:w-[24rem]">
                                 <SheetHeader className="p-6 border-b border-foreground/10 text-left bg-background/95">
                                     <SheetTitle className="flex items-center gap-2 font-serif font-black text-2xl tracking-tight text-navy">
                                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-white text-lg leading-none">B</span>

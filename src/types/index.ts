@@ -118,6 +118,8 @@ export interface Country {
     tourism_highlights: string[] | null;
     flag_emoji: string | null;
     hero_image_url: string | null;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     visa_portal_url: string | null;
     business_portal_url: string | null;
     tourism_portal_url: string | null;
@@ -152,6 +154,8 @@ export interface Article {
     meta_title: string | null;
     meta_description: string | null;
     hero_image_url: string | null;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     reading_time_minutes: number | null;
     source_url: string | null;
     source_title: string | null;

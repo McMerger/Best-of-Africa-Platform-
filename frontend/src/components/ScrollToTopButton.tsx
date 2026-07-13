@@ -86,7 +86,7 @@ export function ScrollToTopButton() {
       )}
 
       <div className="fixed bottom-4 left-4 z-40 flex items-center gap-2 sm:bottom-6 sm:left-6">
-        {sections.length > 0 && (
+        {sections.length > 0 && visible && (
           <button
             type="button"
             onClick={() => setOpen(value => !value)}

@@ -14,13 +14,6 @@ import { stripMarkdown } from '@/lib/utils';
 
 // Local fallback imagery rotated by index so events without a hero_image_url
 // don't all share one (previously external, washed-out) photo.
-const EVENT_FALLBACKS = [
-  '/images/v2_events.webp',
-  '/images/v2_concierge.webp',
-  '/images/v2_hero_kigali.webp',
-  '/images/v2_real_background.webp',
-];
-
 export const BetaEvents: React.FC = () => {
     const { data: eventsData, isLoading } = useQuery({
         queryKey: ['events'],
@@ -118,15 +111,7 @@ export const BetaEvents: React.FC = () => {
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
                                 className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
                             >
-                                <div className="relative h-56 overflow-hidden sm:h-72 md:h-auto md:w-5/12">
-                                    <div 
-                                        className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-1000"
-                                        style={{ backgroundImage: `url(${event.hero_image_url || EVENT_FALLBACKS[index % EVENT_FALLBACKS.length]})` }}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent md:hidden" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card hidden md:block" />
-                                </div>
-                                <div className="z-10 flex flex-col justify-center p-5 sm:p-8 md:w-7/12 md:p-14">
+                                <div className="z-10 flex w-full flex-col justify-center p-5 sm:p-8 md:p-12">
                                     <div className="flex flex-wrap items-center gap-4 mb-6">
                                         <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full">
                                             {event.event_type}

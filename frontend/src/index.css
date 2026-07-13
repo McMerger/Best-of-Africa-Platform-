@@ -334,15 +334,24 @@ body {
   }
 
   @media (max-width: 639px) {
-    .page-stack { gap: var(--page-section-gap); }
-    .section-rule { padding-top: 2.75rem; }
-    .mobile-scroll-strip {
-      flex-wrap: wrap;
-      margin-inline: 0 !important;
-      overflow: visible;
-      scroll-snap-type: none;
+    :root {
+      --page-gutter: 1rem;
+      --page-section-gap: 2.75rem;
     }
-    .mobile-scroll-strip > * { flex: 0 1 auto; }
+    .page-container { width: calc(100% - 2rem); }
+    .page-stack { gap: var(--page-section-gap); }
+    .dashboard-shell { display: block; }
+    .section-frame { padding: 1.15rem; border-radius: 0.7rem; }
+    .control-deck { padding: 1rem; border-radius: 0.7rem; }
+    .section-rule { padding-top: 2.25rem; }
+    .mobile-scroll-strip {
+      flex-wrap: nowrap;
+      margin-inline: 0;
+      gap: 1.25rem;
+      overflow-x: auto;
+      scroll-snap-type: inline mandatory;
+    }
+    .mobile-scroll-strip > * { flex: 0 0 auto; scroll-snap-align: start; }
     .dashboard-rail {
       position: sticky;
       top: 4.5rem;
@@ -358,6 +367,8 @@ body {
       overscroll-behavior-inline: contain;
       scroll-snap-type: inline proximity;
       padding: 0.4rem;
+      border-radius: 0;
+      border-inline: 0;
     }
     .dashboard-rail a {
       min-height: 2.5rem;
@@ -742,6 +753,39 @@ textarea:focus-visible,
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Legacy local art was not shipped with verifiable photographic provenance.
+   It must never be presented as documentary imagery. Source-attributed remote
+   photography is rendered through the editorial image components instead. */
+img[src^="/images/"],
+[style*="/images/"] {
+  display: none !important;
+  background-image: none !important;
+}
+
+/* Phone UI is deliberately a separate interaction density, not a compressed
+   desktop canvas. Content becomes single-column, tap targets stay reachable,
+   and oversized desktop spacing cannot consume most of a handset viewport. */
+@media (max-width: 639px) {
+  .site-header { background: #FFFFFF !important; backdrop-filter: none !important; }
+  main { min-width: 0; }
+  main h1 { font-size: clamp(2.25rem, 11vw, 3rem) !important; line-height: 1.02 !important; }
+  main h2 { font-size: clamp(1.65rem, 8vw, 2.25rem) !important; line-height: 1.12 !important; }
+  main h3 { font-size: clamp(1.25rem, 6vw, 1.65rem) !important; }
+  main p, main li { overflow-wrap: anywhere; }
+  main [class~="p-8"], main [class~="p-10"] { padding: 1.25rem !important; }
+  main [class~="px-8"], main [class~="px-10"] { padding-inline: 1.25rem !important; }
+  main [class~="py-8"], main [class~="py-10"] { padding-block: 1.5rem !important; }
+  main [class~="rounded-3xl"] { border-radius: 0.8rem !important; }
+  main button, main a { -webkit-tap-highlight-color: transparent; }
+  main input, main select, main textarea { min-height: 2.75rem; font-size: 1rem; }
+  main img { max-width: 100%; }
+  .dashboard-shell > .page-stack { margin-top: 1.5rem; }
+  .dashboard-shell .responsive-data-table { margin-inline: -0.25rem; }
+  .dashboard-shell .recharts-wrapper { font-size: 0.72rem; }
+  .structured-content { font-size: 1rem; }
+  .structured-content p { line-height: 1.72; }
 }
 
 .rounded-3xl { border-radius: 0.875rem !important; }

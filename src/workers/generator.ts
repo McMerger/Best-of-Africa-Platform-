@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
 import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
 import { generateAudioNarration } from '../lib/audio';
 import { indexArticle } from '../lib/vectorize';
@@ -31,7 +31,7 @@ export async function generateArticleFromQueue(
     try {
         // Get ingested item
         const item = await env.DB.prepare(`
-      SELECT i.*, s.country_code as source_country, s.sector_id as source_sector
+      SELECT i.*, s.country_code as source_country, s.sector_id as source_sector, s.name as source_name
       FROM ingested_items i
       LEFT JOIN sources s ON i.source_id = s.id
       WHERE i.id = ?
@@ -137,9 +137,10 @@ export async function generateArticleFromQueue(
                 id, slug, title, subtitle, content, summary,
                 country_code, sector_id, tags,
                 reading_time_minutes, source_url, source_title, source_published_at,
+                hero_image_url, image_credit, image_source_url,
                 generation_model, generation_prompt_version, ai_investor_brief,
                 status, published_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
         `).bind(
             articleId, slug,
             generated.title,
@@ -153,6 +154,9 @@ export async function generateArticleFromQueue(
             itemData.url           ?? null,
             itemData.title         ?? null,
             itemData.published_at  ?? null,
+            itemData.image_url ?? null,
+            itemData.image_url ? (itemData.image_credit || itemData.source_name) : null,
+            itemData.image_url ? (itemData.image_source_url || itemData.url) : null,
             MODELS.TEXT_GENERATION,
             ARTICLE_PROMPT_VERSION,
             generated.investor_brief,
@@ -169,17 +173,6 @@ export async function generateArticleFromQueue(
         // We do this in the background so it doesn't block the queue consumer.
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
-        try {
-            const imagePrompt = buildHeroPrompt(generated.title, sectorId, generated.summary);
-            const imageBuffer = await generateArticleImage(env, imagePrompt);
-            if (imageBuffer) {
-                const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);
-                if (imageUrl) {
-                    await env.DB.prepare('UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?').bind(imageUrl, articleId).run();
-                }
-            }
-        } catch (err) { console.error('Image gen failed:', err); }
-
         // Audio narration ships with the article (the UI shows Listen buttons on
         // every card — audio must exist, not be a member-gated maybe).
         try {
@@ -265,6 +258,11 @@ export async function recoverPendingItems(env: Env, limit = 10): Promise<number>
 // backlog is empty.
 // ───────────────────────────────────────────────────────────────────────────────
 export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
+    // Retained as a compatibility no-op for older scheduled deployments.
+    // BOA no longer generates or backfills synthetic editorial photography.
+    void env; void batch;
+    return 0;
+    /* c8 ignore start */
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, sector_id
         FROM articles INDEXED BY idx_articles_hero_missing
@@ -279,7 +277,7 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
             const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (!imageBuffer) break; // model unavailable — retry next cron tick
-            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer);
+            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer!);
             if (imageUrl) {
                 await env.DB.prepare('UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?').bind(imageUrl, a.id).run();
                 done++;
@@ -305,6 +303,10 @@ export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
 // Self-terminates when the whole archive is flux-era.
 // ───────────────────────────────────────────────────────────────────────────────
 export async function regenerateHeroImages(env: Env, batch = 5): Promise<number> {
+    // Retained as a compatibility no-op for older scheduled deployments.
+    void env; void batch;
+    return 0;
+    /* c8 ignore start */
     const rows = await env.DB.prepare(`
         SELECT id, title, summary, sector_id
         FROM articles INDEXED BY idx_articles_regen_pending
@@ -319,7 +321,7 @@ export async function regenerateHeroImages(env: Env, batch = 5): Promise<number>
             const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
             const imageBuffer = await generateArticleImage(env, imagePrompt);
             if (!imageBuffer) break; // model unavailable — retry next cron tick
-            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer);
+            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer!);
             if (imageUrl) {
                 await env.DB.prepare(
                     'UPDATE articles SET hero_image_url = ?, hero_variant = 1, hero_regen = 1 WHERE id = ?'
@@ -595,11 +597,11 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
             ).run();
 
             // 4. Image generation (independent — failure does not block article)
-            try {
+            if (false) try {
                 const imagePrompt = buildHeroPrompt(generated.title, payload.sector_id ?? null, generated.summary);
                 const imageBuffer = await generateArticleImage(env, imagePrompt);
                 if (imageBuffer) {
-                    const imageUrl = await uploadArticleHero(env, articleId, imageBuffer);
+                    const imageUrl = await uploadArticleHero(env, articleId, imageBuffer!);
                     if (imageUrl) {
                         await env.DB.prepare(
                             'UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?'

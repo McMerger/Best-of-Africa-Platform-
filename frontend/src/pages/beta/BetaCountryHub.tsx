@@ -21,6 +21,8 @@ import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
 import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
@@ -60,35 +62,20 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
 
 // Deterministic local fallback so broken/missing article heroes show a real
 // editorial photo (not a flickering random pick or the branded "B" box).
-const HUB_FALLBACKS = [
-  '/images/v2_editorial_1.webp',
-  '/images/v2_editorial_2.webp',
-  '/images/fallback_business.webp',
-  '/images/fallback_culture.webp',
-  '/images/fallback_tech.webp',
-];
-const hubFallback = (seed = '') =>
-  HUB_FALLBACKS[Math.abs([...seed].reduce((a, c) => a + c.charCodeAt(0), 0)) % HUB_FALLBACKS.length];
-
 const ArticleCard = ({ article }: { article: ArticleListItem }) => {
   const { t } = useLanguage();
-  const fb = hubFallback(article.slug || article.title);
+  const image = sourcedEditorialImage(article);
   return (
   <Link
     to={`/posts/${article.slug}`}
     className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
-    <div className="aspect-[16/9] overflow-hidden bg-navy-card relative">
-      <img
-        src={heroThumb(article.hero_image_url) || fb}
-        alt={stripMarkdown(article.title)}
-        loading="lazy"
-        onError={(e) => { const img = e.currentTarget; if (img.dataset.fb !== '1') { img.dataset.fb = '1'; img.src = fb; } }}
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90"
-      />
+    <div className="min-h-28 sm:aspect-[16/9] overflow-hidden bg-navy relative">
+      {image ? <img src={heroThumb(image)} alt={stripMarkdown(article.title)} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.025] transition-transform duration-500" /> : <div className="flex min-h-28 items-end p-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Source-linked country reporting</div>}
       <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
+      {image && <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-3 rounded bg-navy/80 px-2 py-1 text-white" />}
     </div>
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {article.sector_name && (
         <span className="text-[10px] font-bold uppercase tracking-widest text-accent-ink mb-3 block">
           {article.sector_name}

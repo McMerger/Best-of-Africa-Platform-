@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
+import { extractPublisherImage, normalizeEditorialImageUrl } from '../lib/editorial-images';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // RSS Feed Parser (Simple)
@@ -13,6 +14,8 @@ interface RSSItem {
     link: string;
     description: string;
     pubDate: string;
+    imageUrl: string | null;
+    imageCredit: string | null;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -124,6 +127,13 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
             const link = itemXml.match(/<link>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/link>/)?.[1] || '';
             const description = itemXml.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/)?.[1] || '';
             const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+            const rawImage =
+                itemXml.match(/<media:content[^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<enclosure[^>]+type=["']image\/[^"]+["'][^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image\//i)?.[1] ||
+                null;
+            const imageCredit = itemXml.match(/<media:credit[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/media:credit>/i)?.[1]?.trim() || null;
 
             if (title && link) {
                 items.push({
@@ -131,6 +141,8 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
                     link: link.trim(),
                     description: description.replace(/<[^>]*>/g, '').trim(),
                     pubDate: pubDate.trim(),
+                    imageUrl: normalizeEditorialImageUrl(rawImage, link.trim()),
+                    imageCredit,
                 });
             }
         }
@@ -146,7 +158,7 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
 // Full Content Scraper
 // Fetches and extracts main content from article URLs
 // ───────────────────────────────────────────────────────────────────────────────
-async function scrapeFullContent(url: string): Promise<string | null> {
+async function scrapeFullContent(url: string): Promise<{ content: string | null; imageUrl: string | null; imageCredit: string | null }> {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
@@ -161,9 +173,10 @@ async function scrapeFullContent(url: string): Promise<string | null> {
 
         clearTimeout(timeoutId);
 
-        if (!response.ok) return null;
+        if (!response.ok) return { content: null, imageUrl: null, imageCredit: null };
 
         const html = await response.text();
+        const publisherImage = extractPublisherImage(html, url);
 
         // Extract main content using simple heuristics
         let content = '';
@@ -220,11 +233,14 @@ async function scrapeFullContent(url: string): Promise<string | null> {
             .trim();
 
         // Only return if we have substantial content (at least 200 chars)
-        return content.length > 200 ? content.slice(0, 10000) : null;
+        return {
+            content: content.length > 200 ? content.slice(0, 10000) : null,
+            ...publisherImage,
+        };
 
     } catch (error) {
         console.error(`Failed to scrape ${url}:`, error);
-        return null;
+        return { content: null, imageUrl: null, imageCredit: null };
     }
 }
 
@@ -300,17 +316,17 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
             await Promise.all(batch.map(async (source: any) => {
                 const s = source;
                 try {
-                    let items: Array<{ title: string; url: string; content: string; publishedAt: string }> = [];
+                    let items: Array<{ title: string; url: string; content: string; publishedAt: string; imageUrl: string | null; imageCredit: string | null }> = [];
 
                     if (s.type === 'rss') {
                         const rssItems = await parseRSS(s.url);
                         items = rssItems.map(item => ({
-                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate,
+                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate, imageUrl: item.imageUrl, imageCredit: item.imageCredit,
                         }));
                     } else if (s.type === 'newsapi' && env.NEWS_API_KEY) {
                         const newsItems = await fetchNewsAPI(env.NEWS_API_KEY, s.url);
                         items = newsItems.map(item => ({
-                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt,
+                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt, imageUrl: null, imageCredit: null,
                         }));
                     }
 
@@ -328,19 +344,23 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         itemBudget--;
 
                         let fullContent = item.content;
+                        let imageUrl = item.imageUrl;
+                        let imageCredit = item.imageCredit;
                         if (fullContent.length < 500 && item.url && scrapeBudget > 0) {
                             scrapeBudget--;
                             try {
                                 const scraped = await scrapeFullContent(item.url);
-                                if (scraped) fullContent = scraped;
+                                if (scraped.content) fullContent = scraped.content;
+                                imageUrl ||= scraped.imageUrl;
+                                imageCredit ||= scraped.imageCredit;
                             } catch (e) { /* Ignore */ }
                         }
 
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString()).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString(), imageUrl, imageUrl ? (imageCredit || s.name) : null, imageUrl ? item.url : null).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: s.id, priority: 'normal',
@@ -412,9 +432,9 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         itemBudget--;
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString()).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, status)
+                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString(), item.imageUrl, item.imageUrl ? (item.imageCredit || 'Original reporting source') : null, item.imageUrl ? item.link : null).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: 'google-news-aggregator', priority: 'normal',

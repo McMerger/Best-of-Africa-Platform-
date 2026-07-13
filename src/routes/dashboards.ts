@@ -74,7 +74,7 @@ router.get('/:region', async (c) => {
         if (articleIds.length > 0) {
             const placeholders = articleIds.map(() => '?').join(',');
             const articles = await c.env.DB.prepare(`
-                SELECT id, slug, title, summary, country_code, hero_image_url, published_at
+                SELECT id, slug, title, summary, country_code, hero_image_url, image_credit, image_source_url, published_at
                 FROM articles
                 WHERE id IN (${placeholders}) AND status = 'published'
             `).bind(...articleIds).all();
@@ -211,7 +211,7 @@ router.get('/continental/overview', async (c) => {
         // "Editor's Highlights" leads with hand-curated pieces (the two-tier
         // model's top shelf), then falls back to recency-weighted engagement.
         c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code, a.hero_image_url, a.curated,
+            SELECT a.id, a.slug, a.title, a.summary, a.country_code, a.hero_image_url, a.image_credit, a.image_source_url, a.curated,
                    c.name as country_name, c.flag_emoji, s.name as sector_name, a.published_at
             FROM articles a
             JOIN countries c ON a.country_code = c.code

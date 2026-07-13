@@ -110,12 +110,14 @@ router.post('/test-translate', devAuthGuard, async (c) => {
 // Direct image-model smoke test: returns byte count + magic bytes so model
 // swaps can be verified without waiting for the generation pipeline.
 router.post('/test-image', devAuthGuard, async (c) => {
+    return c.json({ error: 'gone', message: 'Synthetic editorial image generation is permanently disabled.' }, 410);
+    /* compatibility code below is intentionally unreachable */
     const { generateArticleImage } = await import('../lib/ai');
     const t0 = Date.now();
     const buf = await generateArticleImage(c.env, 'African market street at golden hour.');
     if (!buf) return c.json({ ok: false, ms: Date.now() - t0 }, 500);
-    const head = Array.from(new Uint8Array(buf.slice(0, 4))).map(b => b.toString(16).padStart(2, '0')).join('');
-    return c.json({ ok: true, bytes: buf.byteLength, magic: head, ms: Date.now() - t0 });
+    const head = Array.from(new Uint8Array(buf!.slice(0, 4))).map(b => b.toString(16).padStart(2, '0')).join('');
+    return c.json({ ok: true, bytes: buf!.byteLength, magic: head, ms: Date.now() - t0 });
 });
 
 router.get('/generate-reports', devAuthGuard, async (c) => {

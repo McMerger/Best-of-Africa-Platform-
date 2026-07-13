@@ -618,6 +618,8 @@ import { generateArticleImage } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 
 router.post('/generate-images', async (c) => {
+    return c.json({ error: 'gone', message: 'Synthetic editorial image generation is permanently disabled. Supply a source-owned image URL, credit and source page instead.' }, 410);
+    /* compatibility code below is intentionally unreachable */
     const { limit = '10' } = c.req.query();
     const batchSize = Math.min(50, parseInt(limit));
 
@@ -649,7 +651,7 @@ router.post('/generate-images', async (c) => {
             if (imageBuffer) {
                 // Upload to R2
                 const key = `hero/${a.id}.png`;
-                const publicUrl = await uploadImage(c.env, key, imageBuffer, 'image/png');
+                const publicUrl = await uploadImage(c.env, key, imageBuffer!, 'image/png');
 
                 // Update DB
                 await c.env.DB.prepare(`

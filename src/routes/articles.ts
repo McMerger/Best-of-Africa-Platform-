@@ -113,7 +113,7 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
       a.id, a.slug, a.title, a.subtitle, a.summary,
       a.country_code, c.name as country_name, c.flag_emoji as country_flag,
       a.sector_id, s.name as sector_name,
-      a.hero_image_url, a.reading_time_minutes,
+      a.hero_image_url, a.image_credit, a.image_source_url, a.reading_time_minutes,
       a.published_at, a.engagement_score, a.is_sponsored,
       a.audio_url, a.audio_duration_seconds
     FROM articles a
@@ -194,7 +194,7 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
                   a.id, a.slug, a.title, a.subtitle, a.summary,
                   a.country_code, c.name as country_name, c.flag_emoji,
                   a.sector_id, s.name as sector_name,
-                  a.hero_image_url, a.reading_time_minutes,
+                  a.hero_image_url, a.image_credit, a.image_source_url, a.reading_time_minutes,
                   a.published_at, a.engagement_score,
                   a.ai_investor_brief, a.ai_push_message, a.ai_social_post,
                   a.audio_url, a.audio_duration_seconds
@@ -251,7 +251,7 @@ router.get('/latest', validate('query', ArticleQuerySchema.pick({ limit: true })
                   a.id, a.slug, a.title, a.subtitle, a.summary,
                   a.country_code, c.name as country_name, c.flag_emoji,
                   a.sector_id, s.name as sector_name,
-                  a.hero_image_url, a.reading_time_minutes,
+                  a.hero_image_url, a.image_credit, a.image_source_url, a.reading_time_minutes,
                   a.published_at, a.audio_url, a.audio_duration_seconds
                 FROM articles a
                 LEFT JOIN countries c ON a.country_code = c.code
@@ -299,7 +299,7 @@ router.get('/country/:code', validate('param', CountryCodeParamSchema), validate
     SELECT 
       a.id, a.slug, a.title, a.subtitle, a.summary,
       a.sector_id, s.name as sector_name,
-      a.hero_image_url, a.reading_time_minutes,
+      a.hero_image_url, a.image_credit, a.image_source_url, a.reading_time_minutes,
       a.published_at, a.engagement_score
     FROM articles a
     LEFT JOIN sectors s ON a.sector_id = s.id
@@ -354,7 +354,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
     SELECT 
       a.id, a.slug, a.title, a.subtitle, a.summary,
       a.country_code, c.name as country_name, c.flag_emoji,
-      a.hero_image_url, a.reading_time_minutes,
+      a.hero_image_url, a.image_credit, a.image_source_url, a.reading_time_minutes,
       a.published_at, a.engagement_score
     FROM articles a
     LEFT JOIN countries c ON a.country_code = c.code
@@ -481,7 +481,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         CACHE_KEYS.articleRelated(article.id),
         async () => {
             const result = await c.env.DB.prepare(`
-                SELECT id, slug, title, summary, hero_image_url, reading_time_minutes
+                SELECT id, slug, title, summary, hero_image_url, image_credit, image_source_url, reading_time_minutes
                 FROM articles
                 WHERE status = 'published'
                   AND id != ?

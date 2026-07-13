@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { ArrowTopRightIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
 import type { ArticleListItem } from '../types';
+import { sourcedEditorialImage } from '../lib/editorialImage';
+import { PhotoCredit } from './PhotoCredit';
 
 interface CountryHeroArticleProps {
     article: ArticleListItem;
@@ -13,18 +15,19 @@ interface CountryHeroArticleProps {
 export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article }) => {
     const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/^📰\s*/g, '').trim();
 
+    const image = sourcedEditorialImage(article);
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="group relative w-full h-[400px] md:h-[500px] rounded-3xl overflow-hidden border border-border/50 shadow-2xl bg-black mb-12"
+            className="group relative w-full min-h-[31rem] md:h-[500px] rounded-xl md:rounded-3xl overflow-hidden border border-border bg-navy mb-10 md:mb-12"
         >
             {/* Background Image / Gradient */}
             <div className="absolute inset-0 w-full h-full">
-                {article.ai_image_url || article.hero_image_url ? (
+                {image ? (
                     <img
-                        src={heroThumb(article.ai_image_url || article.hero_image_url)}
+                        src={heroThumb(image)}
                         alt={article.title}
                         className="w-full h-full object-cover opacity-60 transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
                     />
@@ -34,10 +37,11 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                 {/* Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent hidden md:block" />
+                {image && <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute right-4 top-4 z-20 rounded bg-navy/80 px-2 py-1 text-white" />}
             </div>
 
             {/* Content */}
-            <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-12 z-10 w-full md:w-3/4">
+            <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-8 md:p-12 z-10 w-full md:w-3/4">
                 <div className="flex gap-3 mb-4">
                     <Badge variant="default" className="bg-background text-foreground text-xs font-bold uppercase tracking-wider px-3 py-1">
                         {article.sector_name || 'Strategic Market'}

@@ -1,151 +1,57 @@
-import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { SectionLabel, CardReveal } from '../../components/beta';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Camera } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
-
-// Curated from the bundled, optimized local imagery so every tile loads
-// reliably (the previous Unsplash URLs had started 404-ing to the fallback).
-const GALLERY_IMAGES = [
-  {
-    url: '/images/v2_events.webp',
-    caption: 'Lagos after dark',
-    location: 'Lagos, Nigeria',
-    category: 'Cities'
-  },
-  {
-    url: '/images/v2_editorial_2.webp',
-    caption: 'Nairobi after hours',
-    location: 'Nairobi, Kenya',
-    category: 'Cities'
-  },
-  {
-    url: '/images/v2_hero_kigali.webp',
-    caption: 'Kigali rising',
-    location: 'Kigali, Rwanda',
-    category: 'Cities'
-  },
-  {
-    url: '/images/v2_editorial_1.webp',
-    caption: 'Colour on the avenue',
-    location: 'Dakar, Senegal',
-    category: 'People'
-  },
-  {
-    url: '/images/v2_concierge.webp',
-    caption: 'Service, elevated',
-    location: 'Cape Town, South Africa',
-    category: 'People'
-  },
-  {
-    url: '/images/v2_real_background.webp',
-    caption: 'Night market',
-    location: 'Marrakech, Morocco',
-    category: 'Culture'
-  },
-  {
-    url: '/images/v2_travel.webp',
-    caption: 'Where the wild meets luxury',
-    location: 'Serengeti, Tanzania',
-    category: 'Culture'
-  }
-];
-
-// Branded placeholder shown when an image fails to load (spec §3.6).
-const BrandedFallback = ({ caption, location }: { caption: string; location: string }) => (
-  <div className="absolute inset-0 flex flex-col items-center justify-center bg-navy-card text-center px-6">
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-navy font-serif font-black text-accent text-xl mb-4">B</span>
-    <span className="font-serif text-lg text-white">{caption}</span>
-    <span className="mt-1 text-sm italic text-accent">{location}</span>
-  </div>
-);
+import { PhotoCredit } from '../../components/PhotoCredit';
+import { api } from '../../services/api';
+import type { ArticleListItem } from '../../types';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { stripMarkdown } from '../../lib/utils';
 
 export const BetaGallery = () => {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [errored, setErrored] = useState<Record<number, boolean>>({});
-
-  const categories = useMemo(
-    () => ['All', ...Array.from(new Set(GALLERY_IMAGES.map(i => i.category)))],
-    []
-  );
-
-  const visible = GALLERY_IMAGES.map((img, index) => ({ ...img, index }))
-    .filter(img => activeCategory === 'All' || img.category === activeCategory);
+  const { data } = useQuery({
+    queryKey: ['gallery-source-linked-stories'],
+    queryFn: api.getFeaturedArticles,
+    staleTime: 5 * 60 * 1000,
+  });
+  const stories: ArticleListItem[] = (data?.data || []).slice(0, 12);
 
   return (
-    <div className="selection:bg-accent selection:text-primary">
-      <SEO
-        title="Gallery | BOA-Story"
-        description="A visual journal of African cities, creators, and everyday opportunity."
-      />
-
-      <div className="max-w-7xl mx-auto px-6 py-14 md:py-24">
-        <header className="mb-12 text-center md:text-left">
-          <SectionLabel text="Visual Journal" />
-          <h1 className="font-serif text-ink text-[40px] md:text-[56px] leading-tight mb-4">
-            Gallery
-          </h1>
-          {/* No authenticity claims here: these are illustrative renders, and
-              "real images" over generated art is exactly the kind of false
-              promise this project positions itself against. */}
-          <p className="text-xl text-ink-blue max-w-2xl">
-            The places, people, and moments that make up the story we're trying to tell — a visual mood board for the Africa we cover.
-          </p>
-        </header>
-
-        {/* Category filter pills */}
-        <div className="flex flex-wrap gap-2 mb-10">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
-                activeCategory === cat
-                  ? 'bg-accent text-navy border-accent'
-                  : 'border-navy/20 text-navy/65 hover:border-accent hover:text-accent'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+    <div className="bg-white text-navy">
+      <SEO title="Photo Desk | BOA-Story" description="Source-attributed photography attached to BOA-Story reporting." />
+      <header className="border-b border-border bg-navy text-white">
+        <div className="page-container py-12 sm:py-16 md:py-20">
+          <p className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/70"><Camera size={15}/> Photo desk</p>
+          <h1 className="max-w-3xl font-serif text-white">The reporting, seen at its source.</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">Every photograph shown here is attached to a specific published report and carries a visible credit linking back to the publisher or rights holder. Illustrative and generated imagery is excluded.</p>
         </div>
+      </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {visible.map((img) => (
-            <CardReveal key={img.index} delay={(img.index % 3) * 0.1}>
-              <motion.div
-                whileHover={{ y: -4 }}
-                className="group relative bg-navy-card rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-xl transition-all duration-300 h-80"
-              >
-                {errored[img.index] ? (
-                  <BrandedFallback caption={img.caption} location={img.location} />
+      <main className="page-container py-10 sm:py-14 md:py-20">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {stories.map((story) => {
+            const image = sourcedEditorialImage(story);
+            return (
+              <Link key={story.slug} to={`/posts/${story.slug}`} className="group overflow-hidden rounded-xl border border-border bg-white transition-colors hover:border-navy/35">
+                {image ? (
+                  <figure className="relative aspect-[4/3] overflow-hidden bg-navy">
+                    <img src={image} alt={story.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
+                    <PhotoCredit credit={story.image_credit} sourceUrl={story.image_source_url} className="absolute bottom-2 left-2 rounded bg-navy/85 px-2 py-1 text-white" />
+                  </figure>
                 ) : (
-                  <>
-                    <img
-                      src={img.url}
-                      alt={img.caption}
-                      onError={() => setErrored(prev => ({ ...prev, [img.index]: true }))}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    {/* Caption overlay slides up on hover (spec §3.6) */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[rgba(15,31,61,0.85)] via-navy/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300" />
-                    <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <span className="text-[10px] font-bold tracking-widest text-accent uppercase mb-2 block">
-                        {img.category}
-                      </span>
-                      <h3 className="font-serif text-xl text-white">
-                        {img.caption}
-                      </h3>
-                      <span className="text-sm italic text-accent">{img.location}</span>
-                    </div>
-                  </>
+                  <div className="flex min-h-32 items-end bg-navy p-5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Source record · {story.country_name || 'Africa'}</div>
                 )}
-              </motion.div>
-            </CardReveal>
-          ))}
+                <div className="p-4 sm:p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{story.country_name || 'Africa'}{story.sector_name ? ` · ${story.sector_name}` : ''}</p>
+                  <h2 className="mt-3 font-serif text-xl leading-snug text-navy">{stripMarkdown(story.title)}</h2>
+                  <span className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-navy">Open report <ArrowRight size={14}/></span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
-      </div>
-
+        <Link to="/posts" className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-navy px-5 text-sm font-semibold sm:w-auto">Browse all reporting <ArrowRight size={16}/></Link>
+      </main>
     </div>
   );
 };

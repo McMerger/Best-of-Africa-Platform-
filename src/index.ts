@@ -327,10 +327,6 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // Backfill hero images for the ~8k articles published while image
     // generation was over quota. Small batch per tick (newest first); the
     // function self-terminates when the backlog is gone.
-    await safe('backfill-heroes', async () => {
-        const { backfillHeroImages } = await import('./workers/generator');
-        await backfillHeroImages(env, 5);
-    });
 
     // Backfill 768w hero variants for articles whose heroes predate variant
     // generation (pure resize, no AI — CPU-cheap, so a bigger batch is fine).
@@ -347,10 +343,6 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // nobody has reached yet. Once the regen queue drains, coverage resumes.
     // Regenerate SDXL-era heroes with FLUX (most-visible articles first).
     // Self-terminates once the whole archive is flux-era.
-    await safe('regen-heroes', async () => {
-        const { regenerateHeroImages } = await import('./workers/generator');
-        await regenerateHeroImages(env, 5);
-    });
 
     // Regenerate legacy m2m100 translations with the large model (bodies were
     // degenerate stumps and are never served until quality=1). Newest-first,

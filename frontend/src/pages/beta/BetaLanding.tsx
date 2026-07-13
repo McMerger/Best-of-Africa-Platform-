@@ -7,6 +7,8 @@ import { api } from '../../services/api';
 import { FALLBACK_ARTICLES, KO_FI_URL } from '../../constants/beta';
 import type { ArticleListItem } from '../../types';
 import { heroThumb, stripMarkdown } from '@/lib/utils';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 const StoryMeta = ({ article }: { article: ArticleListItem }) => (
   <div className="flex items-center gap-3 text-xs text-white/75">
@@ -28,6 +30,7 @@ export const BetaLanding = () => {
   const stories: ArticleListItem[] = liveStories.length > 0 ? liveStories : FALLBACK_ARTICLES.slice(0, 4);
   const lead = stories[0];
   const secondary = stories.slice(1, 4);
+  const leadImage = lead ? sourcedEditorialImage(lead) : null;
 
   return (
     <div className="selection:bg-accent selection:text-navy">
@@ -48,25 +51,21 @@ export const BetaLanding = () => {
             <p className="text-white/75 text-lg md:text-xl leading-relaxed max-w-2xl mb-8">
               Structured country intelligence, market coverage and decision-ready briefings for investors, companies, governments and institutions operating across the continent.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-navy-mid transition-colors">
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
+              <Link to="/intelligence" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy transition-colors hover:bg-white/90">
                 Enter Intelligence <ArrowRight size={16} />
               </Link>
-              <Link to="/dashboards/overview" className="inline-flex items-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
+              <Link to="/dashboards/overview" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
                 Open Continental Dashboard
               </Link>
             </div>
           </div>
 
           {lead && (
-            <Link to={`/posts/${lead.slug}`} className="group relative min-h-[360px] md:min-h-[430px] overflow-hidden rounded-xl border border-white/15 bg-navy block">
-              <img
-                src={heroThumb(lead.hero_image_url) || '/images/v2_editorial_1.webp'}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-                fetchPriority="high"
-              />
+            <Link to={`/posts/${lead.slug}`} className="group relative min-h-[22rem] md:min-h-[430px] overflow-hidden rounded-xl border border-white/15 bg-navy-mid block">
+              {leadImage && <img src={heroThumb(leadImage)} alt={lead.title} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
               <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/45 to-transparent" />
+              {leadImage && <PhotoCredit credit={lead.image_credit} sourceUrl={lead.image_source_url} className="absolute right-3 top-3 z-10 rounded bg-navy/80 px-2 py-1 text-white" />}
               <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
                 <StoryMeta article={lead} />
                 <h2 className="font-serif text-white text-3xl md:text-4xl leading-tight mt-4 group-hover:text-accent transition-colors">
@@ -103,16 +102,12 @@ export const BetaLanding = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-px bg-border border border-border rounded-xl overflow-hidden">
-          {secondary.map((article, index) => (
+          {secondary.map((article) => (
             <Link key={article.slug} to={`/posts/${article.slug}`} className="group bg-card p-5 md:p-6 min-w-0">
-              <div className="aspect-[16/10] overflow-hidden rounded-lg bg-muted mb-5">
-                <img
-                  src={heroThumb(article.hero_image_url) || `/images/v2_editorial_${(index % 2) + 1}.webp`}
-                  alt=""
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              {sourcedEditorialImage(article) ? <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-navy mb-5">
+                <img src={heroThumb(sourcedEditorialImage(article)!)} alt={article.title} loading="lazy" className="w-full h-full object-cover" />
+                <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-2 rounded bg-navy/80 px-2 py-1 text-white" />
+              </div> : <div className="mb-5 h-1 w-14 bg-navy" aria-hidden="true" />}
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">
                 {article.country_code && <CountryFlag code={article.country_code} title={article.country_name} size={20} />}
                 <span>{article.country_name}</span>
