@@ -16,7 +16,7 @@ import {
     servicesRouter, marketIntelRouter, personalizationRouter, authRouter,
     eventsRouter, campaignsRouter, configRouter, devRouter,
     bookmarksRouter, systemRouter, openapiRouter, agentWebhooksRouter, auditRouter, selfImproveRouter,
-    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter, geminiOAuthRouter
+    newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter, geminiOAuthRouter, translationRouter
 } from './routes';
 import worldCupRouter from './routes/worldcup';
 import { refreshWorldCupTeams } from './lib/worldcup';
@@ -258,6 +258,7 @@ api.route('/agent/providers', agentProvidersRouter);
 api.route('/agent/moonshot/oauth', moonshotOAuthRouter);
 api.route('/agent/gemini/oauth', geminiOAuthRouter);
 api.route('/members', membersRouter);
+api.route('/translate', translationRouter);
 api.route('/dev', devRouter);
 api.route('/bookmarks', bookmarksRouter);
 api.route('/world-cup', worldCupRouter);

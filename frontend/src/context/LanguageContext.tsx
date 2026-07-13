@@ -3,7 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES as CONTENT_LANGUAGES } from '../types';
 import { TRANSLATIONS } from '../i18n/dict';
-export const SUPPORTED_LANGUAGES = CONTENT_LANGUAGES.filter(language => language.code === 'en');
+// Article and interface language are one reader preference. Selecting a locale
+// changes the application chrome and is also passed to article queries so the
+// stored article translation is served when available.
+export const SUPPORTED_LANGUAGES = CONTENT_LANGUAGES;
 
 interface LanguageContextType {
     language: LanguageCode;
