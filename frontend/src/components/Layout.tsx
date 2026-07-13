@@ -4,6 +4,7 @@ import { Footer } from './Footer';
 import { Breadcrumbs } from './Breadcrumbs';
 import { InterfaceTranslator } from './InterfaceTranslator';
 import { MEMBER_PREVIEW_MODE } from '../config/flags';
+import { ScrollToTopButton } from './ScrollToTopButton';
 
 
 
@@ -14,7 +15,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
     return (
-        <div className="flex min-h-screen supports-[min-height:100dvh]:min-h-[100dvh] bg-background text-foreground overflow-x-hidden">
+        <div className="flex min-h-screen supports-[min-height:100dvh]:min-h-[100dvh] bg-background text-foreground overflow-x-clip">
             <InterfaceTranslator />
             <div className="flex-1 flex flex-col min-h-screen min-w-0">
                 <NavBar />
@@ -29,6 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {children}
                 </main>
                 <Footer />
+                <ScrollToTopButton />
             </div>
         </div>
     );

@@ -109,6 +109,7 @@ body {
 
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 8rem;
     /* overflow-x: clip prevents a horizontal scrollbar WITHOUT making <html> a
        scroll container (which `hidden` does, by coercing overflow-y to auto and
        breaking two-finger/trackpad wheel scrolling). touch-action removed so
@@ -324,7 +325,7 @@ body {
 
   @media (max-width: 1023px) {
     .dashboard-rail {
-      top: 4rem;
+      top: 4.5rem;
       margin-inline: calc(var(--page-gutter) * -1);
       padding: 0.8rem var(--page-gutter);
       background: hsl(var(--background) / 0.94);
@@ -343,27 +344,29 @@ body {
     }
     .mobile-scroll-strip > * { flex: 0 1 auto; }
     .dashboard-rail {
-      position: relative;
-      top: auto;
-      margin-inline: 0;
-      padding: 0;
-      background: transparent;
-      backdrop-filter: none;
+      position: sticky;
+      top: 4.5rem;
+      z-index: 30;
+      margin-inline: calc(var(--page-gutter) * -1);
+      padding: 0.65rem var(--page-gutter);
+      background: hsl(var(--background) / 0.96);
+      backdrop-filter: blur(14px);
     }
     .dashboard-rail nav {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      overflow: visible;
-      padding: 0.55rem;
+      display: flex;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scroll-snap-type: inline proximity;
+      padding: 0.4rem;
     }
     .dashboard-rail a {
-      min-height: 2.75rem;
-      width: 100%;
+      min-height: 2.5rem;
+      width: auto;
       display: inline-flex;
       align-items: center;
-      white-space: normal;
+      white-space: nowrap;
+      scroll-snap-align: start;
     }
-    .dashboard-rail a:last-child { grid-column: 1 / -1; }
   }
 
   .fade-in-up {

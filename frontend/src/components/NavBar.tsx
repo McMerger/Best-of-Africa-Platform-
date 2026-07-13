@@ -30,6 +30,23 @@ export const NavBar: React.FC = () => {
     const location = useLocation();
     const { t } = useLanguage();
     const { isAuthenticated } = useAuth();
+    const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+    const [scrolled, setScrolled] = React.useState(false);
+
+    React.useEffect(() => setMobileMenuOpen(false), [location.pathname]);
+
+    React.useEffect(() => {
+        const update = () => setScrolled(window.scrollY > 12);
+        update();
+        window.addEventListener('scroll', update, { passive: true });
+        return () => window.removeEventListener('scroll', update);
+    }, []);
+
+    const isPathActive = (path: string) => {
+        if (path === '/') return location.pathname === '/';
+        if (path.startsWith('/dashboards')) return location.pathname.startsWith('/dashboards');
+        return location.pathname === path || location.pathname.startsWith(`${path}/`);
+    };
 
     // Full mobile menu, every primary page is reachable here, grouped by section.
     const mobileSections: { heading: string; links: { href: string; label: string }[] }[] = [
@@ -72,7 +89,7 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80">
+        <header className={cn("sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80 transition-shadow duration-200", scrolled && "shadow-[0_8px_30px_-22px_rgba(15,31,61,0.65)]")}>
             {/* Pre-header utilities. Signed-in only: for visitors it held nothing
                 but the language button — a dead 44px strip on every page. Their
                 LanguageSelector lives in the main navbar row instead. */}
@@ -106,7 +123,7 @@ export const NavBar: React.FC = () => {
                         { path: '/posts', label: t('nav.stories', 'Stories') },
                         { path: '/membership', label: t('nav.membership', 'Membership') },
                     ].map((item) => {
-                        const isActive = location.pathname.startsWith(item.path);
+                        const isActive = isPathActive(item.path);
                         return (
                             <Link
                                 key={item.path}
@@ -166,7 +183,7 @@ export const NavBar: React.FC = () => {
                                 <span className="sr-only">Search</span>
                             </Link>
                         </Button>
-                        <Sheet>
+                        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                             <SheetTrigger asChild>
                                 <Button variant="ghost" size="icon" className="w-9 h-9 rounded-full ml-1">
                                     <HamburgerMenuIcon className="h-6 w-6" />
@@ -194,9 +211,10 @@ export const NavBar: React.FC = () => {
                                                         <Link
                                                             key={link.href}
                                                             to={link.href}
+                                                            onClick={() => setMobileMenuOpen(false)}
                                                             className={cn(
                                                                 "block py-2.5 px-4 rounded text-sm uppercase tracking-widest font-bold transition-all",
-                                                                location.pathname === link.href
+                                                                isPathActive(link.href)
                                                                     ? "bg-accent/10 text-navy border-l-2 border-accent"
                                                                     : "text-navy/60 hover:text-accent hover:bg-accent/10 border-l-2 border-transparent"
                                                             )}
@@ -211,12 +229,12 @@ export const NavBar: React.FC = () => {
                                     <div className="mt-auto pt-6 border-t border-border space-y-3">
                                         {isAuthenticated && (
                                             <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-navy/70 hover:text-accent hover:bg-accent/10 rounded">
-                                                <Link to="/settings"><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
+                                                <Link to="/settings" onClick={() => setMobileMenuOpen(false)}><GearIcon className="mr-3 h-4 w-4" /> Settings</Link>
                                             </Button>
                                         )}
                                         {isAuthenticated && (
                                             <Button variant="ghost" asChild className="w-full justify-start h-auto py-3 text-navy/70 hover:text-accent hover:bg-accent/10 rounded">
-                                                <Link to="/admin"><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
+                                                <Link to="/admin" onClick={() => setMobileMenuOpen(false)}><LockClosedIcon className="mr-3 h-4 w-4" /> Admin</Link>
                                             </Button>
                                         )}
                                         {isAuthenticated && (
