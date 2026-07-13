@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, stripProcessLeakage } from '@/lib/utils';
 
 interface MarkdownRendererProps {
   content: string;
@@ -35,7 +35,7 @@ const isBlockStart = (lines: string[], index: number) => {
 };
 
 function renderStructuredContent(content: string): string {
-  const lines = content.replace(/\r\n?/g, '\n').split('\n');
+  const lines = stripProcessLeakage(content).replace(/\r\n?/g, '\n').split('\n');
   const blocks: string[] = [];
   let index = 0;
 

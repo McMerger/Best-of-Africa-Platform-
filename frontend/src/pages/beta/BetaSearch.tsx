@@ -183,7 +183,7 @@ export const BetaSearch: React.FC = () => {
                             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center border border-accent/30">
                                 <SparklesIcon className="text-accent w-6 h-6" />
                             </div>
-                            <h3 className="font-serif text-[2rem] text-foreground">Analyst Synthesis</h3>
+                            <h3 className="font-serif text-[2rem] text-foreground">Research answer</h3>
                         </div>
                         <MarkdownRenderer content={analystAnswer} className="relative z-10 text-foreground/80" />
                     </motion.div>

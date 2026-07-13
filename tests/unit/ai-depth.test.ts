@@ -43,6 +43,12 @@ describe('AI response depth contract', () => {
         expect(extractAIText('hidden reasoning<|channel|>final<|message|>Visible answer')).toBe('Visible answer');
     });
 
+    it('removes hidden deliberation while preserving the finished answer', () => {
+        expect(extractAIText('<think>I should compare three approaches.</think>Published finding.')).toBe('Published finding.');
+        expect(extractAIText('<analysis>Private scratch work.</analysis>\nFinal evidence brief.')).toBe('Final evidence brief.');
+        expect(extractAIText('```reasoning\ninternal plan\n```\nDecision-ready conclusion.')).toBe('Decision-ready conclusion.');
+    });
+
     it('runs one evidence-preserving expansion pass for a minimal first draft', async () => {
         const expanded = Array.from({ length: 2220 }, (_, index) => `word${index}`).join(' ');
         const run = vi.fn()

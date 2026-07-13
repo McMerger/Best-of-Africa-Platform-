@@ -94,6 +94,7 @@ const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; minim
 };
 
 const THIN_EVIDENCE_LANGUAGE = /\b(insufficient (?:data|evidence|context)|no (?:relevant|supporting) (?:data|evidence|records)|evidence (?:is|was) too thin|unable to substantiate)\b/i;
+const PUBLISHED_OUTPUT_CONTRACT = `Return only the finished deliverable. Never expose chain-of-thought, hidden reasoning, scratch work, planning, prompt interpretation, model identity, tool narration or drafting commentary. Do not use <think>, <analysis>, "reasoning", "as an AI", "I considered", "let me", or similar process language. Present supported evidence, conclusions, uncertainty and next actions directly.`;
 
 export function countResponseWords(text: string): number {
     return text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -115,12 +116,17 @@ export function evaluateArticleDepth(content: unknown, investorBrief: unknown): 
 
 export function extractAIText(response: unknown): string {
     const finalOnly = (text: string): string => {
+        const clean = (value: string) => value
+            .replace(/<think(?:ing)?\b[^>]*>[\s\S]*?<\/think(?:ing)?>/gi, '')
+            .replace(/<analysis\b[^>]*>[\s\S]*?<\/analysis>/gi, '')
+            .replace(/```(?:thinking|reasoning|analysis|chain[- ]of[- ]thought)[^\n]*\n[\s\S]*?```/gi, '')
+            .trim();
         const harmonyMarker = '<|channel|>final<|message|>';
         const harmonyIndex = text.lastIndexOf(harmonyMarker);
-        if (harmonyIndex >= 0) return text.slice(harmonyIndex + harmonyMarker.length).trim();
+        if (harmonyIndex >= 0) return clean(text.slice(harmonyIndex + harmonyMarker.length));
         const assistantFinalIndex = text.toLowerCase().lastIndexOf('assistantfinal');
-        if (assistantFinalIndex >= 0) return text.slice(assistantFinalIndex + 'assistantfinal'.length).trim();
-        return text.trim();
+        if (assistantFinalIndex >= 0) return clean(text.slice(assistantFinalIndex + 'assistantfinal'.length));
+        return clean(text);
     };
 
     if (typeof response === 'string') return finalOnly(response);
@@ -162,18 +168,21 @@ export function isValidStructuredOutput(text: string): boolean {
 }
 
 function applyResponseProfile(options: AICallOptions): AICallOptions {
-    if (!options.response_profile) return options;
-    const profile = RESPONSE_PROFILES[options.response_profile];
-    const contract = profile.instructions;
-    const withBudget = { ...options, max_tokens: Math.max(options.max_tokens || 0, profile.minimumTokens) };
+    const profile = options.response_profile ? RESPONSE_PROFILES[options.response_profile] : null;
+    const contract = profile
+        ? `DEPTH AND EVIDENCE CONTRACT:\n${profile.instructions}\n\nPUBLISHED OUTPUT CONTRACT:\n${PUBLISHED_OUTPUT_CONTRACT}`
+        : `PUBLISHED OUTPUT CONTRACT:\n${PUBLISHED_OUTPUT_CONTRACT}`;
+    const withBudget = profile
+        ? { ...options, max_tokens: Math.max(options.max_tokens || 0, profile.minimumTokens) }
+        : { ...options };
     if (options.messages) {
         const messages = options.messages.map(message => ({ ...message }));
         const systemIndex = messages.findIndex(message => message.role === 'system');
-        if (systemIndex >= 0) messages[systemIndex].content += `\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}`;
-        else messages.unshift({ role: 'system', content: `DEPTH AND EVIDENCE CONTRACT:\n${contract}` });
+        if (systemIndex >= 0) messages[systemIndex].content += `\n\n${contract}`;
+        else messages.unshift({ role: 'system', content: contract });
         return { ...withBudget, messages };
     }
-    return { ...withBudget, prompt: `${options.prompt || ''}\n\nDEPTH AND EVIDENCE CONTRACT:\n${contract}` };
+    return { ...withBudget, prompt: `${options.prompt || ''}\n\n${contract}` };
 }
 
 export async function callConfiguredAI(env: Env, options: AICallOptions): Promise<string> {
@@ -188,7 +197,7 @@ export async function callConfiguredAI(env: Env, options: AICallOptions): Promis
         : 'Return the complete rewritten response under the original format.';
     const expansionPrompt = `The draft below is materially underdeveloped (${countResponseWords(first)} words; the requested analytical floor is ${contract.minimumWords} words when evidence permits).
 
-Rewrite it as a complete response under the original instructions and schema. Add depth only from the original supplied evidence. Preserve every supported detail, make reasoning explicit, add counter-evidence and limitations, and never pad or invent. If the evidence genuinely cannot support the requested depth, state the precise missing evidence instead.
+Rewrite it as a complete response under the original instructions and schema. Add depth only from the original supplied evidence. Preserve every supported detail, state the evidence for each conclusion, add counter-evidence and limitations, and never pad or invent. Return only the finished deliverable without internal reasoning or process narration. If the evidence genuinely cannot support the requested depth, state the precise missing evidence instead.
 
 ${structuredInstruction}
 

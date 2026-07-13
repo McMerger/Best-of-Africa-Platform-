@@ -72,7 +72,7 @@ export const AdminInboxTab: React.FC = () => {
 
             <Section
                 title="Consultation Requests"
-                description="Concierge / booking submissions with the AI preliminary brief already sent."
+                description="Concierge and booking submissions with the preliminary brief already sent."
                 empty={!data?.bookings?.length}
             >
                 <Table>

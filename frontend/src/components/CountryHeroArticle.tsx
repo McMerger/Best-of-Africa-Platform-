@@ -55,7 +55,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                         {cleanText(article.summary)}
                     </p>
                     <div className="flex items-center gap-2 text-primary font-bold tracking-widest uppercase text-sm group-hover:translate-x-2 transition-transform">
-                        Read Operational Analysis <ArrowTopRightIcon className="h-5 w-5" />
+                        Open Country Briefing <ArrowTopRightIcon className="h-5 w-5" />
                     </div>
                 </Link>
             </div>

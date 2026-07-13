@@ -58,7 +58,7 @@ export const ArticleFeedbackDialog: React.FC<ArticleFeedbackDialogProps> = ({
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="feedback">Reasoning / Feedback</Label>
+                        <Label htmlFor="feedback">Editorial feedback</Label>
                         <Textarea
                             id="feedback"
                             placeholder="Why is this change necessary? (e.g., Tone issues, hallucination, missing context...)"

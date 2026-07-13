@@ -134,7 +134,7 @@ export const CommandMenu = () => {
                             <div className="grid gap-2 mt-4">
                                 {[
                                     { label: "New stories published", type: "UPDATE", time: "Just now" },
-                                    { label: "Regional analysis updated", type: "EVENT", time: "Recently" },
+                                    { label: "Regional briefing updated", type: "EVENT", time: "Recently" },
                                     { label: "Strategic briefing ready", type: "RISK", time: "Today" },
                                 ].map((signal, i) => (
                                     <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-muted/40 cursor-default transition-all group">

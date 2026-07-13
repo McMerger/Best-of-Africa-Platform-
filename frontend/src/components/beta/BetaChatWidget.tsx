@@ -104,7 +104,7 @@ export const BetaChatWidget = () => {
                 <Sparkles size={18} className="text-accent" />
                 <div>
                   <h3 className="font-serif text-lg leading-tight">Ask the Analyst</h3>
-                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">Evidence-grounded synthesis</p>
+                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">Source-grounded briefing</p>
                 </div>
               </div>
               <button 

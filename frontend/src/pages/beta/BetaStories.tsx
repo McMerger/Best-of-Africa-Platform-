@@ -11,7 +11,7 @@ import { FALLBACK_ARTICLES } from '../../constants/beta';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { stripMarkdown, heroThumb } from '@/lib/utils';
+import { stripMarkdown, stripProcessLeakage, heroThumb } from '@/lib/utils';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
@@ -288,7 +288,7 @@ export const BetaStories = () => {
         {/* Feed Summary */}
         {feedMode === 'foryou' && curatedData?.ai_feed_summary && (
           <div className="mb-8 p-4 bg-accent/10 border border-accent/20 rounded-xl text-center text-accent/90 text-sm font-medium italic">
-            {curatedData.ai_feed_summary}
+            {stripProcessLeakage(curatedData.ai_feed_summary)}
           </div>
         )}
 
@@ -464,7 +464,7 @@ export const BetaStories = () => {
                         <div className="bg-accent/5 border-l-2 border-accent pl-3 py-1 mb-3">
                           <p className="text-xs text-accent/90 font-medium italic">
                             <Sparkles size={10} className="inline mr-1" />
-                            {(article as any).ai_curation.relevance_note}
+                            {stripProcessLeakage((article as any).ai_curation.relevance_note)}
                           </p>
                         </div>
                       ) : (

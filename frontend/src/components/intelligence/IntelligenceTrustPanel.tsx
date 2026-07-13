@@ -14,7 +14,7 @@ export const IntelligenceTrustPanel = ({ updatedAt, sourceLabel }: IntelligenceT
     { Icon: Database, label: 'Source', value: sourceLabel },
     { Icon: Clock3, label: 'Freshness', value: validTimestamp ? timestamp.toLocaleString() : 'Updated with the live dataset' },
     { Icon: UserCheck, label: 'Review', value: 'Critical claims require editorial review' },
-    { Icon: ShieldCheck, label: 'AI policy', value: 'AI may summarise; it must not invent facts' },
+    { Icon: ShieldCheck, label: 'Evidence policy', value: 'Summaries must remain source-bound and factual' },
   ];
 
   return (

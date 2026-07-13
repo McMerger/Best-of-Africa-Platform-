@@ -307,7 +307,7 @@ export const BetaIntelligence = () => {
                     <h3 className="font-serif text-2xl text-foreground mb-3 leading-snug">{stripMarkdown(opp.title)}</h3>
                     <p className="text-[15px] text-foreground/75 leading-7 font-light">{stripMarkdown(opp.summary)}</p>
                     <div className="mt-5 border-l-2 border-accent/40 pl-4">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink mb-2">Why it matters — analysis</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink mb-2">Why it matters</p>
                       <p className="text-sm text-foreground/70 leading-6">{stripMarkdown(opp.why_it_matters)}</p>
                     </div>
                     <details className="mt-5 group/details rounded-xl border border-foreground/10 bg-foreground/[0.02] open:bg-foreground/[0.035]">

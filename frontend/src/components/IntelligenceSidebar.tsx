@@ -107,7 +107,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                                     : 'bg-background text-foreground'
                                     }`}>
                                     <span className="block mb-1 text-[10px] font-bold uppercase tracking-widest opacity-50">
-                                        {msg.role === 'system' ? 'Analysis' : 'Input'}
+                                        {msg.role === 'user' ? 'Your question' : 'Briefing'}
                                     </span>
                                     {msg.role === 'user'
                                       ? msg.content

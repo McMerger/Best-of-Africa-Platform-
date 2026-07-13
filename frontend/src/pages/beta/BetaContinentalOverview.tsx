@@ -192,7 +192,7 @@ export const BetaContinentalOverview: React.FC = () => {
           <div className="border-b border-border bg-navy px-7 py-7 text-white md:px-10">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Continental evidence briefing</p>
             <h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight md:text-4xl">What the latest reporting establishes—and what it does not</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70">A long-form, source-bounded synthesis of current actors, chronology, mechanisms, cross-country differences, counter-signals, evidence gaps and verification priorities.</p>
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70">A source-bounded briefing on current actors, chronology, mechanisms, cross-country differences, counter-signals, evidence gaps and verification priorities.</p>
           </div>
           <div className="px-7 py-8 md:px-10 md:py-10">
             {isAnalyticsLoading && (
@@ -201,10 +201,10 @@ export const BetaContinentalOverview: React.FC = () => {
                 <div className="h-4 w-full rounded bg-foreground/5" />
                 <div className="h-4 w-11/12 rounded bg-foreground/5" />
                 <div className="h-32 w-full rounded-xl bg-foreground/5" />
-                <p className="pt-2 text-xs text-muted-foreground">Preparing the full evidence analysis. First generation can take about a minute; subsequent reads are cached.</p>
+                <p className="pt-2 text-xs text-muted-foreground">Loading the current evidence brief.</p>
               </div>
             )}
-            {isAnalyticsError && <div className="text-sm leading-7 text-muted-foreground"><p>The long-form synthesis request did not complete. The observed dashboard record below contains {overview.total_articles_30d.toLocaleString()} published articles across {overview.countries_covered} countries in the current 30-day window.</p><p className="mt-3">Use the regional distribution, country ranking, sector counts and source-linked highlights on this page as the current evidence layer.</p></div>}
+            {isAnalyticsError && <div className="text-sm leading-7 text-muted-foreground"><p>The extended evidence brief could not be loaded. The dashboard below contains {overview.total_articles_30d.toLocaleString()} published articles across {overview.countries_covered} countries in the current 30-day window.</p><p className="mt-3">Use the regional distribution, country ranking, sector counts and source-linked highlights as the current evidence layer.</p></div>}
             {platformAnalytics?.market_summary && (
               <>
                 <MarkdownRenderer content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />
