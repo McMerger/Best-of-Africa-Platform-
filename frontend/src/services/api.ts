@@ -291,9 +291,10 @@ export const api = {
         article_count: number;
         top_sectors: { sector: Sector; count: number }[];
         recent_articles: ArticleListItem[];
-        sentiment_score: number;
-        investment_readiness_score: number;
-        tourism_appeal_score: number;
+        sentiment_score: number | null;
+        investment_readiness_score: number | null;
+        tourism_appeal_score: number | null;
+        methodology: string;
         narrative_gaps: string[];
         recommendations: string[];
     }>(`/intel/country/${code}/report`),
@@ -377,14 +378,19 @@ export const api = {
 
     // Analytics
     getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => request<{
-        data: { sector_id: string; sector_name: string; growth_yoy: number; volatility: string; article_count: number; ai_insight?: string }[];
+        data: { sector_id: string; sector_name: string; growth_yoy: null; volatility: null; article_count: number; total_views: number; countries_covered: number; coverage_current_30d: number; coverage_previous_30d: number; coverage_change: number; coverage_change_pct: number | null; latest_reported_at: string | null; ai_insight: string }[];
+        methodology: string;
         updated_at: string;
     }>(`/market-intel/performance${lens ? `?lens=${lens}` : ''}`),
 
     getLeadingSector: () => request<{
         name: string;
-        growth: number;
+        growth: number | null;
         trend: string;
+        stories_7d: number;
+        stories_previous_7d: number;
+        coverage_change: number;
+        methodology: string;
         updated_at: string;
     }>('/market-intel/leading-sector'),
 
@@ -398,19 +404,22 @@ export const api = {
     }>('/market-intel/coverage-pulse'),
 
     getSentimentDivergence: () => request<{
-        average_divergence: number;
-        countries: { country_code: string; country_name: string; reality_score: number; perception_score: number; gap: number }[];
+        average_divergence: null;
+        countries: { country_code: string; country_name: string; region: string; reality_score: null; perception_score: null; gap: null; coverage_this_week: number; coverage_last_week: number; coverage_change: number; audience_response: number | null; latest_reported_at: string | null }[];
+        methodology: string;
         updated_at: string;
     }>('/market-intel/sentiment-divergence'),
 
     getPlatformAnalytics: (lens?: 'investor' | 'government' | 'explorer') => request<{
         market_summary: string;
-        stability_index: string;
-        stability_score: number;
-        sentiment_pct: number;
-        sentiment_trend: 'up' | 'down';
-        sector_trends: { id: string; name: string; trend: string; article_count: number }[];
+        stability_index: null;
+        stability_score: null;
+        sentiment_pct: null;
+        sentiment_trend: null;
+        sector_trends: { id: string; name: string; trend: 'coverage_up' | 'coverage_down' | 'coverage_flat'; article_count: number; previous_article_count: number; coverage_change: number }[];
         total_articles_7d: number;
+        coverage: { countries_7d: number; total_views_7d: number; audience_response: number | null };
+        methodology: string;
         updated_at: string;
     }>(`/dashboards/analytics/summary${lens ? `?lens=${lens}` : ''}`),
 
@@ -422,15 +431,27 @@ export const api = {
             sector_name: string;
             title: string;
             summary: string;
+            why_it_matters: string;
+            evidence_points: string[];
+            counter_signals: string[];
+            diligence_questions: string[];
+            coverage_stories: number;
+            audience_response: number;
+            latest_reported_at: string | null;
+            methodology: string;
             score: number;
         }[]
     }>('/market-intel/opportunities'),
 
     getSectorVelocity: (sectorId: string) => request<{
         sector_id: string;
-        cagr_5yr: number;
-        deal_flow_usd: number;
-        active_projects: number;
+        cagr_5yr: number | null;
+        deal_flow_usd: number | null;
+        active_projects: null;
+        coverage_stories_30d: number;
+        data_year: number | null;
+        source_urls: string[];
+        methodology: string;
         updated_at: string;
     }>(`/market-intel/sector/${sectorId}/velocity`),
 

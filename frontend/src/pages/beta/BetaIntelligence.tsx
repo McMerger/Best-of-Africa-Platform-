@@ -269,9 +269,9 @@ export const BetaIntelligence = () => {
           <motion.section initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-4">
               <TrendingUp size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Opportunities</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">Evidence-led watchlist</h2>
             </div>
-            <p className="text-lg text-foreground/70 mb-8 font-light">High-signal sector reads across the continent, ranked for members.</p>
+            <p className="text-lg text-foreground/70 mb-8 font-light">Country-sector intersections prominent in current BOA-Story reporting, with the evidence, counter-signals and diligence gaps exposed.</p>
 
             <div className="space-y-6">
               {isLoadingOpp ? (
@@ -279,7 +279,7 @@ export const BetaIntelligence = () => {
               ) : opportunities?.data && opportunities.data.length > 0 ? (
                 opportunities.data.map((opp, i) => (
                   <motion.div
-                    key={i}
+                    key={`${opp.country_code}-${opp.sector_id}`}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -289,16 +289,32 @@ export const BetaIntelligence = () => {
                     <div className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-accent/20 to-transparent group-hover:from-accent group-hover:to-accent/50 transition-colors" />
                     <div className="flex flex-wrap items-center gap-4 mb-4">
                       <span className="text-[11px] font-bold uppercase tracking-widest text-accent-ink bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20">
-                        Score: {Math.round(opp.score * 100)}
+                        {opp.coverage_stories} recent reports
                       </span>
                       <span className="text-xs font-bold uppercase tracking-widest text-foreground/70">{opp.country_name} • {opp.sector_name}</span>
                     </div>
                     <h3 className="font-serif text-2xl text-foreground mb-3 leading-snug">{stripMarkdown(opp.title)}</h3>
-                    <p className="text-[15px] text-foreground/70 line-clamp-3 leading-relaxed font-light">{stripMarkdown(opp.summary)}</p>
-                    <div className="mt-6">
+                    <p className="text-[15px] text-foreground/75 leading-7 font-light">{stripMarkdown(opp.summary)}</p>
+                    <div className="mt-5 border-l-2 border-accent/40 pl-4">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-ink mb-2">Why it matters — analysis</p>
+                      <p className="text-sm text-foreground/70 leading-6">{stripMarkdown(opp.why_it_matters)}</p>
+                    </div>
+                    <details className="mt-5 group/details rounded-xl border border-foreground/10 bg-foreground/[0.02] open:bg-foreground/[0.035]">
+                      <summary className="cursor-pointer list-none px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/65 group-open/details:text-accent-ink">
+                        Evidence, constraints and diligence
+                      </summary>
+                      <div className="px-4 pb-4 space-y-5 text-sm leading-6 text-foreground/70">
+                        {opp.evidence_points?.length > 0 && <div><p className="font-bold text-foreground mb-2">Reported evidence</p><ul className="space-y-2 list-disc pl-5">{opp.evidence_points.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ul></div>}
+                        {opp.counter_signals?.length > 0 && <div><p className="font-bold text-foreground mb-2">Counter-signals and limits</p><ul className="space-y-2 list-disc pl-5">{opp.counter_signals.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ul></div>}
+                        {opp.diligence_questions?.length > 0 && <div><p className="font-bold text-foreground mb-2">What to verify next</p><ol className="space-y-2 list-decimal pl-5">{opp.diligence_questions.map((item, index) => <li key={index}>{stripMarkdown(item)}</li>)}</ol></div>}
+                        <p className="text-xs text-foreground/45 pt-2 border-t border-foreground/10">{opp.methodology}</p>
+                      </div>
+                    </details>
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                       <Link to={`/countries/${opp.country_code}`} className="text-[11px] uppercase tracking-widest text-accent-ink font-bold hover:text-foreground transition-colors">
                         View {opp.country_name} Hub →
                       </Link>
+                      <span className="text-[10px] uppercase tracking-widest text-foreground/40">Audience response {opp.audience_response}/100</span>
                     </div>
                   </motion.div>
                 ))

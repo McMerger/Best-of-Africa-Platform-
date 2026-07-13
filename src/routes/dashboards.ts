@@ -357,160 +357,98 @@ async function generateDashboard(env: Env, region: string): Promise<any> {
 // GET /dashboards/analytics - Platform-wide analytics (for Continental Overview)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/analytics/summary', async (c) => {
-    // Parse lens
-    const lensParam = (c.req.query('lens') || 'investor') as string;
+    const lensParam = c.req.query('lens') || 'investor';
     const activeLens = ['investor', 'government', 'explorer'].includes(lensParam) ? lensParam : 'investor';
-    // Aggregate platform metrics
-    const [articleStats, sentimentData, sectorTrends] = await Promise.all([
-        c.env.DB.prepare(`
-            SELECT 
-                COUNT(*) as total_articles,
-                AVG(engagement_score) as avg_engagement,
-                SUM(view_count) as total_views
-            FROM articles 
-            WHERE status = 'published' AND published_at > datetime('now', '-7 days')
-        `).first(),
 
+    const [articleStats, sectorRows, recentRecords] = await Promise.all([
         c.env.DB.prepare(`
-            SELECT AVG(image_strength_score) as avg_sentiment
-            FROM countries
-            WHERE image_strength_score IS NOT NULL
-        `).first(),
-
+            SELECT COUNT(*) AS total_articles,
+                   COUNT(DISTINCT country_code) AS countries_covered,
+                   SUM(COALESCE(view_count, 0)) AS total_views,
+                   AVG(engagement_score) AS audience_response
+            FROM articles
+            WHERE status = 'published' AND published_at >= datetime('now', '-7 days')
+        `).first<Record<string, any>>(),
         c.env.DB.prepare(`
-            SELECT s.id, s.name, COUNT(a.id) as recent_count
+            SELECT s.id, s.name,
+                   SUM(CASE WHEN a.published_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS current_count,
+                   SUM(CASE WHEN a.published_at >= datetime('now', '-14 days')
+                             AND a.published_at < datetime('now', '-7 days') THEN 1 ELSE 0 END) AS previous_count
             FROM sectors s
-            LEFT JOIN articles a ON a.sector_id = s.id 
-                AND a.status = 'published' 
-                AND a.published_at > datetime('now', '-7 days')
-            GROUP BY s.id
-            ORDER BY recent_count DESC
-        `).all()
+            LEFT JOIN articles a
+              ON a.sector_id = s.id
+             AND a.status = 'published'
+             AND a.published_at >= datetime('now', '-14 days')
+            WHERE s.id != 'general'
+            GROUP BY s.id, s.name
+            ORDER BY current_count DESC, previous_count DESC, s.name
+        `).all<Record<string, any>>(),
+        c.env.DB.prepare(`
+            SELECT a.title, a.summary, a.published_at, a.source_title, a.source_url,
+                   c.name AS country_name, s.name AS sector_name
+            FROM articles a
+            LEFT JOIN countries c ON c.code = a.country_code
+            LEFT JOIN sectors s ON s.id = a.sector_id
+            WHERE a.status = 'published'
+            ORDER BY a.published_at DESC
+            LIMIT 14
+        `).all<Record<string, any>>(),
     ]);
 
-    const stats = articleStats as Record<string, any>;
-    const sentiment = sentimentData as Record<string, any>;
-    const sectors = (sectorTrends.results || []) as any[];
+    const sectorTrends = (sectorRows.results || []).map(row => {
+        const current = Number(row.current_count || 0);
+        const previous = Number(row.previous_count || 0);
+        const change = current - previous;
+        return {
+            id: row.id,
+            name: row.name,
+            trend: change > 0 ? 'coverage_up' : change < 0 ? 'coverage_down' : 'coverage_flat',
+            article_count: current,
+            previous_article_count: previous,
+            coverage_change: change,
+        };
+    });
 
-    // --- -Driven Stability Index ---
-    const avgEngagement = stats?.avg_engagement || 50;
-    const avgSentiment = sentiment?.avg_sentiment || 50;
-    const dataBasedScore = Math.min(1000, Math.round(((avgEngagement + avgSentiment) / 2) * 10));
-
-    // Fetch recent headlines for context
-    const recentHeadlines = await c.env.DB.prepare(`
-        SELECT title FROM articles 
-        WHERE status = 'published' 
-        ORDER BY published_at DESC 
-        LIMIT 8
-    `).all();
-    const headlineContext = (recentHeadlines.results || []).map((a: any) => a.title).join('\n- ');
-
-    const aiStability = await getCached(
-        c.env,
-        `dashboard:ai_stability:${activeLens}`,
-        async () => {
-            if (!headlineContext) return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 500 ? 'MODERATE' : 'VOLATILE' };
-            try {
-                const lensInstruction = activeLens === 'investor'
-                    ? 'Focus on intrinsic value signals, earnings stability, and margin of safety across African markets. HIGH = strong fundamentals with value opportunities, VOLATILE = speculative, overvalued, or erratic earnings.'
-                    : activeLens === 'government'
-                        ? 'Focus on governance quality, fiscal sustainability, political stability, and development impact. HIGH = strong institutions and policy continuity, VOLATILE = regime instability, fiscal distress, or security risks.'
-                        : 'Focus on travel safety, hospitality infrastructure, and tourism appeal. HIGH = safe, accessible, and world-class experiences, VOLATILE = travel advisories, infrastructure gaps, or safety concerns.';
-
-                const prompt = `You are a Market Stability Analyst for African markets. ${lensInstruction}
-
-Return ONLY valid JSON: {"score": <0-1000>, "index": "<HIGH|MODERATE|VOLATILE>"}
-
-Scoring guide:
-- 700-1000: HIGH stability (positive outlook, strong fundamentals)
-- 400-699: MODERATE stability (mixed signals, watchful)  
-- 0-399: VOLATILE (significant risks, uncertainty)
-
-Platform Metrics: ${stats?.total_articles || 0} articles this week, avg engagement ${Math.round(avgEngagement)}/100, avg sentiment ${Math.round(avgSentiment)}/100.
-
-Latest Headlines:
-- ${headlineContext}`;
-                const raw = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
-                const match = raw.match(/\{.*\}/s);
-                if (match) {
-                    const parsed = JSON.parse(match[0]);
-                    const score = typeof parsed.score === 'number' ? Math.min(1000, Math.max(0, parsed.score)) : dataBasedScore;
-                    const index = ['HIGH', 'MODERATE', 'VOLATILE'].includes(parsed.index) ? parsed.index : (score > 700 ? 'HIGH' : score > 400 ? 'MODERATE' : 'VOLATILE');
-                    return { score, index };
-                }
-                return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 400 ? 'MODERATE' : 'VOLATILE' };
-            } catch (e) {
-                return { score: dataBasedScore, index: dataBasedScore > 700 ? 'HIGH' : dataBasedScore > 400 ? 'MODERATE' : 'VOLATILE' };
-            }
-        },
-        { ttl: CACHE_TTL.DASHBOARD } // ~10 min cache
-    );
-
-    const stabilityScore = aiStability.score;
-    const stabilityIndex = aiStability.index;
-
-    // Calculate overall sentiment percentage
-    const sentimentPct = Math.round(avgSentiment);
-    const sentimentTrend = avgEngagement > 50 ? 'up' : 'down';
-
-    // Generate sector trends
-    const sectorWithTrends = sectors.map(s => ({
-        id: s.id,
-        name: s.name,
-        trend: s.recent_count > 5 ? 'Rising' : s.recent_count > 2 ? 'Stable' : 'Emerging',
-        article_count: s.recent_count
-    }));
-
-    // Generate market summary (-driven)
-    const topSector = sectors[0]?.name || 'Technology';
-
-    // Prepare context for 
-    const summaryContext = {
-        stability: stabilityIndex,
-        avg_engagement: Math.round(avgEngagement),
-        total_articles: stats?.total_articles || 0,
-        top_sector: topSector,
-        top_sector_count: sectors[0]?.recent_count || 0,
-        sentiment: sentimentTrend,
-        sentiment_pct: sentimentPct
-    };
+    const evidence = (recentRecords.results || []).map((record, index) =>
+        `[${index + 1}] ${record.published_at || 'date unavailable'} — ${record.title}\nCountry: ${record.country_name || 'unavailable'} | Sector: ${record.sector_name || 'unavailable'}\n${record.summary || 'Summary unavailable.'}\nSource: ${record.source_title || 'unavailable'} | ${record.source_url || 'URL unavailable'}`
+    ).join('\n\n');
 
     const marketSummary = await getCached(
         c.env,
-        `dashboard_market_summary_ai:${activeLens}`,
+        `dashboard:coverage-brief:depth-v2:${activeLens}`,
         async () => {
-            const lensRole = activeLens === 'investor'
-                ? 'You are a Business Observer for BOA-Story. Write a 2-sentence "Investment Pulse" focusing on intrinsic value signals, margin of safety, and earnings stability across African markets.'
-                : activeLens === 'government'
-                    ? 'You are a Policy Observer for BOA-Story. Write a 2-sentence "Policy Pulse" focusing on governance quality, fiscal sustainability, and development impact across African nations.'
-                    : 'You are a Culture Observer for BOA-Story. Write a 2-sentence "Explorer Pulse" focusing on destination appeal, safety, and world-class experiences emerging across the continent.';
+            if (!evidence) return 'No source-linked continental briefing is currently available.';
+            const audience = activeLens === 'government'
+                ? 'policy and public-sector readers'
+                : activeLens === 'explorer'
+                    ? 'travel, culture and place-focused readers'
+                    : 'investor and operator readers';
+            const prompt = `System: You are BOA-Story's continental evidence editor writing for ${audience}. Use only the numbered records, cite them inline and separate facts from analysis. Coverage and audience activity are not proxies for economic performance, stability, sentiment, investability or tourism safety.
 
-            try {
-                const prompt = `${lensRole}
-Tone: Professional, Insightful, Forward-looking.
-Do NOT use "Based on the data" or generic openers.
+User: Produce a rigorous continental briefing with a direct answer, dated chronology, named actors, country and sector contrasts, causal mechanisms, operational or policy implications, counter-signals, source limitations, under-covered regions or questions, and prioritized verification steps.
 
-Data: ${JSON.stringify(summaryContext)}`;
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.7 });
-                return text || `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} sector leads coverage.`;
-            } catch (e) {
-                console.error('AI Dashboard Summary Failed', e);
-                return `Market Activity ${stabilityIndex === 'HIGH' ? 'High' : 'Moderate'}. ${topSector} leads coverage with strong engagement.`;
-            }
+RECORDS:
+${evidence}`;
+            return callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.2, response_profile: 'deep-analysis' });
         },
-        { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
+        { ttl: CACHE_TTL.DASHBOARD }
     );
 
     return c.json({
         market_summary: marketSummary,
-        stability_index: stabilityIndex,
-        stability_score: stabilityScore,
-        sentiment_pct: sentimentPct,
-        sentiment_trend: sentimentTrend,
-        sector_trends: sectorWithTrends,
-        total_articles_7d: stats?.total_articles || 0,
-        updated_at: new Date().toISOString()
+        stability_index: null,
+        stability_score: null,
+        sentiment_pct: null,
+        sentiment_trend: null,
+        sector_trends: sectorTrends,
+        total_articles_7d: Number(articleStats?.total_articles || 0),
+        coverage: {
+            countries_7d: Number(articleStats?.countries_covered || 0),
+            total_views_7d: Number(articleStats?.total_views || 0),
+            audience_response: articleStats?.audience_response === null ? null : Number(Number(articleStats?.audience_response || 0).toFixed(1)),
+        },
+        methodology: 'The briefing is source-linked. Numeric fields describe BOA-Story coverage and audience activity only; no stability or sentiment score is inferred.',
+        updated_at: new Date().toISOString(),
     });
 });
 

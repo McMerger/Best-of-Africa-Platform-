@@ -32,6 +32,7 @@ export const MODELS = {
 // v1.2 — Removed investment/tourism/intelligence framing. All prompts now use student writer
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
 export const ARTICLE_PROMPT_VERSION = 'v1.3-depth-contract';
+export const AI_RESPONSE_VERSION = 'depth-v2';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Enforced Information Generation
@@ -52,20 +53,20 @@ export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-a
 
 const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; instructions: string }> = {
     'editorial-article': {
-        minimumWords: 400,
-        instructions: `Write a complete 400-600 word narrative, not a synopsis. Develop the people, place, chronology and consequences using only the supplied source material. Preserve the required output schema. Never add generic filler to reach length.`,
+        minimumWords: 700,
+        instructions: `Write a complete 700-1,000 word narrative, not a synopsis. Develop the people, place, chronology, mechanisms, competing perspectives and consequences using only the supplied source material. Include concrete names, locations, dates and figures where supplied. Preserve the required output schema. Never add generic filler to reach length.`,
     },
     'evidence-brief': {
-        minimumWords: 450,
-        instructions: `Produce a substantive evidence brief. Include a direct finding, dated evidence, named actors and places, chronology, operational or policy implications, counter-signals, source limitations, and concrete verification questions. Attribute claims to the supplied records. Do not invent figures, scores, forecasts or certainty.`,
+        minimumWords: 700,
+        instructions: `Produce a substantive 700-1,000 word evidence brief when the records support it. Include a direct finding, dated evidence, named actors and places, chronology, causal mechanisms, stakeholder effects, cross-country or sector differences, operational and policy implications, counter-signals, source limitations, and concrete verification questions. Attribute every material claim to the supplied records. Do not invent figures, scores, forecasts or certainty.`,
     },
     'deep-analysis': {
-        minimumWords: 700,
-        instructions: `Produce a rigorous 700-1,100 word analysis when the evidence supports that depth. Separate reported facts from analysis; cite supplied source identifiers inline; explain chronology, mechanisms, stakeholders, cross-country or sector differences, implications, counter-evidence, uncertainty, and next diligence steps. Do not pad thin evidence or introduce outside facts.`,
+        minimumWords: 1000,
+        instructions: `Produce a rigorous 1,000-1,600 word analysis when the evidence supports that depth. Begin with a precise answer, then separate reported facts from analysis; cite supplied source identifiers inline; explain chronology, mechanisms, named stakeholders, cross-country or sector differences, second-order implications, implementation constraints, counter-evidence, uncertainty, source gaps, and prioritized diligence steps. Do not pad thin evidence or introduce outside facts.`,
     },
     'decision-brief': {
-        minimumWords: 300,
-        instructions: `Produce a decision-useful brief, not a promotional summary. State what is known, why it matters, who is affected, practical constraints, contrary evidence, information gaps, and what the reader should verify next. Do not manufacture recommendations or facts.`,
+        minimumWords: 500,
+        instructions: `Produce a 500-800 word decision-useful brief when evidence permits, not a promotional summary. State the decision context, what is known, why it matters, who is affected, chronology, practical constraints, implementation considerations, contrary evidence, information gaps, and prioritized verification steps. Distinguish evidence from judgment and do not manufacture recommendations or facts.`,
     },
 };
 
@@ -551,7 +552,7 @@ Requirements:
 - Do NOT frame this as an investment pitch or tourism guide.
 - Do NOT use hedging language ("might", "could", "potentially").
 - Do NOT use NGO, corporate, or intelligence jargon.
-- Honest, grounded, relatable tone. 400-600 words.
+- Honest, grounded, relatable tone. 700-1,000 words when the source supports it; never pad thin evidence.
 
 Structure your response EXACTLY as follows:
 

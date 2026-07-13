@@ -100,15 +100,15 @@ export async function generateDailyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const prompt = `System: You are an executive briefing writer. Synthesize internal articles with global context.
+        const prompt = `System: You are BOA-Story's executive evidence editor. Synthesize only the supplied reporting. Distinguish what the records say from your analysis, and never turn coverage volume into a market claim.
 
 User: Global Context: ${globalContext}
 
 Internal Coverage:
 ${briefContext}
 
-Write a 3-4 sentence Executive Summary connecting our stories to the global picture.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 250 })) || '';
+Write a detailed daily briefing with: a direct lead; the most consequential dated developments and named actors; connections and tensions across countries or sectors; practical implications; counter-signals; coverage gaps; and three questions to verify next. Cite the numbered internal records inline. If the evidence is thin, identify exactly what is missing.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 2400, temperature: 0.2, response_profile: 'evidence-brief' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for digest:', error);
     }
@@ -162,7 +162,7 @@ export async function generateWeeklyDigest(
     let aiSummary = '';
     try {
         const sectorSummaries = Object.entries(bySector).map(([sector, arts]) =>
-            `${sector}: ${arts.length} articles, top story: "${arts[0].title}"`
+            `${sector}: ${arts.length} articles\n${arts.slice(0, 4).map((article, index) => `  ${index + 1}. ${article.title} (${article.country_name || 'country unavailable'}, ${article.published_at || 'date unavailable'}): ${article.summary || 'summary unavailable'}`).join('\n')}`
         ).join('\n');
 
         // RAG: Get Weekly Global Context
@@ -175,15 +175,15 @@ export async function generateWeeklyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const prompt = `System: You are a strategic analyst. Write a weekly briefing connecting our coverage to major external events.
+        const prompt = `System: You are BOA-Story's weekly evidence editor. Use only the supplied records. Coverage count measures BOA-Story reporting activity, not economic performance. Separate facts, synthesis and uncertainty.
 
 User: Major External Events: ${globalContext}
 
 Our Sector Coverage:
 ${sectorSummaries}
 
-Write a 5-sentence "Week in Review" analyzing how our coverage reflects or misses these broader trends.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 300 })) || '';
+Write a rigorous Week in Review covering: the week's central finding; a dated chronology; country and sector differences; named actors; mechanisms and consequences; counter-evidence; what BOA-Story covered heavily or missed; implications for operators and policymakers; source limitations; and a prioritized verification agenda. Cite the supplied story titles inline.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 3200, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for weekly digest:', error);
     }

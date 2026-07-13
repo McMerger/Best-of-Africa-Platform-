@@ -184,12 +184,14 @@ export interface SearchResult {
 
 export interface PlatformAnalytics {
     market_summary: string;
-    stability_index: string;
-    stability_score: number;
-    sentiment_pct: number;
-    sentiment_trend: 'up' | 'down';
-    sector_trends: { id: string; name: string; trend: string; article_count: number }[];
+    stability_index: null;
+    stability_score: null;
+    sentiment_pct: null;
+    sentiment_trend: null;
+    sector_trends: { id: string; name: string; trend: 'coverage_up' | 'coverage_down' | 'coverage_flat'; article_count: number; previous_article_count: number; coverage_change: number }[];
     total_articles_7d: number;
+    coverage: { countries_7d: number; total_views_7d: number; audience_response: number | null };
+    methodology: string;
     updated_at: string;
 }
 

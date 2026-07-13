@@ -385,13 +385,24 @@ router.get('/:code/relationships', async (c) => {
             const vector = (embedding as Record<string, any>).data[0];
             const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
 
-            const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
+            const context = relevant.matches.map((match, index) => {
+                const metadata = match.metadata as Record<string, any>;
+                return `[${index + 1}] ${metadata.published_at || 'date unavailable'} — ${metadata.title || 'Untitled record'}\n${metadata.text || metadata.summary || 'Evidence excerpt unavailable.'}\nURL: ${metadata.source_url || metadata.url || 'unavailable'}`;
+            }).join('\n\n');
             if (!context) return [];
 
-            // : Extract Partners
+            // Extract only relationships actually evidenced in the records.
             try {
-                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });
+                const prompt = `System: You are BOA-Story's diplomatic and trade evidence desk. Use only the numbered records. Do not infer a formal relationship from co-mention, and do not assign partnership strength, sentiment or strategic importance without explicit evidence. Cite records inline.
+
+User: Extract the documented relationships involving ${data.name}. Return ONLY a valid JSON array with this schema:
+[{"partner":"named country, institution or bloc","type":"documented relationship type","context":"120-180 words covering the dated event, actors, terms or mechanism, implications, counter-signals, source limitation and [n] citations"}]
+
+Exclude any relationship that cannot be supported. Return [] when evidence is insufficient.
+
+RECORDS:
+${context}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2400, temperature: 0.2 });
                 const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {

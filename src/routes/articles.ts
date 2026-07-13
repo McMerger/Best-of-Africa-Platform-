@@ -215,15 +215,17 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
         c.env,
         CACHE_KEYS.globalBriefing,
         async () => {
-            const headlines = (articles as unknown as ArticleListItem[]).slice(0, 6).map(a => a.title).join('; ');
-            if (!headlines) return "Monitor global markets for emerging trends.";
+            const evidence = (articles as unknown as ArticleListItem[]).slice(0, 8).map((article, index) =>
+                `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
+            ).join('\n\n');
+            if (!evidence) return "No source-linked briefing is currently available.";
 
             try {
-                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
+                const prompt = `System: You are BOA-Story's front-page evidence editor. Use only the numbered records, cite them inline and distinguish facts from synthesis. Coverage volume is editorial activity, not a market indicator.\nUser: Write a substantive briefing that connects the leading records across countries and sectors. Cover chronology, named actors, mechanisms, practical implications, counter-signals, source limitations and what readers should verify next.\n\nRecords:\n${evidence}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2200, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
-                return "Global markets are active.";
+                return "The source-linked briefing is temporarily unavailable.";
             }
         },
         { ttl: CACHE_TTL.DASHBOARD }
@@ -365,15 +367,17 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
         c.env,
         CACHE_KEYS.sectorOutlook(sectorId),
         async () => {
-            const headlines = (articles.results as any[]).slice(0, 5).map(a => a.title).join('; ');
-            if (!headlines) return "No sufficient data for trend analysis.";
+            const evidence = (articles.results as any[]).slice(0, 10).map((article, index) =>
+                `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
+            ).join('\n\n');
+            if (!evidence) return "Insufficient source-linked reporting for sector analysis.";
 
             try {
-                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.6 });
+                const prompt = `System: You are BOA-Story's sector evidence editor. Use only the numbered records and cite them inline. Do not infer growth, stability or investability from coverage or engagement.\nUser: Produce a detailed sector outlook covering the direct finding, chronology, named actors, cross-country differences, mechanisms, operating and policy implications, counter-signals, limitations and next diligence steps.\n\nRecords:\n${evidence}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 2600, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
-                return "Sector activity is normal.";
+                return "The source-linked sector outlook is temporarily unavailable.";
             }
         },
         { ttl: CACHE_TTL.DASHBOARD }
@@ -498,18 +502,24 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
             const prompt = `
                 Article Title: ${article.title}
                 Summary: ${article.summary}
+                Published: ${article.published_at || 'date unavailable'}
+                Source: ${article.source_title || 'source unavailable'} — ${article.source_url || 'URL unavailable'}
+                Article evidence:
+                ${(article.content || '').slice(0, 9000)}
                 
-                Task: Generate an "Executive Brief" for an investor audience.
-                1. Three bullet points of "Key Takeaways".
-                2. One sentence of "Strategic Implication" for the African market.
+                Task: Generate a source-disciplined executive brief. Do not turn one article into a continent-wide conclusion or investment recommendation.
+                1. Four detailed key takeaways, each identifying the supported fact, actor, date or figure and why it matters.
+                2. A 150-250 word strategic implication explicitly labeled as analysis.
+                3. Two to four evidence limitations or counter-signals.
+                4. Three concrete diligence questions.
                 
                 Output JSON format:
-                { "key_takeaways": ["...", "...", "..."], "strategic_implication": "..." }
+                { "key_takeaways": ["..."], "strategic_implication": "...", "limitations": ["..."], "diligence_questions": ["..."] }
              `;
 
             try {
-                const aiPrompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${prompt}`;
-                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 300, temperature: 0.2 });
+                const aiPrompt = `System: You are BOA-Story's evidence editor. Use only the supplied article, distinguish facts from analysis and preserve the requested JSON schema.\nUser: ${prompt}`;
+                const rawResponse = await callConfiguredAI(c.env, { prompt: aiPrompt, max_tokens: 1800, temperature: 0.2, response_profile: 'decision-brief' });
                 const match = (rawResponse || '').match(/\{.*\}/s);
                 return match ? JSON.parse(match[0]) : null;
             } catch (e) {

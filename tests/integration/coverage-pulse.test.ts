@@ -15,10 +15,12 @@ function createCoverageDb(results: QueryResult[]) {
         prepare(sql: string) {
             queries.push(sql);
             const result = results[index++] || {};
-            return {
+            const statement = {
+                bind: vi.fn(() => statement),
                 first: vi.fn(async () => result.first ?? null),
                 all: vi.fn(async () => ({ results: result.results ?? [], success: true })),
             };
+            return statement;
         },
     } as unknown as D1Database;
     return { db, queries };
@@ -30,6 +32,71 @@ describe('GET /coverage-pulse', () => {
     beforeEach(() => {
         app = new Hono();
         app.route('/', marketIntelRouter);
+    });
+
+    it('reports sector coverage momentum without asking AI for performance scores', async () => {
+        const { db } = createCoverageDb([{ results: [
+            { id: 'technology', name: 'Technology', current_30d: 12, previous_30d: 8, countries_30d: 5, views_30d: 240, latest_reported_at: '2026-07-12' },
+        ] }]);
+        const run = vi.fn(() => { throw new Error('AI must not score coverage as market performance'); });
+        const env = createMockEnv({ DB: db, AI: { run } as any });
+
+        const response = await app.fetch(new Request('http://localhost/performance'), env);
+        const body = await response.json() as any;
+
+        expect(response.status).toBe(200);
+        expect(run).not.toHaveBeenCalled();
+        expect(body.data[0]).toMatchObject({
+            sector_id: 'technology',
+            growth_yoy: null,
+            volatility: null,
+            coverage_current_30d: 12,
+            coverage_previous_30d: 8,
+            coverage_change: 4,
+            coverage_change_pct: 50,
+        });
+        expect(body.methodology).toContain('coverage activity only');
+    });
+
+    it('does not estimate CAGR, deal flow or projects from headlines', async () => {
+        const { db } = createCoverageDb([
+            { first: { year: 2025, growth_rate: null, investment_volume_usd: null, source_urls: '[]' } },
+            { first: { count: 14 } },
+        ]);
+        const run = vi.fn(() => { throw new Error('AI must not invent structured market metrics'); });
+        const env = createMockEnv({ DB: db, AI: { run } as any });
+
+        const response = await app.fetch(new Request('http://localhost/sector/technology/velocity'), env);
+        const body = await response.json() as any;
+
+        expect(response.status).toBe(200);
+        expect(run).not.toHaveBeenCalled();
+        expect(body).toMatchObject({
+            cagr_5yr: null,
+            deal_flow_usd: null,
+            active_projects: null,
+            coverage_stories_30d: 14,
+        });
+        expect(body.methodology).toContain('never used to estimate');
+    });
+
+    it('replaces reality-versus-perception scoring with regional coverage evidence', async () => {
+        const { db } = createCoverageDb([{ results: [
+            { code: 'KE', name: 'Kenya', region: 'East', this_week: 6, last_week: 3, audience_response: 71.25, latest_reported_at: '2026-07-12' },
+        ] }]);
+        const run = vi.fn(() => { throw new Error('AI must not grade country reality from news'); });
+        const env = createMockEnv({ DB: db, AI: { run } as any });
+
+        const response = await app.fetch(new Request('http://localhost/sentiment-divergence'), env);
+        const body = await response.json() as any;
+
+        expect(response.status).toBe(200);
+        expect(run).not.toHaveBeenCalled();
+        expect(body.average_divergence).toBeNull();
+        expect(body.countries[0]).toMatchObject({
+            country_code: 'KE', reality_score: null, perception_score: null, gap: null,
+            coverage_this_week: 6, coverage_last_week: 3, coverage_change: 3, audience_response: 71.3,
+        });
     });
 
     it('returns production-shaped coverage data and keeps zero-current-week countries', async () => {

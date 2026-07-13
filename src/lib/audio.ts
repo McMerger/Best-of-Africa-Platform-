@@ -1,5 +1,6 @@
 import type { Env } from '../types';
 import { getCached } from './cache';
+import { callConfiguredAI } from './ai';
 
 type TtsProvider = 'elevenlabs' | 'aura-2' | 'aura-1';
 
@@ -149,7 +150,7 @@ export async function generateBriefAudio(
     countryCode: string,
     date: string,
 ): Promise<{ audioUrl: string; transcript: string } | null> {
-    return getCached(env, `brief_audio:v2:${countryCode}:${date}`, async () => {
+    return getCached(env, `brief_audio:v3:${countryCode}:${date}`, async () => {
         const articles = await env.DB.prepare(`
             SELECT title, summary FROM articles
             WHERE country_code = ? AND status = 'published' AND date(published_at) = ?
@@ -160,10 +161,20 @@ export async function generateBriefAudio(
 
         const country = await env.DB.prepare('SELECT name FROM countries WHERE code = ?')
             .bind(countryCode).first<{ name: string }>();
-        const headlines = (articles.results as Array<{ title: string }>)
-            .map((article, index) => `${index + 1}. ${article.title}`)
-            .join('. ');
-        const transcript = `Good morning. This is your ${country?.name || countryCode} briefing for ${date}. Today's top stories: ${headlines}. For the full stories, visit BOA-Story.`;
+        const evidence = (articles.results as Array<{ title: string; summary?: string | null }>)
+            .map((article, index) => `[${index + 1}] ${article.title}\n${article.summary || 'Summary unavailable.'}`)
+            .join('\n\n');
+        const transcript = await callConfiguredAI(env, {
+            prompt: `System: You are BOA-Story's audio briefing editor. Use only the numbered records. Write for the ear in natural, human sentences. Do not read citation symbols, markdown, URLs or section labels aloud. Do not infer national conditions, market growth or stability from the records.
+
+User: Write a 240-290 word spoken briefing for ${country?.name || countryCode} dated ${date}. Open with the date and direct lead, connect the stories through chronology and named actors, explain why the documented developments matter, include one counter-signal or evidence limitation, and close with two things listeners should watch next. No preamble about being an AI.
+
+RECORDS:
+${evidence}`,
+            max_tokens: 900,
+            temperature: 0.25,
+        });
+        if (!transcript.trim()) return null;
         const generated = await synthesizeNarration(env, transcript);
         if (!generated) return null;
 
@@ -171,7 +182,7 @@ export async function generateBriefAudio(
         await env.MEDIA.put(audioKey, generated.audio, { httpMetadata: { contentType: 'audio/mpeg' } });
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
         const path = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
-        return { audioUrl: `${path}?v=2`, transcript };
+        return { audioUrl: `${path}?v=3`, transcript };
     }, { ttl: 86400 });
 }
 

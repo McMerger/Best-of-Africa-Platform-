@@ -55,8 +55,6 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         articleCount,
         topSectors,
         recentArticles,
-        viewStats,
-        sectorSentiment,
       ] = await Promise.all([
         c.env.DB.prepare(
           "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
@@ -79,22 +77,6 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
           ORDER BY published_at DESC
           LIMIT 10
         `).bind(code).all(),
-
-        c.env.DB.prepare(`
-          SELECT 
-            SUM(view_count) as total_views,
-            AVG(engagement_score) as avg_engagement,
-            AVG(avg_read_time_seconds) as avg_read_time
-          FROM articles
-          WHERE country_code = ? AND status = 'published'
-        `).bind(code).first(),
-
-        c.env.DB.prepare(`
-          SELECT sector_id, AVG(engagement_score) as sentiment
-          FROM articles
-          WHERE country_code = ? AND status = 'published'
-          GROUP BY sector_id
-        `).bind(code).all(),
       ]);
 
       // Identify narrative gaps
@@ -105,13 +87,6 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         WHERE a.id IS NULL
       `).bind(code).all<{ name: string }>();
 
-      // Calculate scores
-      const engagementScore = (viewStats as Record<string, any>)?.avg_engagement || 0;
-      const investmentScore = Math.min(100, (articleCount?.total || 0) * 10 + engagementScore * 20);
-      const tourismScore = topSectors.results?.some((s: any) => s.id === 'tourism')
-        ? Math.min(100, engagementScore * 30 + 50)
-        : 30;
-
       return {
         country: country as any,
         article_count: articleCount?.total || 0,
@@ -120,9 +95,10 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
           count: s.count,
         })),
         recent_articles: recentArticles.results as any || [],
-        sentiment_score: Math.round(engagementScore * 100) / 100,
-        investment_readiness_score: Math.round(investmentScore),
-        tourism_appeal_score: Math.round(tourismScore),
+        sentiment_score: null,
+        investment_readiness_score: null,
+        tourism_appeal_score: null,
+        methodology: 'BOA-Story does not infer sentiment, investment readiness or tourism appeal from article count, engagement or sector mentions. Use the source-linked recommendations and primary evidence instead.',
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
         recommendations: await generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []),
       } as CountryReport;
@@ -551,13 +527,22 @@ router.post('/reformat', validate('json', AiReformatSchema), async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 async function generateAIRecommendations(env: Env, countryName: string, articles: any[]): Promise<string[]> {
   try {
-    const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
+    const evidence = articles.slice(0, 8).map((article, index) =>
+      `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
+    ).join('\n\n');
+    if (!evidence) return [];
 
-    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Country: ${countryName}. News: ${topStories}`;
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.5 });
+    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records. Do not infer market growth, investment readiness, political stability or tourism appeal from article volume or engagement. Distinguish reported facts from analysis and cite record numbers inline.
 
-    // Parse response (simple heuristic)
-    return (text || '').split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
+User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 140-220 words and contain: the supported finding, named actors and dates, why it matters, a counter-signal or limitation, and a concrete verification step. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
+
+RECORDS:
+${evidence}`;
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 2200, temperature: 0.2, response_profile: 'decision-brief' });
+
+    const jsonMatch = (text || '').match(/\[[\s\S]*\]/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    return Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string' && item.trim()).slice(0, 3) : [];
 
   } catch (e) {
     return [];

@@ -325,9 +325,10 @@ export interface CountryReport {
     article_count: number;
     top_sectors: { sector: Sector; count: number }[];
     recent_articles: ArticleListItem[];
-    sentiment_score: number;
-    investment_readiness_score: number;
-    tourism_appeal_score: number;
+    sentiment_score: number | null;
+    investment_readiness_score: number | null;
+    tourism_appeal_score: number | null;
+    methodology: string;
     narrative_gaps: string[];
     recommendations: string[];
 }
