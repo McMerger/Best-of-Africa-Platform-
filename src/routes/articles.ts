@@ -13,6 +13,10 @@ import { callConfiguredAI } from '../lib/ai';
 import { generateAudioNarration } from '../lib/audio';
 import { verifyJWT } from '../lib/auth';
 
+// Temporary read-only stakeholder review mode. Keep authenticated actions
+// (including paid TTS generation) protected; only article truncation is lifted.
+const PAYWALL_DISABLED_FOR_REVIEW = true;
+
 // ───────────────────────────────────────────────────────────────────────────────
 // Helper: resolve the ACTIVE member behind a Bearer JWT (or null)
 // ───────────────────────────────────────────────────────────────────────────────
@@ -519,7 +523,8 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     // ── Server-side paywall ────────────────────────────────────────────────────
     // Validate any Bearer JWT. Any authenticated client (basic/premium/enterprise)
     // gets full content. Anonymous visitors receive a truncated preview + paywall flag.
-    const clientId = await activeMemberId(c.env, c.req.header('Authorization'));
+    const authenticatedClientId = await activeMemberId(c.env, c.req.header('Authorization'));
+    const clientId = PAYWALL_DISABLED_FOR_REVIEW ? 'member-preview' : authenticatedClientId;
 
     let articleContent = article.content || '';
     let paywallActive = false;

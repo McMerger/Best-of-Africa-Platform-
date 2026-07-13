@@ -13,6 +13,11 @@ export const APP_FLAGS = {
   isFull,
 };
 
+// Temporary stakeholder review mode. This exposes every read-only member view
+// without weakening account administration or paid, cost-incurring actions.
+// Set to false to restore normal subscription gating.
+export const MEMBER_PREVIEW_MODE = true;
+
 export const FEATURES = {
   // Beta features (The authentic platform)
   BETA_LANDING: true,
