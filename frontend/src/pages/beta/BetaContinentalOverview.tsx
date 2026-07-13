@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Globe, MapPin, Activity, ArrowRight, BarChart3, Newspaper } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
@@ -15,6 +15,8 @@ import { MarkdownRenderer } from '../../components/MarkdownRenderer';
 
 export const BetaContinentalOverview: React.FC = () => {
   const { isMember } = useMember();
+  const { view: requestedView = 'overview' } = useParams<{ view?: string }>();
+  const view = ['overview', 'regions', 'sectors'].includes(requestedView) ? requestedView : 'overview';
   // Hoisted so the hook runs on every render (the early loading/error returns
   // would otherwise make this conditional and break the rules of hooks).
 
@@ -31,6 +33,7 @@ export const BetaContinentalOverview: React.FC = () => {
     queryKey: ['platform-analytics', 'investor'],
     queryFn: () => api.getPlatformAnalytics('investor'),
     staleTime: 10 * 60 * 1000,
+    enabled: view === 'overview',
   });
 
   if (isLoading) {
@@ -123,16 +126,19 @@ export const BetaContinentalOverview: React.FC = () => {
       <div className="page-container dashboard-shell mt-10 md:mt-14">
         <aside className="dashboard-rail" aria-label="Continental dashboard sections">
           <nav>
-            <a href="#continental-snapshot">Snapshot</a>
-            <a href="#continental-briefing">Evidence brief</a>
-            <a href="#regional-coverage">Regions</a>
-            <a href="#coverage-gaps">Coverage gaps</a>
-            <a href="#sector-highlights">Sectors & stories</a>
+            {[
+              ['overview', 'Snapshot & brief'],
+              ['regions', 'Regions & gaps'],
+              ['sectors', 'Sectors & stories'],
+            ].map(([slug, label]) => (
+              <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>
+            ))}
           </nav>
         </aside>
 
         <div className="page-stack">
 
+        {view === 'overview' && <>
         <section id="continental-snapshot" className="page-section">
 
         {/* Free-preview banner */}
@@ -216,7 +222,9 @@ export const BetaContinentalOverview: React.FC = () => {
             )}
           </div>
         </motion.section>
+        </>}
 
+        {view === 'regions' && <>
         <div id="regional-coverage" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Chart: Regional Breakdown */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-card rounded-xl border border-foreground/10 p-8 md:p-10 flex flex-col">
@@ -322,8 +330,10 @@ export const BetaContinentalOverview: React.FC = () => {
             </div>
           </motion.div>
         )}
+        </>}
 
         {/* Sectors in focus + editor's highlights, free for everyone */}
+        {view === 'sectors' && (
         <div id="sector-highlights" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* List: Top Sectors */}
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-xl border border-foreground/10 p-8 h-fit">
@@ -389,6 +399,7 @@ export const BetaContinentalOverview: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Membership CTA — the dashboard itself is fully free; this points to
             the genuinely premium, member-only intelligence. */}

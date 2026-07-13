@@ -144,11 +144,13 @@ const AnimatedRoutes = () => {
           <Route path="/countries/:code" element={<PageTransition><BetaCountryHub /></PageTransition>} />
           <Route path="/countries/:code/narratives" element={<PageTransition><BetaNarrativeToolkit /></PageTransition>} />
           <Route path="/intelligence"    element={<PageTransition><BetaIntelligence /></PageTransition>} />
+          <Route path="/intelligence/:view" element={<PageTransition><BetaIntelligence /></PageTransition>} />
           {/* /intel is a legacy alias, canonical intelligence page is /intelligence.
               (Supporter Feed lives at /supporter-feed.) Redirect avoids a duplicate route. */}
           <Route path="/intel" element={<Navigate to="/intelligence" replace />} />
           <Route path="/sectors/:id/trends" element={<PageTransition><PremiumSectorTrends /></PageTransition>} />
           <Route path="/dashboards/overview" element={<PageTransition><BetaContinentalOverview /></PageTransition>} />
+          <Route path="/dashboards/:view" element={<PageTransition><BetaContinentalOverview /></PageTransition>} />
           <Route path="/dashboards"      element={<Navigate to="/dashboards/overview" replace />} />
           <Route path="/library"         element={<PageTransition><BetaLibrary /></PageTransition>} />
           <Route path="/sponsor/dashboard" element={<PageTransition><BetaSponsorDashboard /></PageTransition>} />

@@ -505,7 +505,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {live?.metrics_7d && live.metrics_7d.length > 0 && (
           <div className="px-6 pb-4 border-t border-foreground/5 pt-4">
             <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-3">7-day skill performance</p>
-            <div className="w-full overflow-x-auto">
+            <div className="responsive-data-table w-full overflow-x-auto">
               <table className="w-full text-[11px] text-left">
                 <thead>
                   <tr className="text-foreground/25 uppercase tracking-wider">
@@ -519,13 +519,13 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                 <tbody>
                   {live.metrics_7d.map((row) => (
                     <tr key={row.agent_name} className="border-t border-foreground/5">
-                      <td className="py-1.5 pr-4 text-foreground/70 font-medium">{row.agent_name}</td>
-                      <td className="py-1.5 pr-3 text-foreground/50 text-right">{row.runs}</td>
-                      <td className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
-                      <td className="py-1.5 pr-3 text-right">
+                      <td data-label="Pipeline" className="py-1.5 pr-4 text-foreground/70 font-medium">{row.agent_name}</td>
+                      <td data-label="Runs" className="py-1.5 pr-3 text-foreground/50 text-right">{row.runs}</td>
+                      <td data-label="Done" className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
+                      <td data-label="Fail" className="py-1.5 pr-3 text-right">
                         <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-foreground/20'}>{row.tasks_failed}</span>
                       </td>
-                      <td className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '-'}</td>
+                      <td data-label="Average duration" className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

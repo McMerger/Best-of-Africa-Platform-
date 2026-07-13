@@ -5,15 +5,36 @@ import { cn } from "@/lib/utils"
 const Table = React.forwardRef<
     HTMLTableElement,
     React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
-        <table
-            ref={ref}
-            className={cn("w-full caption-bottom text-sm", className)}
-            {...props}
-        />
-    </div>
-))
+>(({ className, ...props }, forwardedRef) => {
+    const tableRef = React.useRef<HTMLTableElement | null>(null)
+
+    React.useEffect(() => {
+        const table = tableRef.current
+        if (!table) return
+        const labels = Array.from(table.querySelectorAll('thead th')).map(cell => cell.textContent?.trim() || '')
+        table.querySelectorAll('tbody tr').forEach(row => {
+            row.querySelectorAll('td').forEach((cell, index) => {
+                if (labels[index]) cell.setAttribute('data-label', labels[index])
+            })
+        })
+    })
+
+    const setRef = (node: HTMLTableElement | null) => {
+        tableRef.current = node
+        if (typeof forwardedRef === 'function') forwardedRef(node)
+        else if (forwardedRef) forwardedRef.current = node
+    }
+
+    return (
+        <div className="responsive-data-table relative w-full overflow-auto">
+            <table
+                ref={setRef}
+                className={cn("w-full caption-bottom text-sm", className)}
+                {...props}
+            />
+        </div>
+    )
+})
 Table.displayName = "Table"
 
 const TableHeader = React.forwardRef<

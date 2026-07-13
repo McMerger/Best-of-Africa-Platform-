@@ -250,9 +250,14 @@ body {
   }
 
   .dashboard-rail a:hover,
-  .dashboard-rail a:focus-visible {
+  .dashboard-rail a:focus-visible,
+  .dashboard-rail a[aria-current='page'] {
     background: hsl(var(--secondary));
     color: hsl(var(--primary));
+  }
+
+  .dashboard-rail a[aria-current='page'] {
+    box-shadow: inset 3px 0 0 hsl(var(--primary));
   }
 
   .section-frame {
@@ -550,25 +555,72 @@ body {
 
   @media (max-width: 639px) {
     .structured-table {
-      position: relative;
-      margin-inline: calc(var(--page-gutter) * -0.45);
-      border-radius: 0.6rem;
-      box-shadow: inset -18px 0 18px -22px rgba(15, 31, 61, 0.6);
+      overflow: visible;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
-    .structured-table table { min-width: 32rem; font-size: 0.82rem; }
-    .structured-table th,
-    .structured-table td { padding: 0.72rem 0.75rem; }
-    .structured-table th:first-child,
-    .structured-table td:first-child {
-      position: sticky;
-      left: 0;
-      z-index: 1;
-      box-shadow: 8px 0 14px -14px rgba(15, 31, 61, 0.8);
+    .structured-table table,
+    .structured-table tbody,
+    .structured-table tr,
+    .structured-table td,
+    .responsive-data-table table,
+    .responsive-data-table tbody,
+    .responsive-data-table tr,
+    .responsive-data-table td {
+      display: block;
+      width: 100%;
+      min-width: 0;
     }
-    .structured-table th:first-child { background: hsl(var(--navy)); }
-    .structured-table td:first-child { background: hsl(var(--card)); }
-    .structured-table tr:nth-child(even) td:first-child { background: hsl(var(--secondary)); }
+
+    .structured-table thead,
+    .responsive-data-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .structured-table tr,
+    .responsive-data-table tbody tr {
+      margin-bottom: 0.9rem;
+      overflow: hidden;
+      border: 1px solid hsl(var(--border));
+      border-radius: 0.75rem;
+      background: hsl(var(--card));
+      box-shadow: 0 12px 32px -28px rgba(15, 31, 61, 0.55);
+    }
+
+    .structured-table td,
+    .responsive-data-table td {
+      display: grid;
+      grid-template-columns: minmax(6.5rem, 0.8fr) minmax(0, 1.2fr);
+      gap: 1rem;
+      align-items: start;
+      border-bottom: 1px solid hsl(var(--border));
+      padding: 0.8rem 0.9rem;
+      text-align: start !important;
+    }
+
+    .structured-table td:last-child,
+    .responsive-data-table td:last-child { border-bottom: 0; }
+
+    .structured-table td::before,
+    .responsive-data-table td::before {
+      content: attr(data-label);
+      color: hsl(var(--muted-foreground));
+      font-size: 0.65rem;
+      font-weight: 750;
+      letter-spacing: 0.07em;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .responsive-data-table { overflow: visible; }
   }
 
   .structured-content--article p,

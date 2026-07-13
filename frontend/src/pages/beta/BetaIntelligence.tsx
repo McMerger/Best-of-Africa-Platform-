@@ -5,7 +5,7 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 
@@ -17,24 +17,28 @@ import { IntelligenceTrustPanel } from '../../components/intelligence/Intelligen
 export const BetaIntelligence = () => {
   const { isMember } = useMember();
   const navigate = useNavigate();
+  const { view: requestedView = 'overview' } = useParams<{ view?: string }>();
+  const view = ['overview', 'map', 'watchlist', 'sectors', 'methodology'].includes(requestedView) ? requestedView : 'overview';
 
   const { data: pulse, isLoading } = useQuery({
     queryKey: ['coverage-pulse'],
     queryFn: api.getCoveragePulse,
     staleTime: 5 * 60 * 1000,
+    enabled: ['overview', 'map', 'watchlist'].includes(view),
   });
 
   const { data: opportunities, isLoading: isLoadingOpp } = useQuery({
     queryKey: ['strategic-opportunities'],
     queryFn: api.getStrategicOpportunities,
     staleTime: 5 * 60 * 1000,
-    enabled: isMember,
+    enabled: isMember && view === 'watchlist',
   });
 
   const { data: sectorCatalog } = useQuery({
     queryKey: ['intelligence-sector-catalog'],
     queryFn: api.getSectors,
     staleTime: 30 * 60 * 1000,
+    enabled: view === 'sectors',
   });
 
   const countries = pulse?.countries || [];
@@ -100,17 +104,22 @@ export const BetaIntelligence = () => {
       <div className="page-container dashboard-shell py-10 md:py-16">
         <aside className="dashboard-rail" aria-label="Intelligence sections">
           <nav>
-            <a href="#live-coverage">Live coverage</a>
-            <a href="#coverage-map">Coverage map</a>
-            <a href="#decision-watch">Decision watch</a>
-            <a href="#sectors">Sectors</a>
-            <a href="#method">How it works</a>
+            {[
+              ['overview', 'Live coverage'],
+              ['map', 'Coverage map'],
+              ['watchlist', 'Decision watch'],
+              ['sectors', 'Sectors'],
+              ['methodology', 'How it works'],
+            ].map(([slug, label]) => (
+              <Link key={slug} to={`/intelligence/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>
+            ))}
           </nav>
         </aside>
 
         <div className="page-stack">
 
-        <section id="method" className="page-section order-[6] section-rule">
+        {view === 'methodology' && <>
+        <section id="method" className="page-section section-rule">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
               <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Decision desk</p>
@@ -127,7 +136,7 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
-        <section className="page-section order-[7] section-rule">
+        <section className="page-section section-rule">
           <div className="mb-8 max-w-3xl">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational workflow</p>
             <h2 className="font-serif text-3xl md:text-4xl text-navy">Move from question to monitored decision.</h2>
@@ -137,7 +146,7 @@ export const BetaIntelligence = () => {
             {[
               ['Search', 'Research countries, sectors and related reporting.', '/search'],
               ['Compare', 'Read continental, regional and country evidence together.', '/dashboards/overview'],
-              ['Map', 'Open geographic coverage and navigate directly to country hubs.', '#coverage-map'],
+              ['Map', 'Open geographic coverage and navigate directly to country hubs.', '/intelligence/map'],
               ['Workspace', 'Build watchlists, preserve evidence and export a decision file.', '/library'],
               ['Monitor', 'Set country, sector and delivery preferences for alerts.', '/settings'],
               ['Brief', 'Use the daily intelligence feed and narrated briefings.', '/feed'],
@@ -157,7 +166,7 @@ export const BetaIntelligence = () => {
           </div>
         </section>
 
-        <section className="page-section order-[8] grid gap-8 rounded-xl border border-border bg-card p-7 md:grid-cols-2 md:p-9">
+        <section className="page-section grid gap-8 rounded-xl border border-border bg-card p-7 md:grid-cols-2 md:p-9">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Operational foundation</p>
             <ul className="mt-5 grid gap-3 text-sm text-navy sm:grid-cols-2">
@@ -169,7 +178,9 @@ export const BetaIntelligence = () => {
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">The next defensibility layer is structured company, project, people, procurement and infrastructure data; version history; validated rankings; configurable alerts; team workspaces; and governed export/connectors. These modules remain labelled as in development until their datasets and methodologies are production-ready.</p>
           </div>
         </section>
+        </>}
 
+        {view === 'sectors' && (
         <section id="sectors" className="page-section order-[5]">
           <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
@@ -189,9 +200,10 @@ export const BetaIntelligence = () => {
             {!sectorCatalog?.data?.length && <div className="col-span-full bg-card p-6 text-sm leading-6 text-muted-foreground">The returned sector catalogue contains zero records. The weekly coverage pulse below remains the current evidence view.</div>}
           </div>
         </section>
+        )}
 
         {/* Free-preview banner */}
-        {!isMember && (
+        {view === 'overview' && !isMember && (
           <div className="page-section order-[4] flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
             <p className="text-sm text-foreground/70 leading-relaxed">
               <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
@@ -204,7 +216,8 @@ export const BetaIntelligence = () => {
         )}
 
         {/* Weekly coverage pulse — real numbers only */}
-        <section id="live-coverage" className="page-section order-1">
+        {view === 'overview' && (
+        <section id="live-coverage" className="page-section">
           <div className="mb-7 max-w-3xl">
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Live evidence layer</p>
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
@@ -244,9 +257,11 @@ export const BetaIntelligence = () => {
             </motion.div>
           )}
         </section>
+        )}
 
         {/* Coverage heatmap */}
-        <motion.section id="coverage-map" className="page-section order-2 section-frame" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
+        {view === 'map' && (
+        <motion.section id="coverage-map" className="page-section section-frame" initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
           <div className="flex items-center gap-4 mb-4">
             <Activity size={24} className="text-accent" />
             <h2 className="font-serif text-[2rem] text-foreground">Coverage Heatmap — Last 7 Days</h2>
@@ -271,9 +286,11 @@ export const BetaIntelligence = () => {
             )}
           </div>
         </motion.section>
+        )}
 
         {/* Deep analysis: Opportunities (members) + weekly momentum (free) */}
-        <div id="decision-watch" className="page-section order-3 grid grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-12">
+        {view === 'watchlist' && (
+        <div id="decision-watch" className="page-section grid grid-cols-1 xl:grid-cols-2 gap-10 xl:gap-12">
 
           {/* Strategic Opportunities — members only */}
           {isMember ? (
@@ -429,6 +446,7 @@ export const BetaIntelligence = () => {
           </motion.section>
 
         </div>
+        )}
         </div>
       </div>
     </div>

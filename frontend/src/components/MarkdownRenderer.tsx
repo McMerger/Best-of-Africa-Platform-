@@ -81,7 +81,7 @@ export function renderStructuredContent(content: string): string {
         if (!isTableDivider(row.join('|'))) rows.push(row);
       }
       const head = headers.map(cell => `<th scope="col">${renderInline(cell)}</th>`).join('');
-      const body = rows.map(row => `<tr>${headers.map((_, cellIndex) => `<td>${renderInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('');
+      const body = rows.map(row => `<tr>${headers.map((header, cellIndex) => `<td data-label="${escapeHtml(header)}">${renderInline(row[cellIndex] || '')}</td>`).join('')}</tr>`).join('');
       blocks.push(`<div class="structured-table" role="region" aria-label="Data table" tabindex="0"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`);
       continue;
     }
