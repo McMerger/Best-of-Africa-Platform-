@@ -114,7 +114,7 @@ const PROVIDER_OPTIONS = [
   { value: 'anthropic',  label: 'Anthropic',                  models: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-6'] },
   { value: 'openai',     label: 'OpenAI',                     models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview'] },
   { value: 'gemini',     label: 'Google Gemini',              models: ['gemini-2.5-pro', 'gemini-2.0-flash'] },
-  { value: 'workers_ai', label: 'Cloudflare Workers AI',      models: ['@cf/meta/llama-3.1-70b-instruct', '@cf/meta/llama-3.1-8b-instruct'] },
+  { value: 'workers_ai', label: 'Cloudflare Workers AI',      models: ['@cf/openai/gpt-oss-120b'] },
 ];
 
 function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClose: () => void; onSaved: () => void }) {
@@ -206,7 +206,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
               onChange={e => setIsDefault(e.target.checked)}
               className="w-4 h-4 accent-accent"
             />
-            <span className="text-sm text-foreground/70">Set as default system provider</span>
+            <span className="text-sm text-foreground/70">Preferred specialist provider (information remains on GPT-OSS 120B)</span>
           </label>
         </div>
 
@@ -403,9 +403,9 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {/* Active provider */}
         <div className="px-6 py-4 border-b border-foreground/5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-foreground/40 text-xs uppercase tracking-wider">Provider</span>
+            <span className="text-foreground/40 text-xs uppercase tracking-wider">Information model</span>
             <span className="text-foreground/80 font-medium">{providerMeta?.logo} {providerInfo?.label || 'Workers AI'}</span>
-            <span className="text-foreground/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'llama-3.1-70b'}</span>
+            <span className="text-foreground/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'gpt-oss-120b'}</span>
           </div>
           {adminKey && (
             <button

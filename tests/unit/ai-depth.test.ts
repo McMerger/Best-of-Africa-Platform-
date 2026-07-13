@@ -42,4 +42,22 @@ describe('AI response depth contract', () => {
         expect(run.mock.calls[1][1].prompt).toContain('DRAFT TO REWRITE');
         expect(run.mock.calls[1][1].prompt).toContain('never pad or invent');
     });
+
+    it('cannot be downgraded by stale provider config or external credentials', async () => {
+        const run = vi.fn().mockResolvedValue({ response: 'Verified information.' });
+        const env = createMockEnv({
+            AI: { run } as any,
+            ANTHROPIC_API_KEY: 'must-not-override-information-model',
+            OPENAI_API_KEY: 'must-not-override-information-model',
+        });
+        await env.CACHE.put('zeroclaw:provider_config', JSON.stringify({
+            providers: { anthropic: { api_key: 'stale-key' } },
+            agents: { defaults: { provider: 'anthropic', model: 'stale-model' } },
+        }));
+
+        await callConfiguredAI(env, { prompt: 'Explain the supplied evidence.', max_tokens: 300 });
+
+        expect(run).toHaveBeenCalledOnce();
+        expect(run.mock.calls[0][0]).toBe('@cf/openai/gpt-oss-120b');
+    });
 });

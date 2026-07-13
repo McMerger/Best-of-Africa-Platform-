@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, OptimizationMessage } from '../../types';
-import { generateHeadlineVariants, fillNarrativeGap } from '../../lib/ai';
+import { generateHeadlineVariants, fillNarrativeGap, MODELS } from '../../lib/ai';
 import { findNarrativeGaps, indexArticle } from '../../lib/vectorize';
 import { updateArticleEngagement } from '../../lib/analytics';
 
@@ -81,7 +81,7 @@ export async function fillContentGaps(env: Env): Promise<void> {
                     generated.title,
                     generated.summary?.slice(0, 160),
                     readingTime,
-                    'gemini-2.5-pro',
+                    MODELS.TEXT_GENERATION,
                     'v1-gap-fill'
                 ).run();
 

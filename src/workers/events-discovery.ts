@@ -7,8 +7,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
-import { matchCountryByName, matchSectorByKeywords } from '../lib/ai';
-import { withCircuitBreaker } from '../lib/circuit-breaker';
+import { callConfiguredAI, matchCountryByName, matchSectorByKeywords } from '../lib/ai';
 
 const slugify = (s: string) =>
     s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
@@ -45,12 +44,7 @@ ${snippets}`;
 
     let text = '';
     try {
-        const resp = await withCircuitBreaker(env, 'ai-text-gen', () =>
-            (env.AI as Record<string, any>).run('@cf/meta/llama-3.1-8b-instruct', {
-                prompt, max_tokens: 700, temperature: 0.1,
-            })
-        );
-        text = (resp as Record<string, any>).response || '';
+        text = await callConfiguredAI(env, { prompt, max_tokens: 700, temperature: 0.1 });
     } catch { return 0; }
 
     let parsed: any[] = [];

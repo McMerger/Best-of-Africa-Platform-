@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
+import { generateArticleImage, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 import { autoTranslateArticle } from '../lib/translate';
 import { generateAudioNarration } from '../lib/audio';
@@ -59,7 +59,7 @@ router.get('/status', async (c) => {
     const { limit = '5' } = c.req.query();
     const recentLimit = Math.max(1, Math.min(50, parseInt(limit) || 5));
 
-    const [taskCounts, recentTasks, latestArticle, providerConfig, stalled, metricsRows] = await Promise.all([
+    const [taskCounts, recentTasks, latestArticle, stalled, metricsRows] = await Promise.all([
         // Task counts by status (last 24h)
         c.env.DB.prepare(`
             SELECT status, COUNT(*) as count
@@ -85,15 +85,6 @@ router.get('/status', async (c) => {
             ORDER BY published_at DESC
             LIMIT 1
         `).first<{ title: string; slug: string; published_at: string; country_code: string }>(),
-
-        // Active provider info (label only, no keys)
-        c.env.DB.prepare(`
-            SELECT provider, label, model, last_test_status, last_tested_at
-            FROM ai_providers
-            WHERE is_active = 1
-            ORDER BY is_default DESC, created_at ASC
-            LIMIT 1
-        `).first<Record<string, unknown>>(),
 
         // Stalled tasks: processing past their TTL
         c.env.DB.prepare(`
@@ -141,10 +132,10 @@ router.get('/status', async (c) => {
         tasks_24h: { pending, processing, completed: completed24h, failed: failed24h, stalled: stalledCount },
         recent_tasks: recentTasks.results || [],
         latest_article: latestArticle || null,
-        active_provider: providerConfig || {
-            provider: 'gemini',
-            label: 'Google Gemini',
-            model: 'gemini-2.5-pro',
+        active_provider: {
+            provider: 'workers_ai',
+            label: 'Cloudflare Workers AI',
+            model: MODELS.TEXT_GENERATION,
         },
         metrics_7d: metricsRows.results || [],
         generated_at: new Date().toISOString(),

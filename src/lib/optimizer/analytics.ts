@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, OptimizationMessage } from '../../types';
-import { generateHeadlineVariants, fillNarrativeGap } from '../../lib/ai';
+import { generateHeadlineVariants, fillNarrativeGap, MODELS } from '../../lib/ai';
 import { findNarrativeGaps, indexArticle } from '../../lib/vectorize';
 // ───────────────────────────────────────────────────────────────────────────────
 // Update Engagement Scores
@@ -166,7 +166,7 @@ export async function logRefinement(
         afterValue,
         triggerReason,
         triggerReason,
-        'gemini-2.5-pro' as any,
+        MODELS.TEXT_GENERATION as any,
         'v1'
     ).run();
 

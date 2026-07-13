@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, UserPreference } from '../types';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
-import { callConfiguredAI } from '../lib/ai';
+import { callConfiguredAI, MODELS } from '../lib/ai';
 
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -391,7 +391,7 @@ router.get('/feed/ai-curated', async (c) => {
                     data: finalFeed,
                     meta: {
                         curated_count: finalFeed.length,
-                        model: 'gemini-2.5-pro'
+                        model: MODELS.TEXT_GENERATION
                     }
                 };
 

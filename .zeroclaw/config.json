@@ -2,7 +2,7 @@
   "providers": {
     "workers_ai": {
       "type": "workers_ai",
-      "note": "Always available — Cloudflare Workers AI (Llama 3.1 70B)"
+      "note": "Always available — Cloudflare Workers AI (GPT-OSS 120B production reasoning model)"
     },
     "openai": {
       "env": "OPENAI_API_KEY",
@@ -28,10 +28,10 @@
   "agents": {
     "defaults": {
       "provider": "workers_ai",
-      "model": "@cf/meta/llama-3.1-70b-instruct"
+      "model": "@cf/openai/gpt-oss-120b"
     },
     "dynamic_config_endpoint": "/api/v1/agent/providers/config",
-    "note": "ZeroClaw fetches dynamic provider config from the BoA backend on each cron run. The active default is whatever is marked is_default=1 in the ai_providers table."
+    "note": "ZeroClaw fetches dynamic provider config from the BoA backend on each cron run. Informational generation is pinned to Workers AI GPT-OSS 120B; provider records remain available only for explicit specialist integrations."
   },
   "skills": {
     "dir": ".zeroclaw/skills"

@@ -19,6 +19,7 @@ import {
     newsletterRouter, agentProvidersRouter, membersRouter, seoRouter, moonshotOAuthRouter, geminiOAuthRouter, translationRouter
 } from './routes';
 import worldCupRouter from './routes/worldcup';
+import { MODELS } from './lib/ai';
 import { refreshWorldCupTeams } from './lib/worldcup';
 import { LiveCounter } from './durable-objects/live-counter';
 
@@ -175,45 +176,11 @@ app.get('/assets/*', async (c) => {
 // Public provider status — shows active model without exposing credentials
 app.get('/api/v1/ai-status', async (c) => {
     const env = c.env as any;
-    let provider = 'workers_ai';
-    let model = '@cf/meta/llama-3.1-70b-instruct';
-    let source = 'fallback';
-
-    // Mirror the priority chain from .ts / callConfiguredAI
-    try {
-        const configRaw = await env.CACHE?.get('zeroclaw:provider_config');
-        if (configRaw) {
-            const config = JSON.parse(configRaw);
-            const defaults = config?.agents?.defaults;
-            if (defaults?.provider && defaults.provider !== 'workers_ai') {
-                provider = defaults.provider;
-                model = defaults.model || model;
-                source = 'db_config';
-            }
-        }
-    } catch {}
-
-    if (source === 'fallback') {
-        if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';           source = 'env_key'; }
-        else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-2.5-pro';              source = 'env_key'; }
-        else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';             source = 'env_key'; }
-        else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                      source = 'env_key'; }
-        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6'; source = 'env_key'; }
-    }
-
-    // Check OAuth tokens (higher priority than API keys)
-    if (source === 'env_key' || source === 'fallback') {
-        try {
-            const { getGeminiAccessToken } = await import('./lib/gemini-oauth');
-            const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
-            if (geminiOAuth) { provider = 'gemini'; model = 'gemini-2.5-pro'; source = 'oauth'; }
-        } catch {}
-    }
 
     return c.json({
-        provider,
-        model,
-        source,
+        provider: 'workers_ai',
+        model: MODELS.TEXT_GENERATION,
+        source: 'enforced_information_policy',
         gemini_key_configured: !!env.GOOGLE_AI_API_KEY,
         gemini_oauth_configured: !!(await env.CACHE?.get('gemini:oauth:refresh_token').catch(() => null)),
         anthropic_configured: !!env.ANTHROPIC_API_KEY,

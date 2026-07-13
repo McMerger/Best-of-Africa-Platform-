@@ -5,9 +5,6 @@
 
 import type { Env } from '../types';
 import { withCircuitBreaker } from './circuit-breaker';
-import { getMoonshotAccessToken } from './moonshot-oauth';
-import { getGeminiAccessToken } from './gemini-oauth';
-import { getProviderToken } from './provider-tokens';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Models Configuration
@@ -37,14 +34,11 @@ export const MODELS = {
 export const ARTICLE_PROMPT_VERSION = 'v1.3-depth-contract';
 
 // ───────────────────────────────────────────────────────────────────────────────
-// Provider-Aware Call
+// Enforced Information Generation
 //
-// Reads the active provider from KV (zeroclaw:provider_config, set by
-// -providers.ts) and routes the request to the correct API.
-// Falls back to Workers when no external provider is configured.
-//
-// Only used for creative/quality-critical generation (articles, lenses,
-// headlines). Fast deterministic calls (classify, embed) stay on Workers .
+// Every reader-facing synthesis, analysis and editorial-writing request runs
+// through GPT-OSS 120B. Specialist deterministic calls such as classification,
+// embeddings, translation, speech and images stay on their purpose-built models.
 // ───────────────────────────────────────────────────────────────────────────────
 export interface AICallOptions {
     prompt?: string;
@@ -156,178 +150,21 @@ ${first}`;
 }
 
 async function callConfiguredAIOnce(env: Env, options: AICallOptions): Promise<string> {
-    let provider = 'workers_ai';
-    let model = MODELS.TEXT_GENERATION;
-    let apiKey: string | undefined;
-    let baseUrl = 'https://api.openai.com/v1';
-
-    // Read provider config from KV (5-min TTL, written by -providers.ts)
-    try {
-        const configRaw = await env.CACHE.get('zeroclaw:provider_config');
-        if (configRaw) {
-            const config = JSON.parse(configRaw);
-            const defaults = config?.agents?.defaults;
-            if (defaults?.provider) {
-                provider = defaults.provider;
-                model = defaults.model || model;
-                const providerCfg = config?.providers?.[provider];
-                apiKey = providerCfg?.api_key;
-                if (providerCfg?.base_url) baseUrl = providerCfg.base_url;
-            }
-        }
-    } catch {
-        // KV unavailable — fall through to auto-detect / Workers 
-    }
-
-    // ── Auto-detect provider from env vars when nothing configured in DB ──────
-    if (provider === 'workers_ai') {
-        if (env.ANTHROPIC_API_KEY)       { provider = 'anthropic';  model = 'claude-sonnet-4-6';            apiKey = env.ANTHROPIC_API_KEY; }
-        // else if (env.GOOGLE_AI_API_KEY)  { provider = 'gemini';     model = 'gemini-1.5-pro-latest';   apiKey = env.GOOGLE_AI_API_KEY; }
-        else if (env.MOONSHOT_API_KEY)   { provider = 'moonshot';   model = 'moonshot-v1-32k';              apiKey = env.MOONSHOT_API_KEY; baseUrl = 'https://api.moonshot.cn/v1'; }
-        else if (env.OPENAI_API_KEY)     { provider = 'openai';     model = 'gpt-4o';                       apiKey = env.OPENAI_API_KEY; }
-        else if (env.OPENROUTER_API_KEY) { provider = 'openrouter'; model = 'anthropic/claude-sonnet-4-6';  apiKey = env.OPENROUTER_API_KEY; baseUrl = 'https://openrouter./api/v1'; }
-    }
-
-    // Do not allow a stale workspace provider config to silently downgrade the
-    // built-in Workers AI path. External providers remain configurable above.
-    if (provider === 'workers_ai') model = MODELS.TEXT_GENERATION;
-
-    // ── Auto-detect from OAuth tokens (Gemini / Moonshot subscription auth) ──
-    if (provider === 'workers_ai') {
-        // const geminiOAuth = await getGeminiAccessToken(env).catch(() => null);
-        // if (geminiOAuth) {
-        //     provider = 'gemini'; model = 'gemini-1.5-pro-latest';
-        // } else {
-            const moonshotOAuth = await getMoonshotAccessToken(env).catch(() => null);
-            if (moonshotOAuth) {
-                provider = 'moonshot'; model = 'moonshot-v1-32k'; baseUrl = 'https://api.moonshot.cn/v1';
-            }
-        // }
-    }
-
-    // ── Workers (default fallback) ─────────────────────────────────────────
-    if (provider === 'workers_ai') {
-        const response = await withCircuitBreaker(
-            env,
-            'ai-text-gen',
-            () => (env.AI as Record<string, any>).run(
-                model.startsWith('@cf/') ? model : MODELS.TEXT_GENERATION,
-                options.messages
-                    ? { messages: options.messages, max_tokens: options.max_tokens, temperature: options.temperature }
-                    : { prompt: options.prompt, max_tokens: options.max_tokens, temperature: options.temperature }
-            )
-        );
-        return extractAIText(response);
-    }
-
-    // ── Moonshot (Kimi) — OAuth token → DB key → bootstrap → env var ─────
-    if (provider === 'moonshot') {
-        const oauthToken    = await getMoonshotAccessToken(env).catch(() => null);
-        const bootstrapKey  = !oauthToken ? await getProviderToken(env, 'moonshot') : null;
-        const effectiveKey  = oauthToken || apiKey || bootstrapKey || env.MOONSHOT_API_KEY;
-        if (!effectiveKey) throw new Error('[ai] Moonshot: no credentials. Authorize via /api/v1/agent/moonshot/oauth/authorize, bootstrap a key, or set MOONSHOT_API_KEY.');
-
-        if (!oauthToken) {
-            console.warn('[moonshot] Using API key fallback — OAuth not yet authorized.');
-        }
-
-        const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${effectiveKey}` },
-            body: JSON.stringify({ model, messages, max_tokens: options.max_tokens, temperature: options.temperature }),
-        });
-        if (!res.ok) throw new Error(`[ai] Moonshot returned HTTP ${res.status}`);
-        const data = await res.json() as any;
-        return (data.choices?.[0]?.message?.content || '').trim();
-    }
-
-    // ── OpenAI / OpenRouter (shared OpenAI-compatible schema) ────────────────
-    if (provider === 'openai' || provider === 'openrouter') {
-        const bootstrapKey = await getProviderToken(env, provider);
-        const effectiveKey = apiKey || bootstrapKey || (provider === 'openai' ? env.OPENAI_API_KEY : env.OPENROUTER_API_KEY);
-        if (!effectiveKey) throw new Error(`[ai] ${provider}: no API key configured.`);
-
-        const messages = options.messages || [{ role: 'user', content: options.prompt || '' }];
-        const res = await fetch(`${baseUrl}/chat/completions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${effectiveKey}` },
-            body: JSON.stringify({ model, messages, max_tokens: options.max_tokens, temperature: options.temperature }),
-        });
-        if (!res.ok) throw new Error(`[ai] ${provider} returned HTTP ${res.status}`);
-        const data = await res.json() as any;
-        return (data.choices?.[0]?.message?.content || '').trim();
-    }
-
-    // ── Anthropic (Claude) — DB key → bootstrap → env var ───────────────────
-    if (provider === 'anthropic') {
-        const bootstrapKey = await getProviderToken(env, 'anthropic');
-        const effectiveKey = apiKey || bootstrapKey || env.ANTHROPIC_API_KEY;
-        if (!effectiveKey) throw new Error('[ai] Anthropic: no API key. Configure via /agent/providers, bootstrap, or set ANTHROPIC_API_KEY secret.');
-
-        const allMessages = options.messages || [{ role: 'user', content: options.prompt || '' }];
-        const systemMsg = allMessages.find(m => m.role === 'system')?.content;
-        const userMessages = allMessages.filter(m => m.role !== 'system');
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': effectiveKey,
-                'anthropic-version': '2023-06-01',
-            },
-            body: JSON.stringify({
-                model,
-                max_tokens: options.max_tokens || 1024,
-                ...(systemMsg ? { system: systemMsg } : {}),
-                messages: userMessages,
-            }),
-        });
-        if (!res.ok) throw new Error(`[ai] Anthropic returned HTTP ${res.status}`);
-        const data = await res.json() as any;
-        return (data.content?.[0]?.text || '').trim();
-    }
-
-    // ── Google Gemini — OAuth token → DB key → bootstrap → env var ──────────
-    if (provider === 'gemini') {
-        const oauthToken   = await getGeminiAccessToken(env).catch(() => null);
-        const bootstrapKey = !oauthToken ? await getProviderToken(env, 'gemini') : null;
-        const fallbackKey  = apiKey || bootstrapKey || env.GOOGLE_AI_API_KEY;
-        const effectiveKey = oauthToken || fallbackKey;
-        if (!effectiveKey) throw new Error('[ai] Gemini: no credentials. Authorize via /api/v1/agent/gemini/oauth/authorize, bootstrap, or set GOOGLE_AI_API_KEY secret.');
-
-        const useOAuthBearer = !!oauthToken;
-
-        const allMessages = options.messages || [{ role: 'user', content: options.prompt || '' }];
-        const systemMsg = allMessages.find(m => m.role === 'system')?.content;
-        const userMessages = allMessages.filter(m => m.role !== 'system');
-
-        const contents = userMessages.map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }],
-        }));
-
-        const reqBody: Record<string, unknown> = {
-            contents,
-            generationConfig: { maxOutputTokens: options.max_tokens, temperature: options.temperature },
-        };
-        if (systemMsg) {
-            reqBody.systemInstruction = { parts: [{ text: systemMsg }] };
-        }
-
-        // OAuth uses Bearer header; API key uses ?key= query param
-        const url = useOAuthBearer
-            ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
-            : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${effectiveKey}`;
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (useOAuthBearer) headers['Authorization'] = `Bearer ${effectiveKey}`;
-
-        const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(reqBody) });
-        if (!res.ok) throw new Error(`[ai] Gemini returned HTTP ${res.status}`);
-        const data = await res.json() as any;
-        return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
-    }
-
-    throw new Error(`[ai] Unknown provider: ${provider}`);
+    // Information is a product contract, not a mutable provider preference.
+    // Pin every call through this shared adapter to the same production
+    // reasoning model so DB settings, secrets and OAuth state cannot silently
+    // change the model behind reader-facing analysis or editorial output.
+    const response = await withCircuitBreaker(
+        env,
+        'ai-text-gen',
+        () => (env.AI as Record<string, any>).run(
+            MODELS.TEXT_GENERATION,
+            options.messages
+                ? { messages: options.messages, max_tokens: options.max_tokens, temperature: options.temperature }
+                : { prompt: options.prompt, max_tokens: options.max_tokens, temperature: options.temperature }
+        )
+    );
+    return extractAIText(response);
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
