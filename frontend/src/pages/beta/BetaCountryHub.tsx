@@ -124,7 +124,7 @@ export const BetaCountryHub = () => {
   const { t } = useLanguage();
   const upperCode = (code || '').toUpperCase();
 
-  const [countryQuery, outlookQuery, narrativeQuery, articlesQuery] = useQueries({
+  const [countryQuery, outlookQuery, narrativeQuery, articlesQuery, dossierQuery] = useQueries({
     queries: [
       {
         queryKey: ['country', upperCode],
@@ -146,6 +146,11 @@ export const BetaCountryHub = () => {
         queryFn: () => api.getArticles({ country: upperCode, limit: '9' }),
         staleTime: 5 * 60 * 1000,
         enabled: !!upperCode },
+      {
+        queryKey: ['country-dossier', upperCode],
+        queryFn: () => api.getCountryDossier(upperCode),
+        staleTime: 24 * 60 * 60 * 1000,
+        enabled: !!upperCode && isMember },
     ] });
 
   const country = countryQuery.data?.country;
@@ -156,6 +161,8 @@ export const BetaCountryHub = () => {
   const narratives = narrativeQuery.data?.narratives ?? [];
   const sectorCoverage = narrativeQuery.data?.sector_coverage ?? [];
   const articles: ArticleListItem[] = (articlesQuery.data?.data ?? []) as ArticleListItem[];
+  const dossier = dossierQuery.data?.dossier;
+  const provenance = dossierQuery.data?.provenance;
 
   const isLoading = countryQuery.isLoading;
 
@@ -397,6 +404,22 @@ export const BetaCountryHub = () => {
         )}
 
         {/* ── Portal Links ───────────────────────────────────────────────────── */}
+        {isMember && (dossierQuery.isLoading || dossier) && (
+          <section>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-ink">Country dossier</p>
+            <h2 className="mt-2 font-serif text-3xl text-navy">Dated economic and trade evidence</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">Official observations retain their reporting year and unit. Historical values and projections remain distinct.</p>
+            {dossierQuery.isLoading ? <div className="mt-8 h-64 animate-pulse rounded-xl border border-border bg-card" /> : dossier && <div className="mt-8 space-y-8">
+              <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+                {(dossier.macroeconomics.world_bank?.indicators || []).slice(0, 12).map(indicator => <div key={indicator.code} className="bg-card p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{indicator.name}</p><p className="mt-3 font-serif text-2xl text-navy">{indicator.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p><p className="mt-1 text-xs text-muted-foreground">{indicator.unit} · {indicator.year}</p></div>)}
+                {!dossier.macroeconomics.world_bank?.indicators?.length && <div className="col-span-full bg-card p-6 text-sm text-muted-foreground">World Bank observations are currently unavailable.</div>}
+              </div>
+              {dossier.trade && <div className="rounded-xl border border-border bg-card p-6"><p className="text-[10px] font-bold uppercase tracking-widest text-accent-ink">UN Comtrade · {dossier.trade.year}</p><div className="mt-5 grid gap-5 sm:grid-cols-3"><div><p className="text-xs text-muted-foreground">Exports</p><p className="font-serif text-2xl text-navy">${dossier.trade.totalExports.toLocaleString()}</p></div><div><p className="text-xs text-muted-foreground">Imports</p><p className="font-serif text-2xl text-navy">${dossier.trade.totalImports.toLocaleString()}</p></div><div><p className="text-xs text-muted-foreground">Balance</p><p className="font-serif text-2xl text-navy">${dossier.trade.balance.toLocaleString()}</p></div></div></div>}
+              {provenance && <div className="border-l-2 border-accent pl-5 text-sm leading-relaxed text-muted-foreground"><p>{provenance.methodology}</p><p className="mt-2 text-xs">Sources: {provenance.sources.map(source => source.name).join(' · ')}</p></div>}
+            </div>}
+          </section>
+        )}
+
         {(country?.business_portal_url || country?.visa_portal_url || country?.tourism_portal_url) && (
           <section>
             <div className="flex items-center gap-3 mb-6">

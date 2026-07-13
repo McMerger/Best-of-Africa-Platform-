@@ -7,6 +7,9 @@ import { Hono } from 'hono';
 import type { Env, Country } from '../types';
 import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
+import { getCountryEconomicProfile } from '../lib/economics';
+import { fetchIMFData, getGDPForecast, getDebtMetrics } from '../lib/imf-data';
+import { getTradeBalance } from '../lib/trade-data';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -396,6 +399,62 @@ router.get('/:code/relationships', async (c) => {
         country_name: data.name,
         relationships: relationships,
         updated_at: new Date().toISOString()
+    });
+});
+
+// Detailed, source-explicit country dossier. External observations retain their
+// source year and unit; forecasts are separated from historical observations.
+router.get('/:code/dossier', async (c) => {
+    const code = c.req.param('code').toUpperCase();
+    const country = await c.env.DB.prepare('SELECT * FROM countries WHERE code = ?').bind(code).first<Record<string, any>>();
+    if (!country) return c.json({ error: 'not_found', message: 'Country not found' }, 404);
+
+    const [worldBankResult, imfResult, forecastResult, debtResult, tradeResult, events, sectors, evidence] = await Promise.all([
+        getCountryEconomicProfile(c.env, code).catch(() => null),
+        fetchIMFData(c.env, country.name).catch(() => null),
+        getGDPForecast(c.env, country.name).catch(() => null),
+        getDebtMetrics(c.env, country.name).catch(() => null),
+        getTradeBalance(c.env, country.name).catch(() => null),
+        c.env.DB.prepare(`SELECT id, title, category, date_start, date_end, location, registration_url AS source_url
+            FROM events WHERE country_code = ? AND date_start >= date('now') ORDER BY date_start ASC LIMIT 12`).bind(code).all(),
+        c.env.DB.prepare(`SELECT s.id, s.name, COUNT(a.id) article_count, MAX(a.published_at) latest_evidence_at
+            FROM sectors s JOIN articles a ON a.sector_id=s.id
+            WHERE a.country_code=? AND a.status='published' GROUP BY s.id ORDER BY article_count DESC, s.name ASC`).bind(code).all(),
+        c.env.DB.prepare(`SELECT title, slug, summary, source_url, published_at, updated_at, reviewed_at
+            FROM articles WHERE country_code=? AND status='published' AND source_url IS NOT NULL
+            ORDER BY published_at DESC LIMIT 20`).bind(code).all(),
+    ]);
+
+    const portals = [
+        ['Business portal', country.business_portal_url], ['Visa portal', country.visa_portal_url],
+        ['Tourism portal', country.tourism_portal_url], ['Investment agency', country.investment_agency_url],
+    ].filter((entry) => entry[1]).map(([name, url]) => ({ name, url, source_type: 'official portal' }));
+
+    return c.json({
+        country: processCountries([country as Country])[0],
+        dossier: {
+            macroeconomics: {
+                world_bank: worldBankResult,
+                imf_current: imfResult,
+                imf_gdp_growth: forecastResult,
+                imf_debt: debtResult,
+            },
+            trade: tradeResult,
+            sector_evidence: sectors.results || [],
+            upcoming_events: events.results || [],
+            recent_source_record: evidence.results || [],
+            official_resources: portals,
+        },
+        provenance: {
+            sources: [
+                { name: 'World Bank Open Data', section: 'macroeconomics', url: 'https://data.worldbank.org/' },
+                { name: 'IMF DataMapper / World Economic Outlook', section: 'macroeconomics', url: 'https://www.imf.org/external/datamapper/' },
+                { name: 'UN Comtrade', section: 'trade', url: 'https://comtradeplus.un.org/' },
+                { name: 'BOA source-linked reporting', section: 'evidence', url: null },
+            ],
+            generated_at: new Date().toISOString(),
+            methodology: 'External observations are reproduced with their original year and unit. IMF projections are labelled separately from historical values. Missing sections remain null; no values are estimated from headlines or engagement.',
+        },
     });
 });
 
