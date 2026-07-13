@@ -98,6 +98,6 @@ Body: {
   "tasksSeen": <patterns analyzed>,
   "tasksDone": <rules added>,
   "tasksFailed": 0,
-  "modelUsed": "<model identifier>"
+  "modelUsed": "@cf/openai/gpt-oss-120b"
 }
 ```

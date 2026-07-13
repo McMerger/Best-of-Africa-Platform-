@@ -86,7 +86,7 @@ Body: {
   "tasksSeen": <articles checked>,
   "tasksDone": <articles passing audit>,
   "tasksFailed": <articles flagged for rewrite/delete>,
-  "modelUsed": "<model identifier>"
+  "modelUsed": "@cf/openai/gpt-oss-120b"
 }
 ```
 

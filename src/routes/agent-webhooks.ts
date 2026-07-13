@@ -407,7 +407,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
         tasksSeen:   1,
         tasksDone:   finalStatus === 'completed' ? 1 : 0,
         tasksFailed: finalStatus === 'failed' ? 1 : 0,
-        modelUsed:   payload.modelUsed,
+        modelUsed:   MODELS.TEXT_GENERATION,
         tokensUsed:  payload.tokensUsed,
         error:       payload.errorMessage,
     }));
@@ -440,10 +440,10 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             id, slug, title, subtitle, content, summary,
                             country_code, sector_id, tags,
                             reading_time_minutes, source_url, source_title, source_published_at,
-                            generation_prompt_version, ai_investor_brief,
+                            generation_model, generation_prompt_version, ai_investor_brief,
                             engagement_score,
                             status, published_at, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'published', datetime('now'), datetime('now'))
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'published', datetime('now'), datetime('now'))
                     `).bind(
                         articleId, slug,
                         cleanTitle, cleanSubtitle || null,
@@ -455,6 +455,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         originalPayload.url          || null,
                         originalPayload.title        || null,
                         originalPayload.published_at || null,
+                        MODELS.TEXT_GENERATION,
                         ARTICLE_PROMPT_VERSION,
                         generated.investor_brief || generated.ai_investor_brief || null,
                     ).run();
@@ -559,7 +560,7 @@ router.use('/metrics', async (c, next) => {
 
 router.post('/metrics', validate('json', MetricSchema), async (c) => {
     const body = await c.req.json() as z.infer<typeof MetricSchema>;
-    await writeAgentMetric(c.env.DB, body);
+    await writeAgentMetric(c.env.DB, { ...body, modelUsed: MODELS.TEXT_GENERATION });
     return c.json({ success: true });
 });
 

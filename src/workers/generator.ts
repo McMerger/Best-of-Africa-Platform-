@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION } from '../lib/ai';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
 import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
 import { generateAudioNarration } from '../lib/audio';
 import { indexArticle } from '../lib/vectorize';
@@ -99,8 +99,8 @@ export async function generateArticleFromQueue(
             sectorName = (sector as Record<string, any>)?.name;
         }
 
-        // Direct generation on the backend using Gemini
-        console.log(`Generating article synchronously on the backend using Gemini...`);
+        // Direct generation on the backend using the enforced information model.
+        console.log(`Generating article synchronously on the backend using ${MODELS.TEXT_GENERATION}...`);
 
         // Generate article content
         const generated = await generateArticleContent(
@@ -137,9 +137,9 @@ export async function generateArticleFromQueue(
                 id, slug, title, subtitle, content, summary,
                 country_code, sector_id, tags,
                 reading_time_minutes, source_url, source_title, source_published_at,
-                generation_prompt_version,
+                generation_model, generation_prompt_version,
                 status, published_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
         `).bind(
             articleId, slug,
             generated.title,
@@ -153,6 +153,7 @@ export async function generateArticleFromQueue(
             itemData.url           ?? null,
             itemData.title         ?? null,
             itemData.published_at  ?? null,
+            MODELS.TEXT_GENERATION,
             ARTICLE_PROMPT_VERSION,
         ).run();
 
@@ -572,9 +573,9 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     id, slug, title, subtitle, content, summary,
                     country_code, sector_id, tags,
                     reading_time_minutes, source_url, source_title, source_published_at,
-                    generation_prompt_version,
+                    generation_model, generation_prompt_version,
                     status, published_at, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
             `).bind(
                 articleId, slug,
                 generated.title,
@@ -588,6 +589,7 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                 payload.url           ?? null,
                 payload.title         ?? null,
                 payload.published_at  ?? null,
+                MODELS.TEXT_GENERATION,
                 ARTICLE_PROMPT_VERSION,
             ).run();
 

@@ -423,7 +423,7 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
       return `[Source ${m.id}]\nTitle: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nPublished: ${meta.published_at || 'date unavailable'}\nURL: ${meta.source_url || meta.url || 'URL unavailable'}`;
     }).join('\n---\n');
 
-    // 4. Generate Response with Gemini
+    // 4. Generate the evidence response with the enforced information model.
     const systemPrompt = `You are the research synthesis layer for BOA-Story. Current date: ${new Date().toISOString().slice(0, 10)}.
 
 Write a detailed, decision-useful answer using ONLY the supplied evidence. Never fill gaps with general knowledge, invented figures, assumed market conditions, or generic claims such as "the outlook remains stable". Cite claims inline as [Source ID]. Distinguish reported facts from your synthesis.

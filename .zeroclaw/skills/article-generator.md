@@ -36,7 +36,7 @@ Record the wall-clock start time at the beginning of each run. You will need it 
      "status": "completed",
      "agentName": "article-generator",
      "durationMs": <wall-clock ms since run start>,
-     "modelUsed": "<model identifier used>",
+     "modelUsed": "@cf/openai/gpt-oss-120b",
      "result": {
        "title": "...",
        "subtitle": "...",
