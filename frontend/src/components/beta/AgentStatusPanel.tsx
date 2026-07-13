@@ -49,7 +49,7 @@ interface Provider {
 
 const PROVIDER_LABELS: Record<string, { name: string; color: string; logo: string }> = {
   openai:     { name: 'OpenAI',                  color: '#10a37f', logo: '⬜' },
-  anthropic:  { name: 'Anthropic',               color: '#d97706', logo: '🔶' },
+  anthropic:  { name: 'Anthropic',               color: '#0F1F3D', logo: 'A' },
   gemini:     { name: 'Google Gemini',            color: '#4285f4', logo: '🔷' },
   openrouter: { name: 'OpenRouter',               color: '#7c3aed', logo: '🔮' },
   workers_ai: { name: 'Cloudflare Workers AI',    color: '#f6821f', logo: '☁️' },
@@ -64,7 +64,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; pulse: boolean }> = {
   OPERATIONAL: { label: 'Operational',  color: '#22c55e', pulse: false },
-  BUSY:        { label: 'Running',      color: '#C9A84C', pulse: true  },
+  BUSY:        { label: 'Running',      color: '#0F1F3D', pulse: true  },
   IDLE:        { label: 'Idle',         color: '#6b7280', pulse: false },
   DEGRADED:    { label: 'Degraded',     color: '#ef4444', pulse: true  },
 };
@@ -357,7 +357,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
           </div>
         </div>
         <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-card font-mono">
-          <div className="w-8 h-8 border-2 border-accent/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
+          <div className="w-8 h-8 border-2 border-accent/20 border-t-[#0F1F3D] rounded-full animate-spin mb-4" />
           <span className="text-accent text-sm tracking-widest animate-pulse">
             {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING SYSTEM STATUS...'}
           </span>

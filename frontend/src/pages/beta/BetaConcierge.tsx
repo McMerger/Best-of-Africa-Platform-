@@ -230,7 +230,7 @@ export const BetaConcierge: React.FC = () => {
                                     <div className="pt-6">
                                         <Button 
                                             type="submit" 
-                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(201,168,76,0.2)] transition-all"
+                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(15,31,61,0.2)] transition-all"
                                             disabled={bookingMutation.isPending}
                                         >
                                             {bookingMutation.isPending ? 'Submitting...' : 'Submit Inquiry'} <ArrowRightIcon size={16} />

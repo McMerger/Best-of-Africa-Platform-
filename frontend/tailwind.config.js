@@ -53,7 +53,6 @@ export default {
                 accent: {
                     DEFAULT: 'hsl(var(--accent))',
                     foreground: 'hsl(var(--accent-foreground))',
-                    // AA-compliant gold for small text on light surfaces.
                     ink: 'hsl(var(--accent-ink))'
                 },
                 destructive: {
@@ -71,10 +70,10 @@ export default {
                     card: '#1A2F50',    /* dark form cards / branded placeholders */
                 },
                 gold: {
-                    DEFAULT: '#C9A84C', /* gold-primary: CTAs, labels, accents */
-                    italic: '#B8942A',  /* gold italic type ("Properly.") + hover */
-                    deep: '#9E7B1F',    /* active state */
-                    light: '#E5D5A3',   /* disabled */
+                    DEFAULT: '#0F1F3D', /* legacy alias: resolves to navy */
+                    italic: '#112240',
+                    deep: '#0F1F3D',    /* active state */
+                    light: '#FFFFFF',   /* disabled */
                 },
                 page: '#FFFFFF',        /* main content section bg — pure white */
                 surface: '#FFFFFF',     /* alternate light section bg — pure white */

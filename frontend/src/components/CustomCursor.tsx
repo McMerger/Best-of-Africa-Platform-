@@ -74,7 +74,7 @@ export const CustomCursor = () => {
       height: 32,
       width: 32,
       backgroundColor: 'transparent',
-      border: '2px solid rgba(201, 168, 76, 0.5)',
+      border: '2px solid rgba(15, 31, 61, 0.5)',
       mixBlendMode: 'normal' as const,
     },
     hover: {
@@ -82,8 +82,8 @@ export const CustomCursor = () => {
       y: mousePosition.y - 32,
       height: 64,
       width: 64,
-      backgroundColor: 'rgba(201, 168, 76, 1)',
-      border: '0px solid rgba(201, 168, 76, 0)',
+      backgroundColor: 'rgba(15, 31, 61, 1)',
+      border: '0px solid rgba(15, 31, 61, 0)',
       mixBlendMode: 'difference' as const,
     }
   };

@@ -49,7 +49,7 @@ export const BetaLanding = () => {
               Structured country intelligence, market coverage and decision-ready briefings for investors, companies, governments and institutions operating across the continent.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">
+              <Link to="/intelligence" className="inline-flex items-center gap-2 rounded-md bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-navy-mid transition-colors">
                 Enter Intelligence <ArrowRight size={16} />
               </Link>
               <Link to="/dashboards/overview" className="inline-flex items-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">
@@ -162,7 +162,7 @@ export const BetaLanding = () => {
             <p className="text-white/70 leading-relaxed">Membership funds the reporting, infrastructure and research behind BOA-Story.</p>
           </div>
           <div className="flex flex-wrap gap-3 shrink-0">
-            <Link to="/membership" className="rounded-md bg-accent px-5 py-3 text-sm font-semibold text-navy hover:bg-[#b99a43] transition-colors">View membership</Link>
+            <Link to="/membership" className="rounded-md bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-navy-mid transition-colors">View membership</Link>
             <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10 transition-colors">Support once</a>
           </div>
         </div>

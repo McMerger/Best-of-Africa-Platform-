@@ -3,7 +3,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const REGIONS = [
     { id: 'North', label: 'North', color: '#3b82f6', gridArea: 'north' },
-    { id: 'West', label: 'West', color: '#fbbf24', gridArea: 'west' },
+    { id: 'West', label: 'West', color: '#0F1F3D', gridArea: 'west' },
     { id: 'Central', label: 'Central', color: '#10b981', gridArea: 'central' },
     { id: 'East', label: 'East', color: '#ef4444', gridArea: 'east' },
     { id: 'Southern', label: 'Southern', color: '#8b5cf6', gridArea: 'south' },
@@ -63,12 +63,12 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                 className="group relative flex flex-col items-center justify-center rounded-2xl border-2 transition-all duration-300 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 style={{
                                     gridArea: region.gridArea,
-                                    borderColor: isActive ? '#C9A84C' : 'var(--border)',
+                                    borderColor: isActive ? '#0F1F3D' : 'var(--border)',
                                     background: isActive
                                         ? 'linear-gradient(135deg, #051828 0%, #0a2a45 100%)'
                                         : 'linear-gradient(135deg, var(--card) 0%, var(--muted) 100%)',
                                     boxShadow: isActive
-                                        ? '0 0 24px rgba(201,168,76,0.25), inset 0 1px 0 rgba(201,168,76,0.1)'
+                                        ? '0 0 24px rgba(15,31,61,0.25), inset 0 1px 0 rgba(15,31,61,0.1)'
                                         : '0 2px 8px rgba(0,0,0,0.06)',
                                     transform: isActive ? 'scale(1.05)' : 'scale(1)',
                                 }}
@@ -86,7 +86,7 @@ export const StrategicMap: React.FC<StrategicMapProps> = ({
                                     style={{
                                         clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
                                         background: isActive
-                                            ? 'linear-gradient(135deg, #C9A84C, #b8962e)'
+                                            ? 'linear-gradient(135deg, #0F1F3D, #0F1F3D)'
                                             : `linear-gradient(135deg, ${region.color}40, ${region.color}20)`,
                                     }}
                                 >

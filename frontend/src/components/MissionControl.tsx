@@ -61,7 +61,7 @@ export const MissionControl: React.FC = () => {
                     {/* Golden Pulse Background (CSS) */}
                     <div className="absolute inset-0 z-0 opacity-40">
                         <div className="absolute inset-0 bg-white" />
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(251,191,36,0.12)_0%,transparent_50%)]" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(15,31,61,0.12)_0%,transparent_50%)]" />
                     </div>
 
                     {/* Content Layer */}

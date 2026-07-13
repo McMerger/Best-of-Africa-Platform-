@@ -237,8 +237,8 @@ export const BetaSponsorDashboard: React.FC = () => {
                     <AreaChart data={timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.28}/>
-                          <stop offset="95%" stopColor="#C9A84C" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#0F1F3D" stopOpacity={0.28}/>
+                          <stop offset="95%" stopColor="#0F1F3D" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
@@ -250,10 +250,10 @@ export const BetaSponsorDashboard: React.FC = () => {
                         dx={-10}
                       />
                       <RechartsTooltip
-                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
+                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(15,31,61,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                         formatter={(value: any) => [value, 'Impressions']}
                       />
-                      <Area type="monotone" dataKey="impressions" stroke="#0F1F3D" strokeWidth={2} fillOpacity={1} fill="url(#colorImpressions)" activeDot={{ r: 5, fill: '#C9A84C', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
+                      <Area type="monotone" dataKey="impressions" stroke="#0F1F3D" strokeWidth={2} fillOpacity={1} fill="url(#colorImpressions)" activeDot={{ r: 5, fill: '#0F1F3D', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}

@@ -659,7 +659,7 @@ export const BetaArticle = () => {
                     href={KO_FI_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(201,168,76,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
+                    className="block w-full bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(15,31,61,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
                   >
                     {t('article.unlock_now', 'Unlock every story')}
                   </a>

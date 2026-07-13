@@ -154,7 +154,7 @@ export const NavBar: React.FC = () => {
 
                     <div className="hidden lg:block w-px h-6 bg-border mx-2" />
 
-                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-5 xl:px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(201,168,76,0.25)] text-[11px] uppercase tracking-widest">
+                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-5 xl:px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(15,31,61,0.25)] text-[11px] uppercase tracking-widest">
                         <Link to="/login">{isAuthenticated ? t('nav.account', 'Account') : t('nav.signin', 'Sign In')}</Link>
                     </Button>
 

@@ -137,7 +137,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
 
                             <a href={affiliateUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-4 rounded-lg border hover:border-primary/50 hover:bg-accent/50 transition-all group">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded bg-[#FFD700] flex items-center justify-center text-black font-bold text-xs">E.</div>
+                                    <div className="h-8 w-8 rounded bg-navy flex items-center justify-center text-white font-bold text-xs">E.</div>
                                     <div>
                                         <div className="font-bold">Expedia</div>
                                         <div className="text-xs text-muted-foreground">Public Rate</div>

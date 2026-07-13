@@ -242,11 +242,11 @@ export const BetaContinentalOverview: React.FC = () => {
                     width={82}
                   />
                   <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(15,31,61,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                     cursor={{ fill: 'rgba(15,31,61,0.04)' }}
                     formatter={(value: any, _n: any, p: any) => [`${value}% of coverage (${p?.payload?.count ?? 0} stories)`, 'Share']}
                   />
-                  <Bar dataKey="pct" fill="#C9A84C" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false}>
+                  <Bar dataKey="pct" fill="#0F1F3D" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false}>
                     <LabelList dataKey="pct" position="right" formatter={(v: any) => `${v}%`} style={{ fill: 'rgba(15,31,61,0.75)', fontSize: 12, fontWeight: 600 }} />
                   </Bar>
                 </BarChart>

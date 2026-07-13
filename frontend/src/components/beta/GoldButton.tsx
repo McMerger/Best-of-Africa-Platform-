@@ -14,7 +14,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-accent text-navy hover:bg-[#b99a43]",
+        primary: "bg-accent text-white hover:bg-navy-mid",
         ghost: "bg-transparent border border-accent/40 text-accent hover:bg-accent/10",
       },
       size: {

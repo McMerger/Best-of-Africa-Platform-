@@ -6,7 +6,7 @@
   /* ── Combined light-first navy system (Combination of both.md §1) ──
      Page bg is light grey; cards/navbar are pure white; navy is reserved
      for hero bands, footer, login, admin via the explicit `navy*` colours. */
-  --background: 210 20% 98%;   /* quiet editorial canvas */
+  --background: 0 0% 100%;   /* quiet editorial canvas */
   --foreground: 219 60% 15%;   /* #0F1F3D navy text-primary */
 
   --primary: 219 60% 15%;      /* #0F1F3D navy — high-contrast elements */
@@ -15,18 +15,18 @@
   --card: 0 0% 100%;           /* Pure White cards */
   --card-foreground: 219 60% 15%;
 
-  --accent: 44 54% 54%;        /* #C9A84C gold-primary */
-  --accent-foreground: 219 60% 15%; /* navy text on gold fills */
+  --accent: 219 60% 15%;        /* #0F1F3D navy accent */
+  --accent-foreground: 0 0% 100%; /* white text on navy fills */
   /* Darker "ink" gold for SMALL TEXT ON LIGHT surfaces (kickers, labels).
-     #C9A84C on white is ~2.4:1 — far below WCAG AA's 4.5:1 — and axe flagged
+     #0F1F3D on white is ~2.4:1 — far below WCAG AA's 4.5:1 — and axe flagged
      ~100 nodes per page. This stays ≥4.5:1 on white; keep bright --accent for
      fills, borders, and any text on navy (where it passes at ~7:1). */
-  --accent-ink: 43 62% 30%;    /* ~#7D5C1D — ≥5:1 on white (33% measured 4.48, under the 4.5 floor) */
+  --accent-ink: 219 60% 15%;    /* ~#7D5C1D — ≥5:1 on white (33% measured 4.48, under the 4.5 floor) */
 
-  --secondary: 210 20% 95%;    /* #EFF2F6 surface-light */
+  --secondary: 0 0% 100%;    /* pure-white secondary surface */
   --secondary-foreground: 219 60% 15%;
 
-  --muted: 210 20% 95%;
+  --muted: 0 0% 100%;
   --muted-foreground: 218 23% 45%; /* #586C8D — darkened to meet WCAG AA on white */
 
   --popover: 0 0% 100%;
@@ -37,7 +37,7 @@
 
   --border: 220 13% 84%;       /* #D1D5DB light-section input border */
   --input: 220 13% 84%;
-  --ring: 44 54% 54%;          /* gold focus ring */
+  --ring: 219 60% 15%;          /* navy focus ring */
 
   --radius: 0.5rem;
   --density-gap: 2rem;
@@ -81,23 +81,23 @@ body {
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 46 65% 52%;
-    --primary-foreground: 210 100% 12%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 219 60% 15%;
 
     --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 46 65% 52%;
-    --accent-foreground: 210 100% 12%;
-    /* On dark surfaces the bright gold IS the readable variant. */
-    --accent-ink: 46 65% 62%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 219 60% 15%;
+    /* On dark surfaces white is the readable accent variant. */
+    --accent-ink: 0 0% 100%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 46 65% 52%;
+    --ring: 0 0% 100%;
   }
 }
 
@@ -174,6 +174,23 @@ body {
 }
 
 @layer utilities {
+  /* Accent utilities resolve to navy on white and white on navy. */
+  .bg-accent.text-navy,
+  .bg-accent.text-primary { color: #FFFFFF !important; }
+
+  :is(.bg-navy, .bg-navy-deep, .bg-navy-mid, .bg-navy-card, .bg-primary, .bg-foreground) :is(.text-accent, .text-accent-ink),
+  :is(.bg-navy, .bg-navy-deep, .bg-navy-mid, .bg-navy-card, .bg-primary, .bg-foreground):is(.text-accent, .text-accent-ink) {
+    color: #FFFFFF !important;
+  }
+
+  :is(.bg-navy, .bg-navy-deep, .bg-navy-mid, .bg-navy-card, .bg-primary, .bg-foreground) .bg-accent {
+    background-color: #FFFFFF !important;
+    color: #0F1F3D !important;
+  }
+
+  :is(.bg-navy, .bg-navy-deep, .bg-navy-mid, .bg-navy-card, .bg-primary, .bg-foreground) .border-accent {
+    border-color: #FFFFFF !important;
+  }
   /* ── Production page architecture ────────────────────────────────────────
      These primitives separate navigation, content, and actions consistently
      across long editorial and dashboard routes. They intentionally use fluid
@@ -581,16 +598,16 @@ body {
 
   /* Animated shimmer border for locked article cards — draws the eye to the paywall CTA */
   @keyframes shimmer-border {
-    0%   { box-shadow: 0 0 0px rgba(201,168,76,0); }
-    40%  { box-shadow: 0 0 18px rgba(201,168,76,0.22); }
-    60%  { box-shadow: 0 0 18px rgba(201,168,76,0.22); }
-    100% { box-shadow: 0 0 0px rgba(201,168,76,0); }
+    0%   { box-shadow: 0 0 0px rgba(15,31,61,0); }
+    40%  { box-shadow: 0 0 18px rgba(15,31,61,0.22); }
+    60%  { box-shadow: 0 0 18px rgba(15,31,61,0.22); }
+    100% { box-shadow: 0 0 0px rgba(15,31,61,0); }
   }
 
   .locked-card-shimmer { animation: none; }
   .locked-card-shimmer:hover {
     animation: none;
-    box-shadow: 0 0 28px rgba(201,168,76,0.2);
+    box-shadow: 0 0 28px rgba(15,31,61,0.2);
   }
 
   /* ── World Cup event ribbon ──────────────────────────────────────────────
@@ -625,7 +642,7 @@ body {
     top: 0;
     left: 0;
     height: 3px;
-    background: linear-gradient(90deg, #C9A84C, #E8C96A);
+    background: linear-gradient(90deg, #0F1F3D, #FFFFFF);
     z-index: 9999;
     transition: width 0.1s linear;
   }
@@ -655,7 +672,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #C9A84C;
+  outline: 2px solid #0F1F3D;
   outline-offset: 2px;
   border-radius: 2px;
 }

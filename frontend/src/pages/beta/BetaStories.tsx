@@ -525,7 +525,7 @@ export const BetaStories = () => {
             >
               {isPlaceholderData ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-accent/40 border-t-[#C9A84C] rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-accent/40 border-t-[#0F1F3D] rounded-full animate-spin" />
                   {t('stories.loading', 'Loading...')}
                 </>
               ) : t('stories.load_more', 'Load More')}

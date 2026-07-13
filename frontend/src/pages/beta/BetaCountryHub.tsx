@@ -52,7 +52,7 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
         transition={{ duration: 0.9, ease: 'easeOut', delay }}
-        className="h-full bg-gradient-to-r from-[#C9A84C]/50 to-[#C9A84C] rounded-full"
+        className="h-full bg-gradient-to-r from-[#0F1F3D]/50 to-[#0F1F3D] rounded-full"
       />
     </div>
   </div>
@@ -417,7 +417,7 @@ export const BetaCountryHub = () => {
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(201,168,76,0.05)]">
+            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(15,31,61,0.05)]">
               <div className="absolute top-0 right-0 p-8 opacity-10">
                  <Globe size={120} />
               </div>
@@ -546,7 +546,7 @@ export const BetaCountryHub = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-accent text-navy font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+              className="inline-block bg-accent text-navy font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(15,31,61,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
               {t('article.become_member', 'Become a Founding Member')}
             </a>

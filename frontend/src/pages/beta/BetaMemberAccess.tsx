@@ -268,7 +268,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || otp.length < 6}
-                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(201,168,76,0.2)]"
+                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(15,31,61,0.2)]"
                     >
                       Verify Code
                     </button>
@@ -330,7 +330,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(201,168,76,0.3)]"
+                      className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(15,31,61,0.3)]"
                     >
                       {isSubmitting ? (
                         <>Verifying...</>

@@ -79,7 +79,7 @@ export const WorldCupBanner = () => {
       >
         {/* Title cluster */}
         <div className="shrink-0 flex items-center gap-2.5">
-          <span className="grid place-items-center w-7 h-7 rounded-full bg-accent/15 border border-accent/40 text-accent shadow-[0_0_12px_-2px_rgba(201,168,76,0.6)]">
+          <span className="grid place-items-center w-7 h-7 rounded-full bg-accent/15 border border-accent/40 text-accent shadow-[0_0_12px_-2px_rgba(15,31,61,0.6)]">
             <Trophy className="w-3.5 h-3.5" aria-hidden="true" />
           </span>
           {/* Wordmark yields to the fixture on the smallest screens; the trophy

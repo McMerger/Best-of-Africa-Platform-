@@ -59,7 +59,7 @@ const CountryCard = ({
         {tag && (
           <p className="text-[11px] text-primary/70 font-medium leading-tight line-clamp-1">{tag}</p>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F1F3D]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
       </Link>
     </motion.div>
   );
@@ -177,7 +177,7 @@ export const BetaCountryTeaser = () => {
                 onClick={() => setActiveRegion(region)}
                 className={`min-h-11 px-3 py-2 rounded-lg sm:rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
-                    ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
+                    ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(15,31,61,0.3)]'
                     : 'bg-background/5 text-primary/70 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
@@ -250,7 +250,7 @@ export const BetaCountryTeaser = () => {
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+              className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(15,31,61,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
               {t('countries.cta_btn', 'Unlock All 54 Country Hubs, Join as a Founding Member')}
             </a>

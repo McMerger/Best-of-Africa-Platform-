@@ -34,7 +34,7 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
     // that reads against the light card without competing with the data.
     const colorScale = scaleLinear<string>()
         .domain([0, 100])
-        .range(["#F3EAD3", "#9A7A22"]);
+        .range(["#FFFFFF", "#0F1F3D"]);
 
     const getScore = (geoName: string) => {
         // Simple mapping, might need more robust country name matching in production
@@ -47,7 +47,7 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
     };
 
     return (
-        <div className="relative w-full h-full bg-[#f8f9fa] rounded-2xl border border-primary/10 overflow-hidden">
+        <div className="relative w-full h-full bg-white rounded-2xl border border-primary/10 overflow-hidden">
             <ComposableMap
                 projection="geoAzimuthalEqualArea"
                 projectionConfig={{
@@ -88,20 +88,20 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
                                         }}
                                         style={{
                                             default: {
-                                                fill: score > 0 ? colorScale(score) : "rgba(15,31,61,0.06)",
-                                                stroke: "#ffffff",
+                                                fill: score > 0 ? colorScale(score) : "#FFFFFF",
+                                                stroke: "rgba(15,31,61,0.35)",
                                                 strokeWidth: 0.75,
                                                 outline: "none"
                                             },
                                             hover: {
                                                 fill: "#0a2540", // primary color
-                                                stroke: "#d4af37", // accent color
+                                                stroke: "#0F1F3D",
                                                 strokeWidth: 1,
                                                 outline: "none",
                                                 cursor: score > 0 ? "pointer" : "default"
                                             },
                                             pressed: {
-                                                fill: "#d4af37",
+                                                fill: "#0F1F3D",
                                                 outline: "none"
                                             }
                                         }}
@@ -120,7 +120,7 @@ export const BetaInteractiveMap: React.FC<BetaInteractiveMapProps> = ({ data, on
             {/* Legend — sequential ramp with ink labels (identity never color-alone) */}
             <div aria-hidden="true" className="absolute bottom-4 right-4 flex items-center gap-2 bg-white/90 backdrop-blur px-3 py-2 rounded-lg border border-primary/10 shadow-sm">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">{legendLow}</span>
-                <span className="h-2 w-24 rounded-full" style={{ background: 'linear-gradient(to right, #F3EAD3, #9A7A22)' }} />
+                <span className="h-2 w-24 rounded-full border border-navy/20" style={{ background: 'linear-gradient(to right, #FFFFFF, #0F1F3D)' }} />
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">{legendHigh}</span>
             </div>
         </div>

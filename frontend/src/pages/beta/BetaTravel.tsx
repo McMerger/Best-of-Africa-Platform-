@@ -104,7 +104,7 @@ export const BetaTravel: React.FC = () => {
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link to="/request-consultation">
-                                <Button className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-widest text-[11px] px-10 py-6 bg-accent text-navy hover:brightness-110 shadow-[0_0_30px_rgba(201,168,76,0.3)] transition-all">
+                                <Button className="w-full sm:w-auto rounded-xl font-bold uppercase tracking-widest text-[11px] px-10 py-6 bg-accent text-navy hover:brightness-110 shadow-[0_0_30px_rgba(15,31,61,0.3)] transition-all">
                                     Request Custom Itinerary
                                 </Button>
                             </Link>

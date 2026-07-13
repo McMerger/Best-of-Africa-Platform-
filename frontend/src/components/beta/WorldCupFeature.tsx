@@ -5,7 +5,7 @@ import { useWorldCupTeams } from '@/hooks/useWorldCupTeams';
 
 /**
  * TEMPORARY landing feature band celebrating African nations at the World Cup.
- * On-brand (navy + gold), CSS-light (no heavy animation, respects reduced-motion
+ * On-brand (navy + white), CSS-light (no heavy animation, respects reduced-motion
  * via the global media query). Gated by WORLD_CUP.enabled (config/worldCup.ts).
  */
 const relativeTime = (iso: string): string => {
@@ -24,8 +24,8 @@ export const WorldCupFeature = () => {
 
   return (
     <section className="relative overflow-hidden bg-navy text-white border-y border-accent/30 py-20 md:py-24 px-6">
-      {/* Soft gold glow + subtle grid for a festive, premium feel */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,168,76,0.18),transparent_60%)] pointer-events-none" />
+      {/* Soft navy glow + subtle grid for a festive, premium feel */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(15,31,61,0.18),transparent_60%)] pointer-events-none" />
       <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto text-center">
@@ -64,7 +64,7 @@ export const WorldCupFeature = () => {
 
         <Link
           to="/posts"
-          className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[11px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(201,168,76,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
+          className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[11px] px-8 py-4 rounded-full shadow-[0_4px_24px_rgba(15,31,61,0.35)] hover:bg-gold-italic transition-all hover:-translate-y-0.5"
         >
           Follow the coverage →
         </Link>

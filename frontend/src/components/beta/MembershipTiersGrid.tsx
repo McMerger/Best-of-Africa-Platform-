@@ -28,7 +28,7 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
         <CardReveal key={tier.id} delay={i * 0.15}>
           {tier.recommended ? (
             // Featured / recommended card, elevated with gold border
-            <div className="bg-navy text-white border-t-4 border-accent rounded-2xl p-8 md:p-10 relative flex flex-col h-full md:-translate-y-4 shadow-[0_20px_50px_rgba(15,31,61,0.25)] z-10 hover:shadow-[0_24px_60px_rgba(201,168,76,0.22)] hover:-translate-y-5 transition-all duration-300">
+            <div className="bg-navy text-white border-t-4 border-accent rounded-2xl p-8 md:p-10 relative flex flex-col h-full md:-translate-y-4 shadow-[0_20px_50px_rgba(15,31,61,0.25)] z-10 hover:shadow-[0_24px_60px_rgba(15,31,61,0.22)] hover:-translate-y-5 transition-all duration-300">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-accent text-navy text-[10px] font-bold uppercase tracking-widest py-1 px-5 rounded-full shadow-lg whitespace-nowrap">
                 Recommended
               </div>
@@ -50,14 +50,14 @@ export const MembershipTiersGrid = ({ isAnnual = false }: MembershipTiersGridPro
                 ))}
               </ul>
               <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer">
-                <GoldButton variant="primary" className="w-full shadow-[0_0_20px_rgba(201,168,76,0.3)]">
+                <GoldButton variant="primary" className="w-full shadow-[0_0_20px_rgba(15,31,61,0.3)]">
                   {tier.ctaLabel}
                 </GoldButton>
               </a>
             </div>
           ) : (
             // Standard card
-            <div className="glass-panel border border-foreground/5 rounded-3xl p-8 md:p-10 flex flex-col h-full hover:border-accent/30 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(201,168,76,0.08)] transition-all duration-300 relative overflow-hidden group">
+            <div className="glass-panel border border-foreground/5 rounded-3xl p-8 md:p-10 flex flex-col h-full hover:border-accent/30 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(15,31,61,0.08)] transition-all duration-300 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <h3 className="font-serif text-[1.5rem] md:text-[2rem] mb-2 text-foreground/90 group-hover:text-foreground transition-colors">{tier.name}</h3>
               <div className="flex items-baseline gap-1 mb-1">

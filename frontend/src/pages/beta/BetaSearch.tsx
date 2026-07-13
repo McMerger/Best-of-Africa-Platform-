@@ -199,7 +199,7 @@ export const BetaSearch: React.FC = () => {
                                 onClick={() => setActiveFilter(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${
                                     activeFilter === tab.id
-                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(201,168,76,0.3)]'
+                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(15,31,61,0.3)]'
                                         : 'bg-card text-foreground/50 hover:text-foreground border border-foreground/5 hover:border-foreground/20'
                                 }`}
                             >

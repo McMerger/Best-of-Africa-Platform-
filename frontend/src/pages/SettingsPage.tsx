@@ -155,7 +155,7 @@ export const SettingsPage: React.FC = () => {
             <div className="container py-20 max-w-4xl">
                 <SEO title="Settings" description="Manage your Best of Africa account, preferences, and subscription." />
                 <div className="mx-auto flex max-w-md flex-col items-center rounded-xl border border-white/10 bg-navy px-8 py-14 text-center text-white shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
-                    <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_40px_rgba(201,168,76,0.3)]">
+                    <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_40px_rgba(15,31,61,0.3)]">
                         <LockClosedIcon className="h-7 w-7 text-accent" />
                     </div>
                     <h1 className="mb-3 text-2xl font-serif font-bold">Sign in to access your settings</h1>

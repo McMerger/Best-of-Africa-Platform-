@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
         <>
             <SEO title="Member Portal" description="Sign in to your Best of Africa membership with a one-click email login link." />
             <div className="flex min-h-[70vh] items-center justify-center bg-background px-4 py-16 text-foreground">
-                {/* Background decorative elements, amber/gold radial glow */}
+                {/* Background decorative elements, restrained navy radial glow */}
                 <div className="hidden" />
 
                 <div className="relative z-10 min-w-0 w-full max-w-[420px] py-12">
