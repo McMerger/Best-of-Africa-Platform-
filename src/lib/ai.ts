@@ -1055,9 +1055,7 @@ function parseIntelligenceReport(text: string): {
 export interface UnifiedBriefing {
     investor: {
         summary: string;
-        verdict: null;
-        classification: null;
-        margin_of_safety: null;
+        evidence_conclusion: string;
         supported_findings: string[];
         implications: string[];
         limitations: string[];
@@ -1065,8 +1063,7 @@ export interface UnifiedBriefing {
     };
     government: {
         summary: string;
-        engagement: null;
-        development_impact: null;
+        evidence_conclusion: string;
         supported_findings: string[];
         implications: string[];
         limitations: string[];
@@ -1074,8 +1071,7 @@ export interface UnifiedBriefing {
     };
     explorer: {
         summary: string;
-        rating: null;
-        safety: null;
+        evidence_conclusion: string;
         supported_findings: string[];
         implications: string[];
         limitations: string[];
@@ -1112,9 +1108,7 @@ OUTPUT FORMAT (JSON - follow EXACTLY):
 {
   "investor": {
     "summary": "[350-500 word source-bounded analysis]",
-    "verdict": null,
-    "classification": null,
-    "margin_of_safety": null,
+    "evidence_conclusion": "[direct source-bounded conclusion about documented commercial activity]",
     "supported_findings": ["specific supported finding"],
     "implications": ["conditional implication clearly labeled as analysis"],
     "limitations": ["source or evidence limitation"],
@@ -1122,8 +1116,7 @@ OUTPUT FORMAT (JSON - follow EXACTLY):
   },
   "government": {
     "summary": "[350-500 word source-bounded analysis]",
-    "engagement": null,
-    "development_impact": null,
+    "evidence_conclusion": "[direct source-bounded conclusion about documented policy action]",
     "supported_findings": ["specific supported finding"],
     "implications": ["conditional implication clearly labeled as analysis"],
     "limitations": ["source or evidence limitation"],
@@ -1131,8 +1124,7 @@ OUTPUT FORMAT (JSON - follow EXACTLY):
   },
   "explorer": {
     "summary": "[350-500 word source-bounded analysis]",
-    "rating": null,
-    "safety": null,
+    "evidence_conclusion": "[direct source-bounded conclusion about documented place relevance]",
     "supported_findings": ["specific supported finding"],
     "implications": ["conditional implication clearly labeled as analysis"],
     "limitations": ["source or evidence limitation"],
@@ -1177,21 +1169,17 @@ function getDefaultBriefing(): UnifiedBriefing {
     return {
         investor: {
             summary: 'The source material is insufficient for a supported investor and operator analysis.',
-            verdict: null,
-            classification: null,
-            margin_of_safety: null,
+            evidence_conclusion: 'The supplied record supports no investment-performance claim; it can only ground the documented activity described in the summary.',
             supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         },
         government: {
             summary: 'The source material is insufficient for a supported government and policy analysis.',
-            engagement: null,
-            development_impact: null,
+            evidence_conclusion: 'The supplied record supports no policy-outcome claim; it can only ground the documented institutional action described in the summary.',
             supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         },
         explorer: {
             summary: 'The source material is insufficient for a supported explorer and place analysis.',
-            rating: null,
-            safety: null,
+            evidence_conclusion: 'The supplied record supports no safety or destination-quality claim; it can only ground the documented place facts described in the summary.',
             supported_findings: [], implications: [], limitations: ['No sufficiently detailed source-linked analysis was generated.'], verification_questions: []
         }
     };

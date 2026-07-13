@@ -410,7 +410,7 @@ router.get('/semantic', async (c) => {
             return c.json({
                 success: true,
                 results: [],
-                ai_answer: null,
+                ai_answer: `The indexed BOA-Story corpus contains zero semantic matches for “${q}” under the current search threshold.`,
                 query: q
             });
         }

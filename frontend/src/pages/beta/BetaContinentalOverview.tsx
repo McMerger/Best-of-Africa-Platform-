@@ -51,8 +51,10 @@ export const BetaContinentalOverview: React.FC = () => {
     return (
       <>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-          <h2 className="font-serif text-3xl mb-3">Overview Unavailable</h2>
-          <p className="text-primary/60 mb-8">We couldn't load the continental data at this time.</p>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-accent-ink">Request failed</p>
+          <h2 className="mt-3 font-serif text-3xl mb-3">Continue through the evidence desk</h2>
+          <p className="max-w-xl text-primary/60 mb-8">This dashboard request did not complete. BOA’s country index and source-linked story search remain the direct routes into the underlying reporting record.</p>
+          <div className="flex gap-3"><Link to="/countries" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Country index</Link><Link to="/search" className="rounded-md border border-border px-5 py-3 text-sm font-semibold text-navy">Search stories</Link></div>
         </div>
       </>
     );
@@ -144,7 +146,7 @@ export const BetaContinentalOverview: React.FC = () => {
           {[
             { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
             { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
-            { Icon: MapPin, label: 'Audio Briefings (30d)', value: overview.narrated_briefings ?? '—' },
+            { Icon: MapPin, label: 'Reporting Regions', value: overview.regions },
           ].map(({ Icon, label, value }, i) => (
             <motion.div
               key={label}
@@ -187,7 +189,7 @@ export const BetaContinentalOverview: React.FC = () => {
                 <p className="pt-2 text-xs text-muted-foreground">Preparing the full evidence analysis. First generation can take about a minute; subsequent reads are cached.</p>
               </div>
             )}
-            {isAnalyticsError && <p className="text-sm text-muted-foreground">The source-linked continental briefing is temporarily unavailable. Coverage statistics below remain current.</p>}
+            {isAnalyticsError && <div className="text-sm leading-7 text-muted-foreground"><p>The long-form synthesis request did not complete. The observed dashboard record below contains {overview.total_articles_30d.toLocaleString()} published articles across {overview.countries_covered} countries in the current 30-day window.</p><p className="mt-3">Use the regional distribution, country ranking, sector counts and source-linked highlights on this page as the current evidence layer.</p></div>}
             {platformAnalytics?.market_summary && (
               <>
                 <MarkdownRenderer content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />

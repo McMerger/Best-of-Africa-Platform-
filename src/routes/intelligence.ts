@@ -38,7 +38,9 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
 
   // Get country first (quick lookup, no cache needed)
   const country = await c.env.DB.prepare(
-    'SELECT * FROM countries WHERE code = ?'
+    `SELECT code, name, region, COALESCE(flag_emoji, '') AS flag_emoji,
+            COALESCE(NULLIF(description, ''), name || ' country reporting evidence from BOA-Story.') AS description
+     FROM countries WHERE code = ?`
   ).bind(code).first();
 
   if (!country) {
@@ -61,7 +63,7 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         ).bind(code).first<{ total: number }>(),
 
         c.env.DB.prepare(`
-          SELECT s.id, s.name, s.icon, COUNT(a.id) as count
+          SELECT s.id, s.name, COALESCE(s.icon, 'bar-chart') AS icon, COUNT(a.id) as count
           FROM sectors s
           JOIN articles a ON a.sector_id = s.id
           WHERE a.country_code = ? AND a.status = 'published'
@@ -71,7 +73,10 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         `).bind(code).all(),
 
         c.env.DB.prepare(`
-          SELECT id, slug, title, summary, sector_id, published_at, engagement_score
+          SELECT id, slug, title, COALESCE(summary, title) AS summary,
+                 COALESCE(sector_id, 'general') AS sector_id,
+                 COALESCE(published_at, updated_at, created_at) AS published_at,
+                 COALESCE(engagement_score, 0) AS engagement_score
           FROM articles
           WHERE country_code = ? AND status = 'published'
           ORDER BY published_at DESC
@@ -95,9 +100,12 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
           count: s.count,
         })),
         recent_articles: recentArticles.results as any || [],
-        sentiment_score: null,
-        investment_readiness_score: null,
-        tourism_appeal_score: null,
+        evidence_profile: {
+          published_articles: Number(articleCount?.total || 0),
+          sectors_represented: (topSectors.results || []).length,
+          source_records_reviewed: (recentArticles.results || []).length,
+          latest_reported_at: (recentArticles.results?.[0] as Record<string, any> | undefined)?.published_at || 'No published country record',
+        },
         methodology: 'BOA-Story does not infer sentiment, investment readiness or tourism appeal from article count, engagement or sector mentions. Use the source-linked recommendations and primary evidence instead.',
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
         recommendations: await generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []),

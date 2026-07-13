@@ -341,18 +341,13 @@ router.get('/:code/economics', async (c) => {
 
     const data = country as Record<string, any>;
 
-    // Calculate derived metrics
-    const gdpGrowth = null; // No mocked data
-    const stability = null;
-
     return c.json({
         code: data.code,
         name: data.name,
-        gdp_growth: gdpGrowth !== null ? `+${gdpGrowth}%` : null,
-        stability: stability,
-        gdp_usd: data.gdp_usd,
-        population: data.population,
-        methodology: 'No stability classification is inferred from media or image metrics. GDP growth is omitted until a dated official observation is available.'
+        recorded_gdp_usd: Number(data.gdp_usd || 0),
+        recorded_population: Number(data.population || 0),
+        evidence_fields_present: Number(data.gdp_usd != null) + Number(data.population != null),
+        methodology: 'These are the country table observations currently recorded by BOA-Story. This endpoint does not infer GDP growth or stability from media, engagement or image fields.'
     });
 });
 
@@ -468,10 +463,10 @@ router.get('/:code/dossier', async (c) => {
                 { name: 'World Bank Open Data', section: 'macroeconomics', url: 'https://data.worldbank.org/' },
                 { name: 'IMF DataMapper / World Economic Outlook', section: 'macroeconomics', url: 'https://www.imf.org/external/datamapper/' },
                 { name: 'UN Comtrade', section: 'trade', url: 'https://comtradeplus.un.org/' },
-                { name: 'BOA source-linked reporting', section: 'evidence', url: null },
+                { name: 'BOA source-linked reporting', section: 'evidence', url: 'https://boa-story.com/stories' },
             ],
             generated_at: new Date().toISOString(),
-            methodology: 'External observations are reproduced with their original year and unit. IMF projections are labelled separately from historical values. Missing sections remain null; no values are estimated from headlines or engagement.',
+            methodology: 'External observations are reproduced with their original year and unit. IMF projections are labelled separately from historical values. Reader-facing panels use the source-linked country record when an external provider returns no observation; no values are estimated from headlines or engagement.',
         },
     });
 });

@@ -201,21 +201,18 @@ export const api = {
     getCountryOutlook: (code: string) => request<{
         country: Country;
         outlook: {
-            investment_readiness: number | null;
-            narrative_strength: number | null;
-            media_presence: number | null;
-            engagement_level: number | null;
-            investment_commentary: string | null;
+            investment_commentary: string;
             methodology: string;
         };
         sector_opportunities: { id: string; name: string; articles: number; avg_engagement: number }[];
         sector_coverage: { id: string; name: string; articles: number; avg_engagement: number }[];
         evidence: {
             published_articles: number;
-            reviewed_strategies: number;
+            sectors_covered: number;
+            active_narrative_strategies: number;
             status: string;
             limitations: string[];
-            source_records: { record: number; title: string; published_at: string | null; source_title: string | null; source_url: string | null }[];
+            source_records: { record: number; title: string; published_at: string; source_title: string; source_url: string }[];
         };
     }>(`/market-intel/country/${code}/outlook`),
     getCountryRelationships: (code: string) => request<{
@@ -284,9 +281,9 @@ export const api = {
             article_id: string;
             title: string;
             briefing: {
-                investor: { summary: string; verdict: null; classification: null; margin_of_safety: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
-                government: { summary: string; engagement: null; development_impact: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
-                explorer: { summary: string; rating: null; safety: null; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
+                investor: { summary: string; evidence_conclusion: string; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
+                government: { summary: string; evidence_conclusion: string; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
+                explorer: { summary: string; evidence_conclusion: string; supported_findings: string[]; implications: string[]; limitations: string[]; verification_questions: string[] };
             };
         }>('/intel/synthesize-unified', {
             method: 'POST',
@@ -298,30 +295,26 @@ export const api = {
         article_count: number;
         top_sectors: { sector: Sector; count: number }[];
         recent_articles: ArticleListItem[];
-        sentiment_score: number | null;
-        investment_readiness_score: number | null;
-        tourism_appeal_score: number | null;
+        evidence_profile: { published_articles: number; sectors_represented: number; source_records_reviewed: number; latest_reported_at: string };
         methodology: string;
         narrative_gaps: string[];
         recommendations: string[];
     }>(`/intel/country/${code}/report`),
     getSectorTrends: (id: string) => request<{
         sector: Sector;
-        trends: {
-            year: number;
-            market_size: number;
-            growth_rate: number;
-            investment_volume: number;
-            regulatory_outlook: string;
-        }[];
-        top_companies: string[];
+        weekly_coverage: { week_start: string; stories: number; countries: number }[];
+        country_coverage: { code: string; name: string; stories: number }[];
         summary: {
-            latest_year: number | null;
-            current_market_size: number | null;
-            current_growth_rate: number | null;
-            yoy_change: number | null;
-            regulatory_outlook: string;
+            stories_30d: number;
+            previous_30d: number;
+            coverage_change: number;
+            countries_30d: number;
+            source_records_30d: number;
+            views_30d: number;
         };
+        methodology: string;
+        reporting_window_days: number;
+        updated_at: string;
     }>(`/market-intel/sector/${id}/trends`),
 
     // System & Personalization
@@ -385,14 +378,14 @@ export const api = {
 
     // Analytics
     getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => request<{
-        data: { sector_id: string; sector_name: string; growth_yoy: null; volatility: null; article_count: number; total_views: number; countries_covered: number; coverage_current_30d: number; coverage_previous_30d: number; coverage_change: number; coverage_change_pct: number | null; latest_reported_at: string | null; ai_insight: string }[];
+        data: { sector_id: string; sector_name: string; article_count: number; total_views: number; countries_covered: number; coverage_current_30d: number; coverage_previous_30d: number; coverage_change: number; coverage_change_pct: number; comparison_basis: string; reporting_window_days: number; latest_reported_at: string; ai_insight: string }[];
         methodology: string;
         updated_at: string;
     }>(`/market-intel/performance${lens ? `?lens=${lens}` : ''}`),
 
     getLeadingSector: () => request<{
         name: string;
-        growth: number | null;
+        coverage_change_pct: number;
         trend: string;
         stories_7d: number;
         stories_previous_7d: number;
@@ -404,28 +397,24 @@ export const api = {
     getCoveragePulse: () => request<{
         stories_7d: number;
         countries_7d: number;
-        top_sector: { name: string; stories: number } | null;
+        top_sector: { name: string; stories: number };
         countries: { country_code: string; country_name: string; this_week: number; last_week: number }[];
-        thinnest_region: { region: string; stories: number } | null;
+        thinnest_region: { region: string; stories: number };
         updated_at: string;
     }>('/market-intel/coverage-pulse'),
 
     getSentimentDivergence: () => request<{
-        average_divergence: null;
-        countries: { country_code: string; country_name: string; region: string; reality_score: null; perception_score: null; gap: null; coverage_this_week: number; coverage_last_week: number; coverage_change: number; audience_response: number | null; latest_reported_at: string | null }[];
+        evidence_scope: string;
+        countries: { country_code: string; country_name: string; region: string; coverage_this_week: number; coverage_last_week: number; coverage_change: number; audience_response: number; latest_reported_at: string }[];
         methodology: string;
         updated_at: string;
     }>('/market-intel/sentiment-divergence'),
 
     getPlatformAnalytics: (lens?: 'investor' | 'government' | 'explorer') => request<{
         market_summary: string;
-        stability_index: null;
-        stability_score: null;
-        sentiment_pct: null;
-        sentiment_trend: null;
         sector_trends: { id: string; name: string; trend: 'coverage_up' | 'coverage_down' | 'coverage_flat'; article_count: number; previous_article_count: number; coverage_change: number }[];
         total_articles_7d: number;
-        coverage: { countries_7d: number; total_views_7d: number; audience_response: number | null };
+        coverage: { countries_7d: number; sectors_7d: number; source_records_7d: number; previous_articles_7d: number; coverage_change_7d: number; total_views_7d: number; audience_response: number; latest_reported_at: string };
         methodology: string;
         updated_at: string;
     }>(`/dashboards/analytics/summary${lens ? `?lens=${lens}` : ''}`),
@@ -453,12 +442,12 @@ export const api = {
 
     getSectorVelocity: (sectorId: string) => request<{
         sector_id: string;
-        cagr_5yr: number | null;
-        deal_flow_usd: number | null;
-        active_projects: null;
         coverage_stories_30d: number;
-        data_year: number | null;
-        source_urls: string[];
+        coverage_previous_30d: number;
+        coverage_change: number;
+        countries_covered_30d: number;
+        source_records_30d: number;
+        reporting_window_days: number;
         methodology: string;
         updated_at: string;
     }>(`/market-intel/sector/${sectorId}/velocity`),
@@ -511,7 +500,7 @@ export const api = {
     }>('/analytics/intelligence'),
 
     // Country Economics
-    getCountryEconomics: (code: string) => request<{ gdp_growth: string | null; stability: string | null; methodology: string }>(`/countries/${code}/economics`),
+    getCountryEconomics: (code: string) => request<{ code: string; name: string; recorded_gdp_usd: number; recorded_population: number; evidence_fields_present: number; methodology: string }>(`/countries/${code}/economics`),
     getCountryDossier: (code: string) => request<{
         country: Country;
         dossier: {

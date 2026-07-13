@@ -48,8 +48,6 @@ describe('GET /coverage-pulse', () => {
         expect(run).not.toHaveBeenCalled();
         expect(body.data[0]).toMatchObject({
             sector_id: 'technology',
-            growth_yoy: null,
-            volatility: null,
             coverage_current_30d: 12,
             coverage_previous_30d: 8,
             coverage_change: 4,
@@ -60,8 +58,7 @@ describe('GET /coverage-pulse', () => {
 
     it('does not estimate CAGR, deal flow or projects from headlines', async () => {
         const { db } = createCoverageDb([
-            { first: { year: 2025, growth_rate: null, investment_volume_usd: null, source_urls: '[]' } },
-            { first: { count: 14 } },
+            { first: { current_30d: 14, previous_30d: 7, countries_30d: 6, source_records_30d: 12 } },
         ]);
         const run = vi.fn(() => { throw new Error('AI must not invent structured market metrics'); });
         const env = createMockEnv({ DB: db, AI: { run } as any });
@@ -72,12 +69,14 @@ describe('GET /coverage-pulse', () => {
         expect(response.status).toBe(200);
         expect(run).not.toHaveBeenCalled();
         expect(body).toMatchObject({
-            cagr_5yr: null,
-            deal_flow_usd: null,
-            active_projects: null,
             coverage_stories_30d: 14,
+            coverage_previous_30d: 7,
+            coverage_change: 7,
+            countries_covered_30d: 6,
+            source_records_30d: 12,
         });
-        expect(body.methodology).toContain('never used to estimate');
+        expect(body.methodology).toContain('not CAGR');
+        expect(JSON.stringify(body)).not.toContain(':null');
     });
 
     it('replaces reality-versus-perception scoring with regional coverage evidence', async () => {
@@ -92,11 +91,12 @@ describe('GET /coverage-pulse', () => {
 
         expect(response.status).toBe(200);
         expect(run).not.toHaveBeenCalled();
-        expect(body.average_divergence).toBeNull();
+        expect(body.evidence_scope).toContain('seven-day windows');
         expect(body.countries[0]).toMatchObject({
-            country_code: 'KE', reality_score: null, perception_score: null, gap: null,
+            country_code: 'KE',
             coverage_this_week: 6, coverage_last_week: 3, coverage_change: 3, audience_response: 71.3,
         });
+        expect(JSON.stringify(body)).not.toContain(':null');
     });
 
     it('returns production-shaped coverage data and keeps zero-current-week countries', async () => {
@@ -134,7 +134,7 @@ describe('GET /coverage-pulse', () => {
         expect(queries[2]).toContain('ORDER BY this_week DESC, (this_week - last_week) DESC, c.name ASC');
     });
 
-    it('returns stable empty and null shapes when no coverage exists', async () => {
+    it('returns a factual zero-coverage shape without null placeholders', async () => {
         const { db } = createCoverageDb([
             { first: null },
             { first: null },
@@ -150,9 +150,10 @@ describe('GET /coverage-pulse', () => {
         expect(body).toMatchObject({
             stories_7d: 0,
             countries_7d: 0,
-            top_sector: null,
+            top_sector: { name: 'Zero qualifying sector stories', stories: 0 },
             countries: [],
-            thinnest_region: null,
+            thinnest_region: { region: 'Zero configured regions', stories: 0 },
         });
+        expect(JSON.stringify(body)).not.toContain(':null');
     });
 });

@@ -92,8 +92,11 @@ router.get('/preferences', async (c) => {
 
     if (!sessionId) {
         return c.json({
-            preferences: null,
-            message: 'No session ID provided'
+            preferences: {
+                countries_of_interest: [], sectors_of_interest: [], regions_of_interest: [],
+                language_preference: 'en', format_preference: 'full', reading_level: 'professional', articles_read: []
+            },
+            preference_basis: 'default all-coverage feed because no reader session was supplied'
         });
     }
 
@@ -102,7 +105,13 @@ router.get('/preferences', async (c) => {
     ).bind(sessionId).first();
 
     if (!prefs) {
-        return c.json({ preferences: null });
+        return c.json({
+            preferences: {
+                countries_of_interest: [], sectors_of_interest: [], regions_of_interest: [],
+                language_preference: 'en', format_preference: 'full', reading_level: 'professional', articles_read: []
+            },
+            preference_basis: 'default all-coverage feed because this session has no saved selections'
+        });
     }
 
     const prefsData = prefs as Record<string, any>;
@@ -381,7 +390,7 @@ router.get('/feed/ai-curated', async (c) => {
                             ...original,
                             ai_curation: {
                                 relevance_note: sel.relevance_note,
-                                score: null
+                                match_basis: 'selected by direct country or sector preference match and source-bounded editorial review'
                             }
                         });
                     }
@@ -399,7 +408,7 @@ router.get('/feed/ai-curated', async (c) => {
                 console.error('AI Curation Failed', e);
                 // Fallback to top 5 raw
                 return {
-                    data: candidates.results.slice(0, 5).map(c => ({ ...c, ai_curation: { relevance_note: `This report matches the selected country or sector interests. The detailed relevance analysis is temporarily unavailable; review the article's cited reporting before drawing conclusions.`, score: null } })),
+                    data: candidates.results.slice(0, 5).map(c => ({ ...c, ai_curation: { relevance_note: 'This report directly matches at least one selected country or sector. Read its dated source record and article evidence before drawing a broader conclusion.', match_basis: 'deterministic country or sector preference match' } })),
                     meta: { mode: 'fallback' }
                 };
             }

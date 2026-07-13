@@ -175,7 +175,7 @@ export const BetaIntelligence = () => {
                 <span className="mt-4 inline-flex text-xs font-semibold text-navy">Open trends →</span>
               </Link>
             ))}
-            {!sectorCatalog?.data?.length && <div className="col-span-full bg-card p-6 text-sm text-muted-foreground">Sector catalogue is currently unavailable.</div>}
+            {!sectorCatalog?.data?.length && <div className="col-span-full bg-card p-6 text-sm leading-6 text-muted-foreground">The returned sector catalogue contains zero records. The weekly coverage pulse below remains the current evidence view.</div>}
           </div>
         </section>
 
@@ -207,7 +207,7 @@ export const BetaIntelligence = () => {
                 {[
                   { Icon: Newspaper, label: 'Stories this week', value: pulse.stories_7d.toLocaleString(), sub: 'Published in the last 7 days' },
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
-                  { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector?.name || '—', sub: pulse.top_sector ? `${pulse.top_sector.stories.toLocaleString()} stories this week` : 'No sector data yet', small: !!pulse.top_sector },
+                  { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector.name, sub: `${pulse.top_sector.stories.toLocaleString()} stories this week`, small: true },
                 ].map(({ Icon, label, value, sub, small }, i) => (
                   <motion.div key={label} initial={false} className="bg-card rounded-xl border border-foreground/10 p-6 relative overflow-hidden">
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -228,7 +228,7 @@ export const BetaIntelligence = () => {
             <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-8 bg-card border border-accent/20 rounded-2xl p-6 text-foreground shadow-xl">
               <p className="text-sm md:text-base leading-relaxed text-foreground/70">
                 Coverage concentrated on {topCountry.country_name} this week ({topCountry.this_week.toLocaleString()} briefings)
-                {pulse.thinnest_region ? <>; {pulse.thinnest_region.region} Africa ran thinnest at {pulse.thinnest_region.stories.toLocaleString()} — exactly where our underreported-nations desk aims next.</> : '.'}
+                <>; {pulse.thinnest_region.region} Africa ran thinnest at {pulse.thinnest_region.stories.toLocaleString()} — exactly where our underreported-nations desk aims next.</>
               </p>
             </motion.div>
           )}
@@ -255,7 +255,7 @@ export const BetaIntelligence = () => {
               />
             ) : (
               <div className="w-full h-full bg-card flex items-center justify-center text-foreground/40 text-xl font-serif">
-                Map data unavailable
+                Zero countries have published coverage in this seven-day map window
               </div>
             )}
           </div>

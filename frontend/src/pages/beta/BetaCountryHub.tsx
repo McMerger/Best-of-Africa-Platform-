@@ -307,7 +307,7 @@ export const BetaCountryHub = () => {
             <div>
               <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
                 <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Published evidence</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.published_articles}</p></div>
-                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Reviewed strategies</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.reviewed_strategies}</p></div>
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sectors evidenced</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.sectors_covered}</p></div>
                 <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Evidence status</p><p className="mt-2 font-serif text-2xl capitalize text-navy">{evidence.status}</p></div>
               </div>
               <p className="mt-6 text-sm leading-relaxed text-muted-foreground">{outlook.methodology}</p>
@@ -340,7 +340,7 @@ export const BetaCountryHub = () => {
             </div>
           ) : (
             <div className="text-center text-foreground/40 text-lg">
-              {t('hub.outlook_unavailable', 'Outlook data unavailable for this country.')}
+              The country evidence request did not complete. The published stories, sector coverage and official country record on this page remain the current source layer.
             </div>
           )}
         </motion.section>
@@ -438,7 +438,7 @@ export const BetaCountryHub = () => {
             {dossierQuery.isLoading ? <div className="mt-8 h-64 animate-pulse rounded-xl border border-border bg-card" /> : dossier && <div className="mt-8 space-y-8">
               <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
                 {(dossier.macroeconomics.world_bank?.indicators || []).slice(0, 12).map(indicator => <div key={indicator.code} className="bg-card p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{indicator.name}</p><p className="mt-3 font-serif text-2xl text-navy">{indicator.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p><p className="mt-1 text-xs text-muted-foreground">{indicator.unit} · {indicator.year}</p></div>)}
-                {!dossier.macroeconomics.world_bank?.indicators?.length && <div className="col-span-full bg-card p-6 text-sm text-muted-foreground">World Bank observations are currently unavailable.</div>}
+                {!dossier.macroeconomics.world_bank?.indicators?.length && <div className="col-span-full bg-card p-6 text-sm leading-6 text-muted-foreground">The provider returned zero World Bank observations for this request. Use the dated BOA source record and official-resource links in this dossier for the evidence currently present.</div>}
               </div>
               {dossier.trade && <div className="rounded-xl border border-border bg-card p-6"><p className="text-[10px] font-bold uppercase tracking-widest text-accent-ink">UN Comtrade · {dossier.trade.year}</p><div className="mt-5 grid gap-5 sm:grid-cols-3"><div><p className="text-xs text-muted-foreground">Exports</p><p className="font-serif text-2xl text-navy">${dossier.trade.totalExports.toLocaleString()}</p></div><div><p className="text-xs text-muted-foreground">Imports</p><p className="font-serif text-2xl text-navy">${dossier.trade.totalImports.toLocaleString()}</p></div><div><p className="text-xs text-muted-foreground">Balance</p><p className="font-serif text-2xl text-navy">${dossier.trade.balance.toLocaleString()}</p></div></div></div>}
               {provenance && <div className="border-l-2 border-accent pl-5 text-sm leading-relaxed text-muted-foreground"><p>{provenance.methodology}</p><p className="mt-2 text-xs">Sources: {provenance.sources.map(source => source.name).join(' · ')}</p></div>}

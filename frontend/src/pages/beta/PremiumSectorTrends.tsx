@@ -1,269 +1,66 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, DollarSign, Building2, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { ArrowLeft, BookOpen, Eye, FileSearch, Globe2, TrendingUp } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { useMember } from '../../context/MemberContext';
-import { KO_FI_URL } from '../../constants/beta';
+
+const number = (value: number) => new Intl.NumberFormat('en').format(value);
 
 export const PremiumSectorTrends: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { isMember } = useMember();
-
-  const { data, isLoading, isError } = useQuery({
+  const query = useQuery({
     queryKey: ['sector-trends', id],
     queryFn: () => api.getSectorTrends(id!),
-    enabled: !!id,
+    enabled: Boolean(id),
   });
 
-  if (isLoading) {
-    return (
-      <>
-        <div className="max-w-6xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-background/5 rounded-xl border border-primary/10" />
-            ))}
-          </div>
-          <div className="h-[400px] bg-background/5 rounded-2xl border border-primary/10" />
-        </div>
-      </>
-    );
-  }
+  if (query.isLoading) return <div className="mx-auto max-w-6xl animate-pulse px-6 py-16"><div className="h-14 w-2/3 rounded-xl bg-navy/10"/><div className="mt-12 grid gap-4 md:grid-cols-4">{[1,2,3,4].map(i => <div key={i} className="h-32 rounded-2xl bg-navy/5"/>)}</div><div className="mt-8 h-96 rounded-2xl bg-navy/5"/></div>;
 
-  if (isError || !data) {
-    return (
-      <>
-        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-          <h2 className="font-serif text-3xl mb-3">Sector data unavailable</h2>
-          <p className="text-primary/60 mb-8">We couldn't load the financial trends for this sector.</p>
-          <Link to="/intel" className="text-accent font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ArrowLeft size={16} /> Back to Market Intel
-          </Link>
-        </div>
-      </>
-    );
-  }
+  if (query.isError || !query.data) return <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col justify-center px-6"><p className="text-xs font-bold uppercase tracking-[.2em] text-accent-ink">Request failed</p><h1 className="mt-3 font-serif text-4xl text-navy">The evidence profile could not be loaded.</h1><p className="mt-4 leading-7 text-muted-foreground">The rest of the intelligence desk remains accessible. Return to the sector index and retry this profile from there.</p><Link to="/intel" className="mt-8 inline-flex items-center gap-2 font-semibold text-navy"><ArrowLeft size={16}/> Market Intelligence</Link></div>;
 
-  const { sector, trends: rawTrends, top_companies, summary } = data;
+  const { sector, weekly_coverage, country_coverage, summary, methodology, updated_at } = query.data;
+  const change = summary.coverage_change;
+  const kpis = [
+    { label: 'Stories · 30 days', value: number(summary.stories_30d), detail: `${number(summary.previous_30d)} in the prior window`, Icon: BookOpen },
+    { label: 'Coverage change', value: `${change > 0 ? '+' : ''}${number(change)}`, detail: 'stories versus prior 30 days', Icon: TrendingUp },
+    { label: 'Countries evidenced', value: number(summary.countries_30d), detail: 'distinct country records', Icon: Globe2 },
+    { label: 'Source records', value: number(summary.source_records_30d), detail: `${number(summary.views_30d)} tracked story views`, Icon: FileSearch },
+  ];
 
-  // The API returns years newest-first and can contain duplicate year rows —
-  // charted as-is, time flowed right-to-left with repeated axis labels, and
-  // "latest" KPIs actually read the OLDEST year. Dedupe (first row per year =
-  // most recent) and sort ascending so time reads left → right.
-  const seenYears = new Set<number>();
-  const trends = (rawTrends as Array<{ year: number; market_size: number; investment_volume: number }>)
-    .filter(t => (seenYears.has(t.year) ? false : (seenYears.add(t.year), true)))
-    .sort((a, b) => a.year - b.year);
-
-  // Values arrive as raw USD; format compactly (B/M/K).
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value == null) return 'N/A';
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-    if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
-    return `$${value}`;
-  };
-
-  const isPositiveGrowth = summary.current_growth_rate && summary.current_growth_rate > 0;
-
-  return (
-    <>
-      <SEO 
-        title={`${sector.name} Trends | BOA-Story Premium`}
-        description={`Financial metrics, market size, and investment volume for the ${sector.name} sector in Africa.`}
-      />
-      
-      <div className="bg-background min-h-screen pb-24">
-        {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-4 sm:px-6 border-b border-accent/20">
-          <div className="max-w-6xl mx-auto">
-            <Link to="/intel" className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm mb-8 transition-colors">
-              <ArrowLeft size={16} />
-              Market Intelligence
-            </Link>
-            
-            <div className="flex items-center gap-3 text-accent text-xs font-bold uppercase tracking-widest mb-4">
-              <TrendingUp size={16} />
-              Sector Financial Profile
-            </div>
-            
-            <h1 className="font-serif text-5xl md:text-6xl font-bold leading-tight mb-6">
-              {sector.name}
-            </h1>
-            <p className="text-foreground/70 text-lg max-w-2xl leading-relaxed">
-              {sector.description || `Comprehensive financial trends, market size projections, and regulatory outlook for ${sector.name} across the continent.`}
-            </p>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-10">
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Market Size ({summary.latest_year})</div>
-              <div className="text-3xl font-serif text-primary">
-                {summary.current_market_size ? formatCurrency(summary.current_market_size) : 'N/A'}
-              </div>
-            </motion.div>
-            
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Growth Rate</div>
-              <div className={`text-3xl font-serif ${isPositiveGrowth ? 'text-accent' : 'text-destructive'}`}>
-                {summary.current_growth_rate ? `${summary.current_growth_rate}%` : 'N/A'}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">YoY Change</div>
-              <div className="text-3xl font-serif text-primary">
-                {summary.yoy_change ? (summary.yoy_change > 0 ? `+${summary.yoy_change}%` : `${summary.yoy_change}%`) : 'N/A'}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="group bg-white rounded-xl p-6 border border-border border-l-[3px] border-l-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Investment Vol</div>
-              <div className="text-3xl font-serif text-primary">
-                {trends.length > 0 ? formatCurrency(trends[trends.length - 1].investment_volume) : 'N/A'}
-              </div>
-            </motion.div>
-          </div>
-
-          {!isMember && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4 mb-8">
-              <p className="text-sm text-primary/70 leading-relaxed">
-                <span className="font-bold text-accent uppercase tracking-widest text-[11px] mr-2">Free preview</span>
-                The headline metrics and market-size trend are open to everyone, no account needed.
-              </p>
-              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent hover:text-primary transition-colors">
-                Unlock full analytics →
-              </a>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Charts Section */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-2xl border border-border p-6 md:p-8 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
-                <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
-                  <DollarSign className="text-accent" /> Market Size Projections (USD)
-                </h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {/* Line wears navy (gold at 3px is 2.2:1 on white — fails the
-                        3:1 mark threshold); the gold stays in the decorative
-                        gradient. Hover dot gets a 2px surface ring. */}
-                    <AreaChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorSize" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#C9A84C" stopOpacity={0.28}/>
-                          <stop offset="95%" stopColor="#C9A84C" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} dy={10} />
-                      <YAxis
-                        tickFormatter={(val) => formatCurrency(val)}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }}
-                        dx={-10}
-                      />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
-                        formatter={(value: any) => [formatCurrency(value), 'Market Size']}
-                      />
-                      <Area type="monotone" dataKey="market_size" stroke="#0F1F3D" strokeWidth={2} fillOpacity={1} fill="url(#colorSize)" activeDot={{ r: 5, fill: '#C9A84C', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {isMember ? (
-              <div className="bg-white rounded-2xl border border-border p-6 md:p-8 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
-                <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
-                  <TrendingUp className="text-accent" /> Investment Volume Over Time
-                </h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} dy={10} />
-                      <YAxis
-                        tickFormatter={(val) => formatCurrency(val)}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }}
-                        dx={-10}
-                      />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(201,168,76,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
-                        formatter={(value: any) => [formatCurrency(value), 'Investment']}
-                        cursor={{ fill: 'rgba(15,31,61,0.04)' }}
-                      />
-                      {/* Navy passes mark contrast on white (≈14:1) — no label relief needed. */}
-                      <Bar dataKey="investment_volume" fill="#0F1F3D" radius={[4, 4, 0, 0]} barSize={20} isAnimationActive={false} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-              ) : (
-              <div className="relative overflow-hidden bg-navy text-white rounded-2xl border border-accent/30 p-8 md:p-10 text-center">
-                <TrendingUp className="w-8 h-8 text-accent mx-auto mb-4" />
-                <h3 className="font-serif text-2xl mb-2">Investment volume, outlook & key players</h3>
-                <p className="text-white/70 text-sm max-w-sm mx-auto mb-6">
-                  Year-by-year investment flow, the regulatory outlook and this sector's major players are part of BOA-Story membership.
-                </p>
-                <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="inline-block bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-7 py-3.5 rounded-full hover:bg-gold-italic transition-all">
-                  Become a Founding Member
-                </a>
-              </div>
-              )}
-            </div>
-
-            {/* Sidebar / Analysis, MEMBERS ONLY */}
-            {isMember && (
-            <div className="space-y-8">
-              {/* Regulatory Outlook */}
-              <div className="bg-white rounded-2xl border border-border p-6 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
-                <div className="flex items-center gap-2 mb-4">
-                  <ShieldAlert className="text-accent w-5 h-5" />
-                  <h3 className="font-serif text-xl text-primary">Regulatory Outlook</h3>
-                </div>
-                <p className="text-primary/70 text-sm leading-relaxed mb-4">
-                  {summary.regulatory_outlook || "Stable with standard compliance requirements."}
-                </p>
-                <div className="text-[10px] uppercase tracking-widest text-primary/40 font-bold border-t border-primary/10 pt-4">
-                  Confidence: High
-                </div>
-              </div>
-
-              {/* Top Companies */}
-              {top_companies && top_companies.length > 0 && (
-                <div className="bg-white rounded-2xl border border-border p-6 shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
-                  <div className="flex items-center gap-2 mb-5">
-                    <Building2 className="text-accent w-5 h-5" />
-                    <h3 className="font-serif text-xl text-primary">Major Players</h3>
-                  </div>
-                  <ul className="space-y-3">
-                    {top_companies.map((company, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-sm text-primary/80">
-                        <CheckCircle2 className="w-4 h-4 text-accent/60 shrink-0" />
-                        {company}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-            )}
-          </div>
-        </div>
+  return <div className="min-h-screen bg-background pb-24 text-foreground">
+    <SEO title={`${sector.name} evidence profile | BOA-Story`} description={`Observed BOA-Story reporting activity for ${sector.name} across Africa.`}/>
+    <header className="border-b border-white/10 bg-navy px-4 py-16 text-white sm:px-6 md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <Link to="/intel" className="inline-flex items-center gap-2 text-sm text-white/65 transition hover:text-white"><ArrowLeft size={15}/> Market Intelligence</Link>
+        <p className="mt-12 text-[11px] font-bold uppercase tracking-[.22em] text-gold">Sector evidence profile</p>
+        <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">{sector.name}</h1>
+        <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">A transparent view of what BOA-Story has actually reported: publishing volume, geographic breadth, source-record breadth and how the evidence window is changing.</p>
       </div>
-    </>
-  );
+    </header>
+
+    <main className="mx-auto max-w-6xl px-4 sm:px-6">
+      <section className="relative -mt-8 grid overflow-hidden rounded-2xl border border-border bg-white shadow-[0_18px_60px_-30px_rgba(15,31,61,.35)] sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map(({label,value,detail,Icon}, index) => <motion.div key={label} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{delay:index*.07}} className="border-b border-border p-6 last:border-0 sm:border-r lg:border-b-0">
+          <Icon size={18} className="text-accent-ink"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">{label}</p><p className="mt-2 font-serif text-4xl text-navy">{value}</p><p className="mt-2 text-xs text-muted-foreground">{detail}</p>
+        </motion.div>)}
+      </section>
+
+      <section className="mt-12 grid gap-8 lg:grid-cols-[1.45fr_.85fr]">
+        <article className="rounded-2xl border border-border bg-white p-6 shadow-sm md:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-accent-ink">Eight-week record</p><h2 className="mt-2 font-serif text-3xl text-navy">Reporting activity over time</h2></div><p className="max-w-xs text-right text-xs leading-5 text-muted-foreground">Story counts are editorial coverage—not market growth.</p></div>
+          <div className="mt-8 h-80"><ResponsiveContainer width="100%" height="100%"><AreaChart data={weekly_coverage}><defs><linearGradient id="coverage" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#C9A84C" stopOpacity={.32}/><stop offset="1" stopColor="#C9A84C" stopOpacity={0}/></linearGradient></defs><CartesianGrid vertical={false} stroke="rgba(15,31,61,.08)"/><XAxis dataKey="week_start" tickFormatter={v => new Date(`${v}T00:00:00`).toLocaleDateString(undefined,{month:'short',day:'numeric'})} axisLine={false} tickLine={false} tick={{fontSize:11}}/><YAxis allowDecimals={false} axisLine={false} tickLine={false} tick={{fontSize:11}}/><Tooltip labelFormatter={v => `Week of ${new Date(`${v}T00:00:00`).toLocaleDateString()}`}/><Area type="monotone" dataKey="stories" name="Published stories" stroke="#0F1F3D" strokeWidth={3} fill="url(#coverage)"/></AreaChart></ResponsiveContainer></div>
+        </article>
+
+        <article className="rounded-2xl border border-border bg-white p-6 shadow-sm md:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-accent-ink">Country breadth</p><h2 className="mt-2 font-serif text-3xl text-navy">Where the reporting sits</h2>
+          <div className="mt-8 h-80"><ResponsiveContainer width="100%" height="100%"><BarChart data={country_coverage} layout="vertical" margin={{left:8}}><CartesianGrid horizontal={false} stroke="rgba(15,31,61,.08)"/><XAxis type="number" allowDecimals={false} axisLine={false} tickLine={false}/><YAxis type="category" dataKey="name" width={85} axisLine={false} tickLine={false} tick={{fontSize:11}}/><Tooltip/><Bar dataKey="stories" name="Published stories" fill="#0F1F3D" radius={[0,4,4,0]}/></BarChart></ResponsiveContainer></div>
+        </article>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-gold/25 bg-gold/5 p-6 md:flex md:items-start md:justify-between md:gap-12 md:p-8"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-accent-ink">Evidence discipline</p><h2 className="mt-2 font-serif text-2xl text-navy">What these numbers do—and do not—say</h2></div><div className="mt-4 max-w-2xl md:mt-0"><p className="text-sm leading-7 text-muted-foreground">{methodology}</p><p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><Eye size={14}/> Window refreshed {new Date(updated_at).toLocaleString()}</p></div></section>
+    </main>
+  </div>;
 };

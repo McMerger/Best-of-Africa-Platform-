@@ -362,12 +362,16 @@ router.get('/analytics/summary', async (c) => {
 
     const [articleStats, sectorRows, recentRecords] = await Promise.all([
         c.env.DB.prepare(`
-            SELECT COUNT(*) AS total_articles,
-                   COUNT(DISTINCT country_code) AS countries_covered,
-                   SUM(COALESCE(view_count, 0)) AS total_views,
-                   AVG(engagement_score) AS audience_response
+            SELECT SUM(CASE WHEN published_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS total_articles,
+                   SUM(CASE WHEN published_at >= datetime('now', '-14 days') AND published_at < datetime('now', '-7 days') THEN 1 ELSE 0 END) AS previous_articles,
+                   COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-7 days') THEN country_code END) AS countries_covered,
+                   COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-7 days') AND sector_id != 'general' THEN sector_id END) AS sectors_covered,
+                   COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-7 days') THEN COALESCE(NULLIF(source_url, ''), NULLIF(source_title, ''), id) END) AS source_records,
+                   SUM(CASE WHEN published_at >= datetime('now', '-7 days') THEN COALESCE(view_count, 0) ELSE 0 END) AS total_views,
+                   AVG(CASE WHEN published_at >= datetime('now', '-7 days') THEN engagement_score END) AS audience_response,
+                   MAX(CASE WHEN published_at >= datetime('now', '-7 days') THEN published_at END) AS latest_reported_at
             FROM articles
-            WHERE status = 'published' AND published_at >= datetime('now', '-7 days')
+            WHERE status = 'published' AND published_at >= datetime('now', '-14 days')
         `).first<Record<string, any>>(),
         c.env.DB.prepare(`
             SELECT s.id, s.name,
@@ -436,16 +440,17 @@ ${evidence}`;
 
     return c.json({
         market_summary: marketSummary,
-        stability_index: null,
-        stability_score: null,
-        sentiment_pct: null,
-        sentiment_trend: null,
         sector_trends: sectorTrends,
         total_articles_7d: Number(articleStats?.total_articles || 0),
         coverage: {
             countries_7d: Number(articleStats?.countries_covered || 0),
+            sectors_7d: Number(articleStats?.sectors_covered || 0),
+            source_records_7d: Number(articleStats?.source_records || 0),
+            previous_articles_7d: Number(articleStats?.previous_articles || 0),
+            coverage_change_7d: Number(articleStats?.total_articles || 0) - Number(articleStats?.previous_articles || 0),
             total_views_7d: Number(articleStats?.total_views || 0),
-            audience_response: articleStats?.audience_response === null ? null : Number(Number(articleStats?.audience_response || 0).toFixed(1)),
+            audience_response: articleStats?.audience_response === null ? 0 : Number(Number(articleStats?.audience_response || 0).toFixed(1)),
+            latest_reported_at: articleStats?.latest_reported_at || 'No story published in the current seven-day window',
         },
         methodology: 'The briefing is source-linked. Numeric fields describe BOA-Story coverage and audience activity only; no stability or sentiment score is inferred.',
         updated_at: new Date().toISOString(),
