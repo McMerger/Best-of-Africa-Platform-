@@ -11,6 +11,16 @@ const GENERATED_IMAGE_MARKERS = [
     'ai_image',
 ];
 
+const GENERIC_PUBLISHER_ART_MARKERS = [
+    '/favicon',
+    '/logo',
+    'logo.',
+    'site-icon',
+    'default-image',
+    'default_image',
+    'placeholder',
+];
+
 /**
  * Accept only public HTTP(S) image URLs and explicitly reject every image path
  * previously used by BOA's generation pipeline. Relative publisher URLs are
@@ -45,6 +55,9 @@ export function extractPublisherImage(html: string, articleUrl: string): { image
         meta('og:image:secure_url') || meta('og:image') || meta('twitter:image'),
         articleUrl,
     );
+    const documentaryImage = imageUrl && !GENERIC_PUBLISHER_ART_MARKERS.some(marker => imageUrl.toLowerCase().includes(marker))
+        ? imageUrl
+        : null;
     const imageCredit = meta('article:image:credit') || meta('image:credit') || meta('twitter:image:alt');
-    return { imageUrl, imageCredit: imageCredit?.trim() || null };
+    return { imageUrl: documentaryImage, imageCredit: imageCredit?.trim() || null };
 }

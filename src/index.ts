@@ -324,9 +324,13 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // 1. Ingestion: every minute
     await safe('ingestion', () => runIngestion(env));
 
-    // Backfill hero images for the ~8k articles published while image
-    // generation was over quota. Small batch per tick (newest first); the
-    // function self-terminates when the backlog is gone.
+    // Recover real publisher photography for existing stories. This is
+    // source-only: no generated or generic fallback imagery is permitted.
+    await safe('backfill-source-images', async () => {
+        const { backfillSourceImages } = await import('./workers/source-images');
+        const result = await backfillSourceImages(env, 8);
+        if (result.checked) console.log(`[cron] source images: ${result.recovered}/${result.checked} recovered`);
+    });
 
     // Backfill 768w hero variants for articles whose heroes predate variant
     // generation (pure resize, no AI — CPU-cheap, so a bigger batch is fine).
