@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseTranslationBatch } from '../../src/routes/translation';
-import { autoTranslateArticle, LANGUAGE_CONFIG } from '../../src/lib/translate';
+import { autoTranslateArticle, LANGUAGE_CONFIG, parseLongTranslationBatch } from '../../src/lib/translate';
 import { createMockEnv } from '../mocks/env';
 
 describe('publication-quality translation batches', () => {
@@ -20,6 +20,11 @@ describe('publication-quality translation batches', () => {
 
     it('rejects partial batches so strings cannot silently disappear', () => {
         expect(parseTranslationBatch('{"translations":["Nur eins"]}', 2)).toBeNull();
+    });
+
+    it('parses a complete long-form translation batch and rejects a partial one', () => {
+        expect(parseLongTranslationBatch('{"translations":["Eins","Zwei"]}', 2)).toEqual(['Eins', 'Zwei']);
+        expect(parseLongTranslationBatch('{"translations":["Eins"]}', 2)).toBeNull();
     });
 
     it('covers every language offered by the application', () => {

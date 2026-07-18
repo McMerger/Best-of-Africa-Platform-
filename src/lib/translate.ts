@@ -195,39 +195,66 @@ function maxWindowRepeat(text: string): number {
  * faithful translation preserves them; only repetition well beyond the
  * source's own level indicates a model loop.
  */
-export function looksDegenerate(source: string, out: string): boolean {
+export function looksDegenerate(source: string, out: string, targetLang?: SupportedLanguage): boolean {
     const o = (out || '').trim();
     if (!o) return true;
-    if (o.length < source.length * 0.35 || o.length > source.length * 2.5) return true;
+    // Chinese conveys the same prose in materially fewer Unicode characters
+    // than English. Keep the strict default for alphabetic-script languages,
+    // but do not misclassify complete Chinese translations as truncations.
+    const minimumRatio = targetLang === 'zh' ? 0.18 : 0.35;
+    if (o.length < source.length * minimumRatio || o.length > source.length * 2.5) return true;
     const srcRep = maxWindowRepeat(source);
     const outRep = maxWindowRepeat(o);
     return outRep >= Math.max(5, srcRep * 2 + 2);
 }
 
-async function llmTranslate(env: Env, text: string, targetLang: SupportedLanguage): Promise<string | null> {
-    const { MODELS } = await import('./ai');
+export function parseLongTranslationBatch(raw: string, expected: number): string[] | null {
+    const clean = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+    const start = clean.indexOf('{');
+    const end = clean.lastIndexOf('}');
+    if (start < 0 || end <= start) return null;
     try {
-        // Chat format is mandatory here: with a raw completion prompt the model
-        // ignores the instruction and CONTINUES the article in English instead
-        // of translating it (verified: 438-char input → 6k chars of English).
-        const res = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
-            messages: [
-                { role: 'system', content: `You are a professional news translator. Translate the user's text into ${LANG_NAMES[targetLang] || targetLang}. Preserve the markdown formatting exactly (headings, **bold**, lists, tables). Output ONLY the translation — no preamble, no notes.` },
-                { role: 'user', content: text },
-            ],
-            // gpt-oss is a reasoning model: its internal reasoning shares this
-            // allowance with the final answer. A 1,400-token ceiling can end
-            // before a complete translation is emitted even for a 1,400-char
-            // source chunk; 6,000 is the production-proven interface budget.
-            max_tokens: 6000,
-            temperature: 0.2,
-        });
-        const out = ((res as Record<string, any>)?.response || '').trim();
-        return out || null;
-    } catch (e) {
-        console.error('[translate] llm chunk failed:', e);
+        const parsed = JSON.parse(clean.slice(start, end + 1));
+        const translations: unknown[] | null = Array.isArray(parsed?.translations) ? parsed.translations : null;
+        if (!translations || translations.length !== expected) return null;
+        if (translations.some(value => typeof value !== 'string' || !value.trim())) return null;
+        return (translations as string[]).map(value => value.trim());
+    } catch {
         return null;
     }
+}
+
+async function llmTranslateBatch(
+    env: Env,
+    texts: string[],
+    targetLang: SupportedLanguage,
+): Promise<string[] | null> {
+    if (!texts.length) return [];
+    const { extractAIText, MODELS } = await import('./ai');
+    try {
+        const res = await (env.AI as Record<string, any>).run(MODELS.TEXT_GENERATION, {
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a professional news translator. Translate every supplied text from English into ${LANG_NAMES[targetLang] || targetLang}. Preserve all facts, names, dates, numbers, URLs and markdown formatting exactly. Never summarize, omit, explain or add commentary. Return only JSON in exactly this shape: {"translations":["first translation","second translation"]}, preserving input order and count.`,
+                },
+                { role: 'user', content: JSON.stringify(texts.map((text, id) => ({ id, text }))) },
+            ],
+            // The reasoning model shares this allowance between its reasoning
+            // and final JSON. One batched call avoids partial multi-call jobs.
+            max_tokens: 12000,
+            temperature: 0.1,
+        });
+        return parseLongTranslationBatch(extractAIText(res), texts.length);
+    } catch (e) {
+        console.error('[translate] llm batch failed:', e);
+        return null;
+    }
+}
+
+async function llmTranslate(env: Env, text: string, targetLang: SupportedLanguage): Promise<string | null> {
+    const translated = await llmTranslateBatch(env, [text], targetLang);
+    return translated?.[0] || null;
 }
 
 /** Split markdown into paragraph-aligned chunks of ~1400 chars. */
@@ -253,13 +280,9 @@ export async function translateLongText(
     targetLang: SupportedLanguage
 ): Promise<string | null> {
     const chunks = chunkMarkdown(text);
-    const out: string[] = [];
-    for (const chunk of chunks) {
-        const tr = await llmTranslate(env, chunk, targetLang);
-        if (tr === null) return null;              // model unavailable — retry later
-        if (looksDegenerate(chunk, tr)) return null; // refuse garbage
-        out.push(tr);
-    }
+    const out = await llmTranslateBatch(env, chunks, targetLang);
+    if (!out || out.length !== chunks.length) return null;
+    if (out.some((translation, index) => looksDegenerate(chunks[index], translation, targetLang))) return null;
     return out.join('\n\n');
 }
 
@@ -277,13 +300,25 @@ export async function ensureArticleTranslation(
     if (await env.CACHE.get(lockKey)) return false;
     await env.CACHE.put(lockKey, '1', { expirationTtl: 10 * 60 });
     try {
-        const [title, subtitle, summary] = await Promise.all([
-            llmTranslate(env, article.title, targetLang),
-            article.subtitle ? llmTranslate(env, article.subtitle, targetLang) : Promise.resolve(null),
-            article.summary ? llmTranslate(env, article.summary, targetLang) : Promise.resolve(null),
-        ]);
-        if (!title || looksDegenerate(article.title, title)) return false;
-        const content = await translateLongText(env, article.content || '', targetLang);
+        const bodyChunks = chunkMarkdown(article.content || '');
+        const sourceTexts = [
+            article.title,
+            ...(article.subtitle ? [article.subtitle] : []),
+            ...(article.summary ? [article.summary] : []),
+            ...bodyChunks,
+        ];
+        const translated = await llmTranslateBatch(env, sourceTexts, targetLang);
+        if (!translated) return false;
+
+        let cursor = 0;
+        const title = translated[cursor++];
+        const subtitle = article.subtitle ? translated[cursor++] : null;
+        const summary = article.summary ? translated[cursor++] : null;
+        const translatedBodyChunks = translated.slice(cursor);
+        if (looksDegenerate(article.title, title, targetLang)) return false;
+        if (translatedBodyChunks.length !== bodyChunks.length) return false;
+        if (translatedBodyChunks.some((value, index) => looksDegenerate(bodyChunks[index], value, targetLang))) return false;
+        const content = translatedBodyChunks.join('\n\n');
         if (!content) return false;
 
         await env.DB.prepare(`

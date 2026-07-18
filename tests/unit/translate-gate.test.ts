@@ -55,4 +55,10 @@ describe('looksDegenerate', () => {
         const outTable = 'Tableau des indicateurs :\n' + (sep + '| PIB | 3,1 % | 2026 |\n').repeat(10);
         expect(looksDegenerate(srcTable, outTable)).toBe(false);
     });
+
+    it('accepts complete Chinese prose despite its naturally compact character count', () => {
+        const source = 'African manufacturers expanded regional production after new transport links reduced delivery times. '.repeat(8);
+        const chinese = '新的交通连接缩短交付时间后，非洲制造商扩大了区域生产。'.repeat(8);
+        expect(looksDegenerate(source, chinese, 'zh')).toBe(false);
+    });
 });
