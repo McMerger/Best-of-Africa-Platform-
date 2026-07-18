@@ -37,7 +37,7 @@ describe('GET /coverage-pulse', () => {
     it('serves official sector performance instead of newsroom-volume proxies', async () => {
         const run = vi.fn(() => { throw new Error('AI must not score coverage as market performance'); });
         const env = createMockEnv({ AI: { run } as any });
-        await env.CACHE.put('market-intel:sector-performance:wdi:v1', JSON.stringify({
+        await env.CACHE.put('market-intel:sector-performance:wdi:v2', JSON.stringify({
             data: [{
                 sector_id: 'manufacturing', sector_name: 'Manufacturing & Industry',
                 indicator_code: 'NV.IND.MANF.KD.ZG', indicator_name: 'Manufacturing value-added growth',

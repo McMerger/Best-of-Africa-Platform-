@@ -9,6 +9,22 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 
+const compactNumber = (value: number) => new Intl.NumberFormat('en', {
+  notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard',
+  maximumFractionDigits: Math.abs(value) >= 100_000 ? 1 : 1,
+}).format(value);
+
+const metricValue = (value: number, unit: string) => unit === 'current US$'
+  ? `$${compactNumber(value)}`
+  : `${compactNumber(value)} ${unit}`;
+
+const metricChange = (value: number, unit: string) => {
+  const sign = value > 0 ? '+' : '';
+  if (unit === 'percentage points') return `${sign}${value.toFixed(1)} pp`;
+  if (unit === 'current US$') return `${sign}$${compactNumber(value)}`;
+  return `${sign}${compactNumber(value)} ${unit}`;
+};
+
 export const BetaIntelligence = () => {
   const { isMember } = useMember();
   const navigate = useNavigate();
@@ -183,12 +199,12 @@ export const BetaIntelligence = () => {
             <div className="max-w-3xl">
               <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-navy/65">Official market series</p>
               <h2 className="font-serif text-3xl text-navy md:text-5xl">African sector performance</h2>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">Comparable country observations from named official indicators. Every card states exactly what is measured, the observation period, geographic breadth and the limitation of that proxy.</p>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">A multi-indicator view of output, market structure, operating capacity, capital intensity and access conditions. Each sector combines a primary performance series with three supporting dimensions, country dispersion, source dates and explicit interpretation limits.</p>
             </div>
             {performance && <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border text-center">
-              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.sectors_measured}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Series</span></div>
+              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.sectors_measured}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Sectors</span></div>
+              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.data.reduce((total, sector) => total + 1 + sector.dimensions.length, 0)}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Signals</span></div>
               <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.countries_in_scope}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Markets</span></div>
-              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">WDI</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Source</span></div>
             </div>}
           </div>
 
@@ -216,14 +232,33 @@ export const BetaIntelligence = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
                       <div className="bg-white p-3"><strong className="block text-lg text-navy">{signedComparison}</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">vs prior observation</span></div>
-                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">markets improving</span></div>
-                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.positive_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">positive signal</span></div>
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">markets moving higher</span></div>
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.dispersion_low.toFixed(1)}–{sector.dispersion_high.toFixed(1)}</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">middle 50% range</span></div>
                       <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.continent_coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Africa coverage</span></div>
                     </div>
                   </div>
 
                   <p className="text-sm leading-6 text-navy/80">{sector.scope}</p>
-                  <div className="mt-4 rounded-lg bg-navy/[0.035] px-4 py-3 text-xs leading-5 text-muted-foreground">Middle 50% of markets: {sector.dispersion_low.toFixed(1)} to {sector.dispersion_high.toFixed(1)} {sector.headline_unit}.</div>
+                  <div className="mt-5 border-t border-border pt-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-navy/60">Structural and operating dimensions</p>
+                    <div className="mt-3 grid gap-2">
+                      {sector.dimensions.map(dimension => {
+                        const dimensionPeriod = dimension.period_start === dimension.period_end ? String(dimension.period_end) : `${dimension.period_start}–${dimension.period_end}`;
+                        return <div key={dimension.indicator_code} className="rounded-lg border border-border bg-navy/[0.02] p-3.5">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div><p className="text-xs font-bold text-navy">{dimension.label}</p><p className="mt-0.5 text-[10px] text-muted-foreground">{dimension.indicator_name} · {dimension.indicator_code}</p></div>
+                            <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-navy/60">{dimension.movement}</span>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div><strong className="block text-base text-navy">{metricValue(dimension.value, dimension.unit)}</strong><span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground">country median</span></div>
+                            <div><strong className="block text-base text-navy">{metricChange(dimension.comparison_value, dimension.comparison_unit)}</strong><span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground">median change</span></div>
+                            <div><strong className="block text-base text-navy">{dimension.markets_rising_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground">markets rising</span></div>
+                            <div><strong className="block text-base text-navy">{dimension.coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.08em] text-muted-foreground">coverage · {dimensionPeriod}</span></div>
+                          </div>
+                        </div>;
+                      })}
+                    </div>
+                  </div>
 
                   <details className="mt-4 border-t border-border pt-4">
                     <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.12em] text-navy">Country distribution and limits</summary>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { calculateSectorPerformance, SECTOR_PERFORMANCE_SERIES } from '../../src/lib/sector-performance';
+import { BUNDLED_WDI_SECTOR_DIMENSIONS } from '../../src/data/sector-performance-wdi-dimensions';
 
 const record = (code: string, name: string, year: number, value: number) => ({
     country: { id: code, value: name },
@@ -55,5 +56,20 @@ describe('official sector performance aggregation', () => {
     it('does not manufacture a sector result from insufficient observations', () => {
         const finance = SECTOR_PERFORMANCE_SERIES.find(series => series.sector_id === 'finance')!;
         expect(calculateSectorPerformance(finance, [record('GH', 'Ghana', 2024, 12)])).toBeNull();
+    });
+
+    it('provides three source-linked structural or operating dimensions for every sector', () => {
+        expect(Object.keys(BUNDLED_WDI_SECTOR_DIMENSIONS)).toHaveLength(8);
+        for (const dimensions of Object.values(BUNDLED_WDI_SECTOR_DIMENSIONS)) {
+            expect(dimensions).toHaveLength(3);
+            for (const dimension of dimensions) {
+                expect(dimension.countries_reported).toBeGreaterThan(0);
+                expect(dimension.coverage_pct).toBeGreaterThan(0);
+                expect(dimension.period_end).toBeGreaterThanOrEqual(dimension.period_start);
+                expect(dimension.interpretation.length).toBeGreaterThan(30);
+                expect(dimension.caveat.length).toBeGreaterThan(30);
+                expect(dimension.source_url).toContain(dimension.indicator_code);
+            }
+        }
     });
 });

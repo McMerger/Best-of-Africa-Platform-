@@ -8,6 +8,14 @@ import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 
 const number = (value: number) => new Intl.NumberFormat('en').format(value);
+const compactNumber = (value: number) => new Intl.NumberFormat('en', { notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(value);
+const metricValue = (value: number, unit: string) => unit === 'current US$' ? `$${compactNumber(value)}` : `${compactNumber(value)} ${unit}`;
+const metricChange = (value: number, unit: string) => {
+  const sign = value > 0 ? '+' : '';
+  if (unit === 'percentage points') return `${sign}${value.toFixed(1)} pp`;
+  if (unit === 'current US$') return `${sign}$${compactNumber(value)}`;
+  return `${sign}${compactNumber(value)} ${unit}`;
+};
 
 export const PremiumSectorTrends: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +34,7 @@ export const PremiumSectorTrends: React.FC = () => {
   const kpis = [
     { label: performance.headline_label, value: `${performance.headline_value > 0 && performance.headline_unit === '%' ? '+' : ''}${performance.headline_value.toFixed(1)} ${performance.headline_unit}`, detail: `cross-country median · ${period}`, Icon: TrendingUp },
     { label: 'Change in performance', value: `${performance.comparison_value > 0 ? '+' : ''}${performance.comparison_value.toFixed(1)} pp`, detail: 'median versus each prior observation', Icon: FileSearch },
-    { label: 'Markets improving', value: `${performance.improving_markets_pct.toFixed(0)}%`, detail: 'of countries with comparable observations', Icon: TrendingUp },
+    { label: 'Markets moving higher', value: `${performance.improving_markets_pct.toFixed(0)}%`, detail: 'share with a positive period-to-period movement', Icon: TrendingUp },
     { label: 'Official country series', value: number(performance.countries_reported), detail: `${performance.continent_coverage_pct.toFixed(0)}% of 54 African markets`, Icon: Globe2 },
   ];
 
@@ -62,10 +70,54 @@ export const PremiumSectorTrends: React.FC = () => {
         <article className="rounded-2xl border border-border bg-white p-6 md:p-8">
           <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Country distribution</p>
           <div className="mt-5 grid gap-6 sm:grid-cols-2">
-            <div><h3 className="text-sm font-bold text-navy">Highest readings</h3><ol className="mt-3 space-y-2 text-sm">{performance.leaders.map(market => <li key={market.country_code} className="flex justify-between gap-3"><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
-            <div><h3 className="text-sm font-bold text-navy">Lowest readings</h3><ol className="mt-3 space-y-2 text-sm">{performance.laggards.map(market => <li key={market.country_code} className="flex justify-between gap-3"><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
+            <div><h3 className="text-sm font-bold text-navy">Highest readings</h3><ol className="mt-3 space-y-2 text-sm">{performance.leaders.map((market, index) => <li key={market.country_code} className="grid grid-cols-[1.25rem_1fr_auto] gap-2"><span className="text-muted-foreground">{index + 1}.</span><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
+            <div><h3 className="text-sm font-bold text-navy">Lowest readings</h3><ol className="mt-3 space-y-2 text-sm">{performance.laggards.map((market, index) => <li key={market.country_code} className="grid grid-cols-[1.25rem_1fr_auto] gap-2"><span className="text-muted-foreground">{index + 1}.</span><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
           </div>
         </article>
+      </section>
+
+      <section className="mt-14 border-t border-border pt-10">
+        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Multi-indicator sector anatomy</p>
+        <h2 className="mt-2 max-w-3xl font-serif text-3xl text-navy md:text-4xl">Market structure and operating conditions</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">The headline series cannot explain a sector by itself. These supporting indicators test scale, access, capacity or operating conditions from separate official country records. Their units are intentionally not blended into a score.</p>
+        <div className="mt-7 grid gap-5 lg:grid-cols-3">
+          {performance.dimensions.map(dimension => {
+            const dimensionPeriod = dimension.period_start === dimension.period_end ? String(dimension.period_end) : `${dimension.period_start}–${dimension.period_end}`;
+            return <article key={dimension.indicator_code} className="flex flex-col rounded-2xl border border-border bg-white p-5 md:p-6">
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-navy/60">{dimension.label}</p><h3 className="mt-2 text-base font-bold leading-6 text-navy">{dimension.indicator_name}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy">{dimension.movement}</span></div>
+              <p className="mt-6 font-serif text-4xl leading-none text-navy">{metricValue(dimension.value, dimension.unit)}</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">Cross-country median from {dimension.countries_reported} markets · {dimensionPeriod}</p>
+              <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border text-center">
+                <div className="bg-white p-3"><strong className="block text-sm text-navy">{metricChange(dimension.comparison_value, dimension.comparison_unit)}</strong><span className="mt-1 block text-[8px] uppercase tracking-[.08em] text-muted-foreground">median change</span></div>
+                <div className="bg-white p-3"><strong className="block text-sm text-navy">{dimension.markets_rising_pct.toFixed(0)}%</strong><span className="mt-1 block text-[8px] uppercase tracking-[.08em] text-muted-foreground">markets rising</span></div>
+                <div className="bg-white p-3"><strong className="block text-sm text-navy">{dimension.coverage_pct.toFixed(0)}%</strong><span className="mt-1 block text-[8px] uppercase tracking-[.08em] text-muted-foreground">coverage</span></div>
+              </div>
+              <p className="mt-5 text-sm leading-6 text-navy/80">{dimension.interpretation}</p>
+              <p className="mt-4 border-l-2 border-navy/20 pl-3 text-xs leading-5 text-muted-foreground"><strong className="text-navy">Limit:</strong> {dimension.caveat}</p>
+              <a href={dimension.source_url} target="_blank" rel="noopener noreferrer" className="mt-auto pt-5 text-xs font-semibold text-navy underline decoration-navy/25 underline-offset-4">Official series {dimension.indicator_code}</a>
+            </article>;
+          })}
+        </div>
+      </section>
+
+      <section className="mt-10 grid overflow-hidden rounded-2xl border border-border bg-white lg:grid-cols-2">
+        <div className="p-6 md:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">What the evidence establishes</p>
+          <h2 className="mt-2 font-serif text-3xl text-navy">Current performance readout</h2>
+          <ul className="mt-6 space-y-4 text-sm leading-6 text-navy/80">
+            <li><strong className="text-navy">Central tendency:</strong> the latest comparable country median is {performance.headline_value.toFixed(1)} {performance.headline_unit}, with a median change of {performance.comparison_value > 0 ? '+' : ''}{performance.comparison_value.toFixed(1)} percentage points.</li>
+            <li><strong className="text-navy">Country spread:</strong> the middle half of reporting markets sits between {performance.dispersion_low.toFixed(1)} and {performance.dispersion_high.toFixed(1)} {performance.headline_unit}; the continental headline therefore hides material divergence.</li>
+            <li><strong className="text-navy">Breadth:</strong> {performance.improving_markets_pct.toFixed(0)}% of comparable markets moved higher, based on {performance.countries_reported} official country series covering {performance.continent_coverage_pct.toFixed(0)}% of Africa.</li>
+            <li><strong className="text-navy">Comparability:</strong> supporting indicators retain their own units, dates and coverage. A higher reading is not automatically favourable, particularly for costs, losses or concentration measures.</li>
+          </ul>
+        </div>
+        <div className="border-t border-border bg-navy/[0.025] p-6 md:p-8 lg:border-l lg:border-t-0">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Required next diligence</p>
+          <h2 className="mt-2 font-serif text-3xl text-navy">Questions the data cannot answer alone</h2>
+          <ol className="mt-6 space-y-4">
+            {performance.diligence_questions.map((question, index) => <li key={question} className="grid grid-cols-[2rem_1fr] gap-3 text-sm leading-6 text-navy/80"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">{index + 1}</span><span>{question}</span></li>)}
+          </ol>
+        </div>
       </section>
 
       <div className="mt-14 border-t border-border pt-10"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Reporting context</p><h2 className="mt-2 font-serif text-3xl text-navy">What the newsroom is tracking</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">These charts explain BOA’s evidence footprint. They do not calculate the market-performance figures above.</p></div>

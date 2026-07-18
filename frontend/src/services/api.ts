@@ -134,6 +134,27 @@ export interface NarrativeIndex {
     updated_at: string;
 }
 
+export type SectorPerformanceDimension = {
+    indicator_code: string; indicator_name: string; label: string; value: number; unit: string;
+    comparison_value: number; comparison_unit: string; markets_rising_pct: number;
+    countries_reported: number; coverage_pct: number; period_start: number; period_end: number;
+    movement: 'rising' | 'falling' | 'stable'; interpretation: string; caveat: string;
+    source_name: string; source_url: string;
+};
+
+export type SectorMarketPerformance = {
+    sector_id: string; sector_name: string; indicator_code: string; indicator_name: string;
+    headline_label: string; headline_value: number; headline_unit: string;
+    comparison_value: number; comparison_unit: string; improving_markets_pct: number;
+    positive_markets_pct: number; countries_reported: number; continent_coverage_pct: number;
+    period_start: number; period_end: number; dispersion_low: number; dispersion_high: number;
+    leaders: { country_code: string; country_name: string; observation_year: number; value: number }[];
+    laggards: { country_code: string; country_name: string; observation_year: number; value: number }[];
+    direction: 'accelerating' | 'slowing' | 'steady'; scope: string; caveat: string;
+    source_name: string; source_url: string; dimensions: SectorPerformanceDimension[];
+    diligence_questions: string[];
+};
+
 export const api = {
     // Articles
     getArticles: (params: Record<string, string> = {}) => {
@@ -319,17 +340,7 @@ export const api = {
     }>(`/intel/country/${code}/report`),
     getSectorTrends: (id: string) => readerRequest<{
         sector: Sector;
-        market_performance: {
-            sector_id: string; sector_name: string; indicator_code: string; indicator_name: string;
-            headline_label: string; headline_value: number; headline_unit: string;
-            comparison_value: number; comparison_unit: string; improving_markets_pct: number;
-            positive_markets_pct: number; countries_reported: number; continent_coverage_pct: number;
-            period_start: number; period_end: number; dispersion_low: number; dispersion_high: number;
-            leaders: { country_code: string; country_name: string; observation_year: number; value: number }[];
-            laggards: { country_code: string; country_name: string; observation_year: number; value: number }[];
-            direction: 'accelerating' | 'slowing' | 'steady'; scope: string; caveat: string;
-            source_name: string; source_url: string;
-        };
+        market_performance: SectorMarketPerformance;
         weekly_coverage: { week_start: string; stories: number; countries: number }[];
         country_coverage: { code: string; name: string; stories: number }[];
         summary: {
@@ -344,7 +355,7 @@ export const api = {
         reporting_methodology: string;
         reporting_window_days: number;
         updated_at: string;
-    }>(`/market-intel/sector/${id}/trends?contract=market-v1`),
+    }>(`/market-intel/sector/${id}/trends?contract=market-v2`),
 
     // System & Personalization
     getCuratedFeed: () => request<{ data: (ArticleListItem & { ai_curation?: { relevance_note: string } })[]; personalized: boolean; ai_feed_summary?: string }>('/personalization/feed/ai-curated'),
@@ -407,39 +418,14 @@ export const api = {
 
     // Analytics
     getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => readerRequest<{
-        data: {
-            sector_id: string;
-            sector_name: string;
-            indicator_code: string;
-            indicator_name: string;
-            headline_label: string;
-            headline_value: number;
-            headline_unit: string;
-            comparison_value: number;
-            comparison_unit: string;
-            improving_markets_pct: number;
-            positive_markets_pct: number;
-            countries_reported: number;
-            continent_coverage_pct: number;
-            period_start: number;
-            period_end: number;
-            dispersion_low: number;
-            dispersion_high: number;
-            leaders: { country_code: string; country_name: string; observation_year: number; value: number }[];
-            laggards: { country_code: string; country_name: string; observation_year: number; value: number }[];
-            direction: 'accelerating' | 'slowing' | 'steady';
-            scope: string;
-            caveat: string;
-            source_name: string;
-            source_url: string;
-        }[];
+        data: SectorMarketPerformance[];
         sectors_measured: number;
         countries_in_scope: number;
         methodology: string;
         retrieved_at: string;
         source_name: string;
         source_url: string;
-    }>(`/market-intel/performance?contract=market-v1${lens ? `&lens=${lens}` : ''}`, 12 * 60 * 60 * 1000),
+    }>(`/market-intel/performance?contract=market-v2${lens ? `&lens=${lens}` : ''}`, 12 * 60 * 60 * 1000),
 
     getLeadingSector: () => request<{
         name: string;

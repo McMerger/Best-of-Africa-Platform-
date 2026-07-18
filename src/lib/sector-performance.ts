@@ -1,5 +1,9 @@
 import type { Env } from '../types';
 import { BUNDLED_WDI_SECTOR_METRICS } from '../data/sector-performance-wdi-snapshot';
+import {
+    BUNDLED_WDI_SECTOR_DIMENSIONS,
+    type SectorPerformanceDimension,
+} from '../data/sector-performance-wdi-dimensions';
 
 const WORLD_BANK_API = 'https://api.worldbank.org/v2';
 const AFRICAN_COUNTRY_CODES = [
@@ -122,6 +126,8 @@ export type SectorPerformance = {
     caveat: string;
     source_name: 'World Bank World Development Indicators';
     source_url: string;
+    dimensions: SectorPerformanceDimension[];
+    diligence_questions: string[];
 };
 
 export type SectorPerformanceResponse = {
@@ -134,22 +140,35 @@ export type SectorPerformanceResponse = {
     source_url: 'https://data.worldbank.org/indicator';
 };
 
+const SECTOR_DILIGENCE_QUESTIONS: Record<string, string[]> = {
+    agriculture: ['Which value chains convert farm output into higher-margin processing and exports?', 'How exposed are yields and margins to rainfall, irrigation, fertiliser, seed and storage constraints?', 'Which land, food-safety, subsidy and trade rules change market-entry economics?', 'Where do logistics, cold-chain, finance and offtake gaps prevent scale?'],
+    energy: ['What dependable generation, transmission and distribution capacity is actually available?', 'How do tariffs, subsidies, losses, collection rates and currency exposure affect project bankability?', 'Which projects have binding licences, financing, offtake agreements and construction milestones?', 'Does the renewable share reflect modern generation or traditional biomass dependence?'],
+    finance: ['Is credit expansion reaching productive firms or concentrating risk in government and large borrowers?', 'How do lending rates, inflation, currency volatility and non-performing loans affect real financing costs?', 'Which licensing, capital, foreign-ownership and consumer-protection rules shape entry?', 'Where does account ownership translate into active deposits, payments, insurance, investment or credit use?'],
+    healthcare: ['Which spending pools are public, insured, out-of-pocket or donor-financed?', 'Where do workforce, beds, diagnostics, medicines and distribution create binding capacity gaps?', 'What reimbursement, registration, procurement and price-control rules govern commercial access?', 'Which demand segments can support sustainable provision without treating unmet need as bankable demand?'],
+    infrastructure: ['Which announced projects have completed feasibility, permits, procurement, financing and land acquisition?', 'How are construction, demand, currency, offtake and sovereign risks allocated?', 'Which ports, airports, corridors and urban systems face measurable capacity constraints?', 'What maintenance obligations and lifecycle costs sit behind new capital formation?'],
+    manufacturing: ['Which subsectors are gaining real output, domestic value added and export share?', 'How do power, logistics, inputs, skills, finance and capacity utilisation constrain margins?', 'Which tariff, local-content, standards and industrial-zone regimes alter competitiveness?', 'Where is industrial employment growth matched by productivity rather than low-value assembly?'],
+    technology: ['Does connectivity translate into affordable, reliable usage and digital transaction volume?', 'Which markets have payment rails, cloud capacity, data centres, cybersecurity and technical talent?', 'How do data protection, localisation, licensing, tax and competition rules affect scaling?', 'Where do adoption figures conceal device, affordability, rural coverage or enterprise-digitisation gaps?'],
+    tourism: ['Are arrivals, receipts, air capacity and accommodation demand recovering in the same markets?', 'How seasonal and concentrated are source markets, routes and visitor spending?', 'Which visa, aviation, tax, land, conservation and licensing rules constrain growth?', 'Do dated official series require validation against current tourism-board, airport and company disclosures?'],
+};
+
 const BUNDLED_SNAPSHOT: SectorPerformanceResponse = {
     data: SECTOR_PERFORMANCE_SERIES.map(config => ({
         ...config,
         ...BUNDLED_WDI_SECTOR_METRICS[config.sector_id],
+        dimensions: BUNDLED_WDI_SECTOR_DIMENSIONS[config.sector_id] || [],
+        diligence_questions: SECTOR_DILIGENCE_QUESTIONS[config.sector_id] || [],
         source_name: 'World Bank World Development Indicators' as const,
         source_url: `https://data.worldbank.org/indicator/${config.indicator_code}`,
     })),
     sectors_measured: SECTOR_PERFORMANCE_SERIES.length,
     countries_in_scope: 54,
-    methodology: 'Each sector is represented by a named official performance proxy. Country-level observations use the latest three non-empty annual records in the World Bank WDI bulk release retrieved 18 July 2026. Headline values are cross-country medians; comparison values are median changes versus each country\'s preceding observation; breadth is the share of reporting markets improving. Series with different units are not combined into a cross-sector score or investment ranking.',
+    methodology: 'Each sector combines a primary official performance proxy with three structural or operating dimensions. Country-level observations use the latest available annual records in the World Bank WDI bulk release retrieved 18 July 2026. Values are cross-country medians, not continental totals; comparison values are median changes versus each country\'s preceding observation; breadth is the share of reporting markets moving higher. Higher is not automatically better for contextual or adverse indicators. Series with different units are never combined into a synthetic score or investment ranking.',
     retrieved_at: '2026-07-18T16:15:31.000Z',
     source_name: 'World Bank World Development Indicators',
     source_url: 'https://data.worldbank.org/indicator',
 };
 
-const CACHE_KEY = 'market-intel:sector-performance:wdi:v1';
+const CACHE_KEY = 'market-intel:sector-performance:wdi:v2';
 const FRESH_MS = 12 * 60 * 60 * 1000;
 
 function round(value: number, digits = 1): number {
@@ -255,6 +274,8 @@ export function calculateSectorPerformance(
         caveat: config.caveat,
         source_name: 'World Bank World Development Indicators',
         source_url: `https://data.worldbank.org/indicator/${config.indicator_code}`,
+        dimensions: BUNDLED_WDI_SECTOR_DIMENSIONS[config.sector_id] || [],
+        diligence_questions: SECTOR_DILIGENCE_QUESTIONS[config.sector_id] || [],
     };
 }
 
@@ -312,7 +333,7 @@ export async function refreshSectorPerformance(env: Env): Promise<SectorPerforma
         data,
         sectors_measured: data.length,
         countries_in_scope: 54,
-        methodology: 'Each sector is represented by a named official performance proxy. Country-level observations use the latest three non-empty annual records within the retrieval window. Headline values are cross-country medians; comparison values are median changes versus each country’s preceding observation; breadth is the share of reporting markets improving. Series with different units are not combined into a cross-sector score or investment ranking.',
+        methodology: 'Each sector combines a primary official performance proxy with three structural or operating dimensions. Country-level observations use the latest available annual records within the retrieval window. Values are cross-country medians, not continental totals; comparison values are median changes versus each country’s preceding observation; breadth is the share of reporting markets moving higher. Higher is not automatically better for contextual or adverse indicators. Series with different units are never combined into a synthetic score or investment ranking.',
         retrieved_at: new Date().toISOString(),
         source_name: 'World Bank World Development Indicators',
         source_url: 'https://data.worldbank.org/indicator',
