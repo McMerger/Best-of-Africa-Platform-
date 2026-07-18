@@ -215,7 +215,11 @@ async function llmTranslate(env: Env, text: string, targetLang: SupportedLanguag
                 { role: 'system', content: `You are a professional news translator. Translate the user's text into ${LANG_NAMES[targetLang] || targetLang}. Preserve the markdown formatting exactly (headings, **bold**, lists, tables). Output ONLY the translation — no preamble, no notes.` },
                 { role: 'user', content: text },
             ],
-            max_tokens: 1400,
+            // gpt-oss is a reasoning model: its internal reasoning shares this
+            // allowance with the final answer. A 1,400-token ceiling can end
+            // before a complete translation is emitted even for a 1,400-char
+            // source chunk; 6,000 is the production-proven interface budget.
+            max_tokens: 6000,
             temperature: 0.2,
         });
         const out = ((res as Record<string, any>)?.response || '').trim();
