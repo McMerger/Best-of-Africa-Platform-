@@ -38,6 +38,24 @@ const AFRICAN_IMF_CODES: Record<string, string> = {
     'Cameroon': 'CMR',
 };
 
+// Complete coverage for the 54 countries exposed by the country directory.
+// Keep common database and editorial aliases so lookups do not depend on one
+// spelling or accent convention.
+Object.assign(AFRICAN_IMF_CODES, {
+    'Benin': 'BEN', 'Burkina Faso': 'BFA', 'Burundi': 'BDI', 'Cabo Verde': 'CPV',
+    'Cape Verde': 'CPV', 'Central African Republic': 'CAF', 'Chad': 'TCD',
+    'Comoros': 'COM', 'Congo': 'COG', 'Republic of the Congo': 'COG',
+    'DR Congo': 'COD', 'Democratic Republic of the Congo': 'COD',
+    "Côte d'Ivoire": 'CIV', 'Côte d’Ivoire': 'CIV', "Cote d'Ivoire": 'CIV',
+    'Djibouti': 'DJI', 'Equatorial Guinea': 'GNQ', 'Eritrea': 'ERI',
+    'Eswatini': 'SWZ', 'Gabon': 'GAB', 'Gambia': 'GMB', 'Guinea': 'GIN',
+    'Guinea-Bissau': 'GNB', 'Lesotho': 'LSO', 'Liberia': 'LBR', 'Libya': 'LBY',
+    'Madagascar': 'MDG', 'Malawi': 'MWI', 'Mali': 'MLI', 'Mauritania': 'MRT',
+    'Niger': 'NER', 'São Tomé and Príncipe': 'STP', 'Sao Tome and Principe': 'STP',
+    'Seychelles': 'SYC', 'Sierra Leone': 'SLE', 'Somalia': 'SOM',
+    'South Sudan': 'SSD', 'Sudan': 'SDN', 'Togo': 'TGO',
+});
+
 // Key IMF indicators
 const IMF_INDICATORS = {
     'NGDP_RPCH': 'Real GDP Growth (%)',
@@ -47,8 +65,9 @@ const IMF_INDICATORS = {
     'LUR': 'Unemployment Rate (%)',
     'GGXWDG_NGDP': 'Government Debt (% of GDP)',
     'BCA_NGDPD': 'Current Account Balance (% of GDP)',
-    'GGR_NGDP': 'Government Revenue (% of GDP)',
-    'GGX_NGDP': 'Government Expenditure (% of GDP)',
+    'BCA': 'Current Account Balance (USD billions)',
+    'LP': 'Population (millions)',
+    'GGXCNL_NGDP': 'General Government Net Lending/Borrowing (% of GDP)',
 };
 
 export interface IMFEconomicData {
@@ -62,8 +81,10 @@ export interface IMFEconomicData {
     unemployment?: number;
     debtToGDP?: number;
     currentAccountBalance?: number;
-    governmentRevenue?: number;
-    governmentExpenditure?: number;
+    currentAccountBillions?: number;
+    populationMillions?: number;
+    netLendingToGDP?: number;
+    indicatorYears?: Record<string, number>;
 }
 
 export interface IMFForecast {
@@ -74,18 +95,59 @@ export interface IMFForecast {
     projections: { year: number; value: number }[];
 }
 
+type IMFIndicatorSnapshot = {
+    checkedAt: string;
+    values: Record<string, Record<string, number>>;
+};
+
+const IMF_INDICATOR_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
+async function fetchIMFIndicator(
+    env: Env,
+    indicator: string,
+    targetYear: number,
+    timeoutMs: number,
+): Promise<IMFIndicatorSnapshot | null> {
+    const cacheKey = `imf:indicator:v2:${indicator}`;
+    const cached = await env.CACHE.get(cacheKey, 'json') as IMFIndicatorSnapshot | null;
+    if (cached && Date.now() - Date.parse(cached.checkedAt) <= IMF_INDICATOR_MAX_AGE_MS) return cached;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const periods = [targetYear - 2, targetYear - 1, targetYear].join(',');
+        const response = await fetch(`https://www.imf.org/external/datamapper/api/v1/${indicator}?periods=${periods}`, {
+            headers: { 'User-Agent': IMF_USER_AGENT },
+            signal: controller.signal,
+        });
+        if (!response.ok) return cached;
+        const data = await response.json() as { values?: Record<string, Record<string, Record<string, number>>> };
+        const values = data.values?.[indicator];
+        if (!values || !Object.keys(values).length) return cached;
+        const snapshot = { checkedAt: new Date().toISOString(), values };
+        await env.CACHE.put(cacheKey, JSON.stringify(snapshot));
+        return snapshot;
+    } catch (error) {
+        console.error(`IMF indicator refresh failed for ${indicator}:`, error);
+        return cached;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 /**
  * Fetch World Economic Outlook data from IMF
  */
 export async function fetchIMFData(
     env: Env,
     countryName: string,
-    year?: number
+    year?: number,
+    options: { refresh?: boolean; timeoutMs?: number } = {},
 ): Promise<IMFEconomicData | null> {
     const cacheKey = `imf:${countryName}:${year || 'latest'}`;
 
     const cached = await env.CACHE.get(cacheKey, 'json') as IMFEconomicData | null;
-    if (cached) return cached;
+    if (cached && !options.refresh) return cached;
 
     const countryCode = AFRICAN_IMF_CODES[countryName];
     if (!countryCode) return null;
@@ -93,64 +155,64 @@ export async function fetchIMFData(
     const targetYear = year || new Date().getFullYear();
 
     try {
-        // IMF DataMapper API (World Economic Outlook)
-        const indicators = Object.keys(IMF_INDICATORS).join(',');
-        const url = `https://www.imf.org/external/datamapper/api/v1/${indicators}/${countryCode}`;
-
-        // The IMF WAF 403s requests with no User-Agent (Workers' fetch default)
-        // or browser-style UAs from non-browser contexts, but accepts API-client
-        // UAs. Identify honestly in curl format with a contact address.
-        const response = await fetch(url, {
-            headers: { 'User-Agent': IMF_USER_AGENT }
-        });
-
-        if (!response.ok) {
-            console.error(`IMF API error: ${response.status}`);
-            return null;
-        }
-
-        const data = await response.json() as Record<string, any>;
+        // DataMapper accepts one indicator per series request. It currently
+        // returns the all-country series even when a location is appended, so
+        // cache that official series once and reuse it across all 54 dossiers.
+        const indicatorIds = Object.keys(IMF_INDICATORS);
+        const series = await Promise.all(indicatorIds.map((indicator) =>
+            fetchIMFIndicator(env, indicator, targetYear, options.timeoutMs || 8000)
+        ));
+        const dataByIndicator = Object.fromEntries(indicatorIds.map((indicator, index) => [indicator, series[index]?.values]));
 
         const economicData: IMFEconomicData = {
             country: countryName,
             countryCode,
             year: targetYear,
+            indicatorYears: {},
         };
 
-        // Parse each indicator
-        if (data.values) {
-            const getValue = (indicator: string): number | undefined => {
-                const indicatorData = data.values[indicator]?.[countryCode];
+        const getValue = (indicator: string): number | undefined => {
+                const indicatorData = dataByIndicator[indicator]?.[countryCode];
                 if (!indicatorData) return undefined;
 
                 // Try target year, then previous years
                 for (let y = targetYear; y >= targetYear - 2; y--) {
                     if (indicatorData[y.toString()] !== undefined) {
-                        economicData.year = y;
-                        return parseFloat(indicatorData[y.toString()]);
+                        economicData.indicatorYears![indicator] = y;
+                        return Number(indicatorData[y.toString()]);
                     }
                 }
                 return undefined;
             };
 
-            economicData.gdpGrowth = getValue('NGDP_RPCH');
-            economicData.gdpBillions = getValue('NGDPD');
-            economicData.gdpPerCapita = getValue('NGDPDPC');
-            economicData.inflation = getValue('PCPIPCH');
-            economicData.unemployment = getValue('LUR');
-            economicData.debtToGDP = getValue('GGXWDG_NGDP');
-            economicData.currentAccountBalance = getValue('BCA_NGDPD');
-            economicData.governmentRevenue = getValue('GGR_NGDP');
-            economicData.governmentExpenditure = getValue('GGX_NGDP');
-        }
+        economicData.gdpGrowth = getValue('NGDP_RPCH');
+        economicData.gdpBillions = getValue('NGDPD');
+        economicData.gdpPerCapita = getValue('NGDPDPC');
+        economicData.inflation = getValue('PCPIPCH');
+        economicData.unemployment = getValue('LUR');
+        economicData.debtToGDP = getValue('GGXWDG_NGDP');
+        economicData.currentAccountBalance = getValue('BCA_NGDPD');
+        economicData.currentAccountBillions = getValue('BCA');
+        economicData.populationMillions = getValue('LP');
+        economicData.netLendingToGDP = getValue('GGXCNL_NGDP');
+        const observedYears = Object.values(economicData.indicatorYears || {});
+        if (observedYears.length) economicData.year = Math.max(...observedYears);
 
-        // Cache for 24 hours
-        await env.CACHE.put(cacheKey, JSON.stringify(economicData), { expirationTtl: 86400 });
+        const hasObservation = [
+            economicData.gdpGrowth, economicData.gdpBillions, economicData.gdpPerCapita,
+            economicData.inflation, economicData.unemployment, economicData.debtToGDP,
+            economicData.currentAccountBalance, economicData.currentAccountBillions,
+        ].some((value) => typeof value === 'number' && Number.isFinite(value));
+        if (!hasObservation) return cached;
+
+        // Preserve the last verified official release. The assembled country
+        // snapshot owns freshness and refresh scheduling.
+        await env.CACHE.put(cacheKey, JSON.stringify(economicData));
 
         return economicData;
     } catch (error) {
         console.error('IMF data fetch error:', error);
-        return null;
+        return cached;
     }
 }
 

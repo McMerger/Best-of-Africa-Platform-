@@ -1,6 +1,6 @@
 import type { Env } from '../types';
 import { getCountryEconomicProfile, type CountryEconomicProfile } from './economics';
-import { fetchIMFData, getDebtMetrics, getGDPForecast } from './imf-data';
+import { fetchIMFData, type IMFEconomicData } from './imf-data';
 import { getTradeBalance, type TradeBalance } from './trade-data';
 
 export const COUNTRY_EVIDENCE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
@@ -17,17 +17,33 @@ export interface ProviderFreshness {
 
 export interface CountryEvidenceSnapshot {
     macroeconomics: {
+        official_profile: CountryEconomicProfile;
+        /** @deprecated Compatibility alias; inspect source_name before assuming the provider. */
         world_bank: CountryEconomicProfile;
         imf_current: Record<string, unknown>;
         imf_gdp_growth: Record<string, unknown>;
         imf_debt: Record<string, unknown>;
     };
-    trade: (TradeBalance & {
+    trade: ((TradeBalance & {
+        kind: 'reported_totals';
         provider: 'UN Comtrade' | 'World Bank World Development Indicators';
         export_year?: number;
         import_year?: number;
-    });
+    }) | IMFExternalBalanceEvidence);
     freshness: ProviderFreshness[];
+    retrieved_at: string;
+}
+
+export interface IMFExternalBalanceEvidence {
+    kind: 'external_balance';
+    country: string;
+    year: number;
+    current_account_percent_gdp?: number;
+    current_account_usd?: number;
+    period_status: 'historical_observation' | 'estimate_or_projection';
+    provider: 'IMF World Economic Outlook';
+    source_name: 'IMF World Economic Outlook';
+    source_url: string;
     retrieved_at: string;
 }
 
@@ -44,7 +60,20 @@ export function isCountryEvidenceStale(snapshot: CountryEvidenceSnapshot, now = 
 }
 
 export async function readCountryEvidence(env: Env, code: string): Promise<CountryEvidenceSnapshot | null> {
-    return await env.CACHE.get(countryEvidenceCacheKey(code), 'json') as CountryEvidenceSnapshot | null;
+    const stored = await env.CACHE.get(countryEvidenceCacheKey(code), 'json') as CountryEvidenceSnapshot | null;
+    if (!stored) return null;
+
+    // Normalize snapshots assembled before official_profile/kind were added.
+    const legacy = stored as CountryEvidenceSnapshot & {
+        macroeconomics: CountryEvidenceSnapshot['macroeconomics'] & { official_profile?: CountryEconomicProfile };
+        trade: CountryEvidenceSnapshot['trade'] & { kind?: 'reported_totals' };
+    };
+    if (!legacy.macroeconomics.official_profile && legacy.macroeconomics.world_bank) {
+        legacy.macroeconomics.official_profile = legacy.macroeconomics.world_bank;
+    }
+    if (!legacy.macroeconomics.official_profile) return null;
+    legacy.trade.kind ||= 'reported_totals';
+    return legacy;
 }
 
 function latestObservationPeriod(profile: CountryEconomicProfile): string {
@@ -59,6 +88,7 @@ export function worldBankTradeFallback(profile: CountryEconomicProfile): Country
 
     const year = Math.min(exports.year, imports.year);
     return {
+        kind: 'reported_totals',
         country: profile.country_name,
         year,
         totalExports: exports.value,
@@ -74,6 +104,66 @@ export function worldBankTradeFallback(profile: CountryEconomicProfile): Country
         provider: 'World Bank World Development Indicators',
         export_year: exports.year,
         import_year: imports.year,
+    };
+}
+
+const IMF_WEO_URL = 'https://www.imf.org/external/datamapper/datasets/WEO';
+
+export function imfEconomicProfile(
+    data: IMFEconomicData,
+    countryCode: string,
+    retrievedAt: string,
+): CountryEconomicProfile | null {
+    const sourceUrl = `https://www.imf.org/external/datamapper/profile/${data.countryCode}`;
+    const definitions: Array<[string, string, number | undefined, string, number]> = [
+        ['NGDPD', 'GDP, current prices', data.gdpBillions, 'USD', 1_000_000_000],
+        ['NGDP_RPCH', 'Real GDP growth', data.gdpGrowth, '%', 1],
+        ['NGDPDPC', 'GDP per capita, current prices', data.gdpPerCapita, 'USD per person', 1],
+        ['PCPIPCH', 'Inflation, average consumer prices', data.inflation, '%', 1],
+        ['LUR', 'Unemployment rate', data.unemployment, '%', 1],
+        ['GGXWDG_NGDP', 'General government gross debt', data.debtToGDP, '% of GDP', 1],
+        ['BCA_NGDPD', 'Current account balance', data.currentAccountBalance, '% of GDP', 1],
+        ['BCA', 'Current account balance', data.currentAccountBillions, 'USD', 1_000_000_000],
+        ['LP', 'Population', data.populationMillions, 'people', 1_000_000],
+        ['GGXCNL_NGDP', 'General government net lending/borrowing', data.netLendingToGDP, '% of GDP', 1],
+    ];
+    const indicators = definitions.flatMap(([code, name, value, unit, multiplier]) =>
+        typeof value === 'number' && Number.isFinite(value) ? (() => {
+            const indicatorYear = data.indicatorYears?.[code] || data.year;
+            const periodStatus = indicatorYear >= new Date(retrievedAt).getUTCFullYear()
+                ? 'estimate_or_projection' as const
+                : 'historical_observation' as const;
+            return [{ code, name, value: value * multiplier, year: indicatorYear, unit, source_url: sourceUrl, period_status: periodStatus }];
+        })() : []
+    );
+    if (!indicators.length) return null;
+    return {
+        country_code: countryCode.toUpperCase(),
+        country_name: data.country,
+        indicators,
+        last_updated: retrievedAt,
+        source_name: 'IMF World Economic Outlook',
+        source_url: sourceUrl,
+    };
+}
+
+export function imfExternalBalanceFallback(
+    data: IMFEconomicData,
+    retrievedAt: string,
+): IMFExternalBalanceEvidence | null {
+    if (data.currentAccountBalance === undefined && data.currentAccountBillions === undefined) return null;
+    const periodYear = data.indicatorYears?.BCA_NGDPD || data.indicatorYears?.BCA || data.year;
+    return {
+        kind: 'external_balance',
+        country: data.country,
+        year: periodYear,
+        ...(data.currentAccountBalance !== undefined ? { current_account_percent_gdp: data.currentAccountBalance } : {}),
+        ...(data.currentAccountBillions !== undefined ? { current_account_usd: data.currentAccountBillions * 1_000_000_000 } : {}),
+        period_status: periodYear >= new Date(retrievedAt).getUTCFullYear() ? 'estimate_or_projection' : 'historical_observation',
+        provider: 'IMF World Economic Outlook',
+        source_name: 'IMF World Economic Outlook',
+        source_url: `https://www.imf.org/external/datamapper/profile/${data.countryCode}`,
+        retrieved_at: retrievedAt,
     };
 }
 
@@ -93,38 +183,49 @@ export async function refreshCountryEvidence(
     const previous = await readCountryEvidence(env, country.code);
     const checkedAt = new Date().toISOString();
 
-    const [worldBankResult, imfResult, forecastResult, debtResult, tradeResult] = await Promise.allSettled([
+    const [worldBankResult, imfResult, tradeResult] = await Promise.allSettled([
         getCountryEconomicProfile(env, country.code, { refresh: true }),
-        fetchIMFData(env, country.name),
-        getGDPForecast(env, country.name),
-        getDebtMetrics(env, country.name),
+        fetchIMFData(env, country.name, undefined, { refresh: true, timeoutMs: 8000 }),
         getTradeBalance(env, country.name, undefined, { refresh: true, lookbackYears: 6, timeoutMs: 7000 }),
     ]);
 
     const freshWorldBank = worldBankResult.status === 'fulfilled' ? worldBankResult.value : null;
-    const worldBank = freshWorldBank || previous?.macroeconomics.world_bank;
-    if (!worldBank) return previous;
+    const freshIMF = imfResult.status === 'fulfilled' ? imfResult.value : null;
+    const freshIMFProfile = freshIMF ? imfEconomicProfile(freshIMF, country.code, checkedAt) : null;
+    const previousWorldBank = previous?.macroeconomics.world_bank?.source_name === 'World Bank World Development Indicators'
+        ? previous.macroeconomics.world_bank
+        : null;
+    const worldBank = freshWorldBank || previousWorldBank;
+    const officialProfile = freshWorldBank
+        || freshIMFProfile
+        || previous?.macroeconomics.official_profile
+        || worldBank;
+    if (!officialProfile) return previous;
 
     const freshTrade = tradeResult.status === 'fulfilled' ? tradeResult.value : null;
     const trade = freshTrade
-        ? { ...freshTrade, provider: 'UN Comtrade' as const }
-        : worldBankTradeFallback(worldBank) || previous?.trade;
+        ? { ...freshTrade, kind: 'reported_totals' as const, provider: 'UN Comtrade' as const }
+        : (worldBank ? worldBankTradeFallback(worldBank) : null)
+            || (freshIMF ? imfExternalBalanceFallback(freshIMF, checkedAt) : null)
+            || previous?.trade;
     if (!trade) return previous;
 
-    const imfUrl = 'https://www.imf.org/external/datamapper/datasets/WEO';
-    const current = imfResult.status === 'fulfilled' && imfResult.value
-        ? imfResult.value as unknown as Record<string, unknown>
-        : previous?.macroeconomics.imf_current || checkedNoSeries('IMF World Economic Outlook', imfUrl, checkedAt);
-    const forecast = forecastResult.status === 'fulfilled' && forecastResult.value
-        ? forecastResult.value as unknown as Record<string, unknown>
-        : previous?.macroeconomics.imf_gdp_growth || checkedNoSeries('IMF World Economic Outlook', imfUrl, checkedAt);
-    const debt = debtResult.status === 'fulfilled' && debtResult.value
-        ? debtResult.value as unknown as Record<string, unknown>
-        : previous?.macroeconomics.imf_debt || checkedNoSeries('IMF World Economic Outlook', imfUrl, checkedAt);
+    const current = freshIMF
+        ? freshIMF as unknown as Record<string, unknown>
+        : previous?.macroeconomics.imf_current || checkedNoSeries('IMF World Economic Outlook', IMF_WEO_URL, checkedAt);
+    const forecast = freshIMF?.gdpGrowth !== undefined
+        ? { country: country.name, year: freshIMF.year, value: freshIMF.gdpGrowth, period_status: freshIMFProfile?.indicators[0]?.period_status }
+        : previous?.macroeconomics.imf_gdp_growth || checkedNoSeries('IMF World Economic Outlook', IMF_WEO_URL, checkedAt);
+    const debt = freshIMF?.debtToGDP !== undefined
+        ? { country: country.name, year: freshIMF.year, debtToGDP: freshIMF.debtToGDP, period_status: freshIMFProfile?.indicators[0]?.period_status }
+        : previous?.macroeconomics.imf_debt || checkedNoSeries('IMF World Economic Outlook', IMF_WEO_URL, checkedAt);
 
     const snapshot: CountryEvidenceSnapshot = {
         macroeconomics: {
-            world_bank: worldBank,
+            official_profile: officialProfile,
+            // Retain the legacy field through the backend-first rollout. Its
+            // source_name tells older clients whether IMF supplied the profile.
+            world_bank: worldBank || officialProfile,
             imf_current: current,
             imf_gdp_growth: forecast,
             imf_debt: debt,
@@ -132,28 +233,28 @@ export async function refreshCountryEvidence(
         trade,
         freshness: [
             {
-                provider: 'World Bank World Development Indicators',
-                source_url: worldBank.source_url,
-                checked_at: freshWorldBank?.last_updated || checkedAt,
-                observation_period: latestObservationPeriod(worldBank),
-                state: freshWorldBank ? 'current_snapshot' : 'last_verified_snapshot',
+                provider: `${officialProfile.source_name} · macroeconomic profile`,
+                source_url: officialProfile.source_url,
+                checked_at: officialProfile.last_updated,
+                observation_period: latestObservationPeriod(officialProfile),
+                state: freshWorldBank || freshIMFProfile ? 'current_snapshot' : 'last_verified_snapshot',
             },
             {
-                provider: trade.provider,
+                provider: `${trade.provider} · external-sector record`,
                 source_url: trade.source_url,
                 checked_at: trade.retrieved_at || checkedAt,
-                observation_period: trade.export_year && trade.import_year
+                observation_period: trade.kind === 'reported_totals' && trade.export_year && trade.import_year
                     ? `exports ${trade.export_year}; imports ${trade.import_year}`
-                    : String(trade.year),
+                    : `${trade.year}${trade.kind === 'external_balance' && trade.period_status === 'estimate_or_projection' ? ' projection' : ''}`,
                 state: freshTrade ? 'current_snapshot' : previous?.trade === trade ? 'last_verified_snapshot' : 'current_snapshot',
             },
-            {
+            ...(officialProfile.source_name !== 'IMF World Economic Outlook' ? [{
                 provider: 'IMF World Economic Outlook',
-                source_url: imfUrl,
+                source_url: IMF_WEO_URL,
                 checked_at: checkedAt,
                 observation_period: 'historical observations and separately labelled projections',
-                state: imfResult.status === 'fulfilled' && imfResult.value ? 'current_snapshot' : 'checked_no_series',
-            },
+                state: freshIMF ? 'current_snapshot' as const : 'checked_no_series' as const,
+            }] : []),
         ],
         retrieved_at: checkedAt,
     };

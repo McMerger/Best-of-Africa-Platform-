@@ -494,7 +494,7 @@ router.get('/:code/dossier', async (c) => {
             ],
             generated_at: externalEvidence.retrieved_at,
             retrieved_at: externalEvidence.retrieved_at,
-            methodology: 'Official observations retain their provider reporting period and unit. Retrieval time is shown separately and never changes an observation year. IMF projections are labelled separately from historical values. An empty provider response is never converted to a zero; the last verified snapshot is retained, with World Bank goods-and-services trade used only when UN Comtrade has no verified merchandise record.',
+            methodology: 'Official observations retain their provider reporting period and unit. Retrieval time is shown separately and never changes an observation year. IMF projections are labelled separately from historical values. An empty provider response is never converted to a zero. The last verified snapshot is retained; World Bank goods-and-services totals can substitute for an unavailable UN Comtrade merchandise record, and an IMF current-account outlook is shown as external-sector evidence when neither provider returns verified trade totals.',
         },
     });
 });

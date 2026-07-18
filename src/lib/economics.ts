@@ -31,6 +31,7 @@ export interface EconomicIndicator {
     year: number;
     unit: string;
     source_url: string;
+    period_status?: 'historical_observation' | 'estimate_or_projection';
 }
 
 export interface CountryEconomicProfile {
@@ -38,7 +39,7 @@ export interface CountryEconomicProfile {
     country_name: string;
     indicators: EconomicIndicator[];
     last_updated: string;
-    source_name: 'World Bank World Development Indicators';
+    source_name: 'World Bank World Development Indicators' | 'IMF World Economic Outlook';
     source_url: string;
 }
 
@@ -126,11 +127,15 @@ export async function getCountryEconomicProfile(
             });
 
             const indicators = await Promise.all(indicatorPromises);
+            const verifiedIndicators = indicators.filter(i => i.value !== null);
+            if (!verifiedIndicators.length) {
+                return await env.CACHE.get(cacheKey, 'json') as CountryEconomicProfile | null;
+            }
 
             const profile: CountryEconomicProfile = {
                 country_code: normalizedCode,
                 country_name: countryName,
-                indicators: indicators.filter(i => i.value !== null),
+                indicators: verifiedIndicators,
                 last_updated: new Date().toISOString(),
                 source_name: 'World Bank World Development Indicators' as const,
                 source_url: `https://data.worldbank.org/?locations=${normalizedCode}`,

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { isCountryEvidenceStale, worldBankTradeFallback, type CountryEvidenceSnapshot } from '../../src/lib/country-evidence';
+import { isCountryEvidenceStale, refreshCountryEvidence, worldBankTradeFallback, type CountryEvidenceSnapshot } from '../../src/lib/country-evidence';
 import { getTradeBalance } from '../../src/lib/trade-data';
 import { publisherNameForArticle, publisherNameForStoredArticle } from '../../src/lib/source-attribution';
 import { parseRSS } from '../../src/workers/ingestion';
@@ -58,6 +58,46 @@ describe('country evidence integrity', () => {
         const result = await getTradeBalance(createMockEnv(), 'Nigeria', undefined, { refresh: true, lookbackYears: 4 });
         expect(result).toMatchObject({ year: 2024, totalExports: 12, totalImports: 9, balance: 3 });
         expect(fetchMock).toHaveBeenCalled();
+    });
+
+    it('assembles a real IMF snapshot when World Bank and Comtrade are unavailable', async () => {
+        vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request) => {
+            const url = String(input);
+            if (url.includes('imf.org/external/datamapper')) {
+                return new Response(JSON.stringify({
+                    values: {
+                        NGDP_RPCH: { CPV: { '2026': 5.2 } },
+                        NGDPD: { CPV: { '2026': 2.9 } },
+                        NGDPDPC: { CPV: { '2026': 5500 } },
+                        PCPIPCH: { CPV: { '2026': 2.1 } },
+                        GGXWDG_NGDP: { CPV: { '2026': 96.4 } },
+                        BCA_NGDPD: { CPV: { '2026': -3.4 } },
+                        BCA: { CPV: { '2026': -0.1 } },
+                    },
+                }), { status: 200 });
+            }
+            if (url.includes('comtradeapi.un.org')) {
+                return new Response(JSON.stringify({ data: [] }), { status: 200 });
+            }
+            return new Response('upstream unavailable', { status: 503 });
+        }));
+
+        const snapshot = await refreshCountryEvidence(createMockEnv(), { code: 'CV', name: 'Cabo Verde' });
+
+        expect(snapshot?.macroeconomics.official_profile).toMatchObject({
+            country_code: 'CV',
+            source_name: 'IMF World Economic Outlook',
+        });
+        expect(snapshot?.macroeconomics.official_profile.indicators).toEqual(expect.arrayContaining([
+            expect.objectContaining({ code: 'NGDPD', value: 2_900_000_000, year: 2026, period_status: 'estimate_or_projection' }),
+        ]));
+        expect(snapshot?.trade).toMatchObject({
+            kind: 'external_balance',
+            provider: 'IMF World Economic Outlook',
+            current_account_percent_gdp: -3.4,
+            current_account_usd: -100_000_000,
+            period_status: 'estimate_or_projection',
+        });
     });
 
     it('attributes aggregator discoveries to their original publisher', () => {

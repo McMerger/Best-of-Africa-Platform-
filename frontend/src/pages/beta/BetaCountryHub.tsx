@@ -41,6 +41,12 @@ const previewScores = (code: string): number[] => {
   ];
 };
 
+const formatEvidenceValue = (value: number, unit: string) => {
+  if (unit === 'USD') return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2 }).format(value);
+  if (unit === 'USD per person') return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+};
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; delay?: number }) => (
@@ -151,6 +157,7 @@ export const BetaCountryHub = () => {
   const articles: ArticleListItem[] = (articlesQuery.data?.data ?? []) as ArticleListItem[];
   const dossier = dossierQuery.data?.dossier;
   const provenance = dossierQuery.data?.provenance;
+  const officialProfile = dossier?.macroeconomics.official_profile || dossier?.macroeconomics.world_bank;
 
   const isLoading = countryQuery.isLoading;
 
@@ -417,7 +424,7 @@ export const BetaCountryHub = () => {
         )}
 
         {/* ── Portal Links ───────────────────────────────────────────────────── */}
-        {isMember && (dossierQuery.isLoading || dossier) && (
+        {isMember && (dossierQuery.isLoading || (dossier && officialProfile)) && (
           <section>
             <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -427,19 +434,22 @@ export const BetaCountryHub = () => {
               </div>
               {provenance?.retrieved_at && <p className="shrink-0 text-xs font-semibold text-navy">Sources checked {new Date(provenance.retrieved_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>}
             </div>
-            {dossierQuery.isLoading ? <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-32 animate-pulse rounded-xl border border-border bg-card" />)}</div> : dossier && <div className="mt-8 space-y-8">
+            {dossierQuery.isLoading ? <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-32 animate-pulse rounded-xl border border-border bg-card" />)}</div> : dossier && officialProfile && <div className="mt-8 space-y-8">
               <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-                {dossier.macroeconomics.world_bank.indicators.slice(0, 12).map(indicator => <a href={(indicator as typeof indicator & { source_url?: string }).source_url || dossier.macroeconomics.world_bank.source_url} target="_blank" rel="noreferrer" key={indicator.code} className="group bg-card p-5 transition-colors hover:bg-muted/60"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{indicator.name}</p><p className="mt-3 font-serif text-2xl text-navy">{indicator.value.toLocaleString(undefined, { maximumFractionDigits: 2 })}</p><p className="mt-1 text-xs text-muted-foreground">{indicator.unit} · observation {indicator.year}</p><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-accent-ink group-hover:underline">Open source</p></a>)}
+                {officialProfile.indicators.slice(0, 12).map(indicator => <a href={indicator.source_url || officialProfile.source_url} target="_blank" rel="noreferrer" key={indicator.code} className="group min-w-0 bg-card p-5 transition-colors hover:bg-muted/60"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{indicator.name}</p><p className="mt-3 break-words font-serif text-2xl text-navy">{formatEvidenceValue(indicator.value, indicator.unit)}</p><p className="mt-1 text-xs text-muted-foreground">{indicator.unit} · {'period_status' in indicator && indicator.period_status === 'estimate_or_projection' ? 'projection' : 'observation'} {indicator.year}</p><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-accent-ink group-hover:underline">{officialProfile.source_name} ↗</p></a>)}
               </div>
               <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-accent-ink">{dossier.trade.provider} · official trade observation</p><a href={dossier.trade.source_url} target="_blank" rel="noreferrer" className="text-xs font-bold text-navy hover:underline">Inspect provider record ↗</a></div>
-                <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
-                  <div className="bg-card p-4"><p className="text-xs text-muted-foreground">Exports · {dossier.trade.export_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">${dossier.trade.totalExports.toLocaleString()}</p></div>
-                  <div className="bg-card p-4"><p className="text-xs text-muted-foreground">Imports · {dossier.trade.import_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">${dossier.trade.totalImports.toLocaleString()}</p></div>
-                  <div className="bg-card p-4"><p className="text-xs text-muted-foreground">Recorded difference</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">${dossier.trade.balance.toLocaleString()}</p></div>
-                </div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-accent-ink">{dossier.trade.provider} · {'totalExports' in dossier.trade ? 'official trade record' : 'official external-sector outlook'}</p><a href={dossier.trade.source_url} target="_blank" rel="noreferrer" className="text-xs font-bold text-navy hover:underline">Inspect provider record ↗</a></div>
+                {'totalExports' in dossier.trade ? <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Exports · {dossier.trade.export_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.totalExports, 'USD')}</p></div>
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Imports · {dossier.trade.import_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.totalImports, 'USD')}</p></div>
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Recorded difference</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.balance, 'USD')}</p></div>
+                </div> : <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
+                  {dossier.trade.current_account_percent_gdp !== undefined && <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Current-account balance · {dossier.trade.year} {dossier.trade.period_status === 'estimate_or_projection' ? 'projection' : 'observation'}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{dossier.trade.current_account_percent_gdp.toLocaleString(undefined, { maximumFractionDigits: 2 })}% of GDP</p></div>}
+                  {dossier.trade.current_account_usd !== undefined && <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Current-account balance · {dossier.trade.year} {dossier.trade.period_status === 'estimate_or_projection' ? 'projection' : 'observation'}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.current_account_usd, 'USD')}</p></div>}
+                </div>}
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">{dossier.freshness.map(source => <a key={source.provider} href={source.source_url} target="_blank" rel="noreferrer" className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-navy/30"><p className="text-xs font-bold text-navy">{source.provider}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Observation period: {source.observation_period}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Checked {new Date(source.checked_at).toLocaleDateString()}</p></a>)}</div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{dossier.freshness.map(source => <a key={`${source.provider}-${source.source_url}`} href={source.source_url} target="_blank" rel="noreferrer" className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-navy/30"><p className="text-xs font-bold text-navy">{source.provider}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Observation period: {source.observation_period}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Checked {new Date(source.checked_at).toLocaleDateString()}</p></a>)}</div>
               {provenance && <div className="border-l-2 border-navy pl-5 text-sm leading-relaxed text-muted-foreground"><p>{provenance.methodology}</p><p className="mt-2 text-xs">Sources: {provenance.sources.map(source => source.name).join(' · ')}</p></div>}
             </div>}
           </section>

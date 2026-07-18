@@ -517,12 +517,14 @@ export const api = {
         country: Country;
         dossier: {
             macroeconomics: {
+                official_profile?: { indicators: { code: string; name: string; value: number; year: number; unit: string; source_url: string; period_status?: 'historical_observation' | 'estimate_or_projection' }[]; last_updated: string; source_name: string; source_url: string };
                 world_bank: { indicators: { code: string; name: string; value: number; year: number; unit: string; source_url: string }[]; last_updated: string; source_name: string; source_url: string };
                 imf_current: Record<string, number | string> | null;
                 imf_gdp_growth: { historical: { year: number; value: number }[]; projections: { year: number; value: number }[] } | null;
                 imf_debt: Record<string, unknown> | null;
             };
-            trade: { year: number; export_year?: number; import_year?: number; totalExports: number; totalImports: number; balance: number; provider: 'UN Comtrade' | 'World Bank World Development Indicators'; source_name: string; source_url: string; retrieved_at: string; topExportPartners: { partner: string; value: number }[]; topImportPartners: { partner: string; value: number }[] };
+            trade: ({ kind: 'reported_totals'; year: number; export_year?: number; import_year?: number; totalExports: number; totalImports: number; balance: number; provider: 'UN Comtrade' | 'World Bank World Development Indicators'; source_name: string; source_url: string; retrieved_at: string; topExportPartners: { partner: string; value: number }[]; topImportPartners: { partner: string; value: number }[] }
+                | { kind: 'external_balance'; year: number; current_account_percent_gdp?: number; current_account_usd?: number; period_status: 'historical_observation' | 'estimate_or_projection'; provider: 'IMF World Economic Outlook'; source_name: string; source_url: string; retrieved_at: string });
             sector_evidence: { id: string; name: string; article_count: number; latest_evidence_at: string }[];
             upcoming_events: { id: string; title: string; category: string; date_start: string; location: string; source_url?: string }[];
             recent_source_record: { title: string; slug: string; summary: string; source_url: string; published_at: string; reviewed_at: string | null }[];
