@@ -82,7 +82,7 @@ describe('country evidence integrity', () => {
             return new Response('upstream unavailable', { status: 503 });
         }));
 
-        const snapshot = await refreshCountryEvidence(createMockEnv(), { code: 'CV', name: 'Cabo Verde' });
+        const snapshot = await refreshCountryEvidence(createMockEnv(), { code: 'CV', name: 'Cabo Verde' }, { fast: true });
 
         expect(snapshot?.macroeconomics.official_profile).toMatchObject({
             country_code: 'CV',

@@ -142,7 +142,7 @@ export async function fetchIMFData(
     env: Env,
     countryName: string,
     year?: number,
-    options: { refresh?: boolean; timeoutMs?: number } = {},
+    options: { refresh?: boolean; timeoutMs?: number; criticalOnly?: boolean } = {},
 ): Promise<IMFEconomicData | null> {
     const cacheKey = `imf:${countryName}:${year || 'latest'}`;
 
@@ -158,7 +158,9 @@ export async function fetchIMFData(
         // DataMapper accepts one indicator per series request. It currently
         // returns the all-country series even when a location is appended, so
         // cache that official series once and reuse it across all 54 dossiers.
-        const indicatorIds = Object.keys(IMF_INDICATORS);
+        const indicatorIds = options.criticalOnly
+            ? ['NGDP_RPCH', 'NGDPD', 'BCA_NGDPD', 'BCA']
+            : Object.keys(IMF_INDICATORS);
         const series = await Promise.all(indicatorIds.map((indicator) =>
             fetchIMFIndicator(env, indicator, targetYear, options.timeoutMs || 8000)
         ));

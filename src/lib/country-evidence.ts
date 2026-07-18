@@ -179,14 +179,15 @@ function checkedNoSeries(provider: string, sourceUrl: string, checkedAt: string)
 export async function refreshCountryEvidence(
     env: Env,
     country: CountryRecord,
+    options: { fast?: boolean } = {},
 ): Promise<CountryEvidenceSnapshot | null> {
     const previous = await readCountryEvidence(env, country.code);
     const checkedAt = new Date().toISOString();
 
     const [worldBankResult, imfResult, tradeResult] = await Promise.allSettled([
-        getCountryEconomicProfile(env, country.code, { refresh: true }),
-        fetchIMFData(env, country.name, undefined, { refresh: true, timeoutMs: 8000 }),
-        getTradeBalance(env, country.name, undefined, { refresh: true, lookbackYears: 6, timeoutMs: 7000 }),
+        options.fast ? Promise.resolve(null) : getCountryEconomicProfile(env, country.code, { refresh: true }),
+        fetchIMFData(env, country.name, undefined, { refresh: true, timeoutMs: 8000, criticalOnly: options.fast }),
+        options.fast ? Promise.resolve(null) : getTradeBalance(env, country.name, undefined, { refresh: true, lookbackYears: 6, timeoutMs: 7000 }),
     ]);
 
     const freshWorldBank = worldBankResult.status === 'fulfilled' ? worldBankResult.value : null;

@@ -447,7 +447,17 @@ router.get('/:code/dossier', async (c) => {
         // This is only the first-ever cache fill. Scheduled rotation keeps all
         // country snapshots warm thereafter, so normal readers never wait on
         // World Bank, IMF or Comtrade network calls.
-        externalEvidence = await refreshCountryEvidence(c.env, { code, name: String(country.name) });
+        externalEvidence = await refreshCountryEvidence(c.env, { code, name: String(country.name) }, { fast: true });
+        if (externalEvidence) {
+            const enrichment = refreshCountryEvidence(c.env, { code, name: String(country.name) }).catch((error) => {
+                console.error(`Country evidence enrichment failed for ${code}:`, error);
+            });
+            try {
+                c.executionCtx.waitUntil(enrichment);
+            } catch {
+                void enrichment;
+            }
+        }
     } else if (isCountryEvidenceStale(externalEvidence)) {
         const refresh = refreshCountryEvidence(c.env, { code, name: String(country.name) }).catch((error) => {
             console.error(`Country evidence background refresh failed for ${code}:`, error);
