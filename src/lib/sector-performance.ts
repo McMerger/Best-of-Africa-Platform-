@@ -246,13 +246,26 @@ async function fetchSeries(config: SectorSeriesConfig): Promise<SectorPerformanc
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
     const currentYear = new Date().getUTCFullYear();
-    const countries = AFRICAN_COUNTRY_CODES.join(';');
-    const url = `${WORLD_BANK_API}/country/${countries}/indicator/${config.indicator_code}?format=json&date=${currentYear - 7}:${currentYear}&per_page=1000`;
     try {
-        const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
-        if (!response.ok) return null;
-        const payload = await response.json() as [unknown, WorldBankRecord[]];
-        return calculateSectorPerformance(config, Array.isArray(payload?.[1]) ? payload[1] : []);
+        // The API accepts semicolon-separated countries but rejects very long
+        // 54-country paths at the edge. Four bounded batches also prevent one
+        // upstream country-code issue from discarding the whole continent.
+        const groups: string[][] = [];
+        for (let index = 0; index < AFRICAN_COUNTRY_CODES.length; index += 14) {
+            groups.push([...AFRICAN_COUNTRY_CODES.slice(index, index + 14)]);
+        }
+        const responses = await Promise.all(groups.map(async group => {
+            const countries = group.join(';');
+            const url = `${WORLD_BANK_API}/country/${countries}/indicator/${config.indicator_code}?format=json&date=${currentYear - 7}:${currentYear}&per_page=1000`;
+            const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+            if (!response.ok) {
+                console.error(`[sector-performance] ${config.indicator_code} batch returned ${response.status}`);
+                return [] as WorldBankRecord[];
+            }
+            const payload = await response.json() as [unknown, WorldBankRecord[]];
+            return Array.isArray(payload?.[1]) ? payload[1] : [];
+        }));
+        return calculateSectorPerformance(config, responses.flat());
     } catch (error) {
         console.error(`[sector-performance] ${config.indicator_code} refresh failed`, error);
         return null;
