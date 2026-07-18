@@ -300,6 +300,7 @@ export async function ensureArticleTranslation(
     if (await env.CACHE.get(lockKey)) return false;
     await env.CACHE.put(lockKey, '1', { expirationTtl: 10 * 60 });
     try {
+        await recordTranslationStatus(env, articleId, targetLang, { phase: 'started' });
         const bodyChunks = chunkMarkdown(article.content || '');
         const sourceTexts = [
             article.title,
@@ -308,16 +309,44 @@ export async function ensureArticleTranslation(
             ...bodyChunks,
         ];
         const translated = await llmTranslateBatch(env, sourceTexts, targetLang);
-        if (!translated) return false;
+        if (!translated) {
+            await recordTranslationStatus(env, articleId, targetLang, {
+                phase: 'model-output-invalid',
+                inputs: sourceTexts.length,
+                sourceChars: sourceTexts.reduce((sum, value) => sum + value.length, 0),
+            });
+            return false;
+        }
 
         let cursor = 0;
         const title = translated[cursor++];
         const subtitle = article.subtitle ? translated[cursor++] : null;
         const summary = article.summary ? translated[cursor++] : null;
         const translatedBodyChunks = translated.slice(cursor);
-        if (looksDegenerate(article.title, title, targetLang)) return false;
-        if (translatedBodyChunks.length !== bodyChunks.length) return false;
-        if (translatedBodyChunks.some((value, index) => looksDegenerate(bodyChunks[index], value, targetLang))) return false;
+        if (looksDegenerate(article.title, title, targetLang)) {
+            await recordTranslationStatus(env, articleId, targetLang, {
+                phase: 'title-gate', sourceChars: article.title.length, outputChars: title.length,
+            });
+            return false;
+        }
+        if (translatedBodyChunks.length !== bodyChunks.length) {
+            await recordTranslationStatus(env, articleId, targetLang, {
+                phase: 'body-count-gate', expected: bodyChunks.length, received: translatedBodyChunks.length,
+            });
+            return false;
+        }
+        const rejectedBodyIndex = translatedBodyChunks.findIndex((value, index) =>
+            looksDegenerate(bodyChunks[index], value, targetLang)
+        );
+        if (rejectedBodyIndex >= 0) {
+            await recordTranslationStatus(env, articleId, targetLang, {
+                phase: 'body-gate',
+                index: rejectedBodyIndex,
+                sourceChars: bodyChunks[rejectedBodyIndex].length,
+                outputChars: translatedBodyChunks[rejectedBodyIndex].length,
+            });
+            return false;
+        }
         const content = translatedBodyChunks.join('\n\n');
         if (!content) return false;
 
@@ -331,6 +360,9 @@ export async function ensureArticleTranslation(
             summary || article.summary || null,
             content,
         ).run();
+        await recordTranslationStatus(env, articleId, targetLang, {
+            phase: 'complete', sourceChars: article.content.length, outputChars: content.length,
+        });
         return true;
     } catch (error) {
         console.error(`[translate] requested translation failed for ${articleId} (${targetLang})`, error);
@@ -354,6 +386,23 @@ const READER_TRANSLATION_LANGUAGES: readonly ReaderTranslationLanguage[] = [
 
 function queuedTranslationKey(articleId: string, language: ReaderTranslationLanguage): string {
     return `translation:queued:v2:${articleId}:${language}`;
+}
+
+function translationStatusKey(articleId: string, language: ReaderTranslationLanguage): string {
+    return `translation:status:v1:${articleId}:${language}`;
+}
+
+async function recordTranslationStatus(
+    env: Env,
+    articleId: string,
+    language: ReaderTranslationLanguage,
+    status: Record<string, unknown>,
+): Promise<void> {
+    await env.CACHE.put(
+        translationStatusKey(articleId, language),
+        JSON.stringify({ ...status, updatedAt: new Date().toISOString() }),
+        { expirationTtl: 24 * 60 * 60 },
+    );
 }
 
 /** Queue a full translation without making the reader wait for the model. */
