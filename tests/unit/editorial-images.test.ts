@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractPublisherImage, normalizeEditorialImageUrl } from '../../src/lib/editorial-images';
+import { extractOriginalArticleUrl, extractPublisherImage, normalizeEditorialImageUrl } from '../../src/lib/editorial-images';
 import { generateArticleImage } from '../../src/lib/ai';
 import { publisherCredit } from '../../src/workers/source-images';
 import type { Env } from '../../src/types';
@@ -14,6 +14,7 @@ describe('editorial image provenance', () => {
     expect(normalizeEditorialImageUrl('https://boa.example/assets/articles/123/hero.png')).toBeNull();
     expect(normalizeEditorialImageUrl('https://replicate.delivery/generated-image.png')).toBeNull();
     expect(normalizeEditorialImageUrl('data:image/png;base64,abc')).toBeNull();
+    expect(normalizeEditorialImageUrl('https://publisher.example/assets/site-logo.png')).toBeNull();
   });
 
   it('extracts a source image and explicit photo credit from publisher metadata', () => {
@@ -37,6 +38,16 @@ describe('editorial image provenance', () => {
       .toBe('Amina Diallo / Reuters');
     expect(publisherCredit('https://www.reuters.com/world/africa/story'))
       .toBe('Publisher image via reuters.com');
+  });
+
+  it('follows only an explicitly labelled original publisher article', () => {
+    const html = '<a class="source-url" href="https://publisher.example/report">original article</a>';
+    expect(extractOriginalArticleUrl(html, 'https://aggregator.example/story'))
+      .toBe('https://publisher.example/report');
+    expect(extractOriginalArticleUrl('<a href="https://random.example/">related</a>', 'https://aggregator.example/story'))
+      .toBeNull();
+    expect(extractOriginalArticleUrl('<a class="source-url" href="/same-story">source</a>', 'https://aggregator.example/story'))
+      .toBeNull();
   });
 
   it('does not create credits for unsafe or non-public source locations', () => {

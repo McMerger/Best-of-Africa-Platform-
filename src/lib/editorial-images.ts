@@ -36,6 +36,7 @@ export function normalizeEditorialImageUrl(candidate: string | null | undefined,
         if (!/^https?:$/.test(url.protocol)) return null;
         const lower = url.toString().toLowerCase();
         if (GENERATED_IMAGE_MARKERS.some(marker => lower.includes(marker))) return null;
+        if (GENERIC_PUBLISHER_ART_MARKERS.some(marker => lower.includes(marker))) return null;
         return url.toString();
     } catch {
         return null;
@@ -55,9 +56,28 @@ export function extractPublisherImage(html: string, articleUrl: string): { image
         meta('og:image:secure_url') || meta('og:image') || meta('twitter:image'),
         articleUrl,
     );
-    const documentaryImage = imageUrl && !GENERIC_PUBLISHER_ART_MARKERS.some(marker => imageUrl.toLowerCase().includes(marker))
-        ? imageUrl
-        : null;
     const imageCredit = meta('article:image:credit') || meta('image:credit') || meta('twitter:image:alt');
-    return { imageUrl: documentaryImage, imageCredit: imageCredit?.trim() || null };
+    return { imageUrl, imageCredit: imageCredit?.trim() || null };
+}
+
+/**
+ * Aggregators such as AllAfrica explicitly link back to the publisher that
+ * supplied the reporting. Only accept a link labelled by the page itself as
+ * the original/source article; never guess a destination from headline text.
+ */
+export function extractOriginalArticleUrl(html: string, aggregatorUrl: string): string | null {
+    const patterns = [
+        /<a[^>]+class=["'][^"']*source-url[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>/i,
+        /<a[^>]+href=["']([^"']+)["'][^>]+class=["'][^"']*source-url[^"']*["'][^>]*>/i,
+    ];
+    const candidate = patterns.map(pattern => html.match(pattern)?.[1]).find(Boolean);
+    if (!candidate) return null;
+
+    const resolved = normalizeEditorialImageUrl(candidate, aggregatorUrl);
+    if (!resolved) return null;
+    try {
+        return new URL(resolved).hostname === new URL(aggregatorUrl).hostname ? null : resolved;
+    } catch {
+        return null;
+    }
 }

@@ -1,5 +1,5 @@
 import type { Env } from '../types';
-import { extractPublisherImage } from '../lib/editorial-images';
+import { extractOriginalArticleUrl, extractPublisherImage, normalizeEditorialImageUrl } from '../lib/editorial-images';
 
 type SourceImageCandidate = {
     id: string;
@@ -8,6 +8,21 @@ type SourceImageCandidate = {
 
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_HTML_BYTES = 2_000_000;
+const RETRY_AFTER_HOURS = 6;
+const PAGE_HEADERS = {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-GB,en;q=0.9',
+    'Cache-Control': 'no-cache',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36',
+};
+
+type StoredSourceImage = {
+    id: string;
+    source_url: string;
+    image_url: string;
+    image_credit: string | null;
+    image_source_url: string | null;
+};
 
 function safeSourceUrl(value: string): URL | null {
     try {
@@ -45,10 +60,7 @@ async function recoverCandidate(env: Env, candidate: SourceImageCandidate): Prom
         const response = await fetch(source, {
             redirect: 'follow',
             signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-            headers: {
-                'Accept': 'text/html,application/xhtml+xml',
-                'User-Agent': 'BOA-Story editorial image verifier/1.0 (+https://bestofafrica.co)',
-            },
+            headers: PAGE_HEADERS,
         });
         const contentType = response.headers.get('content-type') || '';
         const contentLength = Number(response.headers.get('content-length') || '0');
@@ -57,9 +69,31 @@ async function recoverCandidate(env: Env, candidate: SourceImageCandidate): Prom
             return false;
         }
 
-        const resolvedSource = response.url || source.toString();
+        let resolvedSource = response.url || source.toString();
         const html = (await response.text()).slice(0, MAX_HTML_BYTES);
-        const image = extractPublisherImage(html, resolvedSource);
+        let image = extractPublisherImage(html, resolvedSource);
+
+        // Aggregator pages sometimes expose only their logo while explicitly
+        // linking the publisher's original article. Follow that acknowledged
+        // source once and use its documentary image and page attribution.
+        const originalUrl = !image.imageUrl ? extractOriginalArticleUrl(html, resolvedSource) : null;
+        if (originalUrl) {
+            const originalResponse = await fetch(originalUrl, {
+                redirect: 'follow',
+                signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+                headers: PAGE_HEADERS,
+            });
+            const originalType = originalResponse.headers.get('content-type') || '';
+            const originalLength = Number(originalResponse.headers.get('content-length') || '0');
+            if (originalResponse.ok && originalType.includes('text/html') && originalLength <= MAX_HTML_BYTES) {
+                resolvedSource = originalResponse.url || originalUrl;
+                const originalHtml = (await originalResponse.text()).slice(0, MAX_HTML_BYTES);
+                image = extractPublisherImage(originalHtml, resolvedSource);
+            } else if (!originalResponse.ok) {
+                await markChecked(env, candidate.id, `http-${originalResponse.status}`);
+                return false;
+            }
+        }
         const credit = image.imageUrl ? publisherCredit(resolvedSource, image.imageCredit) : null;
         if (!image.imageUrl || !credit) {
             await markChecked(env, candidate.id, 'no-publisher-image');
@@ -101,7 +135,16 @@ export async function backfillSourceImages(env: Env, batch = 8): Promise<{ check
         WHERE status = 'published'
           AND source_url IS NOT NULL AND source_url != ''
           AND (hero_image_url IS NULL OR hero_image_url = '')
-          AND source_image_checked_at IS NULL
+          AND (
+              source_image_checked_at IS NULL
+              OR (
+                  source_image_checked_at <= datetime('now', '-${RETRY_AFTER_HOURS} hours')
+                  AND source_image_status IN (
+                      'http-403', 'http-429', 'http-500', 'http-502', 'http-503',
+                      'http-504', 'http-521', 'http-525', 'timeout', 'fetch-failed'
+                  )
+              )
+          )
         ORDER BY COALESCE(published_at, created_at) DESC, id ASC
         LIMIT ?
     `).bind(limit).all<SourceImageCandidate>();
@@ -111,4 +154,52 @@ export async function backfillSourceImages(env: Env, batch = 8): Promise<{ check
         if (await recoverCandidate(env, candidate)) recovered += 1;
     }
     return { checked: candidates.results?.length || 0, recovered };
+}
+
+/**
+ * Recover source images already captured from RSS or publisher metadata during
+ * ingestion. Duplicate ingestion rows can contain different media completeness,
+ * so this deliberately selects the most recent non-empty image for each URL.
+ */
+export async function backfillStoredSourceImages(env: Env, batch = 40): Promise<number> {
+    const limit = Math.max(1, Math.min(Math.trunc(batch), 100));
+    const rows = await env.DB.prepare(`
+        SELECT a.id, a.source_url,
+               (SELECT i.image_url FROM ingested_items i
+                WHERE i.url = a.source_url AND i.image_url IS NOT NULL AND i.image_url != ''
+                ORDER BY i.created_at DESC LIMIT 1) AS image_url,
+               (SELECT i.image_credit FROM ingested_items i
+                WHERE i.url = a.source_url AND i.image_url IS NOT NULL AND i.image_url != ''
+                ORDER BY i.created_at DESC LIMIT 1) AS image_credit,
+               (SELECT i.image_source_url FROM ingested_items i
+                WHERE i.url = a.source_url AND i.image_url IS NOT NULL AND i.image_url != ''
+                ORDER BY i.created_at DESC LIMIT 1) AS image_source_url
+        FROM articles a
+        WHERE a.status = 'published'
+          AND a.source_url IS NOT NULL AND a.source_url != ''
+          AND (a.hero_image_url IS NULL OR a.hero_image_url = '')
+          AND EXISTS (
+              SELECT 1 FROM ingested_items i
+              WHERE i.url = a.source_url AND i.image_url IS NOT NULL AND i.image_url != ''
+          )
+        ORDER BY COALESCE(a.published_at, a.created_at) DESC, a.id ASC
+        LIMIT ?
+    `).bind(limit).all<StoredSourceImage>();
+
+    let recovered = 0;
+    for (const row of rows.results || []) {
+        const imageUrl = normalizeEditorialImageUrl(row.image_url, row.source_url);
+        const sourceUrl = safeSourceUrl(row.image_source_url || row.source_url)?.toString() || null;
+        const credit = sourceUrl ? publisherCredit(sourceUrl, row.image_credit) : null;
+        if (!imageUrl || !sourceUrl || !credit) continue;
+
+        await env.DB.prepare(`
+            UPDATE articles
+            SET hero_image_url = ?, image_credit = ?, image_source_url = ?,
+                source_image_checked_at = datetime('now'), source_image_status = 'found'
+            WHERE id = ? AND (hero_image_url IS NULL OR hero_image_url = '')
+        `).bind(imageUrl, credit, sourceUrl, row.id).run();
+        recovered += 1;
+    }
+    return recovered;
 }

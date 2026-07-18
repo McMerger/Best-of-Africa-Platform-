@@ -327,9 +327,12 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // Recover real publisher photography for existing stories. This is
     // source-only: no generated or generic fallback imagery is permitted.
     await safe('backfill-source-images', async () => {
-        const { backfillSourceImages } = await import('./workers/source-images');
+        const { backfillSourceImages, backfillStoredSourceImages } = await import('./workers/source-images');
+        const stored = await backfillStoredSourceImages(env, 40);
         const result = await backfillSourceImages(env, 8);
-        if (result.checked) console.log(`[cron] source images: ${result.recovered}/${result.checked} recovered`);
+        if (stored || result.checked) {
+            console.log(`[cron] source images: ${stored} stored + ${result.recovered}/${result.checked} fetched`);
+        }
     });
 
     // Backfill 768w hero variants for articles whose heroes predate variant
