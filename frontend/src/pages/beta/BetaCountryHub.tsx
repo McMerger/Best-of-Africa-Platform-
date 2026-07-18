@@ -20,7 +20,7 @@ import { CountryFlag } from '../../components/CountryFlag';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { EditorialContent } from '../../components/EditorialContent';
 import { sourcedEditorialImage } from '../../lib/editorialImage';
 import { PhotoCredit } from '../../components/PhotoCredit';
 
@@ -308,7 +308,7 @@ export const BetaCountryHub = () => {
                     </div>
                     <p className="text-xs text-muted-foreground">{evidence.source_records.length} source records reviewed</p>
                   </div>
-                  <MarkdownRenderer content={outlook.investment_commentary} className="prose-sm max-w-none text-foreground/80" />
+                  <EditorialContent content={outlook.investment_commentary} className="prose-sm max-w-none text-foreground/80" />
                   {evidence.source_records.length > 0 && (
                     <details className="mt-8 rounded-xl border border-border bg-background p-5">
                       <summary className="cursor-pointer text-sm font-semibold text-navy">Inspect source window</summary>
@@ -316,7 +316,7 @@ export const BetaCountryHub = () => {
                         {evidence.source_records.map(source => (
                           <li key={`${source.record}-${source.title}`} className="flex gap-3">
                             <span className="font-semibold text-accent-ink">[{source.record}]</span>
-                            <span>{source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className="hover:text-navy hover:underline">{source.title}</a> : source.title}{source.published_at ? ` · ${new Date(source.published_at).toLocaleDateString()}` : ''}</span>
+                            <span>{source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className="hover:text-navy hover:underline">{stripMarkdown(source.title)}</a> : stripMarkdown(source.title)}{source.published_at ? ` · ${new Date(source.published_at).toLocaleDateString()}` : ''}</span>
                           </li>
                         ))}
                       </ol>
@@ -411,7 +411,7 @@ export const BetaCountryHub = () => {
               <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
                 {t('hub.situation_report', 'Situation Report')}
               </div>
-              <MarkdownRenderer content={country.ai_situation_report} className="relative max-w-4xl text-[15px] leading-7 text-foreground/80 md:text-base" />
+              <EditorialContent content={country.ai_situation_report} className="relative max-w-4xl text-[15px] leading-7 text-foreground/80 md:text-base" />
             </div>
           </motion.section>
         )}

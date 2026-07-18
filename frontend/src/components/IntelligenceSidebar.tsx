@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DesktopIcon, PersonIcon, StarIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
-import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { EditorialContent } from '@/components/EditorialContent';
 
 
 interface IntelligenceSidebarProps {
@@ -111,7 +111,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                                     </span>
                                     {msg.role === 'user'
                                       ? msg.content
-                                      : <MarkdownRenderer content={msg.content} className="structured-content-compact" />}
+                                      : <EditorialContent content={msg.content} className="editorial-content-compact" />}
                                 </div>
                             </div>
                         ))}

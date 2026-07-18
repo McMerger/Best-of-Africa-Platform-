@@ -66,7 +66,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                                             <CalendarIcon className="h-3 w-3" /> {new Date(event.date_start).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                                         </span>
                                     </div>
-                                    <h4 className="font-bold text-base group-hover:text-primary transition-colors">{event.title}</h4>
+                                    <h4 className="font-bold text-base group-hover:text-primary transition-colors">{stripMarkdown(event.title)}</h4>
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <MixerVerticalIcon className="h-3 w-3" /> {event.location}
                                     </div>

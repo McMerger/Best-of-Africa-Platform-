@@ -11,7 +11,7 @@ import { CountryFlag } from '../../components/CountryFlag';
 import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { EditorialContent } from '../../components/EditorialContent';
 import { sourcedEditorialImage } from '../../lib/editorialImage';
 import { PhotoCredit } from '../../components/PhotoCredit';
 
@@ -215,7 +215,7 @@ export const BetaContinentalOverview: React.FC = () => {
             {isAnalyticsError && <div className="text-sm leading-7 text-muted-foreground"><p>The extended evidence brief could not be loaded. The dashboard below contains {overview.total_articles_30d.toLocaleString()} published articles across {overview.countries_covered} countries in the current 30-day window.</p><p className="mt-3">Use the regional distribution, country ranking, sector counts and source-linked highlights as the current evidence layer.</p></div>}
             {platformAnalytics?.market_summary && (
               <>
-                <MarkdownRenderer content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />
+                <EditorialContent content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />
                 <div className="mt-8 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
                   <p>{platformAnalytics.methodology}</p>
                   <p className="mt-1">Updated {new Date(platformAnalytics.updated_at).toLocaleString()} · {platformAnalytics.total_articles_7d.toLocaleString()} reports across {platformAnalytics.coverage.countries_7d} countries in the seven-day evidence window.</p>
@@ -375,7 +375,7 @@ export const BetaContinentalOverview: React.FC = () => {
                         <div className="absolute inset-0 bg-background/20 group-hover:bg-transparent transition-colors z-10" />
                         <img 
                           src={heroThumb(sourcedEditorialImage(article)!)}
-                          alt={article.title}
+                          alt={stripMarkdown(article.title)}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                         <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-2 z-20 rounded bg-navy/80 px-2 py-1 text-white" />

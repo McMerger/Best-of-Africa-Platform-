@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SearchIcon, SparklesIcon, GlobeIcon, FileTextIcon, LayersIcon, ArrowRightIcon, XIcon } from 'lucide-react';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { EditorialContent } from '../../components/EditorialContent';
 import { stripMarkdown } from '@/lib/utils';
 
 const FILTER_TABS = [
@@ -48,7 +48,7 @@ export const BetaSearch: React.FC = () => {
             try {
                 const res = await api.search(inputValue);
                 const items = [
-                    ...(res.results || []).slice(0, 3).map((r: any) => ({ type: 'article', label: r.article?.title || r.title, slug: r.article?.slug || r.slug })),
+                    ...(res.results || []).slice(0, 3).map((r: any) => ({ type: 'article', label: stripMarkdown(r.article?.title || r.title), slug: r.article?.slug || r.slug })),
                 ];
                 setSuggestions(items);
             } catch { setSuggestions([]); }
@@ -186,7 +186,7 @@ export const BetaSearch: React.FC = () => {
                             </div>
                             <h3 className="font-serif text-[1.65rem] text-foreground sm:text-[2rem]">Research answer</h3>
                         </div>
-                        <MarkdownRenderer content={analystAnswer} className="relative z-10 text-foreground/80" />
+                        <EditorialContent content={analystAnswer} className="relative z-10 text-foreground/80" />
                     </motion.div>
                 )}
 

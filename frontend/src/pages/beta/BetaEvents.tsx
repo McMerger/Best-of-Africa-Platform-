@@ -165,7 +165,7 @@ export const BetaEvents: React.FC = () => {
                         <DialogDescription className="text-foreground/60 font-light text-[1.125rem]">
                             {isSuccess 
                                 ? 'We have received your registration details.'
-                                : selectedEvent?.title}
+                                : stripMarkdown(selectedEvent?.title)}
                         </DialogDescription>
                     </DialogHeader>
 

@@ -15,7 +15,7 @@ import { stripMarkdown, heroThumb } from '@/lib/utils';
 import { ScrollReveal } from '../../components/beta/ScrollReveal';
 import type { PlayableTrack } from '../../context/AudioContext';
 import type { ArticleListItem, SearchResult } from '../../types';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { EditorialContent } from '../../components/EditorialContent';
 import { sourcedEditorialImage } from '../../lib/editorialImage';
 import { PhotoCredit } from '../../components/PhotoCredit';
 
@@ -312,7 +312,7 @@ export const BetaStories = () => {
             <Sparkles size={16} className="text-accent shrink-0 mt-0.5" />
             <div>
               <span className="text-[10px] font-bold tracking-widest text-accent uppercase block mb-1">{t('stories.summary', 'Summary')}</span>
-              <MarkdownRenderer content={searchData.ai_answer} className="structured-content-compact text-sm text-primary/80" />
+              <EditorialContent content={searchData.ai_answer} className="editorial-content-compact text-sm text-primary/80" />
             </div>
           </div>
         )}

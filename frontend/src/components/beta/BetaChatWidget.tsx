@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
-import { MarkdownRenderer } from '../MarkdownRenderer';
+import { EditorialContent } from '../EditorialContent';
 
 type Message = {
   id: string;
@@ -132,7 +132,7 @@ export const BetaChatWidget = () => {
                     {msg.isError && <AlertCircle size={14} className="inline mr-1.5 mb-0.5" />}
                     {msg.role === 'user' || msg.isError
                       ? <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                      : <MarkdownRenderer content={msg.content} className="structured-content-compact text-sm" />}
+                      : <EditorialContent content={msg.content} className="editorial-content-compact text-sm" />}
                     
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-primary/10">

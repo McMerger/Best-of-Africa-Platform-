@@ -63,7 +63,7 @@ export const BetaLanding = () => {
 
           {lead && (
             <Link to={`/posts/${lead.slug}`} className="group relative min-h-[22rem] md:min-h-[430px] overflow-hidden rounded-xl border border-white/15 bg-navy-mid block">
-              {leadImage && <img src={heroThumb(leadImage)} alt={lead.title} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
+              {leadImage && <img src={heroThumb(leadImage)} alt={stripMarkdown(lead.title)} className="absolute inset-0 h-full w-full object-cover" fetchPriority="high" />}
               <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/45 to-transparent" />
               {leadImage && <PhotoCredit credit={lead.image_credit} sourceUrl={lead.image_source_url} className="absolute right-3 top-3 z-10 rounded bg-navy/80 px-2 py-1 text-white" />}
               <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
@@ -105,7 +105,7 @@ export const BetaLanding = () => {
           {secondary.map((article) => (
             <Link key={article.slug} to={`/posts/${article.slug}`} className="group bg-card p-5 md:p-6 min-w-0">
               {sourcedEditorialImage(article) ? <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-navy mb-5">
-                <img src={heroThumb(sourcedEditorialImage(article)!)} alt={article.title} loading="lazy" className="w-full h-full object-cover" />
+                <img src={heroThumb(sourcedEditorialImage(article)!)} alt={stripMarkdown(article.title)} loading="lazy" className="w-full h-full object-cover" />
                 <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-2 rounded bg-navy/80 px-2 py-1 text-white" />
               </div> : <div className="mb-5 h-1 w-14 bg-navy" aria-hidden="true" />}
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-3">

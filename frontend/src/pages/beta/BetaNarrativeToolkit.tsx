@@ -153,7 +153,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                       <MessageSquare className="text-accent" /> The Story So Far
                     </h3>
                     <div className="prose prose-sm md:prose-base prose-p:text-primary/70 max-w-none">
-                      <p className="whitespace-pre-wrap">{countryData?.country.narrative_arc}</p>
+                      <p>{stripMarkdown(countryData?.country.narrative_arc)}</p>
                     </div>
                   </div>
 

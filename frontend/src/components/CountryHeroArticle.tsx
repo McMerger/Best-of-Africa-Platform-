@@ -28,7 +28,7 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                 {image ? (
                     <img
                         src={heroThumb(image)}
-                        alt={article.title}
+                        alt={cleanText(article.title)}
                         className="w-full h-full object-cover opacity-60 transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
                     />
                 ) : (

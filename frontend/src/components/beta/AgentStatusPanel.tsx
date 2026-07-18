@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Zap, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Plus, Trash2, TestTube } from 'lucide-react';
 import { request } from '../../services/api';
+import { stripMarkdown } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -425,7 +426,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
               href={`/stories/${live.latest_article.slug}`}
               className="text-sm text-foreground/80 hover:text-accent transition-colors line-clamp-1"
             >
-              {live.latest_article.title}
+              {stripMarkdown(live.latest_article.title)}
             </a>
             <p className="text-[10px] text-foreground/30 mt-0.5">{relativeTime(live.latest_article.published_at)}</p>
           </div>

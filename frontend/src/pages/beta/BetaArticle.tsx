@@ -13,7 +13,7 @@ import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
 import { CountryFlag } from '../../components/CountryFlag';
 import { heroThumb, stripMarkdown } from '@/lib/utils';
-import { MarkdownRenderer } from '../../components/MarkdownRenderer';
+import { EditorialContent } from '../../components/EditorialContent';
 import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import type { Article, ArticleListItem, Country } from '../../types';
 import { sourcedEditorialImage } from '../../lib/editorialImage';
@@ -207,8 +207,8 @@ export function renderArticleHtml(md: string): string {
   return s;
 }
 
-function ArticleMarkdown({ content }: { content: string }) {
-  return <MarkdownRenderer content={content} variant="article" className="article-body" />;
+function ArticleContent({ content }: { content: string }) {
+  return <EditorialContent content={content} variant="article" className="article-body" />;
 }
 
 export const BetaArticle = () => {
@@ -423,7 +423,7 @@ export const BetaArticle = () => {
               animate={{ scale: 1 }}
               transition={{ duration: 1.5, ease: "easeOut" }}
               src={article.hero_image_url}
-              alt={article.title}
+              alt={stripMarkdown(article.title)}
               fetchPriority="high"
               decoding="async"
               onError={(e) => {
@@ -445,7 +445,7 @@ export const BetaArticle = () => {
             animate={{ scale: 1 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             src={`/images/fallback_${categoryLabel?.toLowerCase().includes('tech') ? 'tech' : categoryLabel?.toLowerCase().includes('culture') ? 'culture' : 'business'}.webp`}
-            alt={article.title}
+            alt={stripMarkdown(article.title)}
             fetchPriority="high"
             decoding="async"
             className="w-full h-full object-cover opacity-60"
@@ -506,7 +506,7 @@ export const BetaArticle = () => {
           <figure className="mb-8 md:mb-10 overflow-hidden rounded-xl border border-border bg-muted">
             <img
               src={heroThumb(editorialImage)}
-              alt={article.title}
+              alt={stripMarkdown(article.title)}
               className="w-full aspect-[16/9] object-cover"
               loading="eager"
             />
@@ -551,7 +551,7 @@ export const BetaArticle = () => {
 
           {/* Article content */}
           <div data-source-language={lens === 'original' ? article.content_language : 'en'} dir={contentDir} className={`transition-opacity duration-500 ${isReframing ? 'opacity-50' : 'opacity-100'}`}>
-            <ArticleMarkdown content={activeContent} />
+            <ArticleContent content={activeContent} />
             {/* End mark — the classic editorial "story ends here" slug. */}
             {!isPaywalled && (
               <div aria-hidden="true" className="mt-2 flex items-center gap-3">
