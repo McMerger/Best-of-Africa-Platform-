@@ -221,6 +221,7 @@ export function createMockEnv(overrides: Partial<Env> = {}): Env {
         AI: createMockAI(),
         VECTORS: createMockVectorize(),
         CONTENT_QUEUE: createMockQueue(),
+        TRANSLATION_QUEUE: createMockQueue(),
         OPTIMIZATION_QUEUE: createMockQueue(),
         ANALYTICS: createMockAnalytics(),
         LIVE_COUNTER: createMockDurableObjectNamespace(),

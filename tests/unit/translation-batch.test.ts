@@ -29,7 +29,7 @@ describe('publication-quality translation batches', () => {
     it('queues complete full-article translations for every reader locale', async () => {
         const queued: Array<Record<string, unknown>> = [];
         const env = createMockEnv({
-            CONTENT_QUEUE: {
+            TRANSLATION_QUEUE: {
                 send: async (message: Record<string, unknown>) => {
                     queued.push(message);
                 },

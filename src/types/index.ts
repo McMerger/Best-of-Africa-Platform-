@@ -22,6 +22,7 @@ export interface Env {
 
     // Queues
     CONTENT_QUEUE: Queue;
+    TRANSLATION_QUEUE: Queue;
     OPTIMIZATION_QUEUE: Queue;
 
     // Analytics

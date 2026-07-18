@@ -314,7 +314,7 @@ const READER_TRANSLATION_LANGUAGES: readonly ReaderTranslationLanguage[] = [
 ];
 
 function queuedTranslationKey(articleId: string, language: ReaderTranslationLanguage): string {
-    return `translation:queued:v1:${articleId}:${language}`;
+    return `translation:queued:v2:${articleId}:${language}`;
 }
 
 /** Queue a full translation without making the reader wait for the model. */
@@ -333,7 +333,7 @@ export async function enqueueArticleTranslation(
             articleId,
             language,
         };
-        await env.CONTENT_QUEUE.send(message);
+        await env.TRANSLATION_QUEUE.send(message);
         return true;
     } catch (error) {
         await env.CACHE.delete(key);
