@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { request } from '../services/api';
 import { TRANSLATIONS } from '../i18n/dict';
+import { readPersistentCache, writePersistentCache } from '../lib/persistentQueryCache';
 
 type TranslationResponse = { translations: string[] };
 const originalText = new WeakMap<Text, string>();
@@ -12,6 +13,16 @@ const SKIP = 'script,style,code,pre,textarea,[contenteditable="true"],[data-no-t
 const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'aria-label', 'title', 'alt'];
 const MAX_BATCH_ITEMS = 24;
 const MAX_BATCH_CHARS = 12000;
+const PERSISTENT_TRANSLATION_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+
+const translationCacheKey = (language: string, text: string) => {
+  let hash = 2166136261;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `ui-translation:${language}:${text.length}:${(hash >>> 0).toString(36)}`;
+};
 
 export function InterfaceTranslator() {
   const { language } = useLanguage();
@@ -96,6 +107,12 @@ export function InterfaceTranslator() {
       document.documentElement.dataset.translationState = 'translating';
       const items = collect();
       const unique = [...new Set(items.map(item => item.value))];
+      await Promise.all(unique.map(async text => {
+        const key = `${language}:${text}`;
+        if (cache.has(key)) return;
+        const persisted = await readPersistentCache<string>(translationCacheKey(language, text), PERSISTENT_TRANSLATION_AGE_MS);
+        if (persisted) cache.set(key, persisted);
+      }));
       for (const batch of batchesFor(unique)) {
         if (cancelled) break;
         const missing = batch.filter(text => !cache.has(`${language}:${text}`));
@@ -107,7 +124,10 @@ export function InterfaceTranslator() {
             });
             missing.forEach((text, index) => {
               const translated = result.translations[index];
-              if (translated) cache.set(`${language}:${text}`, translated);
+              if (translated) {
+                cache.set(`${language}:${text}`, translated);
+                void writePersistentCache(translationCacheKey(language, text), translated);
+              }
             });
           } catch { /* Keep the original text when translation is temporarily unavailable. */ }
         }

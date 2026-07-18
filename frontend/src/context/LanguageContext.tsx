@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { LanguageCode } from '../types';
 import { SUPPORTED_LANGUAGES as CONTENT_LANGUAGES } from '../types';
 import { TRANSLATIONS } from '../i18n/dict';
+import { useQueryClient } from '@tanstack/react-query';
 // Article and interface language are one reader preference. Selecting a locale
 // changes the application chrome and is also passed to article queries so the
 // stored article translation is served when available.
@@ -18,6 +19,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+    const queryClient = useQueryClient();
     // 1. Initialize from URL or LocalStorage or Default
     const [language, setLanguageState] = useState<LanguageCode>(() => {
         if (typeof window !== 'undefined') {
@@ -38,6 +40,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             const dir = SUPPORTED_LANGUAGES.find(l => l.code === supported)?.dir || 'ltr';
             document.documentElement.dir = dir;
             document.documentElement.lang = supported;
+            // Reader endpoints derive their locale from this preference. Mark
+            // active data stale so lists, reports and dashboards refresh into
+            // the newly requested language instead of retaining an English
+            // React Query snapshot under an unchanged key.
+            void queryClient.invalidateQueries({ refetchType: 'active' });
         }
     };
 
@@ -352,6 +359,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // legacy inline dict (current lang) → shared chrome dict (English) → fallback → key.
     const t = (key: string, fallback?: string) => {
         return (
+            TRANSLATIONS[language]?.[key] ??
+            translations[language]?.[key] ??
             TRANSLATIONS.en?.[key] ??
             translations.en?.[key] ??
             fallback ??

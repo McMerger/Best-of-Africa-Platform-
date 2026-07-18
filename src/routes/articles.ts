@@ -40,6 +40,30 @@ async function activeMemberId(env: Env, authHeader: string | undefined): Promise
 }
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
+const READER_LANGUAGES = new Set(['fr', 'ar', 'pt', 'de', 'hi', 'zh']);
+
+async function localizeArticleList<T extends { id?: string }>(env: Env, rows: T[], language: string | undefined): Promise<T[]> {
+    if (!language || !READER_LANGUAGES.has(language) || !rows.length) return rows;
+    const ids = rows.map(row => row.id).filter((id): id is string => !!id);
+    if (!ids.length) return rows;
+    const placeholders = ids.map(() => '?').join(',');
+    const translations = await env.DB.prepare(`
+        SELECT article_id, title, subtitle, summary
+        FROM article_translations
+        WHERE language = ? AND quality >= 0 AND article_id IN (${placeholders})
+    `).bind(language, ...ids).all<{ article_id: string; title: string; subtitle: string | null; summary: string | null }>();
+    const byId = new Map((translations.results || []).map(translation => [translation.article_id, translation]));
+    return rows.map(row => {
+        const translation = row.id ? byId.get(row.id) : undefined;
+        return translation ? {
+            ...row,
+            title: translation.title,
+            ...(translation.subtitle ? { subtitle: translation.subtitle } : {}),
+            ...(translation.summary ? { summary: translation.summary } : {}),
+            title_language: language,
+        } : row;
+    });
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /articles - List articles with pagination and filters
@@ -125,7 +149,7 @@ router.get('/', validate('query', ArticleQuerySchema), async (c) => {
     LIMIT ? OFFSET ?
   `).bind(...params, limitNum, offset).all<ArticleListItem>();
 
-        articleResults = articles.results || [];
+        articleResults = await localizeArticleList(c.env, articles.results || [], c.req.query('lang')?.toLowerCase());
     } catch (err) {
         console.error('[articles] list query failed:', err);
         // Return empty paginated response rather than 500
@@ -237,7 +261,8 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
         `${index + 1}. ${article.title}. ${(article.summary || '').slice(0, 320)}`
     ).join('\n\n');
 
-    return c.json({ data: articles, ai_global_briefing: globalBriefing || `Current source-linked reporting\n\n${recordBriefing}` });
+    const localizedArticles = await localizeArticleList(c.env, articles as ArticleListItem[], c.req.query('lang')?.toLowerCase());
+    return c.json({ data: localizedArticles, ai_global_briefing: globalBriefing || `Current source-linked reporting\n\n${recordBriefing}` });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -271,7 +296,7 @@ router.get('/latest', validate('query', ArticleQuerySchema.pick({ limit: true })
         { ttl: CACHE_TTL.DYNAMIC }
     );
 
-    return c.json({ data: articles });
+    return c.json({ data: await localizeArticleList(c.env, articles as ArticleListItem[], c.req.query('lang')?.toLowerCase()) });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -318,7 +343,7 @@ router.get('/country/:code', validate('param', CountryCodeParamSchema), validate
     return c.json({
         country,
         articles: {
-            data: articles.results || [],
+            data: await localizeArticleList(c.env, articles.results || [], c.req.query('lang')?.toLowerCase()),
             pagination: {
                 page: pageNum,
                 limit: limitNum,
@@ -402,7 +427,7 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
             ai_outlook: aiOutlook || immediateSectorOutlook
         },
         articles: {
-            data: articles.results || [],
+            data: await localizeArticleList(c.env, articles.results || [], c.req.query('lang')?.toLowerCase()),
             pagination: {
                 page: pageNum,
                 limit: limitNum,
@@ -434,6 +459,13 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         return c.json({ error: 'not_found', message: 'Article not found' }, 404);
     }
 
+    const sourceForTranslation = {
+        title: article.title,
+        subtitle: article.subtitle,
+        summary: article.summary,
+        content: article.content || '',
+    };
+
     // Two-tier byline: only human-reviewed (curated) stories carry the personal
     // byline; automated briefing coverage is attributed to the desk.
     const a = article as unknown as Record<string, unknown>;
@@ -452,8 +484,9 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     a.title_language = 'en';
     a.content_language = 'en';
     if (['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(reqLang)) {
-        const { getTranslation } = await import('../lib/translate');
-        const tr = await getTranslation(c.env, article.id, reqLang as 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh');
+        const { ensureArticleTranslation, getTranslation } = await import('../lib/translate');
+        const targetLanguage = reqLang as 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh';
+        const tr = await getTranslation(c.env, article.id, targetLanguage);
         // Shorts serve at any quality (even -1 rows keep usable m2m100 shorts —
         // -1 only means the BODY regeneration failed its gate).
         if (tr) {
@@ -467,6 +500,14 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
             if (tr.quality === 1 && tr.content) {
                 a.content = tr.content;
                 a.content_language = reqLang;
+            }
+        }
+        if (!tr || tr.quality !== 1 || !tr.content) {
+            const buildTranslation = ensureArticleTranslation(c.env, article.id, sourceForTranslation, targetLanguage);
+            try {
+                c.executionCtx.waitUntil(buildTranslation);
+            } catch {
+                void buildTranslation;
             }
         }
     }

@@ -16,6 +16,10 @@ const getSessionId = () => {
 // Auth token helpers
 const getAuthToken = () => localStorage.getItem('boa_auth_token');
 const getAdminToken = () => localStorage.getItem('boa_admin_token');
+const getReaderLanguage = () => {
+    const language = localStorage.getItem('boa_lang') || 'en';
+    return ['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(language) ? language : 'en';
+};
 
 // Request helper
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -133,15 +137,16 @@ export interface NarrativeIndex {
 export const api = {
     // Articles
     getArticles: (params: Record<string, string> = {}) => {
-        const searchParams = new URLSearchParams(params);
+        const searchParams = new URLSearchParams({ ...params, lang: params.lang || getReaderLanguage() });
         const endpoint = `/articles?${searchParams}`;
         return readerRequest<PaginatedResponse<ArticleListItem>>(endpoint, 24 * 60 * 60 * 1000);
     },
     getArticle: (slug: string, lang?: string) =>
         readerRequest<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(
-            `/articles/${slug}${lang && ['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(lang) ? `?lang=${lang}` : ''}`
+            `/articles/${slug}${lang && ['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(lang) ? `?lang=${lang}` : ''}`,
+            lang && lang !== 'en' ? 5 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000,
         ),
-    getFeaturedArticles: () => readerRequest<{ data: ArticleListItem[] }>('/articles/featured?limit=20', 24 * 60 * 60 * 1000),
+    getFeaturedArticles: () => readerRequest<{ data: ArticleListItem[] }>(`/articles/featured?limit=20&lang=${getReaderLanguage()}`, 24 * 60 * 60 * 1000),
     getWorldCupTeams: () => request<{
         teams: { name: string; flag: string; code: string }[];
         updated_at: string | null;
@@ -164,7 +169,7 @@ export const api = {
             away: { name: string; code?: string; score?: number | null };
         }[];
     }>('/world-cup/teams'),
-    getLatestArticles: () => readerRequest<{ data: ArticleListItem[] }>('/articles/latest?limit=20', 24 * 60 * 60 * 1000),
+    getLatestArticles: () => readerRequest<{ data: ArticleListItem[] }>(`/articles/latest?limit=20&lang=${getReaderLanguage()}`, 24 * 60 * 60 * 1000),
     getEvents: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
         return readerRequest<{ success: boolean; data: CalendarEvent[] }>(`/events?${searchParams}`);

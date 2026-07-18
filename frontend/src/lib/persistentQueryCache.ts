@@ -33,6 +33,15 @@ async function load<T>(key: string): Promise<CacheEnvelope<T> | null> {
   }
 }
 
+export async function readPersistentCache<T>(key: string, maxAgeMs: number): Promise<T | null> {
+  const cached = await load<T>(key);
+  return cached && Date.now() - cached.savedAt <= maxAgeMs ? cached.data : null;
+}
+
+export async function writePersistentCache<T>(key: string, value: T): Promise<T> {
+  return save(key, value);
+}
+
 function fetchOnce<T>(key: string, loader: () => Promise<T>): Promise<T> {
   const existing = inFlight.get(key) as Promise<T> | undefined;
   if (existing) return existing;

@@ -259,6 +259,48 @@ export async function translateLongText(
     return out.join('\n\n');
 }
 
+/** Build and persist the full, quality-gated translation a reader requested. */
+export async function ensureArticleTranslation(
+    env: Env,
+    articleId: string,
+    article: { title: string; subtitle?: string | null; summary?: string | null; content: string },
+    targetLang: Exclude<SupportedLanguage, 'en'>,
+): Promise<boolean> {
+    const existing = await getTranslation(env, articleId, targetLang);
+    if (existing?.quality === 1 && existing.content) return true;
+
+    const lockKey = `translation:building:v1:${articleId}:${targetLang}`;
+    if (await env.CACHE.get(lockKey)) return false;
+    await env.CACHE.put(lockKey, '1', { expirationTtl: 10 * 60 });
+    try {
+        const [title, subtitle, summary] = await Promise.all([
+            llmTranslate(env, article.title, targetLang),
+            article.subtitle ? llmTranslate(env, article.subtitle, targetLang) : Promise.resolve(null),
+            article.summary ? llmTranslate(env, article.summary, targetLang) : Promise.resolve(null),
+        ]);
+        if (!title || looksDegenerate(article.title, title)) return false;
+        const content = await translateLongText(env, article.content || '', targetLang);
+        if (!content) return false;
+
+        await env.DB.prepare(`
+            INSERT OR REPLACE INTO article_translations
+                (id, article_id, language, title, subtitle, summary, content, quality, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, datetime('now'))
+        `).bind(
+            crypto.randomUUID(), articleId, targetLang, title,
+            subtitle || article.subtitle || null,
+            summary || article.summary || null,
+            content,
+        ).run();
+        return true;
+    } catch (error) {
+        console.error(`[translate] requested translation failed for ${articleId} (${targetLang})`, error);
+        return false;
+    } finally {
+        await env.CACHE.delete(lockKey);
+    }
+}
+
 /**
  * Regenerate stored translations (quality=0 → 1) newest-article-first with the
  * large model; short fields and the body are all redone in one pass. Rows whose
@@ -319,29 +361,28 @@ export async function backfillTranslations(env: Env, batch = 2): Promise<number>
     return done;
 }
 
-/** Phase 2 of the backfill: create rows for covered-language articles that have none. */
+/** Phase 2: fill every reader locale, newest and most-read articles first. */
 async function backfillMissingTranslations(env: Env, batch: number): Promise<number> {
     // Once coverage is complete the anti-join below scans every covered
     // article and finds nothing — every minute, forever. Park the sweep for
     // 6h whenever it comes back empty; new articles are translated at
     // enrichment time anyway, so the backfill only needs occasional passes.
-    const DONE_FLAG = 'translate:coverage_done';
+    const DONE_FLAG = 'translate:all-reader-locales:v2:coverage_done';
     if (await env.CACHE.get(DONE_FLAG)) return 0;
 
-    const inList = (codes: string[]) => codes.map(c => `'${c}'`).join(',');
     const missing = await env.DB.prepare(`
         SELECT a.id AS aid, l.lang, a.title, a.subtitle, a.summary, a.content
         FROM articles a
-        JOIN (SELECT 'fr' AS lang UNION ALL SELECT 'ar' UNION ALL SELECT 'pt') l
-          ON (l.lang = 'fr' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.fr)}))
-          OR (l.lang = 'ar' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.ar)}))
-          OR (l.lang = 'pt' AND a.country_code IN (${inList(LANGUAGE_COUNTRIES.pt)}))
+        CROSS JOIN (
+            SELECT 'fr' AS lang UNION ALL SELECT 'ar' UNION ALL SELECT 'pt'
+            UNION ALL SELECT 'de' UNION ALL SELECT 'hi' UNION ALL SELECT 'zh'
+        ) l
         WHERE a.status = 'published'
           AND NOT EXISTS (
               SELECT 1 FROM article_translations t
               WHERE t.article_id = a.id AND t.language = l.lang
           )
-        ORDER BY a.published_at DESC
+        ORDER BY a.published_at DESC, a.view_count DESC, l.lang ASC
         LIMIT ?
     `).bind(batch).all<{ aid: string; lang: SupportedLanguage; title: string; subtitle: string | null; summary: string | null; content: string }>();
 
@@ -400,38 +441,20 @@ export async function autoTranslateArticle(
         country_code?: string | null;
     }
 ): Promise<void> {
-    // Determine which languages to translate to based on article's country
-    const targetLanguages: SupportedLanguage[] = [];
+    // Every locale visible in the reader gets pre-saved short fields for new
+    // work. Long bodies are upgraded through the quality-gated backfill or as
+    // soon as a reader requests that locale.
+    const targetLanguages: Exclude<SupportedLanguage, 'en'>[] = ['fr', 'ar', 'pt', 'de', 'hi', 'zh'];
 
-    // If article is about a Francophone country, translate to French
-    if (article.country_code && LANGUAGE_COUNTRIES.fr.includes(article.country_code)) {
-        targetLanguages.push('fr');
-    }
-
-    // If article is about an Arabic-speaking country, translate to Arabic
-    if (article.country_code && LANGUAGE_COUNTRIES.ar.includes(article.country_code)) {
-        targetLanguages.push('ar');
-    }
-
-    // If article is about a Lusophone country, translate to Portuguese
-    if (article.country_code && LANGUAGE_COUNTRIES.pt.includes(article.country_code)) {
-        targetLanguages.push('pt');
-    }
-
-    // Always create French translation for pan-African content (no specific country)
-    if (!article.country_code) {
-        targetLanguages.push('fr');
-    }
-
-    // Translate to each target language
-    for (const lang of targetLanguages) {
+    for (let offset = 0; offset < targetLanguages.length; offset += 2) {
+        await Promise.allSettled(targetLanguages.slice(offset, offset + 2).map(async (lang) => {
         try {
             console.log(`Auto-translating article ${articleId} to ${lang}`);
-            const translated = await translateArticle(env, article, lang);
-            await storeTranslation(env, articleId, lang, translated);
+                await ensureArticleTranslation(env, articleId, article, lang);
             console.log(`  → Translation stored for ${lang}`);
         } catch (error) {
             console.error(`Failed to translate article ${articleId} to ${lang}:`, error);
         }
+        }));
     }
 }
