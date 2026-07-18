@@ -29,9 +29,16 @@ const isPipeRow = (line: string) => {
   return (trimmed.startsWith('|') || /\s\|\s/.test(trimmed)) && splitTableRow(trimmed).length > 1;
 };
 
+const nextContentIndex = (lines: string[], start: number) => {
+  let index = start;
+  while (index < lines.length && !lines[index].trim()) index += 1;
+  return index;
+};
+
 const startsTable = (lines: string[], index: number) => {
-  if (!isPipeRow(lines[index] || '') || !isPipeRow(lines[index + 1] || '')) return false;
-  return splitTableRow(lines[index]).length === splitTableRow(lines[index + 1]).length;
+  const next = nextContentIndex(lines, index + 1);
+  if (!isPipeRow(lines[index] || '') || !isPipeRow(lines[next] || '')) return false;
+  return splitTableRow(lines[index]).length === splitTableRow(lines[next]).length;
 };
 
 const startsBlock = (lines: string[], index: number) => {
@@ -85,11 +92,13 @@ function parseEditorialContent(content: string): EditorialBlock[] {
 
     if (startsTable(lines, index)) {
       const headers = splitTableRow(line);
-      index += isTableDivider(lines[index + 1] || '') ? 2 : 1;
+      index = nextContentIndex(lines, index + 1);
+      if (isTableDivider(lines[index] || '')) index = nextContentIndex(lines, index + 1);
       const rows: string[][] = [];
       while (index < lines.length && isPipeRow(lines[index]) && lines[index].trim()) {
         const row = splitTableRow(lines[index++]);
         if (!isTableDivider(row.join('|'))) rows.push(row);
+        index = nextContentIndex(lines, index);
       }
       blocks.push({ kind: 'table', headers, rows });
       continue;
