@@ -16,6 +16,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { NotificationBell } from './NotificationBell';
+import { OPEN_MOBILE_MENU_EVENT } from './MobileNavigationDock';
 
 import {
     Sheet,
@@ -33,7 +34,16 @@ export const NavBar: React.FC = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
     const [scrolled, setScrolled] = React.useState(false);
 
-    React.useEffect(() => setMobileMenuOpen(false), [location.pathname]);
+    React.useEffect(() => {
+        const frame = window.requestAnimationFrame(() => setMobileMenuOpen(false));
+        return () => window.cancelAnimationFrame(frame);
+    }, [location.pathname]);
+
+    React.useEffect(() => {
+        const openMenu = () => setMobileMenuOpen(true);
+        window.addEventListener(OPEN_MOBILE_MENU_EVENT, openMenu);
+        return () => window.removeEventListener(OPEN_MOBILE_MENU_EVENT, openMenu);
+    }, []);
 
     React.useEffect(() => {
         const update = () => setScrolled(window.scrollY > 12);
@@ -89,7 +99,8 @@ export const NavBar: React.FC = () => {
     ];
 
     return (
-        <header className={cn("site-header sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80 transition-shadow duration-200", scrolled && "shadow-[0_8px_30px_-22px_rgba(15,31,61,0.65)]")}>
+        <>
+        <header className={cn("site-header fixed inset-x-0 top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-border/80 transition-shadow duration-200", scrolled && "shadow-[0_8px_30px_-22px_rgba(15,31,61,0.65)]")}>
             {/* Pre-header utilities. Signed-in only: for visitors it held nothing
                 but the language button — a dead 44px strip on every page. Their
                 LanguageSelector lives in the main navbar row instead. */}
@@ -114,7 +125,7 @@ export const NavBar: React.FC = () => {
 
                 {/* CENTER: Desktop Nav */}
                 {/* navy/70 is the contrast floor for 11px text on white — /60 is 4.38:1, under WCAG's 4.5 */}
-                <nav className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/70 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
+                <nav aria-label="Primary navigation" className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/70 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
                     {[
                         { path: '/intelligence', label: t('nav.intelligence_short', 'Intelligence'), priority: true },
                         { path: '/dashboards/overview', label: 'Dashboard', priority: true },
@@ -259,5 +270,7 @@ export const NavBar: React.FC = () => {
                 </div>
             </div>
         </header>
+        <div aria-hidden="true" className={cn("h-[4.5rem] shrink-0 lg:h-16", isAuthenticated && "lg:h-24")} />
+        </>
     );
 };

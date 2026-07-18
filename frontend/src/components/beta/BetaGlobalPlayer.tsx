@@ -30,7 +30,7 @@ export const BetaGlobalPlayer = () => {
     const hasNext = currentIndex < playlist.length - 1;
 
     return (
-        <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-12 duration-500 ease-out">
+        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-3 sm:right-8 lg:bottom-8 z-[100] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-12 duration-500 ease-out">
             
             {/* Queue Popover */}
             {showQueue && playlist.length > 0 && (

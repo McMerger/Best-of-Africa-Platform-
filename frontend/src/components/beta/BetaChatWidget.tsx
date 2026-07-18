@@ -79,7 +79,7 @@ export const BetaChatWidget = () => {
     <>
       {/* Floating Action Button */}
       <motion.button
-        className="fixed bottom-4 right-4 z-50 p-3 sm:bottom-6 sm:right-6 sm:p-4 bg-background text-foreground rounded-full shadow-lg border border-primary/20 hover:bg-background/90 hover:scale-105 transition-all flex items-center justify-center"
+        className="fixed bottom-[calc(4.65rem+env(safe-area-inset-bottom))] right-3 z-50 p-3 sm:right-6 sm:p-4 lg:bottom-6 bg-background text-foreground rounded-full shadow-lg border border-primary/20 hover:bg-background/90 hover:scale-105 transition-all flex items-center justify-center"
         onClick={() => setIsOpen(true)}
         initial={{ scale: 0 }}
         animate={{ scale: isOpen ? 0 : 1 }}
@@ -96,7 +96,7 @@ export const BetaChatWidget = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-4 right-4 z-50 w-[calc(100vw-2rem)] sm:bottom-6 sm:right-6 sm:w-[560px] h-[min(760px,82dvh)] bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
+            className="fixed bottom-[calc(4.65rem+env(safe-area-inset-bottom))] right-3 z-50 w-[calc(100vw-1.5rem)] sm:right-6 sm:w-[560px] h-[min(760px,72dvh)] sm:h-[min(760px,82dvh)] lg:bottom-6 bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-background text-foreground p-4 flex justify-between items-center shrink-0">

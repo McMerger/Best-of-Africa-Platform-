@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, List, X } from 'lucide-react';
+import { ArrowUp, Check, List, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 type PageSection = { id: string; label: string };
@@ -8,11 +8,17 @@ export function ScrollToTopButton() {
   const { pathname } = useLocation();
   const [visible, setVisible] = useState(false);
   const [sections, setSections] = useState<PageSection[]>([]);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);
   const timerRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    const update = () => setVisible(window.scrollY > Math.max(520, window.innerHeight * 0.65));
+    const update = () => {
+      setVisible(window.scrollY > Math.min(260, window.innerHeight * 0.3));
+      const available = document.documentElement.scrollHeight - window.innerHeight;
+      setProgress(available > 0 ? Math.min(100, Math.max(0, (window.scrollY / available) * 100)) : 0);
+    };
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
@@ -23,8 +29,11 @@ export function ScrollToTopButton() {
   }, []);
 
   useEffect(() => {
-    setVisible(false);
-    setOpen(false);
+    const resetFrame = window.requestAnimationFrame(() => {
+      setVisible(false);
+      setOpen(false);
+      setActiveSection(null);
+    });
 
     const collect = () => {
       const headings = Array.from(document.querySelectorAll<HTMLElement>('main h2'))
@@ -32,6 +41,7 @@ export function ScrollToTopButton() {
         .slice(0, 14);
       const next = headings.map((heading, index) => {
         if (!heading.id) heading.id = `page-section-${index + 1}`;
+        if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
         return { id: heading.id, label: heading.textContent!.trim().replace(/\s+/g, ' ') };
       });
       setSections(next.length >= 3 ? next : []);
@@ -46,10 +56,37 @@ export function ScrollToTopButton() {
     const observer = new MutationObserver(schedule);
     if (main) observer.observe(main, { childList: true, characterData: true, subtree: true });
     return () => {
+      window.cancelAnimationFrame(resetFrame);
       observer.disconnect();
       window.clearTimeout(timerRef.current);
     };
   }, [pathname]);
+
+  useEffect(() => {
+    if (!sections.length) return;
+    let frame = 0;
+    const updateActive = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        const headerOffset = (document.querySelector('.site-header')?.getBoundingClientRect().height || 64) + 36;
+        let current = sections[0]?.id || null;
+        for (const section of sections) {
+          const element = document.getElementById(section.id);
+          if (element && element.getBoundingClientRect().top <= headerOffset) current = section.id;
+          else if (element) break;
+        }
+        setActiveSection(current);
+      });
+    };
+    updateActive();
+    window.addEventListener('scroll', updateActive, { passive: true });
+    window.addEventListener('resize', updateActive);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', updateActive);
+      window.removeEventListener('resize', updateActive);
+    };
+  }, [sections]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,41 +98,49 @@ export function ScrollToTopButton() {
   return (
     <>
       {open && sections.length > 0 && (
-        <nav id="page-section-menu" aria-label="Sections on this page" className="fixed bottom-[4.5rem] left-4 z-40 w-[min(21rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-navy/15 bg-white shadow-[0_24px_60px_-24px_rgba(15,31,61,0.55)] sm:bottom-[5.25rem] sm:left-6">
+        <nav id="page-section-menu" aria-label="Sections on this page" className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-3 z-40 w-[min(23rem,calc(100vw-1.5rem))] overflow-hidden rounded-xl border border-navy/15 bg-white shadow-[0_24px_60px_-24px_rgba(15,31,61,0.55)] sm:left-6 sm:w-[min(23rem,calc(100vw-3rem))] lg:bottom-[5.25rem]">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-navy/60">On this page</span>
             <button type="button" onClick={() => setOpen(false)} className="rounded-full p-1.5 text-navy/50 hover:bg-navy/5 hover:text-navy" aria-label="Close section menu"><X size={15} /></button>
           </div>
           <div className="max-h-[min(55dvh,28rem)] overflow-y-auto p-2">
-            {sections.map((section, index) => (
+            {sections.map((section, index) => {
+              const active = activeSection === section.id;
+              return (
               <button
                 type="button"
                 key={section.id}
                 onClick={() => {
-                  document.getElementById(section.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  const element = document.getElementById(section.id);
+                  element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  window.setTimeout(() => element?.focus({ preventScroll: true }), 450);
                   setOpen(false);
                 }}
-                className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm leading-5 text-navy/75 hover:bg-navy/5 hover:text-navy"
+                aria-current={active ? 'location' : undefined}
+                className={`flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm leading-5 transition-colors ${active ? 'bg-navy text-white' : 'text-navy/75 hover:bg-navy/5 hover:text-navy'}`}
               >
-                <span className="mt-0.5 w-5 shrink-0 text-[10px] font-bold tabular-nums text-navy/35">{String(index + 1).padStart(2, '0')}</span>
-                <span>{section.label}</span>
+                <span className={`mt-0.5 w-5 shrink-0 text-[10px] font-bold tabular-nums ${active ? 'text-white/65' : 'text-navy/35'}`}>{String(index + 1).padStart(2, '0')}</span>
+                <span className="flex-1">{section.label}</span>
+                {active && <Check size={15} className="mt-0.5 shrink-0" aria-hidden="true" />}
               </button>
-            ))}
+            )})}
           </div>
         </nav>
       )}
 
-      <div className="fixed bottom-4 left-4 z-40 flex items-center gap-2 sm:bottom-6 sm:left-6">
+      <div className="fixed bottom-[calc(4.65rem+env(safe-area-inset-bottom))] left-3 z-40 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 sm:left-6 sm:max-w-none lg:bottom-6">
         {sections.length > 0 && visible && (
           <button
             type="button"
             onClick={() => setOpen(value => !value)}
             aria-expanded={open}
             aria-controls="page-section-menu"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-navy/15 bg-white px-3.5 text-xs font-bold uppercase tracking-[0.1em] text-navy shadow-[0_12px_35px_-16px_rgba(15,31,61,0.55)] hover:border-navy/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
+            className="relative inline-flex min-h-11 min-w-0 max-w-[min(17rem,calc(100vw-5.5rem))] items-center gap-2 overflow-hidden rounded-full border border-navy/15 bg-white px-3.5 text-xs font-bold text-navy shadow-[0_12px_35px_-16px_rgba(15,31,61,0.55)] hover:border-navy/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy"
           >
+            <span className="absolute inset-x-0 bottom-0 h-0.5 bg-navy/10" aria-hidden="true"><span className="block h-full bg-navy" style={{ width: `${progress}%` }} /></span>
             <List size={16} aria-hidden="true" />
-            <span className="hidden min-[390px]:inline">Sections</span>
+            <span className="truncate sm:hidden">Sections</span>
+            <span className="hidden max-w-[13rem] truncate sm:inline">{sections.find(section => section.id === activeSection)?.label || 'On this page'}</span>
           </button>
         )}
         <button

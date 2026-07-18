@@ -69,14 +69,16 @@ export const BetaIntelligence = () => {
 
         <div className="max-w-6xl mx-auto w-full">
           <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end md:gap-8">
-            <motion.div initial={false}>
+            <motion.div initial={false} className="min-w-0">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink flex items-center gap-2">
                   <Activity size={14} />
                   Africa Decision Intelligence
                 </span>
               </div>
-              <h1 className="max-w-full break-words font-serif text-navy text-[clamp(2.35rem,11vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-5">Market Intelligence</h1>
+              <h1 className="max-w-full break-words font-serif text-navy text-[clamp(2.2rem,9.5vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-5">
+                Market <span className="block min-[440px]:inline">Intelligence</span>
+              </h1>
               <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
                 The institutional entry point for understanding markets, sectors and decision signals across all 54 African nations.
               </p>
