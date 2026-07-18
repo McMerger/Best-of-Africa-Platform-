@@ -79,6 +79,7 @@ import { MemberProvider } from './context/MemberContext';
 import { AudioProvider } from './context/AudioContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ContentPrefetcher } from './components/ContentPrefetcher';
 
 // ── Deferred chrome ─────────────────────────────────────────────────────────
 // None of these are needed for first paint, and together (cmdk, sonner, audio
@@ -110,7 +111,17 @@ const DeferredChrome = () => {
   );
 };
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12" aria-label="Loading page">
@@ -190,6 +201,7 @@ function App() {
                 <MissionProvider>
                   <AudioProvider>
                     <Router>
+                      <ContentPrefetcher />
                       <BreadcrumbProvider>
                       <ErrorBoundary>
                         <Suspense fallback={<PageLoader />}>

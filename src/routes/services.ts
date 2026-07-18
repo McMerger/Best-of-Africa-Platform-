@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib';
 import { validate, BookingRequestSchema, PaginationSchema, EventRegistrationSchema, IdOrSlugParamSchema, UuidParamSchema, CountryCodeParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
 import { callConfiguredAI } from '../lib/ai';
 import { z } from 'zod';
@@ -225,6 +225,29 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
     }
 
     const data = event as Record<string, unknown>;
+    const eventContextKey = `event:${id}:context:v2`;
+    const eventContext = await getCachedValue<string>(c.env, eventContextKey);
+    const immediateEventContext = `${String(data.title)} is scheduled from ${String(data.date_start || 'the recorded start date')} to ${String(data.date_end || data.date_start || 'the recorded end date')}${data.country_name ? ` in ${String(data.country_name)}` : ''}. ${String(data.description || 'The event record contains the current organiser-supplied details and registration information.')}`;
+    if (!eventContext) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, eventContextKey, async () => {
+                const topic = `${data.title} ${data.country_name || ''} business`;
+                try {
+                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [topic] });
+                    const vector = (embedding as Record<string, any>).data[0];
+                    const relevant = await c.env.VECTORS.query(vector, { topK: 6, returnMetadata: true });
+                    const context = relevant.matches.map((match, index) => {
+                        const metadata = match.metadata as Record<string, any>;
+                        return `[${index + 1}] ${metadata.title || 'Untitled record'}\nPublished: ${metadata.published_at || 'date unavailable'}\nSource URL: ${metadata.source_url || metadata.url || 'unavailable'}\nEvidence: ${(metadata.text || metadata.summary || '').slice(0, 650)}`;
+                    }).join('\n---\n');
+                    if (!context) return immediateEventContext;
+                    const prompt = `System: You are BOA-Story's event evidence desk. Use only the event record and numbered reporting records. Explain relevance, affected sectors and institutions, practical questions, contradictions and evidence gaps. Cite records inline and do not invent speakers, agenda items or outcomes.\nUser: Event: ${data.title}. Description: ${data.description || 'unavailable'}. Country: ${data.country_name || 'not specified'}. Dates: ${data.date_start || 'unavailable'} to ${data.date_end || 'unavailable'}.\n\nRelevant records:\n${context}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' });
+                    return aiResponse?.trim() || immediateEventContext;
+                } catch { return immediateEventContext; }
+            }, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
 
     return c.json({
         success: true,
@@ -232,29 +255,7 @@ router.get('/events/:id', validate('param', IdOrSlugParamSchema), async (c) => {
             ...data,
             date: data.date_start, // Alias for frontend
             event_type: data.category, // Alias for frontend
-            ai_context_brief: await getCached(
-                c.env,
-                `event:${id}:context:v2`,
-                async () => {
-                    const topic = `${data.title} ${data.country_name || ''} business`;
-                    try {
-                        const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [topic] });
-                        const vector = (embedding as Record<string, any>).data[0];
-                        const relevant = await c.env.VECTORS.query(vector, { topK: 6, returnMetadata: true });
-                        const context = relevant.matches.map((match, index) => {
-                            const metadata = match.metadata as Record<string, any>;
-                            return `[${index + 1}] ${metadata.title || 'Untitled record'}\nPublished: ${metadata.published_at || 'date unavailable'}\nSource URL: ${metadata.source_url || metadata.url || 'unavailable'}\nEvidence: ${(metadata.text || metadata.summary || '').slice(0, 650)}`;
-                        }).join('\n---\n');
-
-                        if (!context) return "No source-linked context records are currently available for this event.";
-
-                        const prompt = `System: You are BOA-Story's event evidence desk. Use only the event record and numbered reporting records. Explain relevance, affected sectors and institutions, practical questions, contradictions and evidence gaps. Cite records inline and do not invent speakers, agenda items or outcomes.\nUser: Event: ${data.title}. Description: ${data.description || 'unavailable'}. Country: ${data.country_name || 'not specified'}. Dates: ${data.date_start || 'unavailable'} to ${data.date_end || 'unavailable'}.\n\nRelevant records:\n${context}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' });
-                        return aiResponse?.trim();
-                    } catch (e) { return null; }
-                },
-                { ttl: 3600 }
-            )
+            ai_context_brief: eventContext || immediateEventContext
         }
     });
 });

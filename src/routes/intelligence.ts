@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 import { validate, CountryCodeParamSchema, UuidParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
 import { z } from 'zod';
@@ -92,6 +92,17 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         WHERE a.id IS NULL
       `).bind(code).all<{ name: string }>();
 
+      const recommendationKey = `intel:country:${code}:recommendations:v2`;
+      const cachedRecommendations = await getCachedValue<string[]>(c.env, recommendationKey);
+      const recommendationFallback = (recentArticles.results as any[]).slice(0, 3).map((article, index) =>
+        `${index + 1}. Verify the institutions, dates and primary documents behind “${article.title}”. The BOA-Story record was published ${article.published_at || 'on an unrecorded date'} and should be checked against current official, regulatory and financial evidence before a decision.`
+      );
+      if (!cachedRecommendations && recentArticles.results?.length) {
+        c.executionCtx.waitUntil(
+          getCached(c.env, recommendationKey, () => generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []), { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+      }
+
       return {
         country: country as any,
         article_count: articleCount?.total || 0,
@@ -108,7 +119,7 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         },
         methodology: 'BOA-Story does not infer sentiment, investment readiness or tourism appeal from article count, engagement or sector mentions. Use the source-linked recommendations and primary evidence instead.',
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
-        recommendations: await generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []),
+        recommendations: cachedRecommendations || recommendationFallback,
       } as CountryReport;
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -184,10 +195,8 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         `).bind(sectorId).all(),
       ]);
 
-      const aiReport = await getCached(
-        c.env,
-        CACHE_KEYS.intelSectorAnalysis(sectorId),
-        async () => {
+      const sectorAnalysisKey = CACHE_KEYS.intelSectorAnalysis(sectorId);
+      const generateSectorReport = async () => {
           const evidence = (topArticles.results as any[]).slice(0, 10).map((article, index) =>
             `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nCoverage engagement: ${article.engagement_score ?? 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
           ).join('\n---\n');
@@ -200,16 +209,23 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
           } catch (e) {
             return "Analysis currently unavailable.";
           }
-        },
-        { ttl: CACHE_TTL.INTEL }
-      );
+      };
+      const aiReport = await getCachedValue<string>(c.env, sectorAnalysisKey);
+      if (!aiReport && topArticles.results?.length) {
+        c.executionCtx.waitUntil(
+          getCached(c.env, sectorAnalysisKey, generateSectorReport, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+      }
+      const immediateSectorReport = (topArticles.results as any[]).slice(0, 6).map((article, index) =>
+        `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+      ).join('\n\n') || `The sector report is grounded in the country, regional and monthly coverage records returned with this response.`;
 
       return {
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         monthly_trend: monthlyTrend.results || [],
         top_articles: topArticles.results || [],
-        ai_analyst_report: aiReport
+        ai_analyst_report: aiReport || immediateSectorReport
       };
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes

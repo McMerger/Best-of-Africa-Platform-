@@ -18,6 +18,19 @@ interface CachedValue<T> {
     ttl: number;
 }
 
+/** Read a cached value without triggering its expensive producer. */
+export async function getCachedValue<T>(env: Env, key: string): Promise<T | null> {
+    try {
+        const cached = await env.CACHE.get(`cache:${key}`, 'json') as CachedValue<T> | null;
+        if (!cached) return null;
+        const age = Math.floor(Date.now() / 1000) - cached.timestamp;
+        return age <= cached.ttl ? cached.data : null;
+    } catch (error) {
+        console.error(`Cache read error for key ${key}:`, error);
+        return null;
+    }
+}
+
 /**
  * Generic caching wrapper for any async fetch function.
  * Uses Cloudflare KV for persistent caching.
@@ -158,4 +171,5 @@ export const CACHE_TTL = {
     DYNAMIC: 120,       // 2 minutes - latest articles, analytics dashboard
     DASHBOARD: 600,     // 10 minutes - dashboard summary, summaries
     INTEL: 1800,        // 30 minutes - intelligence reports
+    ARCHIVE: 2592000,   // 30 days - immutable published-article enrichments
 } as const;

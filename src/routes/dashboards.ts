@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, Dashboard } from '../types';
 
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -130,9 +130,15 @@ router.get('/:region', async (c) => {
                 `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nEvidence: ${(article.summary || '').slice(0, 650)}`
             ).join('\n---\n');
             const prompt = `System: You are BOA-Story's regional evidence desk. Use only the supplied records and coverage counts. ${lensInstruction} Distinguish facts from analysis and state limitations.\n\nRegion: ${region}\nCountry coverage counts: ${JSON.stringify(trendingCountries.results || [])}\nSector coverage counts: ${JSON.stringify(sectorBreakdown.results || [])}\nReporting records:\n${articleEvidence || 'No current reporting records.'}`;
-            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' });
-            aiInsight = text || aiInsight;
-            await c.env.CACHE.put(cacheKey, aiInsight, { expirationTtl: 3600 });
+            aiInsight = (featuredArticles as any[]).slice(0, 5).map((article, index) =>
+                `${index + 1}. ${article.title} (${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 360)}`
+            ).join('\n\n') || `${region} Africa is represented by the current reporting and coverage totals in this dashboard.`;
+            c.executionCtx.waitUntil(
+                callConfiguredAI(c.env, { prompt, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' })
+                    .then(text => text?.trim() ? c.env.CACHE.put(cacheKey, text.trim(), { expirationTtl: CACHE_TTL.ARCHIVE }) : undefined)
+                    .then(() => undefined)
+                    .catch(error => console.error(`Dashboard brief refresh failed for ${region}`, error))
+            );
         }
     } catch { }
 
@@ -417,10 +423,8 @@ router.get('/analytics/summary', async (c) => {
         `[${index + 1}] ${record.published_at || 'date unavailable'} — ${record.title}\nCountry: ${record.country_name || 'unavailable'} | Sector: ${record.sector_name || 'unavailable'}\n${(record.summary || 'Summary unavailable.').slice(0, 900)}\nSource: ${record.source_title || 'unavailable'} | ${record.source_url || 'URL unavailable'}`
     ).join('\n\n');
 
-    const marketSummary = await getCached(
-        c.env,
-        `dashboard:coverage-brief:depth-v6:${activeLens}`,
-        async () => {
+    const marketSummaryKey = `dashboard:coverage-brief:depth-v6:${activeLens}`;
+    const generateMarketSummary = async () => {
             if (!evidence) return 'No source-linked continental briefing is currently available.';
             const audience = activeLens === 'government'
                 ? 'policy and public-sector readers'
@@ -434,8 +438,22 @@ User: Produce a rigorous 3,200-4,800 word continental briefing with a direct ans
 RECORDS:
 ${evidence}`;
             return callConfiguredAI(c.env, { prompt, max_tokens: 6500, temperature: 0.15, response_profile: 'deep-analysis' });
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
+    };
+
+    const cachedMarketSummary = await getCachedValue<string>(c.env, marketSummaryKey);
+    if (!cachedMarketSummary && evidence) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, marketSummaryKey, generateMarketSummary, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+
+    const evidenceSummary = (recentRecords.results || []).slice(0, 5).map((record, index) =>
+        `${index + 1}. ${record.title} (${record.country_name || 'country not tagged'}, ${record.published_at || 'date not recorded'}). ${(record.summary || '').slice(0, 360)}`
+    ).join('\n\n');
+    const marketSummary = cachedMarketSummary || (
+        evidenceSummary
+            ? `The current continental record contains ${Number(articleStats?.total_articles || 0)} published reports across ${Number(articleStats?.countries_covered || 0)} countries in the latest seven-day window. These figures measure BOA-Story reporting coverage, not market performance.\n\nRecent source-linked reporting\n\n${evidenceSummary}`
+            : `The current seven-day evidence window contains ${Number(articleStats?.total_articles || 0)} published reports across ${Number(articleStats?.countries_covered || 0)} countries and ${Number(articleStats?.sectors_covered || 0)} sectors. These are BOA-Story coverage totals, not measures of market performance, stability or investability.`
     );
 
     return c.json({

@@ -204,7 +204,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </div>
           <div className="px-7 py-8 md:px-10 md:py-10">
             {isAnalyticsLoading && (
-              <div className="space-y-4 animate-pulse" aria-label="Generating continental evidence briefing">
+              <div className="space-y-4 animate-pulse" aria-label="Loading continental evidence briefing">
                 <div className="h-5 w-3/4 rounded bg-foreground/10" />
                 <div className="h-4 w-full rounded bg-foreground/5" />
                 <div className="h-4 w-11/12 rounded bg-foreground/5" />

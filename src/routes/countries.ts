@@ -5,7 +5,7 @@
 
 import { Hono } from 'hono';
 import type { Env, Country } from '../types';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 import { getCountryEconomicProfile } from '../lib/economics';
 import { fetchIMFData, getGDPForecast, getDebtMetrics } from '../lib/imf-data';
@@ -74,17 +74,22 @@ router.get('/', async (c) => {
                     `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1100)}`
                 ).join('\n---\n');
 
+                const immediateBrief = (relevant.results || []).slice(0, 5).map((article: any, index) =>
+                    `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 320)}`
+                ).join('\n\n');
+                insights[region] = immediateBrief || `${region} Africa is represented by the country records and published coverage totals in this index.`;
+
                 if (context) {
                     const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts, supported interpretation, uncertainty and gaps.\nUser: Produce a full regional evidence brief for ${region} Africa covering chronology, actors, documented mechanisms, country and sector differences, stakeholder effects, practical implications, counter-signals, alternative explanations, source limitations, claim ledger and verification priorities.\n\nRecords:\n${context}`;
-                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
-                    const text = aiRes?.trim();
-                    if (text) {
-                        insights[region] = text;
-                        await c.env.CACHE.put(cacheKey, text, { expirationTtl: 3600 * 4 }); // 4 hours
-                    }
+                    c.executionCtx.waitUntil(
+                        callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' })
+                            .then(text => text?.trim() ? c.env.CACHE.put(cacheKey, text.trim(), { expirationTtl: CACHE_TTL.ARCHIVE }) : undefined)
+                            .then(() => undefined)
+                            .catch(error => console.error(`Regional brief refresh failed for ${region}`, error))
+                    );
                 }
             } catch (e) {
-                insights[region] = "Regional data currently updating.";
+                insights[region] = `${region} Africa is represented by the country records and published coverage totals in this index.`;
             }
         }));
 
@@ -216,6 +221,27 @@ router.get('/:code', async (c) => {
         { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
     );
 
+    const countrySituationKey = CACHE_KEYS.countrySituation(code);
+    const countrySituation = await getCachedValue<string>(c.env, countrySituationKey);
+    const situationEvidenceRows = stats.recent_articles as any[];
+    const situationFallback = situationEvidenceRows.length
+        ? situationEvidenceRows.map((article, index) => `${index + 1}. ${article.title} (${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`).join('\n\n')
+        : `${country.name} is represented by its country profile and the published coverage totals in this record.`;
+    if (!countrySituation && situationEvidenceRows.length) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, countrySituationKey, async () => {
+                const evidence = situationEvidenceRows.map((article, index) =>
+                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
+                ).join('\n---\n');
+                try {
+                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from supported interpretation, identify contradictions, alternative explanations and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a complete current situation dossier for ${country.name}, including scope, chronology, actors, documented mechanisms, stakeholder impacts, sector interactions, policy and operating implications, counter-signals, source limitations, a claim ledger and prioritized verification steps.\n\nRecords:\n${evidence}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
+                    return aiResponse?.trim() || situationFallback;
+                } catch { return situationFallback; }
+            }, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+
     return c.json({
         country: processCountries([country])[0],
         stats: {
@@ -223,22 +249,7 @@ router.get('/:code', async (c) => {
             top_sectors: stats.top_sectors,
         },
         recent_articles: stats.recent_articles,
-        ai_situation_report: await getCached(
-            c.env,
-            CACHE_KEYS.countrySituation(code),
-            async () => {
-                const evidence = (stats.recent_articles as any[]).map((article, index) =>
-                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
-                ).join('\n---\n');
-                if (!evidence) return "No source-linked country reporting is currently available.";
-                try {
-                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from supported interpretation, identify contradictions, alternative explanations and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a complete current situation dossier for ${country.name}, including scope, chronology, actors, documented mechanisms, stakeholder impacts, sector interactions, policy and operating implications, counter-signals, source limitations, a claim ledger and prioritized verification steps.\n\nRecords:\n${evidence}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
-                    return aiResponse?.trim();
-                } catch { return "The source-linked country briefing is temporarily unavailable."; }
-            },
-            { ttl: CACHE_TTL.DASHBOARD }
-        )
+        ai_situation_report: countrySituation || situationFallback
     });
 });
 

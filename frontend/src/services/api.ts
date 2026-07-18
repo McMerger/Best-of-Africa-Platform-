@@ -1,4 +1,5 @@
 import type { Article, ArticleListItem, CalendarEvent, Country, CountryStats, Dashboard, PaginatedResponse, SearchResult, Sector, SectorBreakdown, TrendingCountry } from '../types';
+import { readThroughCache } from '@/lib/persistentQueryCache';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api/v1';
 
@@ -19,11 +20,16 @@ const getAdminToken = () => localStorage.getItem('boa_admin_token');
 // Request helper
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = getAuthToken();
+    const method = (options.method || 'GET').toUpperCase();
+    const sessionScoped = endpoint.startsWith('/bookmarks')
+        || endpoint.startsWith('/personalization')
+        || endpoint.startsWith('/notifications');
     const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-Session-ID': getSessionId(),
+        'Accept': 'application/json',
         ...((options.headers as Record<string, string>) || {}),
     };
+    if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+    if (method !== 'GET' || sessionScoped) headers['X-Session-ID'] = getSessionId();
 
     // Add auth token if available — but never clobber an Authorization header
     // the caller set explicitly (triggerAuditScan / triggerAgentEvolution pass
@@ -57,6 +63,11 @@ export async function request<T>(endpoint: string, options: RequestInit = {}): P
 
     return response.json();
 }
+
+const readerRequest = <T>(endpoint: string, maxAgeMs?: number) => {
+    const accessScope = getAuthToken() ? 'member' : 'public';
+    return readThroughCache<T>(`${accessScope}:${endpoint}`, () => request<T>(endpoint), maxAgeMs);
+};
 
 export interface Campaign {
     id: string;
@@ -123,13 +134,14 @@ export const api = {
     // Articles
     getArticles: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
-        return request<PaginatedResponse<ArticleListItem>>(`/articles?${searchParams}`);
+        const endpoint = `/articles?${searchParams}`;
+        return readerRequest<PaginatedResponse<ArticleListItem>>(endpoint, 24 * 60 * 60 * 1000);
     },
     getArticle: (slug: string, lang?: string) =>
-        request<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(
-            `/articles/${slug}${lang && ['fr', 'ar', 'pt'].includes(lang) ? `?lang=${lang}` : ''}`
+        readerRequest<{ article: Article; country: Country; sector: Sector; related: ArticleListItem[] }>(
+            `/articles/${slug}${lang && ['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(lang) ? `?lang=${lang}` : ''}`
         ),
-    getFeaturedArticles: () => request<{ data: ArticleListItem[] }>('/articles/featured?limit=20'),
+    getFeaturedArticles: () => readerRequest<{ data: ArticleListItem[] }>('/articles/featured?limit=20', 24 * 60 * 60 * 1000),
     getWorldCupTeams: () => request<{
         teams: { name: string; flag: string; code: string }[];
         updated_at: string | null;
@@ -152,16 +164,16 @@ export const api = {
             away: { name: string; code?: string; score?: number | null };
         }[];
     }>('/world-cup/teams'),
-    getLatestArticles: () => request<{ data: ArticleListItem[] }>('/articles/latest?limit=20'),
+    getLatestArticles: () => readerRequest<{ data: ArticleListItem[] }>('/articles/latest?limit=20', 24 * 60 * 60 * 1000),
     getEvents: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
-        return request<{ success: boolean; data: CalendarEvent[] }>(`/events?${searchParams}`);
+        return readerRequest<{ success: boolean; data: CalendarEvent[] }>(`/events?${searchParams}`);
     },
 
     // Countries
-    getCountries: () => request<{ data: Country[]; by_region: Record<string, { countries: Country[]; ai_insight: string }> }>('/countries'),
+    getCountries: () => readerRequest<{ data: Country[]; by_region: Record<string, { countries: Country[]; ai_insight: string }> }>('/countries'),
     getPlatformStats: () => request<{ total_countries: number; total_articles: number; total_views: number; regions: number }>('/countries/stats'),
-    getCountry: (code: string) => request<{ country: Country; stats: CountryStats }>(`/countries/${code}`),
+    getCountry: (code: string) => readerRequest<{ country: Country; stats: CountryStats }>(`/countries/${code}`),
 
     // Dashboards
     getDashboards: () => request<{ data: Dashboard[] }>('/dashboards'),
@@ -171,7 +183,7 @@ export const api = {
         trending_countries: TrendingCountry[];
         sector_breakdown: SectorBreakdown[]
     }>(`/dashboards/${region}`),
-    getContinentalOverview: () => request<{
+    getContinentalOverview: () => readerRequest<{
         overview: {
             total_articles_30d: number;
             countries_covered: number;
@@ -190,15 +202,15 @@ export const api = {
     autocomplete: (query: string) => request<{ suggestions: { text: string; type: string }[] }>(`/search/suggest?q=${encodeURIComponent(query)}`),
 
     // Intelligence
-    getSectors: () => request<{ data: Sector[] }>('/market-intel/sectors'),
-    getSector: (id: string) => request<{
+    getSectors: () => readerRequest<{ data: Sector[] }>('/market-intel/sectors', 24 * 60 * 60 * 1000),
+    getSector: (id: string) => readerRequest<{
         sector: Sector;
         by_country: { code: string; name: string; flag_emoji: string; count: number }[];
         by_region: { name: string; count: number; views: number }[];
         recent_articles: ArticleListItem[];
         top_performers: ArticleListItem[];
     }>(`/market-intel/sector/${id}`),
-    getCountryOutlook: (code: string) => request<{
+    getCountryOutlook: (code: string) => readerRequest<{
         country: Country;
         outlook: {
             investment_commentary: string;
@@ -215,7 +227,7 @@ export const api = {
             source_records: { record: number; title: string; published_at: string; source_title: string; source_url: string }[];
         };
     }>(`/market-intel/country/${code}/outlook`),
-    getCountryRelationships: (code: string) => request<{
+    getCountryRelationships: (code: string) => readerRequest<{
         country_code: string;
         country_name: string;
         relationships: { partner: string; type: string; context: string }[];
@@ -251,11 +263,11 @@ export const api = {
         aligned_articles: ArticleListItem[];
         sector_coverage: { id: string; name: string; article_count: number; }[];
     }>(`/narratives/country/${code}`),
-    getReports: () => request<{ data: ArticleListItem[] }>('/market-intel/reports'),
-    getGeneratedReports: () => request<{ data: ArticleListItem[] }>('/market-intel/generated-reports'),
-    getGeneratedReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/generated-reports/${id}`),
-    getReportsBySector: (sectorId: string) => request<{ data: ArticleListItem[] }>(`/market-intel/reports/sector/${sectorId}`),
-    getReport: (id: string) => request<{ report: Article; related: ArticleListItem[] }>(`/market-intel/reports/${id}`),
+    getReports: () => readerRequest<{ data: ArticleListItem[] }>('/market-intel/reports'),
+    getGeneratedReports: () => readerRequest<{ data: ArticleListItem[] }>('/market-intel/generated-reports'),
+    getGeneratedReport: (id: string) => readerRequest<{ report: Article; related: ArticleListItem[] }>(`/market-intel/generated-reports/${id}`),
+    getReportsBySector: (sectorId: string) => readerRequest<{ data: ArticleListItem[] }>(`/market-intel/reports/sector/${sectorId}`),
+    getReport: (id: string) => readerRequest<{ report: Article; related: ArticleListItem[] }>(`/market-intel/reports/${id}`),
     getAudienceInsights: () => request<{
         demographics: { age_group: string; percentage: number }[];
         regions: { name: string; percentage: number }[];
@@ -290,7 +302,7 @@ export const api = {
             body: JSON.stringify({ articleId })
         }),
 
-    getPremiumCountryReport: (code: string) => request<{
+    getPremiumCountryReport: (code: string) => readerRequest<{
         country: Country;
         article_count: number;
         top_sectors: { sector: Sector; count: number }[];
@@ -300,7 +312,7 @@ export const api = {
         narrative_gaps: string[];
         recommendations: string[];
     }>(`/intel/country/${code}/report`),
-    getSectorTrends: (id: string) => request<{
+    getSectorTrends: (id: string) => readerRequest<{
         sector: Sector;
         weekly_coverage: { week_start: string; stories: number; countries: number }[];
         country_coverage: { code: string; name: string; stories: number }[];
@@ -394,14 +406,14 @@ export const api = {
         updated_at: string;
     }>('/market-intel/leading-sector'),
 
-    getCoveragePulse: () => request<{
+    getCoveragePulse: () => readerRequest<{
         stories_7d: number;
         countries_7d: number;
         top_sector: { name: string; stories: number };
         countries: { country_code: string; country_name: string; this_week: number; last_week: number }[];
         thinnest_region: { region: string; stories: number };
         updated_at: string;
-    }>('/market-intel/coverage-pulse'),
+    }>('/market-intel/coverage-pulse', 60 * 60 * 1000),
 
     getSentimentDivergence: () => request<{
         evidence_scope: string;
@@ -410,16 +422,16 @@ export const api = {
         updated_at: string;
     }>('/market-intel/sentiment-divergence'),
 
-    getPlatformAnalytics: (lens?: 'investor' | 'government' | 'explorer') => request<{
+    getPlatformAnalytics: (lens?: 'investor' | 'government' | 'explorer') => readerRequest<{
         market_summary: string;
         sector_trends: { id: string; name: string; trend: 'coverage_up' | 'coverage_down' | 'coverage_flat'; article_count: number; previous_article_count: number; coverage_change: number }[];
         total_articles_7d: number;
         coverage: { countries_7d: number; sectors_7d: number; source_records_7d: number; previous_articles_7d: number; coverage_change_7d: number; total_views_7d: number; audience_response: number; latest_reported_at: string };
         methodology: string;
         updated_at: string;
-    }>(`/dashboards/analytics/summary${lens ? `?lens=${lens}` : ''}`),
+    }>(`/dashboards/analytics/summary${lens ? `?lens=${lens}` : ''}`, 24 * 60 * 60 * 1000),
 
-    getStrategicOpportunities: () => request<{
+    getStrategicOpportunities: () => readerRequest<{
         data: {
             country_code: string;
             country_name: string;
@@ -438,7 +450,7 @@ export const api = {
             methodology: string;
             score: number;
         }[]
-    }>('/market-intel/opportunities'),
+    }>('/market-intel/opportunities', 24 * 60 * 60 * 1000),
 
     getSectorVelocity: (sectorId: string) => request<{
         sector_id: string;
@@ -479,16 +491,16 @@ export const api = {
     // Narratives
     getNarrativeStrategies: (params: Record<string, string> = {}) => {
         const searchParams = new URLSearchParams(params);
-        return request<{ data: NarrativeStrategy[] }>(`/narratives?${searchParams}`);
+        return readerRequest<{ data: NarrativeStrategy[] }>(`/narratives?${searchParams}`);
     },
-    getCountryNarratives: (code: string) => request<{
+    getCountryNarratives: (code: string) => readerRequest<{
         country: Country & { narrative_arc: string };
         active_strategies: NarrativeStrategy[];
         aligned_articles: ArticleListItem[];
         sector_coverage: any[];
         ai_gap_analysis: string;
     }>(`/narratives/country/${code}`),
-    getNarrativeIndex: (code: string) => request<NarrativeIndex>(`/narratives/country/${code}/index`),
+    getNarrativeIndex: (code: string) => readerRequest<NarrativeIndex>(`/narratives/country/${code}/index`),
 
     // 3D Visualization Data Feed ("The Brain")
     getIntelligence: () => request<{
@@ -570,7 +582,7 @@ export const api = {
 
     // Corporate Services & Summits
     getCorporateEvents: () => request<{ data: any[] }>('/services/events'),
-    getEvent: (id: string) => request<{ event: any }>(`/services/events/${id}`),
+    getEvent: (id: string) => readerRequest<{ event: any }>(`/services/events/${id}`),
     registerForEvent: (id: string, data: any) => request<{ success: boolean; registration_id: string }>(`/services/events/${id}/register`, {
         method: 'POST',
         body: JSON.stringify(data)

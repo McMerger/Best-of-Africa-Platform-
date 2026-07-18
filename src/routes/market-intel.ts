@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -99,10 +99,8 @@ router.get('/sector/:id', async (c) => {
     const evidence = (recentArticles.results as any[]).map((article, index) =>
         `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
     ).join('\n---\n');
-    const sectorAnalysis = await getCached(
-        c.env,
-        `sector:${sectorId}:evidence-analysis:v5`,
-        async () => {
+    const sectorAnalysisKey = `sector:${sectorId}:evidence-analysis:v5`;
+    const generateSectorAnalysis = async () => {
             if (!evidence) return 'Insufficient evidence for a current sector analysis.';
             try {
                 const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered records, cite them inline, distinguish facts from analysis, and explain cross-country differences, chronology, actors, operational and policy implications, counter-signals, limitations and next diligence steps. Never infer market growth from reporting or engagement volume.\nUser: Produce a complete evidence analysis for Africa's ${(sector as Record<string, any>).name} sector.\n\nRecords:\n${evidence}`;
@@ -111,17 +109,24 @@ router.get('/sector/:id', async (c) => {
                 console.error('Sector evidence analysis failed', error);
                 return null;
             }
-        },
-        { ttl: 3600 * 24 }
-    );
+    };
+    const sectorAnalysis = await getCachedValue<string>(c.env, sectorAnalysisKey);
+    if (!sectorAnalysis && evidence) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, sectorAnalysisKey, generateSectorAnalysis, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const immediateSectorAnalysis = (recentArticles.results as any[]).slice(0, 6).map((article, index) =>
+        `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+    ).join('\n\n') || `${(sector as Record<string, any>).name} is represented by the country, regional and published coverage records in this profile.`;
 
     return c.json({
-        sector: { ...sector, ai_outlook: sectorAnalysis },
+        sector: { ...sector, ai_outlook: sectorAnalysis || immediateSectorAnalysis },
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         recent_articles: recentArticles.results || [],
         top_performers: topPerformers.results || [],
-        ai_trend_analysis: sectorAnalysis,
+        ai_trend_analysis: sectorAnalysis || immediateSectorAnalysis,
     });
 });
 
@@ -255,10 +260,8 @@ router.get('/country/:code/outlook', async (c) => {
         `[${index + 1}] ${record.published_at} — ${record.title}\nSector: ${record.sector_name || 'General coverage'}\n${record.summary.slice(0, 1200)}\nSource: ${record.source_title} | ${record.source_url || `/stories/${record.slug}`}`
     ).join('\n\n');
 
-    const evidenceBriefing = await getCached(
-        c.env,
-        `${CACHE_KEYS.countryOutlook(code)}:evidence-contract-v3`,
-        async () => {
+    const evidenceBriefingKey = `${CACHE_KEYS.countryOutlook(code)}:evidence-contract-v3`;
+    const generateEvidenceBriefing = async () => {
             if (!evidenceContext) return `The current BOA-Story evidence window contains zero published records for ${countryData.name}. That observed zero is the finding: no country-level inference can be supported from this dataset until reporting records enter the window.`;
             const prompt = `System: You are BOA-Story's country evidence editor. Use only the numbered records. This is not an investment rating. Do not infer economic performance, political stability, policy quality, tourism safety or investability from article volume, engagement or narrative fields. Cite records inline and distinguish reported fact, supported interpretation and unresolved question.
 
@@ -267,14 +270,21 @@ User: Produce a complete evidence briefing for ${countryData.name}. Cover the re
 RECORDS:
 ${evidenceContext}`;
             return callConfiguredAI(c.env, { prompt, max_tokens: 6500, temperature: 0.15, response_profile: 'evidence-brief' });
-        },
-        { ttl: CACHE_TTL.INTEL }
-    );
+    };
+    const evidenceBriefing = await getCachedValue<string>(c.env, evidenceBriefingKey);
+    if (!evidenceBriefing && evidenceContext) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, evidenceBriefingKey, generateEvidenceBriefing, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const immediateCountryBriefing = sourceRecords.slice(0, 6).map((record, index) =>
+        `${index + 1}. ${record.title} (${record.published_at || 'date not recorded'}, ${record.sector_name || 'general coverage'}). ${(record.summary || '').slice(0, 420)}`
+    ).join('\n\n') || `The current BOA-Story evidence window contains zero published records for ${countryData.name}. No country-level inference is supported from this dataset until reporting records enter the window.`;
 
     return c.json({
         country: countryData,
         outlook: {
-            investment_commentary: evidenceBriefing,
+            investment_commentary: evidenceBriefing || immediateCountryBriefing,
             methodology: 'This source-linked briefing analyzes BOA-Story reporting records. It does not infer investment readiness, stability, safety or economic performance from coverage or engagement.'
         },
         sector_opportunities: [],
@@ -855,10 +865,11 @@ router.get('/sector/:id/velocity', async (c) => {
 // GET /market-intel/opportunities - High-growth intersections
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/opportunities', async (c) => {
-    return c.json(await getCached(
-        c.env,
-        'strategic-opportunities:depth-v8',
-        async () => {
+    const cacheKey = 'strategic-opportunities:depth-v8';
+    const cached = await getCachedValue<{ data: any[]; updated_at?: string }>(c.env, cacheKey);
+    if (cached) return c.json(cached);
+
+    const generateOpportunities = async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
                     c.code as country_code,
@@ -978,9 +989,71 @@ ${evidence}`;
             }
 
             return { data: formatted, updated_at: new Date().toISOString() };
-        },
-        { ttl: 3600 * 12 } // Cache for 12 hours
-    ));
+    };
+    c.executionCtx.waitUntil(
+        getCached(c.env, cacheKey, generateOpportunities, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+    );
+    return c.json(await buildImmediateOpportunities(c.env));
 });
+
+async function buildImmediateOpportunities(env: Env) {
+    const opportunities = await env.DB.prepare(`
+        SELECT c.code AS country_code, c.name AS country_name,
+               s.id AS sector_id, s.name AS sector_name,
+               COUNT(a.id) AS article_count, AVG(a.engagement_score) AS avg_score,
+               MAX(a.published_at) AS latest_reported_at
+        FROM articles a
+        JOIN countries c ON a.country_code = c.code
+        JOIN sectors s ON a.sector_id = s.id
+        WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
+        GROUP BY c.code, s.id
+        ORDER BY article_count DESC, latest_reported_at DESC
+        LIMIT 6
+    `).all<Record<string, any>>();
+
+    const data = await Promise.all((opportunities.results || []).map(async opportunity => {
+        const recent = await env.DB.prepare(`
+            SELECT title, summary, published_at, source_title, source_url
+            FROM articles
+            WHERE country_code = ? AND sector_id = ? AND status = 'published'
+            ORDER BY published_at DESC LIMIT 8
+        `).bind(opportunity.country_code, opportunity.sector_id).all<Record<string, any>>();
+        const records = recent.results || [];
+        const evidencePoints = records.slice(0, 8).map((article, index) =>
+            `[${index + 1}] ${article.published_at || 'Date not recorded'}: ${article.title}; source: ${article.source_title || article.source_url || 'source not supplied'}.`
+        );
+        return {
+            country_code: opportunity.country_code,
+            country_name: opportunity.country_name,
+            sector_id: opportunity.sector_id,
+            sector_name: opportunity.sector_name,
+            title: `${opportunity.country_name} ${opportunity.sector_name} evidence brief`,
+            summary: records.slice(0, 6).map((article, index) =>
+                `${index + 1}. ${article.title} (${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+            ).join('\n\n'),
+            why_it_matters: `BOA-Story recorded ${Number(opportunity.article_count || 0)} published reports at this country-sector intersection in the current 30-day window. That identifies a reporting-led watchlist for primary-source review; it does not establish growth, profitability, policy durability or investability. Verify the named institutions, legal instruments, financing, implementation milestones and contrary evidence behind the linked records before making a decision.`,
+            evidence_points: evidencePoints,
+            counter_signals: [
+                'Reporting volume and audience activity are not measures of market growth or investment readiness.',
+                'Several records may repeat the same announcement rather than provide independent confirmation.',
+                'The 30-day window can omit older constraints, failed projects and developments receiving little coverage.',
+            ],
+            diligence_questions: [
+                'Which primary filings, legal instruments and official notices substantiate these reports?',
+                'Which named entity owns delivery, financing, oversight and performance reporting?',
+                'Which milestones have been completed, delayed, revised or cancelled?',
+                'What current evidence would contradict the apparent pattern in these records?',
+            ],
+            claim_ledger: [`The intersection is prominent in the current BOA-Story reporting set; records [1-${Math.max(1, evidencePoints.length)}] support that coverage observation.`],
+            coverage_stories: Number(opportunity.article_count || 0),
+            audience_response: Math.round(Number(opportunity.avg_score || 0)),
+            latest_reported_at: opportunity.latest_reported_at,
+            score: Math.round(Number(opportunity.avg_score || 0)),
+            methodology: 'Ranked by BOA-Story reporting volume and recency. Audience response is descriptive platform activity, not an opportunity score.',
+        };
+    }));
+
+    return { data, updated_at: new Date().toISOString() };
+}
 
 export { router as marketIntelRouter };

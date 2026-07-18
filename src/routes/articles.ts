@@ -7,7 +7,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { Env, Article, ArticleListItem, PaginatedResponse, Variables } from '../types';
 import { trackEvent } from '../lib/analytics';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, UuidParamSchema } from '../lib';
 import { callConfiguredAI } from '../lib/ai';
 import { generateAudioNarration } from '../lib/audio';
@@ -211,13 +211,11 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
     );
 
     // Global Briefing (The "World View")
-    const globalBriefing = await getCached(
-        c.env,
-        CACHE_KEYS.globalBriefing,
-        async () => {
-            const evidence = (articles as unknown as ArticleListItem[]).slice(0, 12).map((article, index) =>
+    const evidenceArticles = (articles as unknown as ArticleListItem[]).slice(0, 12);
+    const evidence = evidenceArticles.map((article, index) =>
                 `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
-            ).join('\n\n');
+    ).join('\n\n');
+    const generateGlobalBriefing = async () => {
             if (!evidence) return "No source-linked briefing is currently available.";
 
             try {
@@ -227,11 +225,18 @@ router.get('/featured', validate('query', ArticleQuerySchema.pick({ limit: true,
             } catch (e) {
                 return "The source-linked briefing is temporarily unavailable.";
             }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
+    };
+    const globalBriefing = await getCachedValue<string>(c.env, CACHE_KEYS.globalBriefing);
+    if (!globalBriefing && evidence) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, CACHE_KEYS.globalBriefing, generateGlobalBriefing, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const recordBriefing = evidenceArticles.slice(0, 5).map((article, index) =>
+        `${index + 1}. ${article.title}. ${(article.summary || '').slice(0, 320)}`
+    ).join('\n\n');
 
-    return c.json({ data: articles, ai_global_briefing: globalBriefing });
+    return c.json({ data: articles, ai_global_briefing: globalBriefing || `Current source-linked reporting\n\n${recordBriefing}` });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -363,31 +368,37 @@ router.get('/sector/:id', validate('param', UuidParamSchema), validate('query', 
     LIMIT ? OFFSET ?
   `).bind(sectorId, limitNum, offset).all();
 
-    const aiOutlook = await getCached(
-        c.env,
-        CACHE_KEYS.sectorOutlook(sectorId),
-        async () => {
-            const evidence = (articles.results as any[]).slice(0, 10).map((article, index) =>
+    const sectorEvidenceRows = (articles.results as any[]).slice(0, 10);
+    const sectorEvidence = sectorEvidenceRows.map((article, index) =>
                 `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
-            ).join('\n\n');
-            if (!evidence) return "Insufficient source-linked reporting for sector analysis.";
+    ).join('\n\n');
+    const generateSectorOutlook = async () => {
+            if (!sectorEvidence) return "The sector record currently contains no published reporting.";
 
             try {
-                const prompt = `System: You are BOA-Story's sector evidence editor. Use only the numbered records and cite them inline. Do not infer growth, stability or investability from coverage or engagement.\nUser: Produce a detailed sector outlook covering the direct finding, chronology, named actors, cross-country differences, mechanisms, operating and policy implications, counter-signals, limitations and next diligence steps.\n\nRecords:\n${evidence}`;
+                const prompt = `System: You are BOA-Story's sector evidence editor. Use only the numbered records and cite them inline. Do not infer growth, stability or investability from coverage or engagement.\nUser: Produce a detailed sector outlook covering the direct finding, chronology, named actors, cross-country differences, mechanisms, operating and policy implications, counter-signals, limitations and next diligence steps.\n\nRecords:\n${sectorEvidence}`;
                 const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                 return aiResponse?.trim();
             } catch (e) {
-                return "The source-linked sector outlook is temporarily unavailable.";
+                return sectorEvidenceRows.map(article => `${article.title}. ${article.summary || ''}`).join('\n\n');
             }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
+    };
+    const sectorOutlookKey = CACHE_KEYS.sectorOutlook(sectorId);
+    const aiOutlook = await getCachedValue<string>(c.env, sectorOutlookKey);
+    if (!aiOutlook && sectorEvidence) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, sectorOutlookKey, generateSectorOutlook, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const immediateSectorOutlook = sectorEvidenceRows.slice(0, 5).map((article, index) =>
+        `${index + 1}. ${article.title}. ${(article.summary || '').slice(0, 320)}`
+    ).join('\n\n');
 
     c.header('Cache-Control', 'public, max-age=60, s-maxage=300');
     return c.json({
         sector: {
             ...sector,
-            ai_outlook: aiOutlook
+            ai_outlook: aiOutlook || immediateSectorOutlook
         },
         articles: {
             data: articles.results || [],
@@ -495,10 +506,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     );
 
     // Generate Executive Brief (Key Takeaways & Strategic Implications)
-    const aiContext = await getCached(
-        c.env,
-        CACHE_KEYS.articleContext(article.id),
-        async () => {
+    const generateAiContext = async () => {
             const prompt = `
                 Article Title: ${article.title}
                 Summary: ${article.summary}
@@ -527,15 +535,31 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
                 console.error('AI Context Failed', e);
                 return null;
             }
-        },
-        { ttl: CACHE_TTL.STATIC } // Briefs don't change often
-    );
+    };
+
+    // Never hold the article body behind an AI call. Serve a previously
+    // generated brief when available and warm a missing brief after the
+    // response has been released to the reader.
+    const aiContextKey = CACHE_KEYS.articleContext(article.id);
+    const aiContext = await getCachedValue<{
+        key_takeaways: string[];
+        strategic_implication: string;
+        limitations?: string[];
+        diligence_questions?: string[];
+        claim_ledger?: string[];
+    }>(c.env, aiContextKey);
+    if (!aiContext) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, aiContextKey, generateAiContext, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
 
     // ── Server-side paywall ────────────────────────────────────────────────────
     // Validate any Bearer JWT. Any authenticated client (basic/premium/enterprise)
     // gets full content. Anonymous visitors receive a truncated preview + paywall flag.
-    const authenticatedClientId = await activeMemberId(c.env, c.req.header('Authorization'));
-    const clientId = PAYWALL_DISABLED_FOR_REVIEW ? 'member-preview' : authenticatedClientId;
+    const clientId = PAYWALL_DISABLED_FOR_REVIEW
+        ? 'member-preview'
+        : await activeMemberId(c.env, c.req.header('Authorization'));
 
     let articleContent = article.content || '';
     let paywallActive = false;
@@ -552,11 +576,12 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         }
     }
 
+    c.header('Cache-Control', 'private, max-age=600, stale-while-revalidate=86400');
     return c.json({
         article: {
             ...article,
             content: articleContent,
-            ai_context: aiContext,
+            ...(aiContext ? { ai_context: aiContext } : {}),
             ...(paywallActive && {
                 paywall: true,
                 paragraphs_visible: paragraphsVisible,
