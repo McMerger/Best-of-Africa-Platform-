@@ -31,8 +31,8 @@ describe('official sector performance aggregation', () => {
     });
 
     it('derives year-over-year performance from three official level observations', () => {
-        const tourism = SECTOR_PERFORMANCE_SERIES.find(series => series.sector_id === 'tourism')!;
-        const result = calculateSectorPerformance(tourism, [
+        const healthcare = SECTOR_PERFORMANCE_SERIES.find(series => series.sector_id === 'healthcare')!;
+        const result = calculateSectorPerformance(healthcare, [
             record('MA', 'Morocco', 2024, 120), record('MA', 'Morocco', 2023, 100), record('MA', 'Morocco', 2022, 80),
             record('TN', 'Tunisia', 2024, 90), record('TN', 'Tunisia', 2023, 100), record('TN', 'Tunisia', 2022, 100),
         ]);
@@ -41,6 +41,15 @@ describe('official sector performance aggregation', () => {
         expect(result?.comparison_value).toBe(-7.5);
         expect(result?.positive_markets_pct).toBe(50);
         expect(result?.direction).toBe('slowing');
+    });
+
+    it('uses the current WDI travel-services share series for tourism performance', () => {
+        const tourism = SECTOR_PERFORMANCE_SERIES.find(series => series.sector_id === 'tourism')!;
+        expect(tourism).toMatchObject({
+            indicator_code: 'BX.GSR.TRVL.ZS',
+            mode: 'level_change',
+            headline_unit: '% of service exports',
+        });
     });
 
     it('does not manufacture a sector result from insufficient observations', () => {

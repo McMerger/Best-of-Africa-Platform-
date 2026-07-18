@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { BUNDLED_WDI_SECTOR_METRICS } from '../data/sector-performance-wdi-snapshot';
 
 const WORLD_BANK_API = 'https://api.worldbank.org/v2';
 const AFRICAN_COUNTRY_CODES = [
@@ -16,7 +17,7 @@ type SectorSeriesConfig = {
     indicator_code: string;
     indicator_name: string;
     mode: CalculationMode;
-    headline_unit: '%' | '% of GDP' | '% of population';
+    headline_unit: '%' | '% of GDP' | '% of population' | '% of service exports';
     comparison_unit: 'percentage points';
     headline_label: string;
     scope: string;
@@ -75,10 +76,10 @@ export const SECTOR_PERFORMANCE_SERIES: readonly SectorSeriesConfig[] = [
     },
     {
         sector_id: 'tourism', sector_name: 'Tourism & Hospitality',
-        indicator_code: 'BX.GSR.TRVL.CD', indicator_name: 'Travel services exports',
-        mode: 'year_over_year', headline_unit: '%', comparison_unit: 'percentage points', headline_label: 'Median annual receipts growth',
-        scope: 'Year-over-year change in travel-services export receipts in current US dollars.',
-        caveat: 'Travel receipts are affected by exchange rates and include more than leisure tourism; they do not measure hotel profitability.',
+        indicator_code: 'BX.GSR.TRVL.ZS', indicator_name: 'Travel services share of service exports',
+        mode: 'level_change', headline_unit: '% of service exports', comparison_unit: 'percentage points', headline_label: 'Median travel-export concentration',
+        scope: 'Travel services as a share of total service exports and the annual change across reporting African economies.',
+        caveat: 'The series covers business and personal travel and measures export concentration, not visitor counts, hotel profitability or domestic tourism.',
     },
 ] as const;
 
@@ -131,6 +132,21 @@ export type SectorPerformanceResponse = {
     retrieved_at: string;
     source_name: 'World Bank World Development Indicators';
     source_url: 'https://data.worldbank.org/indicator';
+};
+
+const BUNDLED_SNAPSHOT: SectorPerformanceResponse = {
+    data: SECTOR_PERFORMANCE_SERIES.map(config => ({
+        ...config,
+        ...BUNDLED_WDI_SECTOR_METRICS[config.sector_id],
+        source_name: 'World Bank World Development Indicators' as const,
+        source_url: `https://data.worldbank.org/indicator/${config.indicator_code}`,
+    })),
+    sectors_measured: SECTOR_PERFORMANCE_SERIES.length,
+    countries_in_scope: 54,
+    methodology: 'Each sector is represented by a named official performance proxy. Country-level observations use the latest three non-empty annual records in the World Bank WDI bulk release retrieved 18 July 2026. Headline values are cross-country medians; comparison values are median changes versus each country\'s preceding observation; breadth is the share of reporting markets improving. Series with different units are not combined into a cross-sector score or investment ranking.',
+    retrieved_at: '2026-07-18T16:15:31.000Z',
+    source_name: 'World Bank World Development Indicators',
+    source_url: 'https://data.worldbank.org/indicator',
 };
 
 const CACHE_KEY = 'market-intel:sector-performance:wdi:v1';
@@ -275,7 +291,7 @@ async function fetchSeries(config: SectorSeriesConfig): Promise<SectorPerformanc
 }
 
 export async function getSectorPerformanceCache(env: Env): Promise<SectorPerformanceResponse | null> {
-    return env.CACHE.get(CACHE_KEY, 'json') as Promise<SectorPerformanceResponse | null>;
+    return (await env.CACHE.get(CACHE_KEY, 'json') as SectorPerformanceResponse | null) || BUNDLED_SNAPSHOT;
 }
 
 export function sectorPerformanceCacheIsFresh(snapshot: SectorPerformanceResponse): boolean {
@@ -285,6 +301,7 @@ export function sectorPerformanceCacheIsFresh(snapshot: SectorPerformanceRespons
 export async function refreshSectorPerformance(env: Env): Promise<SectorPerformanceResponse | null> {
     const previous = await getSectorPerformanceCache(env);
     const results = await Promise.all(SECTOR_PERFORMANCE_SERIES.map(fetchSeries));
+    if (!results.some((item): item is SectorPerformance => item !== null)) return previous;
     const previousBySector = new Map((previous?.data || []).map(item => [item.sector_id, item]));
     const data = SECTOR_PERFORMANCE_SERIES
         .map((config, index) => results[index] || previousBySector.get(config.sector_id) || null)
