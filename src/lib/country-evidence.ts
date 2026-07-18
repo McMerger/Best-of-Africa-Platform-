@@ -98,7 +98,7 @@ export async function refreshCountryEvidence(
         fetchIMFData(env, country.name),
         getGDPForecast(env, country.name),
         getDebtMetrics(env, country.name),
-        getTradeBalance(env, country.name, undefined, { refresh: true, lookbackYears: 6 }),
+        getTradeBalance(env, country.name, undefined, { refresh: true, lookbackYears: 6, timeoutMs: 7000 }),
     ]);
 
     const freshWorldBank = worldBankResult.status === 'fulfilled' ? worldBankResult.value : null;

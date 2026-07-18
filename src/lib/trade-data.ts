@@ -171,7 +171,7 @@ export async function getTradeBalance(
     env: Env,
     countryName: string,
     year?: number,
-    options: { refresh?: boolean; lookbackYears?: number } = {},
+    options: { refresh?: boolean; lookbackYears?: number; timeoutMs?: number } = {},
 ): Promise<TradeBalance | null> {
     const cacheKey = `trade-balance:v2:${countryName}:${year || 'latest'}`;
 
@@ -183,9 +183,12 @@ export async function getTradeBalance(
 
     const targetYear = year || new Date().getFullYear();
     const lookbackYears = year ? 1 : Math.max(3, options.lookbackYears || 6);
+    const deadline = Date.now() + Math.max(1000, options.timeoutMs || 8000);
 
     try {
         for (let offset = 0; offset < lookbackYears; offset++) {
+            const remainingMs = deadline - Date.now();
+            if (remainingMs < 500) break;
             const candidateYear = targetYear - offset;
             const makeUrl = (flowCode: 'X' | 'M') => {
                 const url = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
@@ -199,8 +202,8 @@ export async function getTradeBalance(
             };
 
             const [exportsRes, importsRes] = await Promise.all([
-                fetchWithTimeout(makeUrl('X').toString()),
-                fetchWithTimeout(makeUrl('M').toString()),
+                fetchWithTimeout(makeUrl('X').toString(), Math.min(4000, remainingMs)),
+                fetchWithTimeout(makeUrl('M').toString(), Math.min(4000, remainingMs)),
             ]);
             if (!exportsRes.ok || !importsRes.ok) continue;
 
