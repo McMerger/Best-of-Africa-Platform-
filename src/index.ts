@@ -324,6 +324,16 @@ async function scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext)
     // 1. Ingestion: every minute
     await safe('ingestion', () => runIngestion(env));
 
+    // Keep official country evidence pre-saved. One country every two minutes
+    // refreshes the continent in under two hours without putting provider
+    // latency on a reader request or creating a 54-country network fan-out.
+    if (minutes % 2 === 0) {
+        await safe('country-evidence-refresh', async () => {
+            const { refreshNextCountryEvidence } = await import('./lib/country-evidence');
+            await refreshNextCountryEvidence(env);
+        });
+    }
+
     // Recover real publisher photography for existing stories. This is
     // source-only: no generated or generic fallback imagery is permitted.
     await safe('backfill-source-images', async () => {

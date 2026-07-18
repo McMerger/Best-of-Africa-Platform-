@@ -16,6 +16,8 @@ interface RSSItem {
     pubDate: string;
     imageUrl: string | null;
     imageCredit: string | null;
+    publisherName: string | null;
+    publisherUrl: string | null;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -105,7 +107,7 @@ export function isAfricanContent(title: string, content = ''): boolean {
     return false;
 }
 
-async function parseRSS(url: string): Promise<RSSItem[]> {
+export async function parseRSS(url: string): Promise<RSSItem[]> {
     try {
         const response = await fetch(url, {
             headers: { 'User-Agent': 'BestOfAfrica/1.0' },
@@ -134,6 +136,7 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
                 itemXml.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image\//i)?.[1] ||
                 null;
             const imageCredit = itemXml.match(/<media:credit[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/media:credit>/i)?.[1]?.trim() || null;
+            const publisherMatch = itemXml.match(/<source(?:\s+url=["']([^"']+)["'])?[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/source>/i);
 
             if (title && link) {
                 items.push({
@@ -143,6 +146,32 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
                     pubDate: pubDate.trim(),
                     imageUrl: normalizeEditorialImageUrl(rawImage, link.trim()),
                     imageCredit,
+                    publisherName: publisherMatch?.[2]?.replace(/<[^>]*>/g, '').trim() || null,
+                    publisherUrl: publisherMatch?.[1]?.trim() || null,
+                });
+            }
+        }
+
+        // Several high-quality publishers expose Atom rather than RSS. Treating
+        // only <item> as valid silently excluded those feeds from the source mix.
+        const entryRegex = /<entry(?:\s[^>]*)?>([\s\S]*?)<\/entry>/g;
+        while ((match = entryRegex.exec(xml)) !== null) {
+            const entryXml = match[1];
+            const title = entryXml.match(/<title(?:\s[^>]*)?>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i)?.[1] || '';
+            const link = entryXml.match(/<link[^>]+(?:rel=["']alternate["'][^>]+)?href=["']([^"']+)["'][^>]*\/?\s*>/i)?.[1] || '';
+            const description = entryXml.match(/<(?:summary|content)(?:\s[^>]*)?>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/(?:summary|content)>/i)?.[1] || '';
+            const pubDate = entryXml.match(/<(?:published|updated)>(.*?)<\/(?:published|updated)>/i)?.[1] || '';
+            const rawImage = entryXml.match(/<media:(?:content|thumbnail)[^>]+url=["']([^"']+)["']/i)?.[1] || null;
+            if (title && link) {
+                items.push({
+                    title: title.replace(/<[^>]*>/g, '').trim(),
+                    link: link.trim(),
+                    description: description.replace(/<[^>]*>/g, '').trim(),
+                    pubDate: pubDate.trim(),
+                    imageUrl: normalizeEditorialImageUrl(rawImage, link.trim()),
+                    imageCredit: null,
+                    publisherName: null,
+                    publisherUrl: null,
                 });
             }
         }
@@ -295,6 +324,11 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     SELECT id, name, type, url, country_code, sector_id
     FROM sources
     WHERE is_active = 1
+      AND id = (
+        SELECT s2.id FROM sources s2
+        WHERE s2.is_active = 1 AND s2.url = sources.url
+        ORDER BY s2.created_at ASC, s2.id ASC LIMIT 1
+      )
     ORDER BY last_fetched_at ASC
     LIMIT ?
   `).bind(SOURCES_PER_RUN).all();
@@ -305,8 +339,10 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     // Per-invocation budgets (shared across fixed-source + discovery tasks) to
     // cap total fetches/DB writes and stay within Worker limits.
     const MAX_ITEMS_PER_SOURCE = 6;
+    const MAX_NEW_ITEMS_PER_FIXED_SOURCE = 2;
     let scrapeBudget = 8;   // full-content scrapes (each is an extra fetch)
-    let itemBudget = 20;    // new items ingested + queued per run
+    let fixedItemBudget = 12;
+    let discoveryItemBudget = 8;
 
     // Define the Fixed Sources Task
     const fixedSourcesTask = async () => {
@@ -316,24 +352,27 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
             await Promise.all(batch.map(async (source: any) => {
                 const s = source;
                 try {
-                    let items: Array<{ title: string; url: string; content: string; publishedAt: string; imageUrl: string | null; imageCredit: string | null }> = [];
+                    let items: Array<{ title: string; url: string; content: string; publishedAt: string; imageUrl: string | null; imageCredit: string | null; publisherName: string | null; publisherUrl: string | null }> = [];
 
                     if (s.type === 'rss') {
                         const rssItems = await parseRSS(s.url);
                         items = rssItems.map(item => ({
-                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate, imageUrl: item.imageUrl, imageCredit: item.imageCredit,
+                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate, imageUrl: item.imageUrl, imageCredit: item.imageCredit, publisherName: item.publisherName, publisherUrl: item.publisherUrl,
                         }));
                     } else if (s.type === 'newsapi' && env.NEWS_API_KEY) {
                         const newsItems = await fetchNewsAPI(env.NEWS_API_KEY, s.url);
                         items = newsItems.map(item => ({
-                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt, imageUrl: null, imageCredit: null,
+                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt, imageUrl: null, imageCredit: null, publisherName: item.source?.name || null, publisherUrl: null,
                         }));
                     }
 
                     // Cap items examined per source to bound DB/dedup calls.
+                    let acceptedFromSource = 0;
                     for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
-                        if (itemBudget <= 0) break;
-                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
+                        if (fixedItemBudget <= 0 || acceptedFromSource >= MAX_NEW_ITEMS_PER_FIXED_SOURCE) break;
+                        // URL-level dedup is intentionally global: duplicate source
+                        // rows must not turn one wire record into several articles.
+                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ? LIMIT 1`).bind(item.url).first();
                         if (existing) continue;
 
                         // Strict Africa relevance gate (applies even to country-coded
@@ -341,7 +380,8 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                         if (!isAfricanContent(item.title, item.content)) continue;
 
                         processed++;
-                        itemBudget--;
+                        fixedItemBudget--;
+                        acceptedFromSource++;
 
                         let fullContent = item.content;
                         let imageUrl = item.imageUrl;
@@ -358,9 +398,9 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
 
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, status)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString(), imageUrl, imageUrl ? (imageCredit || s.name) : null, imageUrl ? item.url : null).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, publisher_name, publisher_url, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString(), imageUrl, imageUrl ? (imageCredit || s.name) : null, imageUrl ? item.url : null, item.publisherName || s.name, item.publisherUrl || s.url).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: s.id, priority: 'normal',
@@ -412,7 +452,8 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
             const queries = [
                 ...targetCountries.map((c: string) => `"${c}" business news when:1d`),
                 ...targetSectors.map((s: string) => `"${s}" industry Africa news when:1d`),
-                '"Africa" economy investment when:1h'
+                '"Africa" economy investment when:1h',
+                `site:${['afdb.org', 'worldbank.org', 'imf.org', 'uneca.org', 'au.int', 'unctad.org', 'wto.org', 'news.un.org'][Math.floor(Date.now() / 60000) % 8]} Africa economy trade investment when:7d`,
             ];
 
             console.log(`Aggregating topics: ${queries.join(' | ')}`);
@@ -422,19 +463,21 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                     const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
                     const items = await parseRSS(googleNewsUrl);
 
+                    let acceptedFromQuery = 0;
                     for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
-                        if (itemBudget <= 0) break;
+                        if (discoveryItemBudget <= 0 || acceptedFromQuery >= 1) break;
                         // Discovery results can drift off-topic — enforce the same Africa gate.
                         if (!isAfricanContent(item.title, item.description || '')) continue;
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ?`).bind(item.link).first();
                         if (existing) continue;
 
-                        itemBudget--;
+                        discoveryItemBudget--;
+                        acceptedFromQuery++;
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, status)
-                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString(), item.imageUrl, item.imageUrl ? (item.imageCredit || 'Original reporting source') : null, item.imageUrl ? item.link : null).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, publisher_name, publisher_url, status)
+                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString(), item.imageUrl, item.imageUrl ? (item.imageCredit || item.publisherName || 'Original reporting source') : null, item.imageUrl ? item.link : null, item.publisherName || 'Original reporting source', item.publisherUrl || item.link).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: 'google-news-aggregator', priority: 'normal',
@@ -482,6 +525,10 @@ export const DEFAULT_SOURCES = [
     { name: 'The Conversation Africa', type: 'rss', url: 'https://theconversation.com/africa/articles.atom', sector_id: null, country_code: null },
     { name: 'Semafor Africa', type: 'rss', url: 'https://www.semafor.com/feed/africa', sector_id: null, country_code: null },
     { name: 'Quartz Africa', type: 'rss', url: 'https://qz.com/africa/rss', sector_id: null, country_code: null },
+    { name: 'UN Economic Commission for Africa', type: 'rss', url: 'https://www.uneca.org/rss.xml', sector_id: null, country_code: null },
+    { name: 'African Union', type: 'rss', url: 'https://au.int/en/rss.xml', sector_id: null, country_code: null },
+    { name: 'UN News Africa', type: 'rss', url: 'https://news.un.org/feed/subscribe/en/news/region/africa/feed/rss.xml', sector_id: null, country_code: null },
+    { name: 'World Trade Organization', type: 'rss', url: 'https://www.wto.org/library/rss/latest_news_e.xml', sector_id: 'finance', country_code: null },
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // BUSINESS & INVESTMENT

@@ -7,9 +7,7 @@ import { Hono } from 'hono';
 import type { Env, Country } from '../types';
 import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
-import { getCountryEconomicProfile } from '../lib/economics';
-import { fetchIMFData, getGDPForecast, getDebtMetrics } from '../lib/imf-data';
-import { getTradeBalance } from '../lib/trade-data';
+import { isCountryEvidenceStale, readCountryEvidence, refreshCountryEvidence } from '../lib/country-evidence';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -433,12 +431,8 @@ router.get('/:code/dossier', async (c) => {
     const country = await c.env.DB.prepare('SELECT * FROM countries WHERE code = ?').bind(code).first<Record<string, any>>();
     if (!country) return c.json({ error: 'not_found', message: 'Country not found' }, 404);
 
-    const [worldBankResult, imfResult, forecastResult, debtResult, tradeResult, events, sectors, evidence] = await Promise.all([
-        getCountryEconomicProfile(c.env, code).catch(() => null),
-        fetchIMFData(c.env, country.name).catch(() => null),
-        getGDPForecast(c.env, country.name).catch(() => null),
-        getDebtMetrics(c.env, country.name).catch(() => null),
-        getTradeBalance(c.env, country.name).catch(() => null),
+    let [externalEvidence, events, sectors, evidence] = await Promise.all([
+        readCountryEvidence(c.env, code),
         c.env.DB.prepare(`SELECT id, title, category, date_start, date_end, location, registration_url AS source_url
             FROM events WHERE country_code = ? AND date_start >= date('now') ORDER BY date_start ASC LIMIT 12`).bind(code).all(),
         c.env.DB.prepare(`SELECT s.id, s.name, COUNT(a.id) article_count, MAX(a.published_at) latest_evidence_at
@@ -449,6 +443,30 @@ router.get('/:code/dossier', async (c) => {
             ORDER BY published_at DESC LIMIT 20`).bind(code).all(),
     ]);
 
+    if (!externalEvidence) {
+        // This is only the first-ever cache fill. Scheduled rotation keeps all
+        // country snapshots warm thereafter, so normal readers never wait on
+        // World Bank, IMF or Comtrade network calls.
+        externalEvidence = await refreshCountryEvidence(c.env, { code, name: String(country.name) });
+    } else if (isCountryEvidenceStale(externalEvidence)) {
+        const refresh = refreshCountryEvidence(c.env, { code, name: String(country.name) }).catch((error) => {
+            console.error(`Country evidence background refresh failed for ${code}:`, error);
+        });
+        try {
+            c.executionCtx.waitUntil(refresh);
+        } catch {
+            void refresh;
+        }
+    }
+
+    if (!externalEvidence) {
+        return c.json({
+            error: 'evidence_refresh_in_progress',
+            message: 'The first verified official-source snapshot is being assembled. Retry shortly.',
+            country_code: code,
+        }, 503);
+    }
+
     const portals = [
         ['Business portal', country.business_portal_url], ['Visa portal', country.visa_portal_url],
         ['Tourism portal', country.tourism_portal_url], ['Investment agency', country.investment_agency_url],
@@ -458,16 +476,14 @@ router.get('/:code/dossier', async (c) => {
         country: processCountries([country as Country])[0],
         dossier: {
             macroeconomics: {
-                world_bank: worldBankResult,
-                imf_current: imfResult,
-                imf_gdp_growth: forecastResult,
-                imf_debt: debtResult,
+                ...externalEvidence.macroeconomics,
             },
-            trade: tradeResult,
+            trade: externalEvidence.trade,
             sector_evidence: sectors.results || [],
             upcoming_events: events.results || [],
             recent_source_record: evidence.results || [],
             official_resources: portals,
+            freshness: externalEvidence.freshness,
         },
         provenance: {
             sources: [
@@ -476,8 +492,9 @@ router.get('/:code/dossier', async (c) => {
                 { name: 'UN Comtrade', section: 'trade', url: 'https://comtradeplus.un.org/' },
                 { name: 'BOA source-linked reporting', section: 'evidence', url: 'https://boa-story.com/stories' },
             ],
-            generated_at: new Date().toISOString(),
-            methodology: 'External observations are reproduced with their original year and unit. IMF projections are labelled separately from historical values. Reader-facing panels use the source-linked country record when an external provider returns no observation; no values are estimated from headlines or engagement.',
+            generated_at: externalEvidence.retrieved_at,
+            retrieved_at: externalEvidence.retrieved_at,
+            methodology: 'Official observations retain their provider reporting period and unit. Retrieval time is shown separately and never changes an observation year. IMF projections are labelled separately from historical values. An empty provider response is never converted to a zero; the last verified snapshot is retained, with World Bank goods-and-services trade used only when UN Comtrade has no verified merchandise record.',
         },
     });
 });

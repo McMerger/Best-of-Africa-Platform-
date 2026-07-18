@@ -32,6 +32,15 @@ const AFRICAN_COUNTRY_CODES: Record<string, string> = {
     'Mozambique': '508',
     'DRC': '180',
     'Cameroon': '120',
+    'Benin': '204', 'Burkina Faso': '854', 'Burundi': '108', 'Cape Verde': '132',
+    'Cabo Verde': '132', 'Central African Republic': '140', 'Chad': '148', 'Comoros': '174',
+    'Republic of the Congo': '178', 'Congo': '178', 'Democratic Republic of the Congo': '180',
+    'Djibouti': '262', 'Equatorial Guinea': '226', 'Eritrea': '232', 'Eswatini': '748',
+    'Gabon': '266', 'Gambia': '270', 'Guinea': '324', 'Guinea-Bissau': '624',
+    'Lesotho': '426', 'Liberia': '430', 'Libya': '434', 'Madagascar': '450', 'Malawi': '454',
+    'Mali': '466', 'Mauritania': '478', 'Niger': '562', 'Sao Tome and Principe': '678',
+    'SÃ£o TomÃ© and PrÃ­ncipe': '678', 'Seychelles': '690', 'Sierra Leone': '694',
+    'Somalia': '706', 'South Sudan': '728', 'Sudan': '729', 'Togo': '768',
 };
 
 // Key commodity codes (HS2)
@@ -74,7 +83,20 @@ export interface TradeBalance {
     topImportPartners: { partner: string; value: number }[];
     topExportCommodities: { commodity: string; value: number }[];
     topImportCommodities: { commodity: string; value: number }[];
+    source_name: 'UN Comtrade' | 'World Bank World Development Indicators';
+    source_url: string;
+    retrieved_at: string;
 }
+
+const fetchWithTimeout = async (url: string, timeoutMs = 8000): Promise<Response> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+    } finally {
+        clearTimeout(timeout);
+    }
+};
 
 /**
  * Fetch trade data from UN Comtrade API
@@ -148,40 +170,42 @@ export async function fetchTradeData(
 export async function getTradeBalance(
     env: Env,
     countryName: string,
-    year?: number
+    year?: number,
+    options: { refresh?: boolean; lookbackYears?: number } = {},
 ): Promise<TradeBalance | null> {
-    const cacheKey = `trade-balance:${countryName}:${year || 'latest'}`;
+    const cacheKey = `trade-balance:v2:${countryName}:${year || 'latest'}`;
 
     const cached = await env.CACHE.get(cacheKey, 'json') as TradeBalance | null;
-    if (cached) return cached;
+    if (cached && !options.refresh) return cached;
 
     const countryCode = AFRICAN_COUNTRY_CODES[countryName];
     if (!countryCode) return null;
 
-    const targetYear = year || new Date().getFullYear() - 1;
+    const targetYear = year || new Date().getFullYear();
+    const lookbackYears = year ? 1 : Math.max(3, options.lookbackYears || 6);
 
     try {
-        // Fetch exports
-        const exportsUrl = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
-        exportsUrl.searchParams.set('reporterCode', countryCode);
-        exportsUrl.searchParams.set('period', targetYear.toString());
-        exportsUrl.searchParams.set('flowCode', 'X');
-        exportsUrl.searchParams.set('partner2Code', '0');
+        for (let offset = 0; offset < lookbackYears; offset++) {
+            const candidateYear = targetYear - offset;
+            const makeUrl = (flowCode: 'X' | 'M') => {
+                const url = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
+                url.searchParams.set('reporterCode', countryCode);
+                url.searchParams.set('period', candidateYear.toString());
+                url.searchParams.set('flowCode', flowCode);
+                url.searchParams.set('partnerCode', '0');
+                url.searchParams.set('partner2Code', '0');
+                url.searchParams.set('cmdCode', 'TOTAL');
+                return url;
+            };
 
-        // Fetch imports  
-        const importsUrl = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
-        importsUrl.searchParams.set('reporterCode', countryCode);
-        importsUrl.searchParams.set('period', targetYear.toString());
-        importsUrl.searchParams.set('flowCode', 'M');
-        importsUrl.searchParams.set('partner2Code', '0');
+            const [exportsRes, importsRes] = await Promise.all([
+                fetchWithTimeout(makeUrl('X').toString()),
+                fetchWithTimeout(makeUrl('M').toString()),
+            ]);
+            if (!exportsRes.ok || !importsRes.ok) continue;
 
-        const [exportsRes, importsRes] = await Promise.all([
-            fetch(exportsUrl.toString()),
-            fetch(importsUrl.toString())
-        ]);
-
-        const exportsData = await exportsRes.json() as Record<string, any>;
-        const importsData = await importsRes.json() as Record<string, any>;
+            const exportsData = await exportsRes.json() as Record<string, any>;
+            const importsData = await importsRes.json() as Record<string, any>;
 
         let totalExports = 0;
         let totalImports = 0;
@@ -218,9 +242,13 @@ export async function getTradeBalance(
             }
         }
 
-        const balance: TradeBalance = {
+            // A successful HTTP response containing no observations is not a
+            // zero-trade economy. Walk backward to the latest reported period.
+            if (totalExports === 0 && totalImports === 0) continue;
+
+            const balance: TradeBalance = {
             country: countryName,
-            year: targetYear,
+            year: candidateYear,
             totalExports,
             totalImports,
             balance: totalExports - totalImports,
@@ -240,14 +268,21 @@ export async function getTradeBalance(
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 5)
                 .map(([commodity, value]) => ({ commodity, value })),
-        };
+                source_name: 'UN Comtrade',
+                source_url: `https://comtradeplus.un.org/TradeFlow?Classification=HS&Frequency=A&Period=${candidateYear}&Reporters=${countryCode}&Partners=0&Flows=X%2CM&CommodityCodes=TOTAL`,
+                retrieved_at: new Date().toISOString(),
+            };
 
-        await env.CACHE.put(cacheKey, JSON.stringify(balance), { expirationTtl: 86400 });
+            // Preserve the last verified observation without an expiry. The
+            // dossier refresh policy records when it was checked again.
+            await env.CACHE.put(cacheKey, JSON.stringify(balance));
 
-        return balance;
+            return balance;
+        }
+        return cached;
     } catch (error) {
         console.error('Trade balance fetch error:', error);
-        return null;
+        return cached;
     }
 }
 

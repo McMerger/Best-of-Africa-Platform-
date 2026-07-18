@@ -13,6 +13,7 @@ import { onArticlePublished } from '../lib/alerts';
 import { autoPostArticle } from '../lib/social';
 import { checkContentIntegrity } from '../lib';
 import { fullEnrich } from '../lib/enrichment';
+import { publisherNameForArticle } from '../lib/source-attribution';
 
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export async function generateArticleFromQueue(
             generated.tags ? JSON.stringify(generated.tags) : '[]',
             readingTime,
             itemData.url           ?? null,
-            itemData.title         ?? null,
+            publisherNameForArticle(itemData),
             itemData.published_at  ?? null,
             itemData.image_url ?? null,
             itemData.image_url ? (itemData.image_credit || itemData.source_name) : null,
@@ -164,8 +165,8 @@ export async function generateArticleFromQueue(
 
         // Mark as completed
         await env.DB.prepare(`
-            UPDATE ingested_items SET status = 'completed' WHERE id = ?
-        `).bind(message.ingested_item_id).run();
+            UPDATE ingested_items SET status = 'completed', article_id = ? WHERE id = ?
+        `).bind(articleId, message.ingested_item_id).run();
 
         console.log(`Successfully generated and published article: ${articleId} from item: ${message.ingested_item_id}`);
 

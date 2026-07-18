@@ -4,7 +4,6 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
-import { getCached, CACHE_TTL } from './cache';
 
 // World Bank API is completely free, no API key needed
 const WORLD_BANK_API = 'https://api.worldbank.org/v2';
@@ -31,6 +30,7 @@ export interface EconomicIndicator {
     value: number | null;
     year: number;
     unit: string;
+    source_url: string;
 }
 
 export interface CountryEconomicProfile {
@@ -38,7 +38,19 @@ export interface CountryEconomicProfile {
     country_name: string;
     indicators: EconomicIndicator[];
     last_updated: string;
+    source_name: 'World Bank World Development Indicators';
+    source_url: string;
 }
+
+const fetchWithTimeout = async (url: string, timeoutMs = 8000): Promise<Response> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+    } finally {
+        clearTimeout(timeout);
+    }
+};
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Fetch Single Indicator
@@ -48,11 +60,10 @@ async function fetchIndicator(
     indicatorCode: string
 ): Promise<{ value: number | null; year: number } | null> {
     try {
-        const url = `${WORLD_BANK_API}/country/${countryCode}/indicator/${indicatorCode}?format=json&per_page=1&mrv=1`;
-
-        const response = await fetch(url, {
-            headers: { 'Accept': 'application/json' }
-        });
+        // MRNEV means "most recent non-empty value". MRV can return the latest
+        // calendar row even when its value is null, hiding a valid older release.
+        const url = `${WORLD_BANK_API}/country/${countryCode}/indicator/${indicatorCode}?format=json&per_page=1&mrnev=1`;
+        const response = await fetchWithTimeout(url);
 
         if (!response.ok) return null;
 
@@ -79,20 +90,21 @@ async function fetchIndicator(
 // ───────────────────────────────────────────────────────────────────────────────
 export async function getCountryEconomicProfile(
     env: Env,
-    countryCode: string
+    countryCode: string,
+    options: { refresh?: boolean } = {},
 ): Promise<CountryEconomicProfile | null> {
-    const cacheKey = `economic:${countryCode}`;
+    const normalizedCode = countryCode.toUpperCase();
+    const cacheKey = `economic:v2:${normalizedCode}`;
+    if (!options.refresh) {
+        const cached = await env.CACHE.get(cacheKey, 'json') as CountryEconomicProfile | null;
+        if (cached) return cached;
+    }
 
-    return getCached(
-        env,
-        cacheKey,
-        async () => {
+    try {
             // Fetch country name
-            const countryResponse = await fetch(
-                `${WORLD_BANK_API}/country/${countryCode}?format=json`
-            );
+            const countryResponse = await fetchWithTimeout(`${WORLD_BANK_API}/country/${normalizedCode}?format=json`);
 
-            let countryName = countryCode;
+            let countryName = normalizedCode;
             if (countryResponse.ok) {
                 const countryData = await countryResponse.json() as any[];
                 if (countryData && countryData[1] && countryData[1][0]) {
@@ -102,27 +114,35 @@ export async function getCountryEconomicProfile(
 
             // Fetch all indicators in parallel
             const indicatorPromises = Object.entries(INDICATORS).map(async ([name, code]) => {
-                const result = await fetchIndicator(countryCode, code);
+                const result = await fetchIndicator(normalizedCode, code);
                 return {
                     code,
                     name: formatIndicatorName(name),
                     value: result?.value ?? null,
                     year: result?.year ?? new Date().getFullYear(),
                     unit: getIndicatorUnit(name),
+                    source_url: `https://data.worldbank.org/indicator/${code}?locations=${normalizedCode}`,
                 };
             });
 
             const indicators = await Promise.all(indicatorPromises);
 
-            return {
-                country_code: countryCode,
+            const profile: CountryEconomicProfile = {
+                country_code: normalizedCode,
                 country_name: countryName,
                 indicators: indicators.filter(i => i.value !== null),
                 last_updated: new Date().toISOString(),
+                source_name: 'World Bank World Development Indicators' as const,
+                source_url: `https://data.worldbank.org/?locations=${normalizedCode}`,
             };
-        },
-        { ttl: 86400 } // Cache for 24 hours (economic data doesn't change that often)
-    );
+            // Keep a last-known-good official snapshot. Freshness is represented
+            // by last_updated and the dossier refresh policy, not destructive TTL.
+            await env.CACHE.put(cacheKey, JSON.stringify(profile));
+            return profile;
+    } catch (error) {
+        console.error(`World Bank profile refresh failed for ${normalizedCode}:`, error);
+        return await env.CACHE.get(cacheKey, 'json') as CountryEconomicProfile | null;
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────────────────

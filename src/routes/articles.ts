@@ -12,6 +12,7 @@ import { validate, ArticleQuerySchema, SlugParamSchema, CountryCodeParamSchema, 
 import { callConfiguredAI } from '../lib/ai';
 import { generateAudioNarration } from '../lib/audio';
 import { verifyJWT } from '../lib/auth';
+import { publisherNameForStoredArticle } from '../lib/source-attribution';
 
 // Temporary read-only stakeholder review mode. Keep authenticated actions
 // (including paid TTS generation) protected; only article truncation is lifted.
@@ -437,6 +438,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     // byline; automated briefing coverage is attributed to the desk.
     const a = article as unknown as Record<string, unknown>;
     a.author_name = a.curated ? 'Mailles Cortes' : 'BOA Briefing Desk';
+    a.source_title = publisherNameForStoredArticle(article);
 
     // Serve a quality-approved stored translation for every reader language
     // one exists (the pipeline auto-translates by country). ONLY the short

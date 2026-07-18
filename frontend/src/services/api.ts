@@ -513,23 +513,24 @@ export const api = {
 
     // Country Economics
     getCountryEconomics: (code: string) => request<{ code: string; name: string; recorded_gdp_usd: number; recorded_population: number; evidence_fields_present: number; methodology: string }>(`/countries/${code}/economics`),
-    getCountryDossier: (code: string) => request<{
+    getCountryDossier: (code: string) => readerRequest<{
         country: Country;
         dossier: {
             macroeconomics: {
-                world_bank: { indicators: { code: string; name: string; value: number; year: number; unit: string }[]; last_updated: string } | null;
+                world_bank: { indicators: { code: string; name: string; value: number; year: number; unit: string; source_url: string }[]; last_updated: string; source_name: string; source_url: string };
                 imf_current: Record<string, number | string> | null;
                 imf_gdp_growth: { historical: { year: number; value: number }[]; projections: { year: number; value: number }[] } | null;
                 imf_debt: Record<string, unknown> | null;
             };
-            trade: { year: number; totalExports: number; totalImports: number; balance: number; topExportPartners: { partner: string; value: number }[]; topImportPartners: { partner: string; value: number }[] } | null;
+            trade: { year: number; export_year?: number; import_year?: number; totalExports: number; totalImports: number; balance: number; provider: 'UN Comtrade' | 'World Bank World Development Indicators'; source_name: string; source_url: string; retrieved_at: string; topExportPartners: { partner: string; value: number }[]; topImportPartners: { partner: string; value: number }[] };
             sector_evidence: { id: string; name: string; article_count: number; latest_evidence_at: string }[];
             upcoming_events: { id: string; title: string; category: string; date_start: string; location: string; source_url?: string }[];
             recent_source_record: { title: string; slug: string; summary: string; source_url: string; published_at: string; reviewed_at: string | null }[];
             official_resources: { name: string; url: string; source_type: string }[];
+            freshness: { provider: string; source_url: string; checked_at: string; observation_period: string; state: 'current_snapshot' | 'last_verified_snapshot' | 'checked_no_series' }[];
         };
-        provenance: { sources: { name: string; section: string; url: string | null }[]; generated_at: string; methodology: string };
-    }>(`/countries/${code}/dossier`),
+        provenance: { sources: { name: string; section: string; url: string | null }[]; generated_at: string; retrieved_at: string; methodology: string };
+    }>(`/countries/${code}/dossier`, 7 * 24 * 60 * 60 * 1000),
 
     // Administrative Intelligence & Moderation
     getAdminArticles: () => request<{ data: ArticleListItem[] }>('/admin/articles'),
