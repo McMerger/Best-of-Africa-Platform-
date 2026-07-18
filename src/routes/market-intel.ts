@@ -8,6 +8,11 @@ import type { Env, Variables, MarketIntelligence } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
 import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
+import {
+    getSectorPerformanceCache,
+    refreshSectorPerformance,
+    sectorPerformanceCacheIsFresh,
+} from '../lib/sector-performance';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -146,6 +151,17 @@ router.get('/sector/:id/trends', async (c) => {
         return c.json({ error: 'not_found', message: 'Sector not found' }, 404);
     }
 
+    const performanceSnapshot = await getSectorPerformanceCache(c.env) || await refreshSectorPerformance(c.env);
+    const marketPerformance = performanceSnapshot?.data.find(item => item.sector_id === sectorId);
+    if (!marketPerformance) {
+        return c.json({
+            error: 'official_series_refresh_failed',
+            message: 'The official performance series for this sector has not been saved yet.',
+            source_name: 'World Bank World Development Indicators',
+            source_url: 'https://data.worldbank.org/indicator',
+        }, 503);
+    }
+
     const [weekly, current, countries, sources] = await Promise.all([
         c.env.DB.prepare(`
             SELECT date(published_at, 'weekday 1', '-7 days') AS week_start,
@@ -183,6 +199,7 @@ router.get('/sector/:id/trends', async (c) => {
 
     return c.json({
         sector,
+        market_performance: marketPerformance,
         weekly_coverage: weekly.results || [],
         country_coverage: countries.results || [],
         summary: {
@@ -193,9 +210,10 @@ router.get('/sector/:id/trends', async (c) => {
             source_records_30d: Number(sources?.source_records || 0),
             views_30d: Number(current?.views_30d || 0),
         },
-        methodology: 'Every value is observed BOA-Story reporting activity. This profile does not estimate market size, investment flows, growth, regulatory quality or sector performance.',
+        methodology: performanceSnapshot?.methodology,
+        reporting_methodology: 'Weekly and thirty-day story fields are BOA-Story editorial activity and are presented only as reporting context. They do not determine the official market-performance values above.',
         reporting_window_days: 30,
-        updated_at: new Date().toISOString(),
+        updated_at: performanceSnapshot?.retrieved_at || new Date().toISOString(),
     });
 });
 
@@ -434,55 +452,24 @@ router.get('/reports/sector/:id', requireApiKey, rateLimit, async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/performance', async (c) => {
     const lens = c.req.query('lens') || 'investor';
-    const rows = await c.env.DB.prepare(`
-        SELECT s.id, s.name,
-               SUM(CASE WHEN a.published_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS current_30d,
-               SUM(CASE WHEN a.published_at >= datetime('now', '-60 days')
-                         AND a.published_at < datetime('now', '-30 days') THEN 1 ELSE 0 END) AS previous_30d,
-               COUNT(DISTINCT CASE WHEN a.published_at >= datetime('now', '-30 days') THEN a.country_code END) AS countries_30d,
-               SUM(CASE WHEN a.published_at >= datetime('now', '-30 days') THEN COALESCE(a.view_count, 0) ELSE 0 END) AS views_30d,
-               MAX(CASE WHEN a.published_at >= datetime('now', '-30 days') THEN a.published_at END) AS latest_reported_at
-        FROM sectors s
-        LEFT JOIN articles a
-          ON a.sector_id = s.id
-         AND a.status = 'published'
-         AND a.published_at >= datetime('now', '-60 days')
-        WHERE s.id != 'general'
-        GROUP BY s.id, s.name
-        ORDER BY current_30d DESC, previous_30d DESC, s.name
-    `).all<Record<string, any>>();
+    const cached = await getSectorPerformanceCache(c.env);
+    if (cached) {
+        if (!sectorPerformanceCacheIsFresh(cached)) {
+            c.executionCtx.waitUntil(refreshSectorPerformance(c.env).then(() => undefined));
+        }
+        return c.json({ ...cached, lens });
+    }
 
-    const data = (rows.results || []).map(row => {
-        const current = Number(row.current_30d || 0);
-        const previous = Number(row.previous_30d || 0);
-        const absoluteChange = current - previous;
-        const percentageChange = previous > 0
-            ? Number((((current - previous) / previous) * 100).toFixed(1))
-            : 0;
-
-        return {
-            sector_id: row.id,
-            sector_name: row.name,
-            article_count: current,
-            total_views: Number(row.views_30d || 0),
-            countries_covered: Number(row.countries_30d || 0),
-            coverage_current_30d: current,
-            coverage_previous_30d: previous,
-            coverage_change: absoluteChange,
-            coverage_change_pct: percentageChange,
-            comparison_basis: previous > 0 ? 'percentage and absolute change versus previous 30 days' : 'absolute change versus a zero-story previous window',
-            reporting_window_days: 30,
-            latest_reported_at: row.latest_reported_at || 'No story published in the current 30-day window',
-            ai_insight: `BOA-Story published ${current} ${row.name} reports across ${Number(row.countries_30d || 0)} countries in the latest 30-day window, ${absoluteChange >= 0 ? '+' : ''}${absoluteChange} versus the preceding window.`,
-        };
-    });
-
-    return c.json({
-        data,
-        lens,
-        methodology: 'This endpoint reports BOA-Story coverage activity only. It does not infer sector growth, investment performance, governance quality, tourism appeal or volatility from headlines, views or engagement.',
-        updated_at: new Date().toISOString(),
-    });
+    const refreshed = await refreshSectorPerformance(c.env);
+    if (!refreshed) {
+        return c.json({
+            error: 'official_series_refresh_failed',
+            message: 'The official sector series could not be retrieved and no verified snapshot has been saved yet.',
+            source_name: 'World Bank World Development Indicators',
+            source_url: 'https://data.worldbank.org/indicator',
+        }, 503);
+    }
+    return c.json({ ...refreshed, lens });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -551,54 +538,31 @@ Return ONLY the raw JSON array.`;
 // GET /market-intel/leading-sector - Top performing sector (for MarketIntelPage header)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/leading-sector', async (c) => {
-    return c.json(await getCached(
-        c.env,
-        'leading-sector-insight:evidence-contract-v2',
-        async () => {
-            const result = await c.env.DB.prepare(`
-                SELECT s.id, s.name,
-                       SUM(a.view_count) as total_views,
-                       COUNT(a.id) as article_count
-                FROM sectors s
-                INNER JOIN articles a ON a.sector_id = s.id 
-                WHERE a.status = 'published' 
-                  AND a.published_at > datetime('now', '-7 days')
-                GROUP BY s.id
-                ORDER BY total_views DESC
-                LIMIT 1
-            `).first() as Record<string, any> | null;
-
-            if (!result) {
-                return { name: 'Zero qualifying sector stories', coverage_change_pct: 0, trend: 'flat', stories_7d: 0, stories_previous_7d: 0, coverage_change: 0, comparison_basis: 'Both seven-day windows contain zero qualifying sector stories.', methodology: 'No published sector coverage was recorded in the current window.', updated_at: new Date().toISOString() };
-            }
-
-            const previous = await c.env.DB.prepare(`
-                SELECT COUNT(*) AS count FROM articles
-                WHERE sector_id = ? AND status = 'published'
-                  AND published_at > datetime('now', '-14 days')
-                  AND published_at <= datetime('now', '-7 days')
-            `).bind(result.id).first<{ count: number }>();
-
-            const currentCount = Number(result.article_count || 0);
-            const previousCount = Number(previous?.count || 0);
-            const change = currentCount - previousCount;
-            const changePct = previousCount > 0 ? Number(((change / previousCount) * 100).toFixed(1)) : null;
-            const trend = change > 0 ? 'up' : change < 0 ? 'down' : 'flat';
-
-            return {
-                name: result.name,
-                coverage_change_pct: changePct === null ? 0 : changePct,
-                trend,
-                stories_7d: currentCount,
-                stories_previous_7d: previousCount,
-                coverage_change: change,
-                comparison_basis: previousCount > 0 ? 'percentage and absolute change versus previous seven days' : 'absolute change versus a zero-story previous window',
-                methodology: 'Leading sector and change measure BOA-Story publishing volume, not market growth or sector performance.',
-                updated_at: new Date().toISOString()
-            };
-        },
-        { ttl: 3600 } // Cache for 1 hour
-    ));
+    const snapshot = await getSectorPerformanceCache(c.env) || await refreshSectorPerformance(c.env);
+    const comparable = (snapshot?.data || []).filter(item =>
+        ['agriculture', 'energy', 'infrastructure', 'manufacturing'].includes(item.sector_id)
+        && item.headline_unit === '%'
+    );
+    const leading = [...comparable].sort((a, b) => b.headline_value - a.headline_value)[0];
+    if (!leading) {
+        return c.json({ error: 'official_series_refresh_failed', message: 'No comparable real-growth sector series has been saved yet.' }, 503);
+    }
+    return c.json({
+        name: leading.sector_name,
+        sector_id: leading.sector_id,
+        metric: leading.indicator_name,
+        value: leading.headline_value,
+        unit: leading.headline_unit,
+        comparison_value: leading.comparison_value,
+        comparison_unit: leading.comparison_unit,
+        period_start: leading.period_start,
+        period_end: leading.period_end,
+        countries_reported: leading.countries_reported,
+        methodology: 'Ranks only the directly comparable annual real-growth WDI proxies for agriculture, broad industry, fixed investment and manufacturing. It does not compare incompatible credit, digital-adoption, health-spending or travel-receipts series.',
+        source_name: leading.source_name,
+        source_url: leading.source_url,
+        updated_at: snapshot?.retrieved_at || new Date().toISOString(),
+    });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -645,6 +609,8 @@ router.get('/coverage-pulse', async (c) => {
         return {
             stories_7d: totals?.stories || 0,
             countries_7d: totals?.countries || 0,
+            most_reported_sector: topSector ? { name: topSector.name, stories: topSector.n } : { name: 'Zero qualifying sector stories', stories: 0 },
+            // Compatibility alias. This is editorial volume, never performance.
             top_sector: topSector ? { name: topSector.name, stories: topSector.n } : { name: 'Zero qualifying sector stories', stories: 0 },
             countries: countries.results || [],
             thinnest_region: thinnest ? { region: thinnest.region, stories: thinnest.n } : { region: 'Zero configured regions', stories: 0 },

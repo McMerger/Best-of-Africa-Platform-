@@ -50,7 +50,14 @@ const openApiSpec = {
             get: {
                 summary: 'Get the verified seven-day BOA coverage pulse',
                 description: 'Reporting activity metrics; not market-performance, return or sovereign-risk indicators.',
-                responses: { 200: { description: 'Weekly story volume, country coverage, leading sector, regional gap and timestamp' } }
+                responses: { 200: { description: 'Weekly story volume, country coverage, most-reported sector, regional gap and timestamp' } }
+            }
+        },
+        '/market-intel/performance': {
+            get: {
+                summary: 'Get official African sector-performance proxies',
+                description: 'Source-linked WDI sector proxies with observation periods, cross-country medians, change, breadth, dispersion, country leaders and limitations. Newsroom volume is excluded.',
+                responses: { 200: { description: 'Eight sector-performance series across the configured 54 African markets' } }
             }
         },
         '/dashboards/continental/overview': {

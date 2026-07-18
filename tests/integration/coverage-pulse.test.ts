@@ -34,12 +34,25 @@ describe('GET /coverage-pulse', () => {
         app.route('/', marketIntelRouter);
     });
 
-    it('reports sector coverage momentum without asking AI for performance scores', async () => {
-        const { db } = createCoverageDb([{ results: [
-            { id: 'technology', name: 'Technology', current_30d: 12, previous_30d: 8, countries_30d: 5, views_30d: 240, latest_reported_at: '2026-07-12' },
-        ] }]);
+    it('serves official sector performance instead of newsroom-volume proxies', async () => {
         const run = vi.fn(() => { throw new Error('AI must not score coverage as market performance'); });
-        const env = createMockEnv({ DB: db, AI: { run } as any });
+        const env = createMockEnv({ AI: { run } as any });
+        await env.CACHE.put('market-intel:sector-performance:wdi:v1', JSON.stringify({
+            data: [{
+                sector_id: 'manufacturing', sector_name: 'Manufacturing & Industry',
+                indicator_code: 'NV.IND.MANF.KD.ZG', indicator_name: 'Manufacturing value-added growth',
+                headline_label: 'Median annual real growth', headline_value: 4.7, headline_unit: '%',
+                comparison_value: 0.8, comparison_unit: 'percentage points', improving_markets_pct: 62.5,
+                positive_markets_pct: 75, countries_reported: 40, continent_coverage_pct: 74.1,
+                period_start: 2023, period_end: 2025, dispersion_low: 2.1, dispersion_high: 7.2,
+                leaders: [], laggards: [], direction: 'accelerating', scope: 'Official output growth.', caveat: 'Not company returns.',
+                source_name: 'World Bank World Development Indicators', source_url: 'https://data.worldbank.org/indicator/NV.IND.MANF.KD.ZG',
+            }],
+            sectors_measured: 1, countries_in_scope: 54,
+            methodology: 'Named official performance proxies; incompatible units are not ranked together.',
+            retrieved_at: new Date().toISOString(), source_name: 'World Bank World Development Indicators',
+            source_url: 'https://data.worldbank.org/indicator',
+        }));
 
         const response = await app.fetch(new Request('http://localhost/performance'), env);
         const body = await response.json() as any;
@@ -47,13 +60,13 @@ describe('GET /coverage-pulse', () => {
         expect(response.status).toBe(200);
         expect(run).not.toHaveBeenCalled();
         expect(body.data[0]).toMatchObject({
-            sector_id: 'technology',
-            coverage_current_30d: 12,
-            coverage_previous_30d: 8,
-            coverage_change: 4,
-            coverage_change_pct: 50,
+            sector_id: 'manufacturing',
+            indicator_code: 'NV.IND.MANF.KD.ZG',
+            headline_value: 4.7,
+            countries_reported: 40,
         });
-        expect(body.methodology).toContain('coverage activity only');
+        expect(body.methodology).toContain('official performance proxies');
+        expect(JSON.stringify(body)).not.toContain('article_count');
     });
 
     it('does not estimate CAGR, deal flow or projects from headlines', async () => {

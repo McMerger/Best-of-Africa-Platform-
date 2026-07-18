@@ -319,6 +319,17 @@ export const api = {
     }>(`/intel/country/${code}/report`),
     getSectorTrends: (id: string) => readerRequest<{
         sector: Sector;
+        market_performance: {
+            sector_id: string; sector_name: string; indicator_code: string; indicator_name: string;
+            headline_label: string; headline_value: number; headline_unit: string;
+            comparison_value: number; comparison_unit: string; improving_markets_pct: number;
+            positive_markets_pct: number; countries_reported: number; continent_coverage_pct: number;
+            period_start: number; period_end: number; dispersion_low: number; dispersion_high: number;
+            leaders: { country_code: string; country_name: string; observation_year: number; value: number }[];
+            laggards: { country_code: string; country_name: string; observation_year: number; value: number }[];
+            direction: 'accelerating' | 'slowing' | 'steady'; scope: string; caveat: string;
+            source_name: string; source_url: string;
+        };
         weekly_coverage: { week_start: string; stories: number; countries: number }[];
         country_coverage: { code: string; name: string; stories: number }[];
         summary: {
@@ -330,9 +341,10 @@ export const api = {
             views_30d: number;
         };
         methodology: string;
+        reporting_methodology: string;
         reporting_window_days: number;
         updated_at: string;
-    }>(`/market-intel/sector/${id}/trends`),
+    }>(`/market-intel/sector/${id}/trends?contract=market-v1`),
 
     // System & Personalization
     getCuratedFeed: () => request<{ data: (ArticleListItem & { ai_curation?: { relevance_note: string } })[]; personalized: boolean; ai_feed_summary?: string }>('/personalization/feed/ai-curated'),
@@ -394,11 +406,40 @@ export const api = {
     }),
 
     // Analytics
-    getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => request<{
-        data: { sector_id: string; sector_name: string; article_count: number; total_views: number; countries_covered: number; coverage_current_30d: number; coverage_previous_30d: number; coverage_change: number; coverage_change_pct: number; comparison_basis: string; reporting_window_days: number; latest_reported_at: string; ai_insight: string }[];
+    getSectorPerformance: (lens?: 'investor' | 'government' | 'explorer') => readerRequest<{
+        data: {
+            sector_id: string;
+            sector_name: string;
+            indicator_code: string;
+            indicator_name: string;
+            headline_label: string;
+            headline_value: number;
+            headline_unit: string;
+            comparison_value: number;
+            comparison_unit: string;
+            improving_markets_pct: number;
+            positive_markets_pct: number;
+            countries_reported: number;
+            continent_coverage_pct: number;
+            period_start: number;
+            period_end: number;
+            dispersion_low: number;
+            dispersion_high: number;
+            leaders: { country_code: string; country_name: string; observation_year: number; value: number }[];
+            laggards: { country_code: string; country_name: string; observation_year: number; value: number }[];
+            direction: 'accelerating' | 'slowing' | 'steady';
+            scope: string;
+            caveat: string;
+            source_name: string;
+            source_url: string;
+        }[];
+        sectors_measured: number;
+        countries_in_scope: number;
         methodology: string;
-        updated_at: string;
-    }>(`/market-intel/performance${lens ? `?lens=${lens}` : ''}`),
+        retrieved_at: string;
+        source_name: string;
+        source_url: string;
+    }>(`/market-intel/performance?contract=market-v1${lens ? `&lens=${lens}` : ''}`, 12 * 60 * 60 * 1000),
 
     getLeadingSector: () => request<{
         name: string;
@@ -414,6 +455,7 @@ export const api = {
     getCoveragePulse: () => readerRequest<{
         stories_7d: number;
         countries_7d: number;
+        most_reported_sector: { name: string; stories: number };
         top_sector: { name: string; stories: number };
         countries: { country_code: string; country_name: string; this_week: number; last_week: number }[];
         thinnest_region: { region: string; stories: number };

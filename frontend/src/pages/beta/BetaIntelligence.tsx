@@ -9,11 +9,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
 
-// The free-visitor intelligence page. Every number on it is real coverage
-// data (weekly volumes, per-country momentum, thinnest region). Its previous
-// incarnation led with pseudo-metrics — "stability 100/moderate", a
-// perception-vs-reality table whose rows were all identical defaults — which
-// read as meaningless because they were.
 export const BetaIntelligence = () => {
   const { isMember } = useMember();
   const navigate = useNavigate();
@@ -27,18 +22,18 @@ export const BetaIntelligence = () => {
     enabled: ['overview', 'map', 'watchlist'].includes(view),
   });
 
+  const { data: performance, isLoading: isLoadingPerformance, isError: isPerformanceError } = useQuery({
+    queryKey: ['sector-market-performance'],
+    queryFn: () => api.getSectorPerformance('investor'),
+    staleTime: 12 * 60 * 60 * 1000,
+    enabled: ['overview', 'sectors'].includes(view),
+  });
+
   const { data: opportunities, isLoading: isLoadingOpp } = useQuery({
     queryKey: ['strategic-opportunities'],
     queryFn: api.getStrategicOpportunities,
     staleTime: 5 * 60 * 1000,
     enabled: isMember && view === 'watchlist',
-  });
-
-  const { data: sectorCatalog } = useQuery({
-    queryKey: ['intelligence-sector-catalog'],
-    queryFn: api.getSectors,
-    staleTime: 30 * 60 * 1000,
-    enabled: view === 'sectors',
   });
 
   const countries = pulse?.countries || [];
@@ -51,7 +46,7 @@ export const BetaIntelligence = () => {
     <div className="pb-24 bg-background text-foreground min-h-screen">
       <SEO
         title="Market Intelligence | BOA-Story"
-        description="The live shape of African coverage: weekly volumes, country momentum, and where reporting runs thin — across all 54 nations."
+        description="Comparable African sector performance indicators, market breadth, country dispersion and source-linked decision intelligence across all 54 nations."
       />
 
       {/* Header */}
@@ -80,7 +75,7 @@ export const BetaIntelligence = () => {
                 Market <span className="block min-[440px]:inline">Intelligence</span>
               </h1>
               <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">
-                The institutional entry point for understanding markets, sectors and decision signals across all 54 African nations.
+                Official sector-performance signals first: output, investment, credit, spending, adoption and external demand across African markets—then the reporting that explains what moved.
               </p>
             </motion.div>
             <motion.div initial={false}>
@@ -101,14 +96,14 @@ export const BetaIntelligence = () => {
         </div>
       </div>
 
-      <IntelligenceTrustPanel updatedAt={pulse?.updated_at} sourceLabel="BOA publishing, country and sector records" />
+      <IntelligenceTrustPanel updatedAt={performance?.retrieved_at || pulse?.updated_at} sourceLabel={performance?.source_name || 'Official market series and BOA reporting records'} />
 
       <div className="page-container dashboard-shell py-10 md:py-16">
         <aside className="dashboard-rail" aria-label="Intelligence sections">
           <nav>
             {[
-              ['overview', 'Live coverage'],
-              ['map', 'Coverage map'],
+              ['overview', 'Market performance'],
+              ['map', 'Reporting map'],
               ['watchlist', 'Decision watch'],
               ['sectors', 'Sectors'],
               ['methodology', 'How it works'],
@@ -182,25 +177,75 @@ export const BetaIntelligence = () => {
         </section>
         </>}
 
-        {view === 'sectors' && (
-        <section id="sectors" className="page-section order-[5]">
-          <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
-            <div className="max-w-2xl">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Structured sector intelligence</p>
-              <h2 className="font-serif text-3xl md:text-4xl text-navy">Follow markets through time.</h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Open sector records with country distribution, market metrics, regulatory outlook, leading companies and historical trend data where available.</p>
+        {(view === 'overview' || view === 'sectors') && (
+        <section id="sector-performance" className="page-section">
+          <div className="flex flex-col gap-5 border-b border-border pb-7 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-navy/65">Official market series</p>
+              <h2 className="font-serif text-3xl text-navy md:text-5xl">African sector performance</h2>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground md:text-base">Comparable country observations from named official indicators. Every card states exactly what is measured, the observation period, geographic breadth and the limitation of that proxy.</p>
             </div>
+            {performance && <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border text-center">
+              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.sectors_measured}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Series</span></div>
+              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">{performance.countries_in_scope}</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Markets</span></div>
+              <div className="bg-white px-3 py-3"><strong className="block text-xl text-navy">WDI</strong><span className="text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Source</span></div>
+            </div>}
           </div>
-          <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
-            {(sectorCatalog?.data || []).slice(0, 12).map(sector => (
-              <Link key={sector.id} to={`/sectors/${sector.id}/trends`} className="group bg-card p-5 hover:bg-accent/5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Sector record</p>
-                <h3 className="mt-2 font-serif text-xl capitalize text-navy group-hover:text-accent-ink">{sector.name}</h3>
-                <span className="mt-4 inline-flex text-xs font-semibold text-navy">Open trends →</span>
-              </Link>
-            ))}
-            {!sectorCatalog?.data?.length && <div className="col-span-full bg-card p-6 text-sm leading-6 text-muted-foreground">The returned sector catalogue contains zero records. The weekly coverage pulse below remains the current evidence view.</div>}
-          </div>
+
+          {isLoadingPerformance ? (
+            <div className="mt-7 grid gap-5 md:grid-cols-2">{[1,2,3,4].map(item => <div key={item} className="h-80 animate-pulse rounded-xl border border-border bg-navy/[0.04]" />)}</div>
+          ) : performance?.data?.length ? (
+            <div className="mt-7 grid gap-5 md:grid-cols-2">
+              {performance.data.map(sector => {
+                const signedComparison = `${sector.comparison_value > 0 ? '+' : ''}${sector.comparison_value.toFixed(1)} pp`;
+                const period = sector.period_start === sector.period_end ? String(sector.period_end) : `${sector.period_start}–${sector.period_end}`;
+                return <article key={sector.sector_id} className="flex min-w-0 flex-col rounded-xl border border-border bg-white p-5 sm:p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{sector.indicator_code}</p>
+                      <h3 className="mt-1 font-serif text-2xl leading-tight text-navy">{sector.sector_name}</h3>
+                    </div>
+                    <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] ${sector.direction === 'accelerating' ? 'border-navy bg-navy text-white' : 'border-border text-navy'}`}>{sector.direction}</span>
+                  </div>
+
+                  <div className="grid gap-5 py-5 sm:grid-cols-[1.05fr_0.95fr]">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{sector.headline_label}</p>
+                      <p className="mt-2 font-serif text-[2.7rem] leading-none text-navy">{sector.headline_value > 0 && sector.headline_unit === '%' ? '+' : ''}{sector.headline_value.toFixed(1)}<span className="ml-1 text-lg">{sector.headline_unit}</span></p>
+                      <p className="mt-3 text-xs leading-5 text-muted-foreground">Median across {sector.countries_reported} reporting markets · observations {period}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border">
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{signedComparison}</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">vs prior observation</span></div>
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">markets improving</span></div>
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.positive_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">positive signal</span></div>
+                      <div className="bg-white p-3"><strong className="block text-lg text-navy">{sector.continent_coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[0.1em] text-muted-foreground">Africa coverage</span></div>
+                    </div>
+                  </div>
+
+                  <p className="text-sm leading-6 text-navy/80">{sector.scope}</p>
+                  <div className="mt-4 rounded-lg bg-navy/[0.035] px-4 py-3 text-xs leading-5 text-muted-foreground">Middle 50% of markets: {sector.dispersion_low.toFixed(1)} to {sector.dispersion_high.toFixed(1)} {sector.headline_unit}.</div>
+
+                  <details className="mt-4 border-t border-border pt-4">
+                    <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.12em] text-navy">Country distribution and limits</summary>
+                    <div className="mt-4 grid gap-5 text-xs leading-5 sm:grid-cols-2">
+                      <div><p className="font-bold text-navy">Highest current readings</p><ol className="mt-2 space-y-1">{sector.leaders.map(market => <li key={market.country_code} className="flex justify-between gap-3"><Link to={`/countries/${market.country_code}`} className="hover:underline">{market.country_name}</Link><span className="tabular-nums">{market.value.toFixed(1)}</span></li>)}</ol></div>
+                      <div><p className="font-bold text-navy">Lowest current readings</p><ol className="mt-2 space-y-1">{sector.laggards.map(market => <li key={market.country_code} className="flex justify-between gap-3"><Link to={`/countries/${market.country_code}`} className="hover:underline">{market.country_name}</Link><span className="tabular-nums">{market.value.toFixed(1)}</span></li>)}</ol></div>
+                      <p className="sm:col-span-2 border-l-2 border-navy/25 pl-3 text-muted-foreground"><strong className="text-navy">Interpretation limit:</strong> {sector.caveat}</p>
+                    </div>
+                  </details>
+
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4 text-xs">
+                    <a href={sector.source_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline decoration-navy/25 underline-offset-4">Source: {sector.source_name}</a>
+                    <Link to={`/sectors/${sector.sector_id}/trends`} className="font-semibold text-navy">Open sector dossier →</Link>
+                  </div>
+                </article>;
+              })}
+            </div>
+          ) : isPerformanceError ? (
+            <div className="mt-7 rounded-xl border border-border bg-white p-6 text-sm leading-6 text-navy">The official-series refresh did not complete on this request. The service preserves the last verified snapshot once the first retrieval succeeds.</div>
+          ) : null}
+
+          {performance && <div className="mt-6 rounded-lg border border-border bg-navy px-5 py-4 text-xs leading-6 text-white/75"><strong className="text-white">Methodology.</strong> {performance.methodology} Retrieved {new Date(performance.retrieved_at).toLocaleString()}.</div>}
         </section>
         )}
 
@@ -209,7 +254,7 @@ export const BetaIntelligence = () => {
           <div className="page-section order-[4] flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-6 py-4">
             <p className="text-sm text-foreground/70 leading-relaxed">
               <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
-              The weekly coverage pulse, the momentum table and the map are free for everyone — no account needed.
+              Official sector-performance proxies, the reporting pulse and the country map are free for everyone — no account needed.
             </p>
             <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent-ink hover:text-foreground transition-colors">
               Unlock full intelligence →
@@ -217,11 +262,11 @@ export const BetaIntelligence = () => {
           </div>
         )}
 
-        {/* Weekly coverage pulse — real numbers only */}
+        {/* Newsroom reporting activity, deliberately separate from market performance. */}
         {view === 'overview' && (
         <section id="live-coverage" className="page-section">
           <div className="mb-7 max-w-3xl">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Live evidence layer</p>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-navy/65">Separate editorial layer</p>
             <h2 className="font-serif text-3xl text-navy">BOA reporting activity</h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Verified coverage volume from the BOA newsroom. These figures measure our reporting footprint—not market performance, investment returns or country risk.</p>
           </div>
@@ -233,7 +278,7 @@ export const BetaIntelligence = () => {
                 {[
                   { Icon: Newspaper, label: 'Stories this week', value: pulse.stories_7d.toLocaleString(), sub: 'Published in the last 7 days' },
                   { Icon: Globe, label: 'Nations covered', value: String(pulse.countries_7d), sub: 'Countries with new reporting this week' },
-                  { Icon: TrendingUp, label: 'Leading sector', value: pulse.top_sector.name, sub: `${pulse.top_sector.stories.toLocaleString()} stories this week`, small: true },
+                  { Icon: TrendingUp, label: 'Most-reported sector', value: (pulse.most_reported_sector || pulse.top_sector).name, sub: `${(pulse.most_reported_sector || pulse.top_sector).stories.toLocaleString()} stories this week — editorial volume`, small: true },
                 ].map(({ Icon, label, value, sub, small }) => (
                   <motion.div key={label} initial={false} className={`group relative overflow-hidden rounded-xl border border-foreground/10 bg-card p-5 md:p-6 ${small ? 'min-[480px]:col-span-2 md:col-span-1' : ''}`}>
                     <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
