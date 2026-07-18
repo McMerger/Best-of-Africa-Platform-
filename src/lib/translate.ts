@@ -301,6 +301,77 @@ export async function ensureArticleTranslation(
     }
 }
 
+export type ReaderTranslationLanguage = Exclude<SupportedLanguage, 'en'>;
+
+export interface ArticleTranslationQueueMessage {
+    type: 'article_translation';
+    articleId: string;
+    language: ReaderTranslationLanguage;
+}
+
+const READER_TRANSLATION_LANGUAGES: readonly ReaderTranslationLanguage[] = [
+    'fr', 'ar', 'pt', 'de', 'hi', 'zh',
+];
+
+function queuedTranslationKey(articleId: string, language: ReaderTranslationLanguage): string {
+    return `translation:queued:v1:${articleId}:${language}`;
+}
+
+/** Queue a full translation without making the reader wait for the model. */
+export async function enqueueArticleTranslation(
+    env: Env,
+    articleId: string,
+    language: ReaderTranslationLanguage,
+): Promise<boolean> {
+    const key = queuedTranslationKey(articleId, language);
+    if (await env.CACHE.get(key)) return false;
+
+    await env.CACHE.put(key, '1', { expirationTtl: 60 * 60 });
+    try {
+        const message: ArticleTranslationQueueMessage = {
+            type: 'article_translation',
+            articleId,
+            language,
+        };
+        await env.CONTENT_QUEUE.send(message);
+        return true;
+    } catch (error) {
+        await env.CACHE.delete(key);
+        throw error;
+    }
+}
+
+/** Run one queued full-article translation with queue-level retries. */
+export async function processArticleTranslationJob(
+    env: Env,
+    message: ArticleTranslationQueueMessage,
+): Promise<void> {
+    const article = await env.DB.prepare(`
+        SELECT title, subtitle, summary, content
+        FROM articles
+        WHERE id = ? AND status = 'published'
+        LIMIT 1
+    `).bind(message.articleId).first<{
+        title: string;
+        subtitle: string | null;
+        summary: string | null;
+        content: string;
+    }>();
+
+    // A withdrawn story is a terminal no-op, not a poison message.
+    if (!article) {
+        await env.CACHE.delete(queuedTranslationKey(message.articleId, message.language));
+        return;
+    }
+
+    const complete = await ensureArticleTranslation(env, message.articleId, article, message.language);
+    if (!complete) {
+        throw new Error(`Translation incomplete for ${message.articleId} (${message.language})`);
+    }
+
+    await env.CACHE.delete(queuedTranslationKey(message.articleId, message.language));
+}
+
 /**
  * Regenerate stored translations (quality=0 → 1) newest-article-first with the
  * large model; short fields and the body are all redone in one pass. Rows whose
@@ -433,7 +504,7 @@ async function backfillMissingTranslations(env: Env, batch: number): Promise<num
 export async function autoTranslateArticle(
     env: Env,
     articleId: string,
-    article: {
+    _article: {
         title: string;
         subtitle?: string | null;
         summary?: string | null;
@@ -441,20 +512,15 @@ export async function autoTranslateArticle(
         country_code?: string | null;
     }
 ): Promise<void> {
-    // Every locale visible in the reader gets pre-saved short fields for new
-    // work. Long bodies are upgraded through the quality-gated backfill or as
-    // soon as a reader requests that locale.
-    const targetLanguages: Exclude<SupportedLanguage, 'en'>[] = ['fr', 'ar', 'pt', 'de', 'hi', 'zh'];
-
-    for (let offset = 0; offset < targetLanguages.length; offset += 2) {
-        await Promise.allSettled(targetLanguages.slice(offset, offset + 2).map(async (lang) => {
-        try {
-            console.log(`Auto-translating article ${articleId} to ${lang}`);
-                await ensureArticleTranslation(env, articleId, article, lang);
-            console.log(`  → Translation stored for ${lang}`);
-        } catch (error) {
-            console.error(`Failed to translate article ${articleId} to ${lang}:`, error);
+    const queued = await Promise.allSettled(READER_TRANSLATION_LANGUAGES.map((language) =>
+        enqueueArticleTranslation(env, articleId, language)
+    ));
+    queued.forEach((result, index) => {
+        if (result.status === 'rejected') {
+            console.error(
+                `Failed to queue article ${articleId} for ${READER_TRANSLATION_LANGUAGES[index]}`,
+                result.reason,
+            );
         }
-        }));
-    }
+    });
 }

@@ -459,13 +459,6 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
         return c.json({ error: 'not_found', message: 'Article not found' }, 404);
     }
 
-    const sourceForTranslation = {
-        title: article.title,
-        subtitle: article.subtitle,
-        summary: article.summary,
-        content: article.content || '',
-    };
-
     // Two-tier byline: only human-reviewed (curated) stories carry the personal
     // byline; automated briefing coverage is attributed to the desk.
     const a = article as unknown as Record<string, unknown>;
@@ -484,7 +477,7 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
     a.title_language = 'en';
     a.content_language = 'en';
     if (['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(reqLang)) {
-        const { ensureArticleTranslation, getTranslation } = await import('../lib/translate');
+        const { enqueueArticleTranslation, getTranslation } = await import('../lib/translate');
         const targetLanguage = reqLang as 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh';
         const tr = await getTranslation(c.env, article.id, targetLanguage);
         // Shorts serve at any quality (even -1 rows keep usable m2m100 shorts —
@@ -503,11 +496,11 @@ router.get('/:slug', validate('param', SlugParamSchema), async (c) => {
             }
         }
         if (!tr || tr.quality !== 1 || !tr.content) {
-            const buildTranslation = ensureArticleTranslation(c.env, article.id, sourceForTranslation, targetLanguage);
+            const queueTranslation = enqueueArticleTranslation(c.env, article.id, targetLanguage);
             try {
-                c.executionCtx.waitUntil(buildTranslation);
+                c.executionCtx.waitUntil(queueTranslation);
             } catch {
-                void buildTranslation;
+                void queueTranslation;
             }
         }
     }

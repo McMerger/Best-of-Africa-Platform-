@@ -429,6 +429,18 @@ async function queue(batch: MessageBatch, env: Env) {
                 await processContentGeneration(data, env);
             } else if (data.type === 'optimize_headline' || data.type === 'fill_narrative_gap') {
                 await processOptimization(data, env);
+            } else if (data.type === 'article_translation') {
+                const articleId = typeof data.articleId === 'string' ? data.articleId : '';
+                const language = typeof data.language === 'string' ? data.language : '';
+                if (!articleId || !['fr', 'ar', 'pt', 'de', 'hi', 'zh'].includes(language)) {
+                    throw new Error('Invalid article translation queue message');
+                }
+                const { processArticleTranslationJob } = await import('./lib/translate');
+                await processArticleTranslationJob(env, {
+                    type: 'article_translation',
+                    articleId,
+                    language: language as 'fr' | 'ar' | 'pt' | 'de' | 'hi' | 'zh',
+                });
             }
 
             message.ack();

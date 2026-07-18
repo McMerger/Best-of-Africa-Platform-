@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseTranslationBatch } from '../../src/routes/translation';
-import { LANGUAGE_CONFIG } from '../../src/lib/translate';
+import { autoTranslateArticle, LANGUAGE_CONFIG } from '../../src/lib/translate';
+import { createMockEnv } from '../mocks/env';
 
 describe('publication-quality translation batches', () => {
     it('accepts a complete ordered translation payload', () => {
@@ -23,5 +24,28 @@ describe('publication-quality translation batches', () => {
 
     it('covers every language offered by the application', () => {
         expect(Object.keys(LANGUAGE_CONFIG).sort()).toEqual(['ar', 'de', 'en', 'fr', 'hi', 'pt', 'zh']);
+    });
+
+    it('queues complete full-article translations for every reader locale', async () => {
+        const queued: Array<Record<string, unknown>> = [];
+        const env = createMockEnv({
+            CONTENT_QUEUE: {
+                send: async (message: Record<string, unknown>) => {
+                    queued.push(message);
+                },
+            } as unknown as Queue,
+        });
+
+        await autoTranslateArticle(env, 'article-1', {
+            title: 'A title',
+            subtitle: 'A subtitle',
+            summary: 'A summary',
+            content: 'The complete article body.',
+        });
+
+        expect(queued).toHaveLength(6);
+        expect(queued.every((message) => message.type === 'article_translation')).toBe(true);
+        expect(queued.map((message) => message.language).sort()).toEqual(['ar', 'de', 'fr', 'hi', 'pt', 'zh']);
+        expect(queued.every((message) => message.articleId === 'article-1')).toBe(true);
     });
 });
