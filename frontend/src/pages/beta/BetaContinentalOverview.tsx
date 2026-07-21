@@ -1,437 +1,124 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Globe, MapPin, Activity, ArrowRight, BarChart3, Newspaper } from 'lucide-react';
+import { Activity, ArrowRight, ExternalLink, Globe2, Landmark, Scale, TrendingUp } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { useMember } from '../../context/MemberContext';
-import { CountryFlag } from '../../components/CountryFlag';
-import { stripMarkdown, heroThumb } from '@/lib/utils';
-import { KO_FI_URL } from '../../constants/beta';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
-import { EditorialContent } from '../../components/EditorialContent';
-import { sourcedEditorialImage } from '../../lib/editorialImage';
-import { PhotoCredit } from '../../components/PhotoCredit';
+
+const compact = (value: number, digits = 1) => new Intl.NumberFormat('en', {
+  notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: digits,
+}).format(value);
+
+const formatValue = (value: number, unit: string) => {
+  if (unit === 'current US$') return `$${compact(value)}`;
+  if (unit === 'current US$ per person') return `$${compact(value)}`;
+  if (unit === 'people') return compact(value);
+  return `${compact(value)}${unit === '%' ? '%' : ` ${unit}`}`;
+};
+
+const period = (start: number, end: number) => start === end ? String(end) : `${start}–${end}`;
 
 export const BetaContinentalOverview: React.FC = () => {
-  const { isMember } = useMember();
   const { view: requestedView = 'overview' } = useParams<{ view?: string }>();
   const view = ['overview', 'regions', 'sectors'].includes(requestedView) ? requestedView : 'overview';
-  // Hoisted so the hook runs on every render (the early loading/error returns
-  // would otherwise make this conditional and break the rules of hooks).
-
-  const { data, isLoading, isError, dataUpdatedAt } = useQuery({
-    queryKey: ['continental-overview'],
+  const query = useQuery({
+    queryKey: ['continental-economic-overview', 'economy-v1'],
     queryFn: api.getContinentalOverview,
-    staleTime: 5 * 60 * 1000,
-  });
-  const {
-    data: platformAnalytics,
-    isLoading: isAnalyticsLoading,
-    isError: isAnalyticsError,
-  } = useQuery({
-    queryKey: ['platform-analytics', 'investor'],
-    queryFn: () => api.getPlatformAnalytics('investor'),
-    staleTime: 10 * 60 * 1000,
-    enabled: view === 'overview',
+    staleTime: 12 * 60 * 60 * 1000,
   });
 
-  if (isLoading) {
-    return (
-      <>
-        <div className="max-w-6xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {[1, 2, 3].map(i => <div key={i} className="h-32 bg-background/5 rounded-xl border border-primary/10" />)}
-          </div>
-          <div className="h-[400px] bg-background/5 rounded-2xl border border-primary/10" />
-        </div>
-      </>
-    );
-  }
+  if (query.isLoading) return <div className="mx-auto max-w-6xl animate-pulse px-5 py-16 sm:px-6"><div className="h-16 w-2/3 rounded-xl bg-navy/10"/><div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[1,2,3,4].map(i => <div key={i} className="h-40 rounded-2xl bg-navy/5"/>)}</div><div className="mt-10 h-96 rounded-2xl bg-navy/5"/></div>;
 
-  if (isError || !data) {
-    return (
-      <>
-        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-accent-ink">Request failed</p>
-          <h2 className="mt-3 font-serif text-3xl mb-3">Continue through the evidence desk</h2>
-          <p className="max-w-xl text-primary/60 mb-8">This dashboard request did not complete. BOA’s country index and source-linked story search remain the direct routes into the underlying reporting record.</p>
-          <div className="flex gap-3"><Link to="/countries" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Country index</Link><Link to="/search" className="rounded-md border border-border px-5 py-3 text-sm font-semibold text-navy">Search stories</Link></div>
-        </div>
-      </>
-    );
-  }
+  if (query.isError || !query.data) return <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col justify-center px-5 sm:px-6"><p className="text-xs font-bold uppercase tracking-[.2em] text-navy/60">Official dataset request failed</p><h1 className="mt-3 font-serif text-4xl text-navy">The continental economic record could not be loaded.</h1><p className="mt-4 leading-7 text-muted-foreground">Retry the official-data dashboard or continue to individual country dossiers.</p><div className="mt-8 flex flex-wrap gap-3"><button onClick={() => query.refetch()} className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Retry dashboard</button><Link to="/countries" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy">Country dossiers</Link></div></div>;
 
-  const { overview, by_region, top_countries, top_sectors, highlights, underreported } = data;
+  const data = query.data;
+  const indicators = Object.fromEntries(data.indicators.map(item => [item.indicator_code, item]));
+  const headlineCodes = ['NY.GDP.MKTP.CD', 'SP.POP.TOTL', 'NY.GDP.MKTP.KD.ZG', 'BX.KLT.DINV.CD.WD'];
+  const headlineIcons = [Landmark, Globe2, TrendingUp, Activity];
 
-  // Express each region's coverage as a share of total story volume (0-100%),
-  // which reads more intuitively than raw counts on the heatmap axis.
-  const regionTotal = by_region.reduce((sum, r) => sum + (r.count || 0), 0) || 1;
-  const regionData = [...by_region]
-    .map(r => ({ region: r.region, count: r.count, pct: Math.round((r.count / regionTotal) * 1000) / 10 }))
-    .sort((a, b) => a.pct - b.pct);
-  const heaviest = regionData[regionData.length - 1];
-  const thinnest = regionData[0];
+  return <div className="min-h-screen bg-background pb-24 text-foreground">
+    <SEO title="Continental Economic Overview | BOA-Story" description="Official continental and regional economic, trade, investment and sector-performance indicators across Africa’s 54 markets."/>
 
-  return (
-    <div className="bg-background text-foreground min-h-screen pb-24">
-      <SEO 
-        title="Continental Overview | BOA-Story Dashboard"
-        description="Pan-African executive dashboard displaying macro trends, regional data, and highlighted stories."
-      />
-      
-      {/* Header */}
-      <div className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
-        <motion.div
-          className="hidden"
-        >
-          <img
-            src="/images/v2_intel.webp"
-            alt="Continental Intelligence Data"
-            className="hero-photo w-full h-[120%] object-cover object-center absolute top-[-10%]"
-          />
-          <div className="absolute inset-0 z-10 hero-scrim" />
+    <header className="border-b border-white/10 bg-navy px-5 py-14 text-white sm:px-6 md:py-20">
+      <div className="mx-auto max-w-6xl">
+        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
+          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">Continental economic command centre</p>
+          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Africa at decision scale.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">A sourced view of continental output, population, growth, inflation, foreign investment, trade, fixed investment and sector operating conditions, built from official country observations with visible periods and source limits.</p>
+          <div className="mt-8 flex flex-wrap gap-3"><Link to="/intelligence/sectors" className="rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy">Sector intelligence</Link><Link to="/countries" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white">Country dossiers</Link></div>
         </motion.div>
-
-        <div className="max-w-6xl mx-auto w-full">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-            <div className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
-              <BarChart3 size={14} />
-              Continental Intelligence Command Centre
-            </div>
-
-            <h1 className="max-w-3xl break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4.5rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-6">
-              Africa at decision scale.
-            </h1>
-            <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
-              A continent-wide evidence layer for institutions monitoring where attention, research and reporting activity are concentrating across African markets.
-            </p>
-            <div className="mt-7 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
-              <Link to="/intelligence" className="flex min-h-12 items-center justify-center rounded-md bg-navy px-5 py-3 text-center text-sm font-semibold text-white hover:bg-navy/90">Market Intelligence</Link>
-              <Link to="/search" className="flex min-h-12 items-center justify-center rounded-md border border-border bg-white px-5 py-3 text-center text-sm font-semibold text-navy hover:border-accent">Search Intelligence</Link>
-            </div>
-          </motion.div>
-        </div>
       </div>
+    </header>
 
-      <div className="border-b border-border bg-navy text-white">
-        <div className="mobile-scroll-strip max-w-6xl mx-auto px-5 sm:px-6 py-5 text-xs font-medium text-white/70">
-          {['Continental allocation', 'Country comparison', 'Sector monitoring', 'Coverage gaps', 'Executive briefing', 'Research prioritisation'].map(label => <span key={label}>{label}</span>)}
-        </div>
-      </div>
+    <IntelligenceTrustPanel updatedAt={data.retrieved_at} sourceLabel={data.source_name}/>
 
-      <IntelligenceTrustPanel updatedAt={dataUpdatedAt} sourceLabel="BOA continental dashboard and publishing records" />
+    <div className="page-container dashboard-shell mt-10 md:mt-14">
+      <aside className="dashboard-rail" aria-label="Continental dashboard sections"><nav>{[['overview','Continental record'],['regions','Regional comparison'],['sectors','Sector performance']].map(([slug,label]) => <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>)}</nav></aside>
 
-      <div className="page-container dashboard-shell mt-10 md:mt-14">
-        <aside className="dashboard-rail" aria-label="Continental dashboard sections">
-          <nav>
-            {[
-              ['overview', 'Snapshot & brief'],
-              ['regions', 'Regions & gaps'],
-              ['sectors', 'Sectors & stories'],
-            ].map(([slug, label]) => (
-              <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>
-            ))}
-          </nav>
-        </aside>
-
-        <div className="page-stack">
-
+      <main className="page-stack min-w-0">
         {view === 'overview' && <>
-        <section id="continental-snapshot" className="page-section">
+          <section className="page-section">
+            <div className="max-w-3xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-navy/60">Official continental record</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Economic scale and direction</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">Totals aggregate the latest country observations; medians preserve equal country weight. Coverage and reporting years remain visible so continent-wide figures are never mistaken for perfectly synchronized national accounts.</p></div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {headlineCodes.map((code,index) => { const item=indicators[code]; const Icon=headlineIcons[index]; return <article key={code} className="rounded-2xl border border-border bg-white p-5 md:p-6"><Icon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{item.label}</p><p className="mt-2 break-words font-serif text-3xl text-navy">{formatValue(item.value,item.unit)}</p><p className="mt-3 text-xs leading-5 text-muted-foreground">{item.aggregation} · {item.countries_reported} countries · {period(item.period_start,item.period_end)}</p></article>; })}
+            </div>
+          </section>
 
-        {/* Free-preview banner */}
-        {!isMember && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-accent/30 bg-card shadow-[0_10px_40px_-15px_rgba(15,31,61,0.3)] px-6 py-4 mb-10">
-            <p className="text-sm text-foreground/70 leading-relaxed">
-              <span className="font-bold text-accent-ink uppercase tracking-widest text-[11px] mr-2">Open access</span>
-              This open dashboard shows BOA's verified research and reporting footprint. Premium institutional modules will extend into country, sector, company, project and risk intelligence.
-            </p>
-            <Link to="/membership" className="shrink-0 text-[11px] font-bold uppercase tracking-widest text-accent-ink hover:text-foreground transition-colors">
-              Request institutional access →
-            </Link>
-          </div>
-        )}
+          <section className="page-section">
+            <div className="flex flex-col gap-3 border-b border-border pb-6 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Macro and external accounts</p><h2 className="mt-2 font-serif text-3xl text-navy">Continental indicator ledger</h2></div><span className="text-xs text-muted-foreground">{data.indicators.length} source-defined fields</span></div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {data.indicators.filter(item => !headlineCodes.includes(item.indicator_code)).map(item => <article key={item.indicator_code} className="rounded-xl border border-border bg-white p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{item.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{item.label}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy/60">{item.aggregation}</span></div>
+                <p className="mt-5 font-serif text-3xl text-navy">{formatValue(item.value,item.unit)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">{item.countries_reported} countries · observations {period(item.period_start,item.period_end)}</p>
+                <p className="mt-5 text-sm leading-6 text-navy/80">{item.interpretation}</p><p className="mt-4 border-l-2 border-navy/20 pl-3 text-xs leading-5 text-muted-foreground"><strong className="text-navy">Limit:</strong> {item.caveat}</p>
+                <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-navy underline decoration-navy/25 underline-offset-4">Official series <ExternalLink size={12}/></a>
+              </article>)}
+            </div>
+          </section>
 
-        <div className="mb-8 max-w-3xl">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-accent-ink">Continental evidence layer</p>
-          <h2 className="font-serif text-3xl text-navy">Thirty-day intelligence footprint</h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">These metrics measure BOA research coverage and narrated output. They are not macroeconomic performance, investment-return or sovereign-risk indicators.</p>
-        </div>
-
-        {/* Top KPI Cards */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
-          {[
-            { Icon: Newspaper, label: 'Articles (30D)', value: overview.total_articles_30d },
-            { Icon: Globe, label: 'Countries Covered (30d)', value: overview.countries_covered },
-            { Icon: MapPin, label: 'Reporting Regions', value: overview.regions },
-          ].map(({ Icon, label, value }, i) => (
-            <motion.div
-              key={label}
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 + i * 0.1, duration: 0.6 }}
-              className={`group relative overflow-hidden bg-card rounded-xl p-4 sm:p-5 md:p-7 border border-foreground/10 flex flex-row items-center gap-4 md:gap-6 hover:border-navy/35 transition-colors ${i === 2 ? 'sm:col-span-2 md:col-span-1' : ''}`}
-            >
-              <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-accent/5 blur-2xl group-hover:bg-accent/10 transition-colors pointer-events-none" />
-              <div className="w-11 h-11 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-accent/15 transition-all">
-                <Icon className="text-accent w-7 h-7" />
-              </div>
-              <div className="relative">
-                <div className="text-foreground/70 text-[11px] font-bold uppercase tracking-widest mb-2">{label}</div>
-                <div className="text-[2.1rem] md:text-[2.75rem] font-serif text-foreground leading-none">{value}</div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-        </section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          id="continental-briefing"
-          className="page-section overflow-hidden rounded-2xl border border-accent/25 bg-card shadow-[0_24px_70px_-40px_rgba(15,31,61,0.45)]"
-        >
-          <div className="border-b border-border bg-navy px-7 py-7 text-white md:px-10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Continental evidence briefing</p>
-            <h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight md:text-4xl">What the latest reporting establishes—and what it does not</h2>
-            <p className="mt-4 max-w-3xl text-sm leading-6 text-white/70">A source-bounded briefing on current actors, chronology, mechanisms, cross-country differences, counter-signals, evidence gaps and verification priorities.</p>
-          </div>
-          <div className="px-7 py-8 md:px-10 md:py-10">
-            {isAnalyticsLoading && (
-              <div className="space-y-4 animate-pulse" aria-label="Loading continental evidence briefing">
-                <div className="h-5 w-3/4 rounded bg-foreground/10" />
-                <div className="h-4 w-full rounded bg-foreground/5" />
-                <div className="h-4 w-11/12 rounded bg-foreground/5" />
-                <div className="h-32 w-full rounded-xl bg-foreground/5" />
-                <p className="pt-2 text-xs text-muted-foreground">Loading the current evidence brief.</p>
-              </div>
-            )}
-            {isAnalyticsError && <div className="text-sm leading-7 text-muted-foreground"><p>The extended evidence brief could not be loaded. The dashboard below contains {overview.total_articles_30d.toLocaleString()} published articles across {overview.countries_covered} countries in the current 30-day window.</p><p className="mt-3">Use the regional distribution, country ranking, sector counts and source-linked highlights as the current evidence layer.</p></div>}
-            {platformAnalytics?.market_summary && (
-              <>
-                <EditorialContent content={platformAnalytics.market_summary} className="max-w-none text-[15px] leading-7 md:text-base" />
-                <div className="mt-8 border-t border-border pt-5 text-xs leading-5 text-muted-foreground">
-                  <p>{platformAnalytics.methodology}</p>
-                  <p className="mt-1">Updated {new Date(platformAnalytics.updated_at).toLocaleString()} · {platformAnalytics.total_articles_7d.toLocaleString()} reports across {platformAnalytics.coverage.countries_7d} countries in the seven-day evidence window.</p>
-                </div>
-              </>
-            )}
-          </div>
-        </motion.section>
+          <section className="page-section">
+            <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Country differentiation</p><h2 className="mt-2 font-serif text-3xl text-navy">Scale, growth and capital rankings</h2><p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">Each ranking uses one named indicator and its recorded year. It is not a composite attractiveness index.</p></div>
+            <div className="mt-7 grid gap-5 lg:grid-cols-3">
+              {[
+                ['Largest economies', data.rankings.largest_economies, 'current US$'],
+                ['Fastest real growth', data.rankings.fastest_growth, '%'],
+                ['Largest net FDI inflows', data.rankings.largest_fdi_inflows, 'current US$'],
+              ].map(([title, rows, unit]) => <article key={title as string} className="rounded-2xl border border-border bg-white p-5 md:p-6"><h3 className="font-serif text-2xl text-navy">{title as string}</h3><ol className="mt-5 space-y-3">{(rows as typeof data.rankings.largest_economies).map((row,index) => <li key={row.country_code} className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 text-sm"><span className="text-muted-foreground">{index+1}.</span><div><Link to={`/countries/${row.country_code}`} className="font-semibold text-navy hover:underline">{row.country_name}</Link><p className="text-[10px] text-muted-foreground">{row.region} · {row.year}</p></div><span className="text-right tabular-nums text-navy">{formatValue(row.value,unit as string)}</span></li>)}</ol></article>)}
+            </div>
+          </section>
         </>}
 
-        {view === 'regions' && <>
-        <div id="regional-coverage" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Chart: Regional Breakdown */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-2 bg-card rounded-xl border border-foreground/10 p-8 md:p-10 flex flex-col">
-            <h3 className="font-serif text-[2rem] text-foreground mb-8 flex items-center gap-4">
-              <Activity className="text-accent" size={32} /> Regional Coverage Share
-            </h3>
-            {/* Brand gold sits at 2.2:1 on white — below the 3:1 mark threshold —
-                so the value labels at the bar ends are mandatory relief, not
-                decoration (palette validated; labels wear ink, not series color).
-                flex-1 lets the chart absorb the grid-stretch that used to leave
-                a blank band under the bars when the country list ran taller. */}
-            <div className="flex-1 min-h-[260px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={regionData} layout="vertical" margin={{ top: 0, right: 46, left: 20, bottom: 0 }}>
-                  <CartesianGrid horizontal={false} stroke="rgba(15,31,61,0.06)" />
-                  <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} tickCount={5} />
-                  <YAxis
-                    type="category"
-                    dataKey="region"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 13, fill: 'rgba(15,31,61,0.85)', fontWeight: 400 }}
-                    width={82}
-                  />
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: '1px solid rgba(15,31,61,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
-                    cursor={{ fill: 'rgba(15,31,61,0.04)' }}
-                    formatter={(value: any, _n: any, p: any) => [`${value}% of coverage (${p?.payload?.count ?? 0} stories)`, 'Share']}
-                  />
-                  <Bar dataKey="pct" fill="#0F1F3D" radius={[0, 4, 4, 0]} barSize={14} isAnimationActive={false}>
-                    <LabelList dataKey="pct" position="right" formatter={(v: any) => `${v}%`} style={{ fill: 'rgba(15,31,61,0.75)', fontSize: 12, fontWeight: 600 }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            {heaviest && thinnest && heaviest.region !== thinnest.region && (
-              <p className="mt-8 pt-6 border-t border-foreground/10 font-serif italic text-[1.0625rem] leading-relaxed text-foreground/70">
-                {heaviest.region} Africa carries {heaviest.pct}% of the month's coverage;{' '}
-                {thinnest.region} Africa remains the thinnest at {thinnest.pct}% — the gap our
-                underreported-nations desk is working to close.
-              </p>
-            )}
-          </motion.div>
-
-          {/* List: Top Countries */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-xl border border-foreground/10 p-8 flex flex-col">
-            <h3 className="font-serif text-[2rem] text-foreground mb-8">Active Across the Continent</h3>
-            <ul className="space-y-5 flex-1">
-              {top_countries.map((c) => (
-                <li key={c.code} className="flex items-center justify-between group">
-                  <Link to={`/countries/${c.code}`} className="flex items-center gap-4">
-                    <CountryFlag code={c.code} title={c.name} size={34} />
-                    <span className="text-[1.125rem] font-light text-foreground group-hover:text-accent transition-colors">
-                      {c.name}
-                    </span>
-                  </Link>
-                  <div className="text-right">
-                    <div className="text-[1.125rem] font-serif text-foreground">{c.articles}</div>
-                    <div className="text-[10px] text-foreground/70 uppercase tracking-widest font-bold">Stories</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <Link to="/countries" className="mt-8 flex items-center justify-center gap-3 w-full py-5 bg-foreground/5 text-foreground text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-foreground/10 hover:text-accent transition-colors">
-              View All Directory <ArrowRight size={14} />
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Underreported nations — deliberately surfaced to counter the
-            big-economy bias and reflect the all-54-nations mission. */}
-        {underreported && underreported.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            id="coverage-gaps"
-            className="page-section bg-card rounded-xl border border-foreground/10 p-8 md:p-10"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
-              <h3 className="font-serif text-[2rem] text-foreground flex items-center gap-4">
-                <MapPin className="text-accent" size={28} /> Underreported Africa
-              </h3>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-accent/80">Where coverage is thin</span>
-            </div>
-            <p className="text-foreground/70 font-light mb-8 max-w-2xl">
-              The headlines crowd around a handful of big economies. These nations are the least covered here — and exactly where we're working to even the story out.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {underreported.map((c) => (
-                <Link
-                  key={c.code}
-                  to={`/countries/${c.code}`}
-                  className="group flex items-center gap-3 rounded-2xl border border-foreground/10 bg-background/30 p-4 hover:border-accent/40 hover:-translate-y-0.5 transition-all"
-                >
-                  <CountryFlag code={c.code} title={c.name} size={32} />
-                  <div className="min-w-0">
-                    <div className="text-[15px] font-medium text-foreground truncate group-hover:text-accent transition-colors">{c.name}</div>
-                    <div className="text-[11px] text-foreground/70">{c.articles} {c.articles === 1 ? 'story' : 'stories'}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-        )}
-        </>}
-
-        {/* Sectors in focus + editor's highlights, free for everyone */}
-        {view === 'sectors' && (
-        <div id="sector-highlights" className="page-section grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* List: Top Sectors */}
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="bg-card rounded-xl border border-foreground/10 p-8 h-fit">
-            <h3 className="font-serif text-[2rem] text-foreground mb-8">Sectors in Focus</h3>
-            <ul className="space-y-4">
-              {top_sectors.map((s) => (
-                <li key={s.id} className="flex items-center justify-between p-4 rounded-xl border border-foreground/5 hover:border-accent/30 bg-background/30 transition-colors">
-                  <span className="text-[15px] font-light text-foreground capitalize">
-                    {s.name}
-                  </span>
-                  <span className="text-[13px] text-accent-ink font-bold font-mono">
-                    {s.count}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Highlights Feed */}
-          <div className="lg:col-span-2">
-            <h3 className="font-serif text-[2.5rem] text-foreground mb-10 leading-none">Editor's Highlights</h3>
-            <div className="space-y-6">
-              {highlights.map((article, index) => (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  key={article.slug}
-                >
-                  <Link
-                    to={`/posts/${article.slug}`}
-                    className="flex flex-col sm:flex-row gap-6 bg-card rounded-2xl border border-foreground/5 p-6 hover:border-accent/30 hover:bg-foreground/5 transition-all group shadow-xl"
-                  >
-                    {sourcedEditorialImage(article) && (
-                      <div className="w-full sm:w-48 h-36 shrink-0 rounded-xl overflow-hidden relative">
-                        <div className="absolute inset-0 bg-background/20 group-hover:bg-transparent transition-colors z-10" />
-                        <img 
-                          src={heroThumb(sourcedEditorialImage(article)!)}
-                          alt={stripMarkdown(article.title)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                        <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-2 z-20 rounded bg-navy/80 px-2 py-1 text-white" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest mb-3 text-accent/80">
-                        {article.country_name && <span>{article.country_name}</span>}
-                        {article.country_name && article.sector_name && <span className="text-foreground/30">•</span>}
-                        {article.sector_name && <span>{article.sector_name}</span>}
-                      </div>
-                      <h4 className="font-serif text-[1.5rem] leading-snug mb-3 text-foreground group-hover:text-accent transition-colors">
-                        {stripMarkdown(article.title)}
-                      </h4>
-                      {article.summary && (
-                        <p className="text-[15px] font-light leading-relaxed text-foreground/70 line-clamp-2">
-                          {stripMarkdown(article.summary)}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+        {view === 'regions' && <section className="page-section">
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Five-region comparison</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Regional economic structure</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">GDP, population and FDI are recorded sums; growth, inflation and investment intensity are country medians. Every card discloses the number of country observations behind each regional reading.</p></div>
+          <div className="mt-8 grid gap-5 lg:grid-cols-2">
+            {data.regions.map(region => <article key={region.region} className="rounded-2xl border border-border bg-white p-5 md:p-7">
+              <div className="flex items-end justify-between gap-4 border-b border-border pb-5"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-navy/60">{region.country_count} countries</p><h3 className="mt-1 font-serif text-3xl text-navy">{region.region} Africa</h3></div><Link to={`/countries?region=${region.region}`} className="text-xs font-semibold text-navy">Open countries <ArrowRight size={12} className="inline"/></Link></div>
+              <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+                {[
+                  ['Recorded GDP', region.gdp, 'current US$'], ['Population', region.population, 'people'], ['Median real growth', region.growth, '%'],
+                  ['Median inflation', region.inflation, '%'], ['Recorded net FDI', region.fdi, 'current US$'], ['Median fixed investment', region.investment, '% of GDP'],
+                ].map(([label,reading,unit]) => { const metric=reading as typeof region.gdp; return <div key={label as string} className="min-w-0 bg-white p-4"><p className="text-[9px] font-bold uppercase tracking-[.1em] text-muted-foreground">{label as string}</p><p className="mt-2 break-words font-serif text-xl text-navy">{formatValue(metric.value,unit as string)}</p><p className="mt-1 text-[9px] leading-4 text-muted-foreground">{metric.countries_reported} countries · {period(metric.period_start,metric.period_end)}</p></div>; })}
+              </div>
+            </article>)}
           </div>
-        </div>
-        )}
+        </section>}
 
-        {/* Membership CTA — the dashboard itself is fully free; this points to
-            the genuinely premium, member-only intelligence. */}
-        {!isMember && (
-          <div className="mt-14 rounded-xl bg-navy text-white border border-accent/30 p-8 md:p-10 text-center">
-            <span className="inline-flex items-center gap-2 text-accent font-bold uppercase tracking-[0.16em] text-[11px] mb-4">
-              <BarChart3 size={14} /> Founding Members
-            </span>
-            <h2 className="font-serif text-white text-[2rem] md:text-[2.5rem] leading-tight mb-4 max-w-2xl mx-auto">
-              Go deeper than the overview
-            </h2>
-            <p className="text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
-              The whole continental dashboard is free. Founding Members unlock per-country
-              situation reports, strategic opportunity scoring, and curated briefings tuned to
-              their exact markets.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="bg-accent text-navy font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-gold-italic transition-all">
-                Become a Founding Member
-              </a>
-              <Link to="/membership" className="border border-accent/40 text-white font-bold uppercase tracking-[0.06em] text-[12px] px-8 py-4 rounded-full hover:bg-accent/10 transition-all">
-                See membership
-              </Link>
-            </div>
+        {view === 'sectors' && <section className="page-section">
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Official sector series</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Sector performance across Africa</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">Eight sector dossiers combine a primary performance proxy with three structural or operating dimensions. Incompatible units remain separate.</p></div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {data.sector_performance.map(sector => <article key={sector.sector_id} className="rounded-2xl border border-border bg-white p-5 md:p-6">
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{sector.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{sector.sector_name}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy">{sector.direction}</span></div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-[1fr_1.2fr]"><div><p className="text-[10px] uppercase tracking-[.1em] text-muted-foreground">{sector.headline_label}</p><p className="mt-2 font-serif text-3xl text-navy">{formatValue(sector.headline_value,sector.headline_unit)}</p><p className="mt-2 text-xs text-muted-foreground">{sector.countries_reported} countries · {period(sector.period_start,sector.period_end)}</p></div><div className="grid gap-2">{sector.dimensions.map(item => <div key={item.indicator_code} className="flex items-center justify-between gap-3 rounded-lg bg-navy/[.035] px-3 py-2"><div><p className="text-xs font-semibold text-navy">{item.label}</p><p className="text-[9px] text-muted-foreground">{item.coverage_pct.toFixed(0)}% coverage · {period(item.period_start,item.period_end)}</p></div><span className="text-right text-sm font-semibold text-navy">{formatValue(item.value,item.unit)}</span></div>)}</div></div>
+              <Link to={`/sectors/${sector.sector_id}/trends`} className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs font-semibold text-navy">Open full performance dossier <ArrowRight size={14}/></Link>
+            </article>)}
           </div>
-        )}
+        </section>}
 
-        </div>
-      </div>
+        <section className="page-section rounded-2xl border border-border bg-navy p-6 text-white md:p-8"><div className="flex items-start gap-4"><Scale className="mt-1 shrink-0" size={20}/><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-white/60">Method and comparability</p><p className="mt-3 text-sm leading-7 text-white/75">{view === 'sectors' ? data.sector_methodology : data.methodology}</p><a href={data.source_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-white underline underline-offset-4">Inspect {data.source_name} <ExternalLink size={12}/></a></div></div></section>
+      </main>
     </div>
-  );
+  </div>;
 };

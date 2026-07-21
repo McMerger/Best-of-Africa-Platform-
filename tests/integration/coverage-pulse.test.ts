@@ -69,6 +69,21 @@ describe('GET /coverage-pulse', () => {
         expect(JSON.stringify(body)).not.toContain('article_count');
     });
 
+    it('serves sector dossiers without editorial activity queries or fields', async () => {
+        const { db, queries } = createCoverageDb([{ first: { id: 'manufacturing', name: 'Manufacturing & Industry' } }]);
+        const env = createMockEnv({ DB: db });
+
+        const response = await app.fetch(new Request('http://localhost/sector/manufacturing/trends'), env);
+        const body = await response.json() as any;
+
+        expect(response.status).toBe(200);
+        expect(queries).toHaveLength(1);
+        expect(queries[0]).not.toMatch(/articles|published_at|view_count|engagement/);
+        expect(body.market_performance.dimensions).toHaveLength(3);
+        expect(body.market_performance.diligence_questions).toHaveLength(4);
+        expect(JSON.stringify(body)).not.toMatch(/weekly_coverage|country_coverage|stories_30d|reporting_methodology/);
+    });
+
     it('does not estimate CAGR, deal flow or projects from headlines', async () => {
         const { db } = createCoverageDb([
             { first: { current_30d: 14, previous_30d: 7, countries_30d: 6, source_records_30d: 12 } },

@@ -8,6 +8,8 @@ import type { Env, Variables, Dashboard } from '../types';
 
 import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
+import { CONTINENTAL_WDI_SNAPSHOT } from '../data/continental-wdi-snapshot';
+import { getSectorPerformanceCache } from '../lib/sector-performance';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -159,101 +161,12 @@ router.get('/:region', async (c) => {
 // GET /dashboards/continental/overview - Pan-African overview
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/continental/overview', async (c) => {
-    const [
-        totalArticles,
-        articlesByRegion,
-        topCountries,
-        topSectors,
-        recentHighlights,
-        leastCovered,
-    ] = await Promise.all([
-        c.env.DB.prepare(`
-            SELECT COUNT(*) as total,
-                   COUNT(DISTINCT country_code) as countries,
-                   SUM(CASE WHEN audio_url IS NOT NULL THEN 1 ELSE 0 END) as narrated
-            FROM articles
-            WHERE status = 'published' AND published_at > datetime('now', '-30 days')
-        `).first<{ total: number; countries: number; narrated: number }>(),
-
-        c.env.DB.prepare(`
-            SELECT c.region, COUNT(a.id) as count
-            FROM countries c
-            JOIN articles a ON a.country_code = c.code
-            WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
-            GROUP BY c.region
-        `).all(),
-
-        // Region-balanced "active nations": top 2 per region by recent activity,
-        // so the list reflects the whole continent instead of ranking the same
-        // big economies by raw volume.
-        c.env.DB.prepare(`
-            SELECT code, name, flag_emoji, image_strength_score, articles, views
-            FROM (
-                SELECT code, name, flag_emoji, image_strength_score, region, articles, views, recent,
-                       ROW_NUMBER() OVER (PARTITION BY region ORDER BY recent DESC, articles DESC) AS rn
-                FROM (
-                    SELECT c.code, c.name, c.flag_emoji, c.image_strength_score, c.region,
-                           COUNT(a.id) AS articles,
-                           SUM(a.view_count) AS views,
-                           SUM(CASE WHEN a.published_at > datetime('now', '-30 days') THEN 1 ELSE 0 END) AS recent
-                    FROM countries c
-                    JOIN articles a ON a.country_code = c.code AND a.status = 'published'
-                    GROUP BY c.code
-                )
-            )
-            WHERE rn <= 2
-            ORDER BY recent DESC, articles DESC
-        `).all(),
-
-        c.env.DB.prepare(`
-            SELECT s.id, s.name, s.icon, s.color, COUNT(a.id) as count
-            FROM sectors s
-            JOIN articles a ON a.sector_id = s.id
-            WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
-            GROUP BY s.id
-            ORDER BY count DESC
-        `).all(),
-
-        // "Editor's Highlights" leads with hand-curated pieces (the two-tier
-        // model's top shelf), then falls back to recency-weighted engagement.
-        c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code, a.hero_image_url, a.image_credit, a.image_source_url, a.curated,
-                   c.name as country_name, c.flag_emoji, s.name as sector_name, a.published_at
-            FROM articles a
-            JOIN countries c ON a.country_code = c.code
-            LEFT JOIN sectors s ON a.sector_id = s.id
-            WHERE a.status = 'published'
-            ORDER BY a.curated DESC,
-                     (a.engagement_score * 1.0 / ((julianday('now') - julianday(a.published_at)) + 1)) DESC
-            LIMIT 5
-        `).all(),
-
-        // Least-covered nations — surfaced deliberately to counter the
-        // mainstream big-economy bias and reflect the all-54-nations mission.
-        c.env.DB.prepare(`
-            SELECT c.code, c.name, c.flag_emoji, COUNT(a.id) as articles
-            FROM countries c
-            LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
-            GROUP BY c.code
-            ORDER BY articles ASC, c.name ASC
-            LIMIT 8
-        `).all(),
-    ]);
-
+    const sectorPerformance = await getSectorPerformanceCache(c.env);
     return c.json({
-        overview: {
-            total_articles_30d: totalArticles?.total || 0,
-            // Real 30-day counts — the old hardcoded 54/5 never changed, which
-            // made the KPI row read as decoration.
-            countries_covered: totalArticles?.countries || 0,
-            narrated_briefings: totalArticles?.narrated || 0,
-            regions: 5,
-        },
-        by_region: articlesByRegion.results || [],
-        top_countries: topCountries.results || [],
-        top_sectors: topSectors.results || [],
-        highlights: recentHighlights.results || [],
-        underreported: leastCovered.results || [],
+        ...CONTINENTAL_WDI_SNAPSHOT,
+        sector_performance: sectorPerformance?.data || [],
+        sectors_measured: sectorPerformance?.sectors_measured || 0,
+        sector_methodology: sectorPerformance?.methodology || '',
     });
 });
 

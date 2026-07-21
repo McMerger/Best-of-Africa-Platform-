@@ -210,18 +210,12 @@ export const api = {
         sector_breakdown: SectorBreakdown[]
     }>(`/dashboards/${region}`),
     getContinentalOverview: () => readerRequest<{
-        overview: {
-            total_articles_30d: number;
-            countries_covered: number;
-            narrated_briefings?: number;
-            regions: number;
-        };
-        by_region: { region: string; count: number }[];
-        top_countries: { code: string; name: string; flag_emoji: string; articles: number; views: number }[];
-        top_sectors: { id: string; name: string; icon: string; count: number }[];
-        highlights: ArticleListItem[];
-        underreported?: { code: string; name: string; flag_emoji: string; articles: number }[];
-    }>('/dashboards/continental/overview'),
+        source_name: string; source_url: string; retrieved_at: string; countries_in_scope: number; methodology: string;
+        indicators: { indicator_code: string; label: string; value: number; unit: string; aggregation: 'sum' | 'country median' | 'derived balance'; countries_reported: number; period_start: number; period_end: number; interpretation: string; caveat: string; source_url: string }[];
+        regions: { region: string; country_count: number; gdp: { value: number; countries_reported: number; period_start: number; period_end: number }; population: { value: number; countries_reported: number; period_start: number; period_end: number }; growth: { value: number; countries_reported: number; period_start: number; period_end: number }; inflation: { value: number; countries_reported: number; period_start: number; period_end: number }; fdi: { value: number; countries_reported: number; period_start: number; period_end: number }; investment: { value: number; countries_reported: number; period_start: number; period_end: number } }[];
+        rankings: { largest_economies: { country_code: string; country_name: string; region: string; year: number; value: number }[]; fastest_growth: { country_code: string; country_name: string; region: string; year: number; value: number }[]; largest_fdi_inflows: { country_code: string; country_name: string; region: string; year: number; value: number }[] };
+        sector_performance: SectorMarketPerformance[]; sectors_measured: number; sector_methodology: string;
+    }>('/dashboards/continental/overview?contract=economy-v1'),
 
     // Search
     search: (query: string) => request<{ results: SearchResult[]; suggestions: string[]; ai_answer?: string }>(`/search?q=${encodeURIComponent(query)}`),
@@ -341,21 +335,9 @@ export const api = {
     getSectorTrends: (id: string) => readerRequest<{
         sector: Sector;
         market_performance: SectorMarketPerformance;
-        weekly_coverage: { week_start: string; stories: number; countries: number }[];
-        country_coverage: { code: string; name: string; stories: number }[];
-        summary: {
-            stories_30d: number;
-            previous_30d: number;
-            coverage_change: number;
-            countries_30d: number;
-            source_records_30d: number;
-            views_30d: number;
-        };
         methodology: string;
-        reporting_methodology: string;
-        reporting_window_days: number;
         updated_at: string;
-    }>(`/market-intel/sector/${id}/trends?contract=market-v2`),
+    }>(`/market-intel/sector/${id}/trends?contract=market-v3`),
 
     // System & Personalization
     getCuratedFeed: () => request<{ data: (ArticleListItem & { ai_curation?: { relevance_note: string } })[]; personalized: boolean; ai_feed_summary?: string }>('/personalization/feed/ai-curated'),

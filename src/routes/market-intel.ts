@@ -162,57 +162,10 @@ router.get('/sector/:id/trends', async (c) => {
         }, 503);
     }
 
-    const [weekly, current, countries, sources] = await Promise.all([
-        c.env.DB.prepare(`
-            SELECT date(published_at, 'weekday 1', '-7 days') AS week_start,
-                   COUNT(*) AS stories,
-                   COUNT(DISTINCT country_code) AS countries
-            FROM articles
-            WHERE sector_id = ? AND status = 'published'
-              AND published_at >= datetime('now', '-56 days')
-            GROUP BY week_start ORDER BY week_start
-        `).bind(sectorId).all<Record<string, any>>(),
-        c.env.DB.prepare(`
-            SELECT SUM(CASE WHEN published_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS stories_30d,
-                   SUM(CASE WHEN published_at >= datetime('now', '-60 days') AND published_at < datetime('now', '-30 days') THEN 1 ELSE 0 END) AS previous_30d,
-                   COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-30 days') THEN country_code END) AS countries_30d,
-                   SUM(CASE WHEN published_at >= datetime('now', '-30 days') THEN COALESCE(view_count, 0) ELSE 0 END) AS views_30d
-            FROM articles WHERE sector_id = ? AND status = 'published'
-              AND published_at >= datetime('now', '-60 days')
-        `).bind(sectorId).first<Record<string, any>>(),
-        c.env.DB.prepare(`
-            SELECT c.code, c.name, COUNT(a.id) AS stories
-            FROM countries c JOIN articles a ON a.country_code = c.code
-            WHERE a.sector_id = ? AND a.status = 'published'
-              AND a.published_at >= datetime('now', '-30 days')
-            GROUP BY c.code, c.name ORDER BY stories DESC, c.name LIMIT 10
-        `).bind(sectorId).all<Record<string, any>>(),
-        c.env.DB.prepare(`
-            SELECT COUNT(DISTINCT COALESCE(NULLIF(source_url, ''), NULLIF(source_title, ''), id)) AS source_records
-            FROM articles WHERE sector_id = ? AND status = 'published'
-              AND published_at >= datetime('now', '-30 days')
-        `).bind(sectorId).first<{ source_records: number }>(),
-    ]);
-
-    const currentStories = Number(current?.stories_30d || 0);
-    const previousStories = Number(current?.previous_30d || 0);
-
     return c.json({
         sector,
         market_performance: marketPerformance,
-        weekly_coverage: weekly.results || [],
-        country_coverage: countries.results || [],
-        summary: {
-            stories_30d: currentStories,
-            previous_30d: previousStories,
-            coverage_change: currentStories - previousStories,
-            countries_30d: Number(current?.countries_30d || 0),
-            source_records_30d: Number(sources?.source_records || 0),
-            views_30d: Number(current?.views_30d || 0),
-        },
         methodology: performanceSnapshot?.methodology,
-        reporting_methodology: 'Weekly and thirty-day story fields are BOA-Story editorial activity and are presented only as reporting context. They do not determine the official market-performance values above.',
-        reporting_window_days: 30,
         updated_at: performanceSnapshot?.retrieved_at || new Date().toISOString(),
     });
 });
