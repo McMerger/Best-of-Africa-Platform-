@@ -68,6 +68,23 @@ export const BetaContinentalOverview: React.FC = () => {
             </div>
           </section>
 
+          <section className="page-section overflow-hidden rounded-2xl border border-border bg-white" aria-labelledby="continental-analysis-path">
+            <div className="border-b border-border px-5 py-6 md:px-8">
+              <p className="text-xs font-bold uppercase tracking-[.08em] text-navy/60">Build the continental picture</p>
+              <h2 id="continental-analysis-path" className="mt-2 font-serif text-3xl text-navy md:text-4xl">Read the economy as connected evidence, not isolated rankings</h2>
+              <p className="mt-4 readable-copy">Economic size, real growth, inflation, trade, investment and population describe different parts of the same landscape. Their relationship is more informative than any one headline figure.</p>
+            </div>
+            <div className="grid gap-px bg-border lg:grid-cols-2">
+              {[
+                ['1. Begin with scale', 'GDP and population establish the size of recorded economic activity and the number of people in scope. Neither figure alone describes productivity, distribution, household welfare or market accessibility.'],
+                ['2. Add momentum', 'Real GDP growth indicates the direction and pace of inflation-adjusted output. Compare it with its observation period and country coverage before describing momentum as current or continent-wide.'],
+                ['3. Examine stability and financing', 'Inflation affects purchasing power and operating costs, while foreign direct investment records a form of external capital flow. High or rising values require country-specific explanation.'],
+                ['4. Inspect distribution', 'Regional totals and country rankings show where recorded values are concentrated. Medians and coverage reveal the typical reporting country and how much of Africa the comparison actually represents.'],
+              ].map(([title,body]) => <article key={title} className="bg-white p-5 md:p-7"><h3 className="text-lg font-bold text-navy">{title}</h3><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}
+            </div>
+            <div className="border-t border-border bg-navy/[.035] px-5 py-5 md:px-8"><p className="text-sm leading-7 text-navy/85"><strong>Practical conclusion:</strong> use this overview to frame questions and identify patterns. Use the regional comparison to test geographic concentration, the sector view to examine operating structure, and country dossiers for decision-level detail.</p></div>
+          </section>
+
           <section className="page-section">
             <div className="flex flex-col gap-3 border-b border-border pb-6 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Trade, prices and investment</p><h2 className="mt-2 font-serif text-3xl text-navy">The other numbers needed for context</h2></div><span className="text-xs text-muted-foreground">{data.indicators.length} official measures in total</span></div>
             <div className="mt-6 grid gap-4 md:grid-cols-2">

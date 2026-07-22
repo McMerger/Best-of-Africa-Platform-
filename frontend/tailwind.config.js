@@ -14,6 +14,13 @@ export default {
             },
         },
         extend: {
+            fontSize: {
+                /* Production reading sizes. `xs` is reserved for supporting
+                   metadata, while `sm` remains comfortably readable body copy. */
+                xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+                sm: ['0.9375rem', { lineHeight: '1.5rem' }],
+                base: ['1.0625rem', { lineHeight: '1.75rem' }],
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 8px)',

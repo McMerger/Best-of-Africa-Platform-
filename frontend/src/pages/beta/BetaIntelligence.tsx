@@ -67,6 +67,22 @@ export const BetaIntelligence = () => {
             </div>
           </section>
 
+          <section className="page-section rounded-2xl border border-border bg-white p-5 md:p-8" aria-labelledby="market-analysis-path">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.08em] text-navy/60">From indicator to informed judgment</p>
+              <h2 id="market-analysis-path" className="mt-2 font-serif text-3xl text-navy md:text-4xl">A fuller way to understand sector performance</h2>
+              <p className="mt-4 readable-copy">Performance is not one number. A useful reading connects the sector’s recorded level, its direction of change, how widely that direction appears across countries, and the conditions that may support or constrain it.</p>
+            </div>
+            <ol className="mt-7 grid gap-4 md:grid-cols-2">
+              {[
+                ['Establish the level', 'Read the latest median and its unit. This describes the middle reporting country, not the continent’s combined market size and not every country.'],
+                ['Test the direction', 'Compare the median change with the share of countries moving higher. A positive median with narrow country breadth may reflect a concentrated rather than widespread shift.'],
+                ['Examine operating conditions', 'Read access, infrastructure, cost, capacity and investment measures alongside the headline. They can explain important constraints without proving causation.'],
+                ['Check decision relevance', 'Move from the continental pattern to country dossiers, local regulation, competition, demand, currency exposure and implementation conditions before making a market decision.'],
+              ].map(([title,body],index) => <li key={title} className="grid grid-cols-[2.25rem_1fr] gap-3 rounded-xl bg-navy/[.035] p-4 md:p-5"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">{index+1}</span><div><h3 className="text-base font-bold text-navy">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div></li>)}
+            </ol>
+          </section>
+
           <section className="page-section overflow-hidden rounded-2xl border border-border bg-white">
             <div className="border-b border-border px-5 py-6 md:px-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Eight-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy">What the latest available country data shows</h2><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">The large value is the middle country reading. “Higher” only describes direction; whether it is favourable depends on what the indicator measures.</p></div>
             <div className="divide-y divide-border">

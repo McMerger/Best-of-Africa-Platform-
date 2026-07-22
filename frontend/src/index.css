@@ -54,6 +54,8 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: 'Inter', sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -175,6 +177,52 @@ body {
 }
 
 @layer utilities {
+  /* Readability floor -------------------------------------------------------
+     Legacy screens contain highly compressed 8–12px labels. Keep their visual
+     hierarchy, but never render meaningful interface text at caption-print
+     size. These rules also catch responsive arbitrary-size utilities. */
+  .text-xs {
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .text-sm {
+    font-size: 0.9375rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  :is(
+    [class*="text-[8px]"],
+    [class*="text-[9px]"],
+    [class*="text-[10px]"],
+    [class*="text-[11px]"]
+  ) {
+    font-size: 0.8125rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  [class*="text-[12px]"] {
+    font-size: 0.875rem !important;
+    line-height: 1.3rem !important;
+  }
+
+  /* Prevent uppercase labels from becoming difficult to scan after their
+     tracking was tuned for much smaller type. */
+  :is(.uppercase, [class*="uppercase"])[class*="tracking-"] {
+    letter-spacing: 0.07em;
+  }
+
+  .readable-copy {
+    max-width: 72ch;
+    color: hsl(var(--foreground) / 0.82);
+    font-size: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+    line-height: 1.75;
+  }
+
+  .readable-copy strong {
+    color: hsl(var(--primary));
+  }
+
   /* Accent utilities resolve to navy on white and white on navy. */
   .bg-accent.text-navy,
   .bg-accent.text-primary { color: #FFFFFF !important; }
@@ -244,7 +292,8 @@ body {
     border-radius: 0.5rem;
     padding: 0.65rem 0.8rem;
     color: hsl(var(--muted-foreground));
-    font-size: 0.72rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     transition: background-color 160ms ease, color 160ms ease;
@@ -371,7 +420,7 @@ body {
       border-inline: 0;
     }
     .dashboard-rail a {
-      min-height: 2.5rem;
+      min-height: 2.75rem;
       width: auto;
       display: inline-flex;
       align-items: center;
