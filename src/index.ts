@@ -47,17 +47,17 @@ app.use('*', prettyJSON());
 // For local frontend dev add to .dev.vars:
 //   ADDITIONAL_ORIGINS=http://localhost:5173,http://localhost:5174
 const BASE_ALLOWED_ORIGINS = new Set([
-    'https://bestofafrica.com',
-    'https://www.bestofafrica.com',
+    'https://best-of-africa.pages.dev',
 ]);
 
 app.use('*', cors({
     origin: (origin, c) => {
         const extra = c.env.ADDITIONAL_ORIGINS;
         const allowed = new Set(BASE_ALLOWED_ORIGINS);
+        if (c.env.PUBLIC_SITE_URL) allowed.add(c.env.PUBLIC_SITE_URL.replace(/\/$/, ''));
         if (extra) extra.split(',').map((o: string) => o.trim()).filter(Boolean).forEach((o: string) => allowed.add(o));
         if (allowed.has(origin) || origin.endsWith('.pages.dev')) return origin;
-        return 'https://bestofafrica.com';
+        return c.env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
     },
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Session-ID', 'X-Requested-With', 'X-Admin-Key'],
@@ -87,7 +87,7 @@ app.use('*', async (c, next) => {
     const referer = c.req.header('Referer');
     const xrw = c.req.header('X-Requested-With');
 
-    const ALLOWED_ORIGINS = ['https://bestofafrica.com', 'https://www.bestofafrica.com'];
+    const ALLOWED_ORIGINS = [c.env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev'];
 
     if (origin && ALLOWED_ORIGINS.some(o => origin === o || origin.endsWith('.pages.dev'))) {
         return next();

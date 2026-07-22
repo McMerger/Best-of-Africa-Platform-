@@ -188,12 +188,12 @@ export const ContactPage: React.FC = () => {
                     <div className="flex flex-col items-start rounded-xl bg-card border border-border p-7 text-left">
                         <ChatBubbleIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">Press Inquiries</h3>
-                        <p className="text-sm text-muted-foreground font-medium">press@bestofafrica.com</p>
+                        <p className="text-sm text-muted-foreground font-medium">Use the form above and select a press-related subject.</p>
                     </div>
                     <div className="flex flex-col items-start rounded-xl bg-card border border-border p-7 text-left">
                         <EnvelopeClosedIcon className="mb-4 h-8 w-8 text-primary" />
                         <h3 className="mb-2 text-lg font-bold text-foreground">General Support</h3>
-                        <p className="text-sm text-muted-foreground font-medium">support@bestofafrica.com</p>
+                        <p className="text-sm text-muted-foreground font-medium">Use the form above so the request is recorded and routed.</p>
                     </div>
                 </div>
             </div>

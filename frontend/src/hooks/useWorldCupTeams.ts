@@ -4,11 +4,8 @@ import { WORLD_CUP, type WorldCupTeam, type WorldCupFixture, type WorldCupResult
 
 /**
  * Returns the African nations still in the World Cup, the next fixture, and
- * recent results involving them, auto-updated from the backend (which
- * refreshes from a live sports feed). Falls back to the curated list in
- * config/worldCup.ts only when the request itself fails — a successful
- * response with an empty roster is meaningful (the African run is over) and
- * must NOT be papered over with the stale seed list.
+ * recent results involving them when the temporary live feature is enabled.
+ * Failed requests return no claims; stale seed data is never presented as live.
  */
 export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string | null; nextFixture: WorldCupFixture | null; fixtures: WorldCupFixture[]; results: WorldCupResult[] } {
   const { data } = useQuery({
@@ -27,5 +24,5 @@ export function useWorldCupTeams(): { teams: WorldCupTeam[]; updatedAt: string |
       results: data.results ?? [],
     };
   }
-  return { teams: WORLD_CUP.teams, updatedAt: null, nextFixture: null, fixtures: [], results: [] };
+  return { teams: [], updatedAt: null, nextFixture: null, fixtures: [], results: [] };
 }

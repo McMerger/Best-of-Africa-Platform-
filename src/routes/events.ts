@@ -36,7 +36,7 @@ router.get('/', async (c) => {
     } catch (err) {
         // Table may not exist yet or query failed — return empty rather than 500
         console.error('[events] list failed:', err);
-        return c.json({ success: true, data: [], message: 'Events temporarily unavailable' });
+        return c.json({ success: false, error: 'events_unavailable', message: 'Verified event records could not be loaded.' }, 503);
     }
 });
 

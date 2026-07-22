@@ -29,6 +29,52 @@ function looksLikeMp3(value: ArrayBuffer | Uint8Array): boolean {
         || (bytes[0] === 0xff && (bytes[1] & 0xe0) === 0xe0);
 }
 
+export function splitNarrationText(text: string, maxCharacters = 1800): string[] {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (!normalized) return [];
+    const sentences = normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [normalized];
+    const chunks: string[] = [];
+    let current = '';
+
+    for (const sentenceValue of sentences) {
+        let sentence = sentenceValue.trim();
+        while (sentence.length > maxCharacters) {
+            if (current) { chunks.push(current); current = ''; }
+            let splitAt = sentence.lastIndexOf(' ', maxCharacters);
+            if (splitAt < Math.floor(maxCharacters * 0.6)) splitAt = maxCharacters;
+            chunks.push(sentence.slice(0, splitAt).trim());
+            sentence = sentence.slice(splitAt).trim();
+        }
+        if (!sentence) continue;
+        if (current && current.length + sentence.length + 1 > maxCharacters) {
+            chunks.push(current);
+            current = sentence;
+        } else {
+            current = current ? `${current} ${sentence}` : sentence;
+        }
+    }
+    if (current) chunks.push(current);
+    return chunks;
+}
+
+function withoutLeadingId3(bytes: Uint8Array): Uint8Array {
+    if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return bytes;
+    const size = ((bytes[6] & 0x7f) << 21) | ((bytes[7] & 0x7f) << 14) | ((bytes[8] & 0x7f) << 7) | (bytes[9] & 0x7f);
+    const offset = Math.min(bytes.length, size + 10);
+    return bytes.slice(offset);
+}
+
+function combineMp3Segments(values: Array<ArrayBuffer | Uint8Array>): Uint8Array {
+    const segments = values.map((value, index) => {
+        const bytes = value instanceof Uint8Array ? value : new Uint8Array(value);
+        return index === 0 ? bytes : withoutLeadingId3(bytes);
+    });
+    const combined = new Uint8Array(segments.reduce((total, segment) => total + segment.byteLength, 0));
+    let offset = 0;
+    for (const segment of segments) { combined.set(segment, offset); offset += segment.byteLength; }
+    return combined;
+}
+
 async function synthesizeNarration(
     env: Env,
     text: string,
@@ -92,25 +138,33 @@ export async function generateAudioNarration(
 ): Promise<{ audioUrl: string; durationSeconds: number } | null> {
     try {
         const narrationText = createNarrationScript(title, content);
-        const generated = await synthesizeNarration(env, narrationText);
-        if (!generated) return null;
+        const chunks = splitNarrationText(narrationText);
+        if (!chunks.length) return null;
+        const generatedSegments: Array<{ audio: ArrayBuffer | Uint8Array; provider: TtsProvider }> = [];
+        for (const chunk of chunks) {
+            const generated = await synthesizeNarration(env, chunk);
+            if (!generated) return null; // Never publish a deceptively partial narration.
+            generatedSegments.push(generated);
+        }
+        const audio = combineMp3Segments(generatedSegments.map(segment => segment.audio));
+        const provider = generatedSegments[0].provider;
 
         const audioKey = `audio/${articleId}.mp3`;
         const durationSeconds = Math.ceil((narrationText.split(/\s+/).length / 150) * 60);
-        await env.MEDIA.put(audioKey, generated.audio, {
+        await env.MEDIA.put(audioKey, audio, {
             httpMetadata: { contentType: 'audio/mpeg' },
         });
 
         const base = ((env as Record<string, any>).PUBLIC_API_URL || '').replace(/\/$/, '');
         const path = base ? `${base}/assets/${audioKey}` : `/assets/${audioKey}`;
-        const audioUrl = `${path}?v=2`;
+        const audioUrl = `${path}?v=3`;
 
         await env.DB.prepare(`
             UPDATE articles
             SET audio_url = ?, audio_duration_seconds = ?, audio_file_size = ?,
-                audio_regen = 2, audio_provider = ?
+                audio_regen = 3, audio_provider = ?
             WHERE id = ?
-        `).bind(audioUrl, durationSeconds, generated.audio.byteLength, generated.provider, articleId).run();
+        `).bind(audioUrl, durationSeconds, audio.byteLength, provider, articleId).run();
 
         return { audioUrl, durationSeconds };
     } catch (error) {

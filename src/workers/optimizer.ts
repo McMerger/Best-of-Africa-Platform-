@@ -114,8 +114,8 @@ export async function processOptimizationTask(
                     INSERT INTO articles (
                         id, slug, title, subtitle, content, summary,
                         country_code, sector_id, tags, generation_model,
-                        status, published_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
+                        status, moderation_status, published_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL)
                 `).bind(
                     articleId, slug,
                     generated.title, generated.subtitle,

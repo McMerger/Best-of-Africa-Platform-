@@ -68,6 +68,7 @@ const AdminPage    = lazyWithRetry(() => import('./pages/AdminPage').then(m => (
 const PrivacyPage  = lazyWithRetry(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage    = lazyWithRetry(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const ContactPage  = lazyWithRetry(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const NotFoundPage = lazyWithRetry(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MissionProvider } from './context/MissionContext';
@@ -183,7 +184,7 @@ const AnimatedRoutes = () => {
           <Route path="/contact"  element={<PageTransition><ContactPage /></PageTransition>} />
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<PageTransition><NotFoundPage /></PageTransition>} />
         </Routes>
       </AnimatePresence>
     </Layout>

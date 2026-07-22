@@ -7,12 +7,8 @@ import type { Env, ContentGenerationMessage } from '../types';
 import { generateArticle as generateArticleContent, identifyCountry, identifySector, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
 import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
 import { generateAudioNarration } from '../lib/audio';
-import { indexArticle } from '../lib/vectorize';
 import { autoTranslateArticle } from '../lib/translate';
-import { onArticlePublished } from '../lib/alerts';
-import { autoPostArticle } from '../lib/social';
 import { checkContentIntegrity } from '../lib';
-import { fullEnrich } from '../lib/enrichment';
 import { publisherNameForArticle } from '../lib/source-attribution';
 
 
@@ -50,17 +46,10 @@ export async function generateArticleFromQueue(
 
         const itemData = item as Record<string, any>;
 
-        // Identify country and sector if not provided by source
-        let countryCode = itemData.source_country;
-        let sectorId = itemData.source_sector;
-
-        if (!countryCode) {
-            countryCode = await identifyCountry(env, itemData.title, itemData.content || '');
-        }
-
-        if (!sectorId) {
-            sectorId = await identifySector(env, itemData.title, itemData.content || '');
-        }
+        // Classify the story itself. A publisher's home country or default beat is
+        // provenance, not evidence that every syndicated story concerns that market.
+        const countryCode = await identifyCountry(env, itemData.title || '', itemData.content || '');
+        const sectorId = await identifySector(env, itemData.title || '', itemData.content || '');
 
         // ── Fair-share guard ──────────────────────────────────────────────────
         // The mission is balanced coverage of all 54 nations, but the news feed
@@ -116,19 +105,6 @@ export async function generateArticleFromQueue(
             throw new Error('generateArticle returned empty title or content');
         }
 
-        // Enrich the article with intelligence data
-        if (countryName) {
-            try {
-                console.log(`Enriching article for ${countryName}...`);
-                const enrichmentMarkdown = await fullEnrich(env, countryName, sectorName ?? undefined);
-                if (enrichmentMarkdown) {
-                    generated.content += enrichmentMarkdown;
-                }
-            } catch (err) {
-                console.error('Article enrichment failed:', err);
-            }
-        }
-
         const articleId = crypto.randomUUID();
         const readingTime = Math.max(1, Math.ceil(generated.content.split(/\s+/).length / 200));
         const slug = generateSlug(generated.title);
@@ -140,8 +116,8 @@ export async function generateArticleFromQueue(
                 reading_time_minutes, source_url, source_title, source_published_at,
                 hero_image_url, image_credit, image_source_url,
                 generation_model, generation_prompt_version, ai_investor_brief,
-                status, published_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                status, moderation_status, published_at, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL, datetime('now'))
         `).bind(
             articleId, slug,
             generated.title,
@@ -168,16 +144,16 @@ export async function generateArticleFromQueue(
             UPDATE ingested_items SET status = 'completed', article_id = ? WHERE id = ?
         `).bind(articleId, message.ingested_item_id).run();
 
-        console.log(`Successfully generated and published article: ${articleId} from item: ${message.ingested_item_id}`);
+        console.log(`Successfully generated article pending editorial audit: ${articleId} from item: ${message.ingested_item_id}`);
 
-        // Async follow-up tasks (Image, Translation, Vector indexing)
+        // Async preparation tasks. Search indexing and distribution wait for approval.
         // We do this in the background so it doesn't block the queue consumer.
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
         // Audio narration ships with the article (the UI shows Listen buttons on
         // every card — audio must exist, not be a member-gated maybe).
         try {
-            await generateAudioNarration(env, articleId, generated.title, generated.summary || generated.content.slice(0, 1200));
+            await generateAudioNarration(env, articleId, generated.title, generated.content);
         } catch (err) { console.error('Audio gen failed:', err); }
 
         try {
@@ -185,10 +161,6 @@ export async function generateArticleFromQueue(
                 title: generated.title, subtitle: generated.subtitle, summary: generated.summary, content: generated.content, country_code: countryCode ?? null,
             });
         } catch (err) { console.error('Translation failed:', err); }
-
-        try {
-            await indexArticle(env, articleId, generated.title, generated.content, { country_code: countryCode ?? null, sector_id: sectorId ?? null });
-        } catch (err) { console.error('Vectorization failed:', err); }
 
     } catch (error) {
         console.error('Article generation failed:', error);
@@ -446,7 +418,7 @@ export async function backfillAudio(env: Env, batch = 3): Promise<number> {
     let done = 0;
     for (const a of rows.results || []) {
         try {
-            const res = await generateAudioNarration(env, a.id, a.title, a.summary || (a.content || '').slice(0, 1200));
+            const res = await generateAudioNarration(env, a.id, a.title, a.content || a.summary || '');
             if (!res) break; // TTS unavailable — retry next tick rather than loop
             done++;
         } catch (err) {
@@ -480,7 +452,7 @@ export async function regenerateAudio(env: Env, batch = 3): Promise<number> {
     let done = 0;
     for (const a of rows.results || []) {
         try {
-            const res = await generateAudioNarration(env, a.id, a.title, a.summary || (a.content || '').slice(0, 1200));
+            const res = await generateAudioNarration(env, a.id, a.title, a.content || a.summary || '');
             if (!res) break; // TTS unavailable — retry next tick
             done++;
         } catch (err) {
@@ -555,18 +527,8 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                 throw new Error('generateArticle returned empty title or content');
             }
 
-            // Enrich the article with intelligence data
-            if (payload.country_name) {
-                try {
-                    console.log(`[generator] Enriching article for ${payload.country_name}...`);
-                    const enrichmentMarkdown = await fullEnrich(env, payload.country_name, payload.sector_name ?? undefined);
-                    if (enrichmentMarkdown) {
-                        generated.content += enrichmentMarkdown;
-                    }
-                } catch (err) {
-                    console.error('[generator] Article enrichment failed:', err);
-                }
-            }
+            const countryCode = await identifyCountry(env, payload.title || '', payload.content || '');
+            const sectorId = await identifySector(env, payload.title || '', payload.content || '');
 
             const articleId = crypto.randomUUID();
             const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
@@ -578,16 +540,16 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     country_code, sector_id, tags,
                     reading_time_minutes, source_url, source_title, source_published_at,
                     generation_model, generation_prompt_version,
-                    status, published_at, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                    status, moderation_status, published_at, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL, datetime('now'))
             `).bind(
                 articleId, slug,
                 generated.title,
                 generated.subtitle ?? null,
                 generated.content,
                 generated.summary ?? null,
-                payload.country_code ?? null,
-                payload.sector_id    ?? null,
+                countryCode,
+                sectorId,
                 generated.tags ? JSON.stringify(generated.tags) : '[]',
                 readingTime,
                 payload.url           ?? null,
@@ -622,23 +584,13 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     subtitle:     generated.subtitle,
                     summary:      generated.summary,
                     content:      generated.content,
-                    country_code: payload.country_code ?? null,
+                    country_code: countryCode,
                 });
             } catch (transErr) {
                 console.error(`[generator] Translation failed for article ${articleId}:`, transErr);
             }
 
-            // 6. Vector indexing (independent — failure does not block article)
-            try {
-                await indexArticle(env, articleId, generated.title, generated.content, {
-                    country_code: payload.country_code ?? null,
-                    sector_id:    payload.sector_id    ?? null,
-                });
-            } catch (vecErr) {
-                console.error(`[generator] Vectorization failed for article ${articleId}:`, vecErr);
-            }
-
-            // 7. Mark task done and update ingested_item status
+            // 6. Mark task done. Search indexing and distribution wait for approval.
             await env.DB.prepare(`
                 UPDATE agent_tasks
                 SET status = 'completed',

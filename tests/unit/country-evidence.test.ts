@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isCountryEvidenceStale, refreshCountryEvidence, worldBankTradeFallback, type CountryEvidenceSnapshot } from '../../src/lib/country-evidence';
-import { getTradeBalance } from '../../src/lib/trade-data';
+import { aggregateTradeTotal, getTradeBalance } from '../../src/lib/trade-data';
 import { publisherNameForArticle, publisherNameForStoredArticle } from '../../src/lib/source-attribution';
 import { parseRSS } from '../../src/workers/ingestion';
 import { createMockEnv } from '../mocks/env';
@@ -42,6 +42,14 @@ describe('country evidence integrity', () => {
         vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 })));
         const result = await getTradeBalance(createMockEnv(), 'Nigeria', 2025, { refresh: true });
         expect(result).toBeNull();
+    });
+
+    it('does not double-count repeated Comtrade aggregate rows', () => {
+        expect(aggregateTradeTotal([
+            { cmdCode: 'TOTAL', partnerCode: 0, partner2Code: 0, primaryValue: 12_000 },
+            { cmdCode: 'TOTAL', partnerCode: 0, partner2Code: 0, primaryValue: 12_000 },
+            { cmdCode: '01', partnerCode: 0, partner2Code: 0, primaryValue: 4_000 },
+        ])).toBe(12_000);
     });
 
     it('walks backward to the latest period with an actual trade observation', async () => {

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { evaluateArticleDepth, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
+import { evaluateArticleDepth, identifyCountry, identifySector, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
 import { autoTranslateArticle } from '../lib/translate';
 import { generateAudioNarration } from '../lib/audio';
 
@@ -447,6 +447,8 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         .slice(0, 80);
                     const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
                     const articleId = crypto.randomUUID();
+                    const countryCode = await identifyCountry(c.env, cleanTitle, generated.content);
+                    const sectorId = await identifySector(c.env, cleanTitle, generated.content);
 
                     await c.env.DB.prepare(`
                         INSERT INTO articles (
@@ -455,14 +457,14 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             reading_time_minutes, source_url, source_title, source_published_at,
                             generation_model, generation_prompt_version, ai_investor_brief,
                             engagement_score,
-                            status, published_at, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'published', datetime('now'), datetime('now'))
+                            status, moderation_status, published_at, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending_audit', 'pending', NULL, datetime('now'))
                     `).bind(
                         articleId, slug,
                         cleanTitle, cleanSubtitle || null,
                         generated.content, cleanSummary || null,
-                        originalPayload.country_code || null,
-                        originalPayload.sector_id    || null,
+                        countryCode,
+                        sectorId,
                         generated.tags ? JSON.stringify(generated.tags) : '[]',
                         readingTime,
                         originalPayload.url          || null,
@@ -487,15 +489,14 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             subtitle:     generated.subtitle,
                             summary:      generated.summary,
                             content:      generated.content,
-                            country_code: originalPayload.country_code,
+                            country_code: countryCode,
                         });
                     } catch (translateError) {
                         console.error(`[enrichment] Translation failed for article ${articleId}:`, translateError);
                     }
 
                     try {
-                        const script = `${generated.title}. ${generated.summary}`;
-                        await generateAudioNarration(c.env, articleId, generated.title, script);
+                        await generateAudioNarration(c.env, articleId, generated.title, generated.content);
                     } catch (audioError) {
                         console.error(`[enrichment] Audio generation failed for article ${articleId}:`, audioError);
                     }

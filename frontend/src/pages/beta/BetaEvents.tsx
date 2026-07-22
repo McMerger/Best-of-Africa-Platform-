@@ -15,7 +15,7 @@ import { stripMarkdown } from '@/lib/utils';
 // Local fallback imagery rotated by index so events without a hero_image_url
 // don't all share one (previously external, washed-out) photo.
 export const BetaEvents: React.FC = () => {
-    const { data: eventsData, isLoading } = useQuery({
+    const { data: eventsData, isLoading, isError, refetch } = useQuery({
         queryKey: ['events'],
         queryFn: () => api.getCorporateEvents()
     });
@@ -65,7 +65,7 @@ export const BetaEvents: React.FC = () => {
         <div className="min-h-screen bg-background text-foreground pb-24">
             <SEO 
                 title="Summits & Events | BOA-Story" 
-                description="Exclusive forums, summits, and executive roundtables focused on African markets."
+                description="Verified forums, summits, and roundtables focused on African markets when records are available."
             />
             
             {/* Header */}
@@ -77,7 +77,7 @@ export const BetaEvents: React.FC = () => {
                             Summits & Executive Forums
                         </h1>
                         <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
-                            Connect with industry leaders, investors, and policymakers shaping the future of African markets at our curated events.
+                            Browse event records only when dates, locations and registration details are available from the event system.
                         </p>
                     </div>
                 </div>
@@ -93,6 +93,13 @@ export const BetaEvents: React.FC = () => {
                                 <div key={i} className="h-28 rounded-lg bg-muted animate-pulse" />
                             ))}
                         </div>
+                    </div>
+                ) : isError ? (
+                    <div className="text-center py-16 text-foreground/60 bg-card rounded-xl border border-foreground/10">
+                        <CalendarIcon className="w-10 h-10 mx-auto mb-5 opacity-50" />
+                        <h2 className="text-[2rem] font-serif mb-4">Event records could not be loaded</h2>
+                        <p className="mx-auto max-w-xl text-base leading-7">The service did not return a verified schedule. No placeholder events are being shown.</p>
+                        <Button type="button" variant="outline" onClick={() => refetch()} className="mt-6">Retry event records</Button>
                     </div>
                 ) : events.length === 0 ? (
                     <div className="text-center py-16 text-foreground/50 bg-card rounded-xl border border-foreground/10">

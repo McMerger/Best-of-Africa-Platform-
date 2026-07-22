@@ -79,7 +79,7 @@ export const BetaConcierge: React.FC = () => {
                             Concierge & Corporate Services
                         </h1>
                         <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
-                            We facilitate seamless market entry, executive travel, and complex site visits across the continent. Flawless execution.
+                            Submit a brief for travel, site-visit or market-entry research. We confirm scope, available support, providers and costs before any engagement begins.
                         </p>
                     </motion.div>
                 </div>
@@ -92,7 +92,7 @@ export const BetaConcierge: React.FC = () => {
                     <div>
                         <h2 className="text-[2.5rem] font-serif mb-6 leading-tight">Our Expertise</h2>
                         <p className="text-foreground/60 text-[1.125rem] leading-[1.8] font-light">
-                            Doing business in Africa requires local knowledge and flawless execution. Our specialized booking and concierge team leverages direct VIP partnerships to ensure your executive trips and site visits are perfectly orchestrated.
+                            Requirements differ by country and city. We review each request individually and distinguish research support from services that require an independently verified local provider.
                         </p>
                     </div>
 
@@ -103,7 +103,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Executive Travel</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Secure transportation, VIP airport protocols, and Tier-1 hotel reservations with exclusive corporate rates.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Research on routes, accommodation and transport options, with provider availability and current terms confirmed before engagement.</p>
                             </div>
                         </div>
 
@@ -113,7 +113,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Site Visits</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Complex multi-city itineraries, translator/guide services, and secure transport for industrial or real estate site visits.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Planning support for multi-city visits, including requirements that may need licensed guides, translators or transport providers.</p>
                             </div>
                         </div>
 
@@ -123,7 +123,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Market Entry Support</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Coordination of local meetings, visa assistance, and high-level government or corporate introductions.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Source-linked market research and meeting preparation. Introductions, legal advice and visa services require separate confirmation.</p>
                             </div>
                         </div>
                     </div>

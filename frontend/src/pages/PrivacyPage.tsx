@@ -50,17 +50,17 @@ export const PrivacyPage: React.FC = () => {
 
                     <section id="data-protection" className="mb-10 scroll-mt-24">
                         <h2 className="mb-4 text-2xl font-bold text-ink">3. Data Protection</h2>
-                        <p>We implement enterprise-grade security measures to protect your information. We do not sell your personal data to third parties.</p>
+                        <p>We use technical and organizational safeguards intended to reduce unauthorized access, loss, or misuse. No online service can guarantee absolute security. We do not sell personal information.</p>
                     </section>
 
                     <section id="pipeda" className="mb-10 scroll-mt-24">
                         <h2 className="mb-4 text-2xl font-bold text-ink">4. Your Rights (PIPEDA)</h2>
-                        <p>This platform complies with Canada's Personal Information Protection and Electronic Documents Act (PIPEDA). Users located in Canada have the right to access, correct, and request deletion of their personal information.</p>
+                        <p>Canadian users can ask to access or correct personal information associated with them and can submit deletion questions through the contact process. Requests are assessed under the privacy law that applies to the service and the request.</p>
                     </section>
 
                     <section id="contact" className="mb-10 scroll-mt-24">
                         <h2 className="mb-4 text-2xl font-bold text-ink">5. Contact</h2>
-                        <p>For privacy concerns, contact <a href="mailto:privacy@bestofafrica.com" className="font-bold text-accent underline hover:text-gold-italic">privacy@bestofafrica.com</a>.</p>
+                        <p>For privacy concerns, use the <Link to="/contact" className="font-bold text-accent underline hover:text-gold-italic">secure contact form</Link> and identify the request as a privacy matter.</p>
                     </section>
                 </div>
 

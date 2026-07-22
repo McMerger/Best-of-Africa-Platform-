@@ -48,6 +48,12 @@ describe('isAfricanContent', () => {
         it('rejects a pure foreign story with no African signal anywhere', () => {
             expect(isAfricanContent('China tech stocks rally', 'Beijing markets rose on stimulus hopes.')).toBe(false);
         });
+        it('rejects a French domestic story carried by an African publisher', () => {
+            expect(isAfricanContent(
+                'France bans under-15s from social media',
+                'The French law takes effect in Paris. This item was republished by a Mozambique news outlet in Maputo.'
+            )).toBe(false);
+        });
     });
 
     describe('foreign-led but genuinely African stories are rescued by body evidence', () => {

@@ -34,7 +34,7 @@ export interface WorldCupResult {
 }
 
 export const WORLD_CUP: { enabled: boolean; label: string; teams: WorldCupTeam[] } = {
-  enabled: true,
+  enabled: false,
   label: 'FIFA World Cup 2026',
   // African nations still in the tournament, EDIT as the bracket changes.
   teams: [

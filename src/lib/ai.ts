@@ -33,7 +33,7 @@ export const MODELS = {
 // persona aligned with the Ko-fi brief: grounded, human, narrative correction.
 export const ARTICLE_PROMPT_VERSION = 'v1.6-depth-enforced';
 export const AI_RESPONSE_VERSION = 'depth-v5-structured-repair';
-export const MIN_PUBLISHABLE_ARTICLE_WORDS = 1600;
+export const MIN_PUBLISHABLE_ARTICLE_WORDS = 900;
 export const MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS = 200;
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -57,9 +57,9 @@ export type AIResponseProfile = 'editorial-article' | 'evidence-brief' | 'deep-a
 
 const RESPONSE_PROFILES: Record<AIResponseProfile, { minimumWords: number; minimumTokens: number; instructions: string }> = {
     'editorial-article': {
-        minimumWords: 1800,
-        minimumTokens: 9000,
-        instructions: `Write a complete 1,800-2,600 word reported narrative, not a synopsis or lightly expanded rewrite. Develop the people, place, chronology, documented mechanisms, competing perspectives, material consequences and unresolved questions using only the supplied source material. Include every relevant name, institution, location, date, quotation and figure supplied. Explain technical or policy context in plain language, distinguish allegation from established fact, show what changed and what did not, and preserve the required output schema. End the reporting body with what remains unresolved. Never add generic filler or invented scene-setting to reach length.`,
+        minimumWords: 900,
+        minimumTokens: 7000,
+        instructions: `Write a complete 900-2,600 word reported narrative whose length is earned by the supplied evidence. Develop the people, place, chronology, documented mechanisms, competing perspectives, material consequences and unresolved questions using only the supplied source material. Include every relevant name, institution, location, date, quotation and figure supplied. Explain technical or policy context in plain language, distinguish allegation from established fact, show what changed and what did not, and preserve the required output schema. Use calibrated uncertainty for projections, disputed claims and incomplete evidence. End the reporting body with what remains unresolved. Never add generic filler, invented scene-setting or unsupported context to reach length.`,
     },
     'evidence-brief': {
         minimumWords: 2200,
@@ -261,7 +261,7 @@ export async function generateArticle(
     tags: string[];
 }> {
     const prompt = buildArticlePrompt(sourceTitle, sourceContent, countryName, sectorName);
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 9000, temperature: 0.7, response_profile: 'editorial-article' });
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 7000, temperature: 0.5, response_profile: 'editorial-article' });
     const article = parseArticleResponse(text);
     const depth = evaluateArticleDepth(article.content, article.investor_brief);
     if (depth.articleWords < MIN_PUBLISHABLE_ARTICLE_WORDS) {
@@ -680,9 +680,9 @@ ${sectorName ? `Sector: ${sectorName}` : ''}
 Requirements:
 - Write in an authentic, personal voice. Guardian-style prose: clear, precise, engaging.
 - Surface the real human story behind the news: the people, the city, the everyday energy.
-- Expand on the source with real context and honest analysis.
+- Explain the source's documented context and implications without importing unsupported facts.
 - Do NOT frame this as an investment pitch or tourism guide.
-- Do NOT use hedging language: no "might", "could", "potentially", "may".
+- Use calibrated uncertainty whenever evidence is incomplete, disputed, projected or conditional. Never turn a possibility into a fact.
 - Do NOT use corporate, NGO, or financial intelligence jargon.
 - Punctuation: do NOT use em-dashes (—) or en-dashes (–). Use commas, periods, or simple hyphens.
 - Write plainly, like a person, NOT like an AI. Ban these clichés outright:
@@ -695,9 +695,9 @@ Requirements:
   "pave the way", "melting pot", "treasure trove", "game-changer", "microcosm",
   "the fabric of", "lasting legacy", "speaks volumes", "in essence". Prefer
   concrete nouns and verbs over these.
-- Honest, grounded tone. Aim for 1,800-2,600 words organised under 6-10 descriptive
-  subheadings (### in markdown) — enough depth to genuinely inform the reader,
-  with concrete detail and context, not a brief.
+- Honest, grounded tone. Write 900-2,600 words under 4-10 descriptive subheadings
+  (### in markdown), choosing length only from the amount of supplied evidence.
+  Do not pad a thin record. Identify material facts that remain unverified.
 
 CRITICAL FORMATTING RULE: Do NOT use markdown bolding (**), italics, or quotes in the TITLE, SUBTITLE, SUMMARY, or TAGS fields. Plain text only for those fields.
 

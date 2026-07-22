@@ -41,7 +41,7 @@ export const BetaAbout = () => {
           <div className="max-w-5xl mx-auto grid grid-cols-2 gap-x-5 gap-y-8 px-4 py-8 sm:px-6 md:grid-cols-4 md:gap-8">
             {[
               { value: stats.total_articles.toLocaleString(), label: t('about.stat_published', 'Stories Published') },
-              { value: stats.total_countries, label: t('about.stat_countries', 'Countries Covered') },
+              { value: stats.total_countries, label: t('about.stat_countries', 'Countries in Directory') },
               { value: stats.regions, label: t('about.stat_regions', 'African Regions') },
               { value: stats.total_views > 1000 ? `${(stats.total_views / 1000).toFixed(1)}k` : stats.total_views, label: t('about.stat_reads', 'Total Reads') },
             ].map(({ value, label }) => (

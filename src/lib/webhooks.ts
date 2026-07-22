@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { publicArticleUrl } from './public-url';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Types
@@ -239,7 +240,7 @@ export async function onArticlePublishedWebhook(
         title: article.title,
         country_code: article.country_code,
         sector_id: article.sector_id,
-        url: `https://bestofafrica.com/articles/${article.slug}`,
+        url: publicArticleUrl(env, article.slug),
     });
 }
 

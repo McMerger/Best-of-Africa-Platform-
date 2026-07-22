@@ -44,7 +44,7 @@ export async function getWikiSummary(
                     {
                         headers: {
                             'Accept': 'application/json',
-                            'User-Agent': 'BestOfAfrica/1.0 (contact@bestofafrica.com)',
+                            'User-Agent': 'BOA-Story/1.0 (+https://best-of-africa.pages.dev/contact)',
                         },
                     }
                 );

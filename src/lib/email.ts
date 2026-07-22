@@ -50,7 +50,11 @@ export async function sendEmail(
     env: EmailEnv | undefined,
     { to, toName, subject, html, fromEmail, fromName }: EmailParams
 ): Promise<boolean> {
-    const from = fromEmail || env?.EMAIL_FROM || 'members@bestofafrica.com';
+    const from = fromEmail || env?.EMAIL_FROM;
+    if (!from) {
+        console.error('[Email Configuration] EMAIL_FROM is required; refusing to claim an unverified sender domain.');
+        return false;
+    }
     const fromDisplay = fromName || env?.EMAIL_FROM_NAME || 'BOA-Story';
 
     // 1. Cloudflare Email Sending (preferred — native binding, no API key)

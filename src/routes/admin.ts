@@ -9,6 +9,10 @@ import type { Env, Variables } from '../types';
 import { requireAdmin } from '../lib/auth';
 import { getCached, CACHE_KEYS } from '../lib/cache';
 import { validate, CreateArticleSchema } from '../lib';
+import { editorialApprovalFailure } from '../lib/editorial-quality';
+import { indexArticle } from '../lib/vectorize';
+import { onArticlePublished } from '../lib/alerts';
+import { autoPostArticle } from '../lib/social';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -690,7 +694,8 @@ router.get('/articles/needs-audit', async (c) => {
 
     const articles = await c.env.DB.prepare(`
         SELECT a.id, a.title, a.content, a.summary, a.country_code, a.sector_id,
-               a.status, a.last_audited_at, a.created_at,
+               a.source_url, a.source_title, a.source_published_at,
+               a.status, a.moderation_status, a.last_audited_at, a.created_at,
                c.name as country_name, s.name as sector_name
         FROM articles a
         LEFT JOIN countries c ON a.country_code = c.code
@@ -714,20 +719,70 @@ router.post('/articles/:id/audit', async (c) => {
         recommendation: 'approve' | 'rewrite' | 'delete';
     }>();
 
-    const article = await c.env.DB.prepare('SELECT id, content FROM articles WHERE id = ?').bind(id).first<{ id: string; content: string }>();
+    const article = await c.env.DB.prepare(`
+        SELECT a.id, a.slug, a.title, a.summary, a.content, a.source_url,
+               a.country_code, a.sector_id, a.hero_image_url, s.name AS sector_name
+        FROM articles a LEFT JOIN sectors s ON s.id = a.sector_id
+        WHERE a.id = ?
+    `).bind(id).first<{
+        id: string; slug: string; title: string; summary: string | null; content: string;
+        source_url?: string | null; country_code: string | null; sector_id: string | null;
+        hero_image_url: string | null; sector_name: string | null;
+    }>();
     if (!article) return c.json({ error: 'not_found' }, 404);
 
-    // Update audit timestamp and optionally status
-    const newStatus = body.recommendation === 'delete' ? 'archived'
-        : body.recommendation === 'approve' ? 'published'
-        : undefined;
+    const qualityScore = Number(body.quality_score);
+    if (!Number.isFinite(qualityScore) || qualityScore < 0 || qualityScore > 100) {
+        return c.json({ error: 'invalid_quality_score', message: 'quality_score must be between 0 and 100' }, 400);
+    }
+    if (!['approve', 'rewrite', 'delete'].includes(body.recommendation)) {
+        return c.json({ error: 'invalid_recommendation' }, 400);
+    }
+    const approvalFailure = editorialApprovalFailure({
+        qualityScore,
+        passed: body.passed,
+        issues: body.issues || [],
+        recommendation: body.recommendation,
+        sourceUrl: article.source_url,
+    });
+    if (approvalFailure) {
+        return c.json({
+            error: 'quality_gate_failed',
+            message: approvalFailure,
+        }, 422);
+    }
 
-    const statusClause = newStatus ? `, status = '${newStatus}'` : '';
+    const newStatus = body.recommendation === 'approve' ? 'published'
+        : body.recommendation === 'delete' ? 'archived'
+        : 'pending_audit';
+    const moderationStatus = body.recommendation === 'approve' ? 'approved'
+        : body.recommendation === 'delete' ? 'rejected'
+        : 'pending';
+
     await c.env.DB.prepare(`
         UPDATE articles
-        SET last_audited_at = datetime('now'), updated_at = datetime('now')${statusClause}
+        SET status = ?, moderation_status = ?, moderation_score = ?,
+            last_audited_at = datetime('now'),
+            reviewed_at = CASE WHEN ? = 'approved' THEN datetime('now') ELSE reviewed_at END,
+            published_at = CASE WHEN ? = 'approved' THEN COALESCE(published_at, datetime('now')) ELSE published_at END,
+            updated_at = datetime('now')
         WHERE id = ?
-    `).bind(id).run();
+    `).bind(newStatus, moderationStatus, qualityScore / 100, moderationStatus, moderationStatus, id).run();
+
+    if (body.recommendation === 'approve') {
+        c.executionCtx.waitUntil(Promise.allSettled([
+            indexArticle(c.env, article.id, article.title, article.content, {
+                country_code: article.country_code ?? undefined,
+                sector_id: article.sector_id ?? undefined,
+            }),
+            onArticlePublished(c.env, article),
+            autoPostArticle(c.env, article),
+        ]).then(results => {
+            results.forEach(result => {
+                if (result.status === 'rejected') console.error('[editorial-publish] follow-up failed', result.reason);
+            });
+        }));
+    }
 
     // Log the audit as a feedback event for self-improvement
     if (!body.passed) {
@@ -737,7 +792,7 @@ router.post('/articles/:id/audit', async (c) => {
             VALUES (?, ?, 'audit_fail', ?, ?, 0)
         `).bind(
             feedbackId, id,
-            `Quality: ${body.quality_score}/100. Issues: ${body.issues.join('; ')}. Recommendation: ${body.recommendation}`,
+            `Quality: ${qualityScore}/100. Issues: ${(body.issues || []).join('; ')}. Recommendation: ${body.recommendation}`,
             article.content
         ).run();
     }
@@ -745,7 +800,7 @@ router.post('/articles/:id/audit', async (c) => {
     return c.json({
         success: true,
         article_id: id,
-        quality_score: body.quality_score,
+        quality_score: qualityScore,
         recommendation: body.recommendation,
         status_changed_to: newStatus || null,
     });

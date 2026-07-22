@@ -24,7 +24,7 @@ describe('AI response depth contract', () => {
     it('blocks shallow Worker drafts at the publication boundary', () => {
         expect(evaluateArticleDepth('short article', 'short brief')).toEqual({ articleWords: 2, briefWords: 2, publishable: false });
         expect(evaluateArticleDepth(
-            Array.from({ length: 1600 }, () => 'article').join(' '),
+            Array.from({ length: 900 }, () => 'article').join(' '),
             Array.from({ length: 200 }, () => 'brief').join(' '),
         ).publishable).toBe(true);
     });
@@ -147,6 +147,6 @@ describe('AI response depth contract', () => {
 
         expect(article.content.split(/\s+/)).toHaveLength(1810);
         expect(article.investor_brief.split(/\s+/)).toHaveLength(275);
-        expect(run.mock.calls[0][1].max_tokens).toBe(9000);
+        expect(run.mock.calls[0][1].max_tokens).toBe(7000);
     });
 });

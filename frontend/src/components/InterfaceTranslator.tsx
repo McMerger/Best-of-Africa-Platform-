@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { request } from '../services/api';
@@ -25,8 +25,9 @@ const translationCacheKey = (language: string, text: string) => {
 };
 
 export function InterfaceTranslator() {
-  const { language } = useLanguage();
-  const location = useLocation();
+    const { language } = useLanguage();
+    const location = useLocation();
+    const [status, setStatus] = useState<'source' | 'translating' | 'translated' | 'partial'>('source');
 
   useEffect(() => {
     let cancelled = false;
@@ -103,8 +104,9 @@ export function InterfaceTranslator() {
 
     const translate = async () => {
       if (cancelled) return;
-      if (language === 'en') { restore(); document.documentElement.dataset.translationState = 'source'; return; }
+      if (language === 'en') { restore(); document.documentElement.dataset.translationState = 'source'; setStatus('source'); return; }
       document.documentElement.dataset.translationState = 'translating';
+      setStatus('translating');
       const items = collect();
       const unique = [...new Set(items.map(item => item.value))];
       await Promise.all(unique.map(async text => {
@@ -129,11 +131,19 @@ export function InterfaceTranslator() {
                 void writePersistentCache(translationCacheKey(language, text), translated);
               }
             });
-          } catch { /* Keep the original text when translation is temporarily unavailable. */ }
+          } catch { /* The visible partial state below tells the reader English remains. */ }
         }
         if (!cancelled) items.filter(item => batch.includes(item.value)).forEach(item => item.apply(cache.get(`${language}:${item.value}`) || item.value));
       }
-      if (!cancelled) document.documentElement.dataset.translationState = 'translated';
+      if (!cancelled) {
+        const incomplete = items.some(item => {
+          const translated = cache.get(`${language}:${item.value}`);
+          return !translated || (translated === item.value && item.value.length > 20 && /\s/.test(item.value));
+        });
+        const nextStatus = incomplete ? 'partial' : 'translated';
+        document.documentElement.dataset.translationState = nextStatus;
+        setStatus(nextStatus);
+      }
     };
 
     const schedule = () => { window.clearTimeout(timer); timer = window.setTimeout(translate, 120); };
@@ -178,5 +188,17 @@ export function InterfaceTranslator() {
     };
   }, [language, location.pathname]);
 
-  return null;
+  if (language === 'en' || status === 'source' || status === 'translated') return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      data-no-translate
+      className="fixed bottom-4 left-4 right-4 z-[100] rounded-md bg-navy px-4 py-3 text-sm font-medium text-white shadow-xl sm:left-auto sm:max-w-sm"
+    >
+      {status === 'translating'
+        ? 'Translating this page…'
+        : 'Some text remains in English because translation could not be completed. Try again shortly.'}
+    </div>
+  );
 }

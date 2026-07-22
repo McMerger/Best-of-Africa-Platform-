@@ -88,6 +88,20 @@ export interface TradeBalance {
     retrieved_at: string;
 }
 
+export function aggregateTradeTotal(records: unknown): number | null {
+    if (!Array.isArray(records)) return null;
+    const totals = records
+        .filter((record): record is Record<string, unknown> => Boolean(record) && typeof record === 'object')
+        .filter(record => record.cmdCode === undefined || String(record.cmdCode).toUpperCase() === 'TOTAL')
+        .filter(record => record.partnerCode === undefined || Number(record.partnerCode) === 0)
+        .filter(record => record.partner2Code === undefined || Number(record.partner2Code) === 0)
+        .map(record => Number(record.primaryValue))
+        .filter(value => Number.isFinite(value) && value > 0);
+    // The preview API can repeat an aggregate across customs/mode dimensions.
+    // Never add those rows together; retain the largest explicit national total.
+    return totals.length ? Math.max(...totals) : null;
+}
+
 const fetchWithTimeout = async (url: string, timeoutMs = 8000): Promise<Response> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -210,44 +224,12 @@ export async function getTradeBalance(
             const exportsData = await exportsRes.json() as Record<string, any>;
             const importsData = await importsRes.json() as Record<string, any>;
 
-        let totalExports = 0;
-        let totalImports = 0;
-        const exportPartners: Record<string, number> = {};
-        const importPartners: Record<string, number> = {};
-        const exportCommodities: Record<string, number> = {};
-        const importCommodities: Record<string, number> = {};
-
-        // Process exports
-        if (exportsData.data) {
-            for (const record of exportsData.data) {
-                const value = record.primaryValue || 0;
-                totalExports += value;
-
-                const partner = record.partnerDesc || 'Unknown';
-                exportPartners[partner] = (exportPartners[partner] || 0) + value;
-
-                const commodity = record.cmdDesc || 'Unknown';
-                exportCommodities[commodity] = (exportCommodities[commodity] || 0) + value;
-            }
-        }
-
-        // Process imports
-        if (importsData.data) {
-            for (const record of importsData.data) {
-                const value = record.primaryValue || 0;
-                totalImports += value;
-
-                const partner = record.partnerDesc || 'Unknown';
-                importPartners[partner] = (importPartners[partner] || 0) + value;
-
-                const commodity = record.cmdDesc || 'Unknown';
-                importCommodities[commodity] = (importCommodities[commodity] || 0) + value;
-            }
-        }
+        const totalExports = aggregateTradeTotal(exportsData.data);
+        const totalImports = aggregateTradeTotal(importsData.data);
 
             // A successful HTTP response containing no observations is not a
             // zero-trade economy. Walk backward to the latest reported period.
-            if (totalExports === 0 && totalImports === 0) continue;
+            if (totalExports === null || totalImports === null) continue;
 
             const balance: TradeBalance = {
             country: countryName,
@@ -255,22 +237,10 @@ export async function getTradeBalance(
             totalExports,
             totalImports,
             balance: totalExports - totalImports,
-            topExportPartners: Object.entries(exportPartners)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([partner, value]) => ({ partner, value })),
-            topImportPartners: Object.entries(importPartners)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([partner, value]) => ({ partner, value })),
-            topExportCommodities: Object.entries(exportCommodities)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([commodity, value]) => ({ commodity, value })),
-            topImportCommodities: Object.entries(importCommodities)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([commodity, value]) => ({ commodity, value })),
+            topExportPartners: [],
+            topImportPartners: [],
+            topExportCommodities: [],
+            topImportCommodities: [],
                 source_name: 'UN Comtrade',
                 source_url: `https://comtradeplus.un.org/TradeFlow?Classification=HS&Frequency=A&Period=${candidateYear}&Reporters=${countryCode}&Partners=0&Flows=X%2CM&CommodityCodes=TOTAL`,
                 retrieved_at: new Date().toISOString(),

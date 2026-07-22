@@ -11,8 +11,7 @@ export const openApiSpec = {
         description: 'Strategic intelligence and media platform for African markets. Provides access to articles, country profiles, sector analysis, and AI-powered insights.',
         contact: {
             name: 'BOA-Story Support',
-            email: 'api@bestofafrica.com',
-            url: 'https://bestofafrica.com',
+            url: 'https://best-of-africa.pages.dev/contact',
         },
         license: {
             name: 'Proprietary',
@@ -20,7 +19,7 @@ export const openApiSpec = {
     },
     servers: [
         {
-            url: 'https://api.bestofafrica.com',
+            url: 'https://best-of-africa-backend.cortesmailles01.workers.dev',
             description: 'Production',
         },
         {

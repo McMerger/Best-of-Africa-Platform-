@@ -68,6 +68,9 @@ const FOREIGN_PRIMARY = [
     'maldives', 'sri lanka', 'bangladesh', 'nepal', 'china', 'chinese', 'beijing',
     'russia', 'russian', 'ukraine', 'united states', 'america', 'washington',
     'europe', 'european union', 'brazil', 'indonesia', 'philippines',
+    'france', 'french', 'paris', 'united kingdom', 'britain', 'british', 'england',
+    'germany', 'german', 'spain', 'spanish', 'italy', 'italian', 'gibraltar',
+    'australia', 'australian', 'new zealand', 'canada', 'canadian', 'japan', 'japanese',
     // Middle East — a wave of Iran coverage ("Tehran's Streets Beat with
     // Defiance", Mashhad, Strait of Hormuz) leaked through in July 2026
     // because none of these were vetoed.

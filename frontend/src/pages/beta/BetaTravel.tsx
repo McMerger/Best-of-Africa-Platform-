@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PlaneIcon, ShieldCheckIcon, StarIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
+import { PlaneIcon, ShieldCheckIcon, SearchCheckIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { SEO } from '../../components/SEO';
@@ -74,7 +74,7 @@ export const BetaTravel: React.FC = () => {
         <div className="min-h-screen bg-background text-foreground pb-24">
             <SEO 
                 title="Africa Business Travel Guide | BOA-Story" 
-                description="Curated corporate travel and VIP hotel partnerships across the African continent."
+                description="A research-led starting point for planning business travel across African cities."
             />
             
             {/* Hero Section */}
@@ -100,7 +100,7 @@ export const BetaTravel: React.FC = () => {
                             Travel with confidence.
                         </h1>
                         <p className="text-lg text-foreground/65 max-w-2xl mb-8 leading-relaxed">
-                            We've negotiated direct VIP partnerships with the continent's finest business hotels to ensure your stays are secure, productive, and exceptionally comfortable.
+                            Compare established properties by city, then verify current rates, availability, entry requirements and transport arrangements directly before booking.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link to="/request-consultation">
@@ -118,19 +118,19 @@ export const BetaTravel: React.FC = () => {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card text-foreground rounded-xl border border-foreground/10 p-8 md:p-10">
                     <div className="grid md:grid-cols-3 gap-12 text-center divide-y md:divide-y-0 md:divide-x divide-white/10">
                         <div className="px-6 py-4 md:py-0">
-                            <StarIcon className="w-12 h-12 text-accent mx-auto mb-6" />
-                            <h3 className="text-xl font-serif font-bold mb-3">Exclusive VIP Benefits</h3>
-                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Room upgrades, resort credits, and complimentary daily breakfasts at partner properties.</p>
+                            <SearchCheckIcon className="w-12 h-12 text-accent mx-auto mb-6" />
+                            <h3 className="text-xl font-serif font-bold mb-3">Research Shortlist</h3>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">A geographically balanced starting point for comparing business-travel options.</p>
                         </div>
                         <div className="px-6 py-4 md:py-0">
                             <ShieldCheckIcon className="w-12 h-12 text-accent mx-auto mb-6" />
-                            <h3 className="text-xl font-serif font-bold mb-3">Vetted for Business</h3>
-                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Every property is vetted for executive-grade security, reliable connectivity, and professional amenities.</p>
+                            <h3 className="text-xl font-serif font-bold mb-3">Verify Current Conditions</h3>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Security, connectivity, transport and amenities can change. Confirm them with the property and current official guidance.</p>
                         </div>
                         <div className="px-6 py-4 md:py-0">
                             <CheckIcon className="w-12 h-12 text-accent mx-auto mb-6" />
-                            <h3 className="text-xl font-serif font-bold mb-3">No Hidden Costs</h3>
-                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Book directly through our portal to receive negotiated corporate rates with no additional service fees.</p>
+                            <h3 className="text-xl font-serif font-bold mb-3">Human Research Support</h3>
+                            <p className="text-foreground/50 text-[15px] leading-relaxed font-light">Submit a brief for itinerary research. A request is not a booking or a promise of rates, benefits or availability.</p>
                         </div>
                     </div>
                 </motion.div>
@@ -139,9 +139,9 @@ export const BetaTravel: React.FC = () => {
             {/* Featured Partners */}
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-24">
                 <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-20">
-                    <h2 className="text-[3rem] font-serif mb-6 text-foreground leading-none">Tier 1 VIP Partners</h2>
+                    <h2 className="text-[3rem] font-serif mb-6 text-foreground leading-none">Business-travel starting points</h2>
                     <p className="text-foreground/60 max-w-2xl mx-auto text-[1.125rem] font-light leading-relaxed">
-                        We earn a commission when you book directly with our partners at no additional cost to you. Booking through us unlocks exclusive VIP benefits not available on public booking engines.
+                        These properties are presented as research candidates, not as partners or endorsements. Confirm every rate, policy and service directly with the property.
                     </p>
                 </motion.div>
 
@@ -153,46 +153,24 @@ export const BetaTravel: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8 }}
-                            className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
+                            className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden group hover:border-accent/30 transition-colors"
                         >
-                            <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
-                                <div 
-                                    className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-1000"
-                                    style={{ backgroundImage: `url(${hotel.image})` }}
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent md:hidden" />
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card hidden md:block" />
-                            </div>
-                            <div className="p-10 md:p-14 md:w-7/12 flex flex-col z-10">
+                            <div className="p-8 sm:p-10 md:p-14 flex flex-col z-10">
                                 <div className="mb-4 text-[11px] font-bold uppercase tracking-widest text-accent">
                                     {hotel.location}
                                 </div>
                                 <h3 className="text-[2.5rem] font-serif leading-none mb-6 text-foreground">{hotel.name}</h3>
                                 <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8]">
-                                    {hotel.description}
+                                    An established property included as a starting point for independent research. Confirm location, facilities, policies, rates and current operating conditions directly before making travel decisions.
                                 </p>
-                                
-                                <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-8 mb-10">
-                                    <div className="flex items-center gap-3 mb-6 font-bold text-[11px] uppercase tracking-widest text-accent">
-                                        <StarIcon size={16} /> VIP Benefits Included
-                                    </div>
-                                    <ul className="grid sm:grid-cols-2 gap-4">
-                                        {hotel.benefits.map((benefit, i) => (
-                                            <li key={i} className="flex items-start gap-3 text-[15px] font-light text-foreground/80">
-                                                <CheckIcon className="w-5 h-5 text-accent mt-0 shrink-0" />
-                                                <span>{benefit}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
                                 
                                 <div className="mt-auto pt-6 flex flex-col sm:flex-row gap-6 items-center justify-between border-t border-foreground/10">
                                     <span className="text-[13px] text-foreground/40 italic">
-                                        *Benefits applied automatically
+                                        Rates and services are not verified in real time
                                     </span>
                                     <Link to="/request-consultation">
                                         <Button className="w-full sm:w-auto rounded-xl gap-3 bg-accent text-navy hover:bg-gold-italic px-8 py-6 font-bold uppercase tracking-widest text-[11px]">
-                                            Book with VIP Benefits <ArrowRightIcon size={16} />
+                                            Request itinerary research <ArrowRightIcon size={16} />
                                         </Button>
                                     </Link>
                                 </div>
@@ -201,10 +179,10 @@ export const BetaTravel: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Affiliate Disclosure */}
+                {/* Research disclosure */}
                 <div className="mt-24 p-8 bg-card rounded-2xl border border-foreground/5 text-center text-foreground/40 font-light max-w-4xl mx-auto">
                     <p className="text-[13px] leading-[1.8]">
-                        <strong className="text-foreground/60">Editorial Disclosure:</strong> We earn revenue through affiliate links when you book hotels, flights, or services through our links. This helps keep our intelligence platform running. Our editorial recommendations are never influenced by affiliate partnerships, and we only recommend properties and services we genuinely believe will benefit business travelers in Africa.
+                        <strong className="text-foreground/60">Research disclosure:</strong> This shortlist is informational. BOA-Story does not represent that it has a commercial relationship with the listed properties and does not guarantee prices, availability, security conditions or amenities.
                     </p>
                 </div>
             </div>

@@ -55,7 +55,7 @@ export const BetaWorldCup: React.FC = () => {
     <div className="bg-background text-foreground min-h-screen pb-24">
       <SEO
         title="Africa at the World Cup | BOA-Story"
-        description="The African nations still standing at the FIFA World Cup 2026, their next fixtures and the road ahead — updated live."
+        description="Archive page for African participation at the FIFA World Cup 2026."
       />
 
       {/* Hero */}
@@ -86,7 +86,9 @@ export const BetaWorldCup: React.FC = () => {
             </h1>
             <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
               {runOver
-                ? "The African run at this World Cup has ended — the results that carried the continent this far are below."
+                ? results.length > 0
+                  ? "The African run at this World Cup has ended. Verified results retained by the sports feed are listed below."
+                  : "The tournament has ended. This page no longer presents seeded teams or fixtures as live information."
                 : `The continent's ${teams.length} ${teams.length === 1 ? 'nation' : 'nations'} still standing at the tournament — who they are, and the road ahead.`}
             </p>
           </motion.div>

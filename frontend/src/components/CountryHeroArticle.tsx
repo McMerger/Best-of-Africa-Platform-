@@ -29,7 +29,8 @@ export const CountryHeroArticle: React.FC<CountryHeroArticleProps> = ({ article 
                     <img
                         src={heroThumb(image)}
                         alt={cleanText(article.title)}
-                        className="w-full h-full object-cover opacity-60 transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
+                        className="w-full h-full object-cover opacity-60 transition-transform ease-linear group-hover:scale-110"
+                        style={{ transitionDuration: '10000ms' }}
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 via-background to-secondary/20" />
