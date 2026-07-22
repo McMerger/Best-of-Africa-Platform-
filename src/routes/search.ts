@@ -38,22 +38,21 @@ router.get('/', async (c) => {
     );
 
     if (type === 'semantic' || type === 'hybrid') {
-        // Generate embedding for query using Workers 
-        const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
-            text: q,
-        });
-
-        const queryVector = (embeddingResponse as Record<string, any>).data[0];
-
-        // Search Vectorize
-        let vectorResults;
+        // Generate embedding for the query and search Vectorize. If Workers AI is
+        // unavailable (e.g. neuron quota exhausted or a model change), degrade
+        // gracefully to keyword/full-text search instead of failing the request.
+        let vectorResults: { matches: any[] } = { matches: [] };
         try {
+            const embeddingResponse = await (c.env.AI as Record<string, any>).run('@cf/baai/bge-base-en-v1.5', {
+                text: q,
+            });
+            const queryVector = (embeddingResponse as Record<string, any>).data[0];
             vectorResults = await c.env.VECTORS.query(queryVector, {
                 topK: limitNum,
                 returnMetadata: 'all',
             });
         } catch (e) {
-            console.warn('Vector search failed (likely local dev), continuing without semantic results:', e);
+            console.warn('Semantic search unavailable, falling back to keyword/full-text search:', e);
             vectorResults = { matches: [] };
         }
 
@@ -99,7 +98,7 @@ router.get('/', async (c) => {
             const placeholders = articleIds.map(() => '?').join(',');
             const articles = await c.env.DB.prepare(`
         SELECT
-          a.id, a.slug, a.title, a.summary,
+          a.id, a.slug, a.title, a.summary, a.source_url,
           a.country_code, c.name as country_name,
           a.sector_id, s.name as sector_name,
           a.hero_image_url, a.published_at
@@ -139,10 +138,13 @@ router.get('/', async (c) => {
             // Generate Answer (The "Refined Delivery")
             let aiAnswer = null;
             if (searchResults.length > 0) {
-                const context = searchResults.slice(0, 3).map(r => `Title: ${r.article.title}\nSummary: ${r.article.summary}`).join('\n---\n');
+                const context = searchResults.slice(0, 12).map((r, index) => {
+                    const article = (articles.results || []).find((item: any) => item.id === r.article.id) as any;
+                    return `[${index + 1}] Title: ${r.article.title}\nPublished: ${r.article.published_at || 'date unavailable'}\nCountry: ${r.article.country_name || 'not specified'}\nSource URL: ${article?.source_url || 'unavailable'}\nEvidence: ${(r.article.match_context || r.article.summary || '').slice(0, 1200)}`;
+                }).join('\n---\n');
                 try {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Query: ${q}\n\nContext:\n${context}`;
-                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                    const prompt = `System: Produce a detailed evidence-grounded research answer using only the supplied records. Cite titles inline, separate facts from implications, identify contradictions and missing evidence, and never pad thin context with general knowledge.\nUser: Query: ${q}\n\nContext:\n${context}`;
+                    const ansRes = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                     aiAnswer = ansRes?.trim();
                 } catch (e) { /* Ignore */ }
             }
@@ -215,17 +217,45 @@ router.get('/', async (c) => {
             }
         }
 
+        // Enrich semantic entries with their article rows. They were pushed with
+        // only {id, score} — without this, every semantic hit (which sorts to the
+        // top) reached the UI with no title/slug/summary and rendered as an
+        // empty card, and the RAG prompt below saw "Untitled" for all of them.
+        const semanticIds = merged.filter((m: any) => m.source === 'semantic').map((m: any) => m.id);
+        if (semanticIds.length > 0) {
+            const ph = semanticIds.map(() => '?').join(',');
+            const rows = await c.env.DB.prepare(`
+                SELECT a.id, a.slug, a.title, a.summary, a.source_url,
+                       a.country_code, c.name as country_name,
+                       a.sector_id, s.name as sector_name,
+                       a.hero_image_url, a.published_at
+                FROM articles a
+                LEFT JOIN countries c ON a.country_code = c.code
+                LEFT JOIN sectors s ON a.sector_id = s.id
+                WHERE a.id IN (${ph}) AND a.status = 'published'
+            `).bind(...semanticIds).all();
+            const byId = new Map((rows.results || []).map((r: any) => [r.id, r]));
+            for (const m of merged as any[]) {
+                if (m.source === 'semantic') {
+                    const row = byId.get(m.id);
+                    if (row) Object.assign(m, row);
+                }
+            }
+        }
+        // Drop anything that never resolved to a published article (stale vectors).
+        const resolvedResults = merged.filter((m: any) => m.slug && m.title);
+
         // ═══════════════════════════════════════════════════════════════════════════
         // RAG: Generate summary from top results using Workers (CACHED)
         // ═══════════════════════════════════════════════════════════════════════════
-        const topResults = merged.slice(0, 5);
+        const topResults = resolvedResults.slice(0, 12);
         let aiSummary: string | null = null;
 
         if (topResults.length > 0) {
             // Cache summaries for 10 minutes to avoid repeated expensive calls
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(q),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v4`),
                 async () => {
                     try {
                         const briefsContext = topResults.map((item: any, i: number) => {
@@ -233,11 +263,11 @@ router.get('/', async (c) => {
                             // Use match_context (specific chunk) if available, otherwise summary
                             const content = item.match_context || item.summary || '';
                             const country = (item.country_name && item.country_name !== 'null') ? item.country_name : 'Region';
-                            return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 400)}`; // Increased context limit
+                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 1200)}`;
                         }).join('\n\n');
 
-                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Summarize the investment outlook for "${q}" based on these briefs:\n${briefsContext}`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
+                        const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], and distinguish reported facts from analysis. Do not make an investment recommendation or estimate missing figures.\nUser: Answer the research query "${q}" based on these records:\n${briefsContext}`;
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('AI summary generation failed:', aiError);
@@ -249,7 +279,7 @@ router.get('/', async (c) => {
         }
 
         // Transform results to match frontend SearchResult type
-        const searchResults = merged.slice(0, limitNum).map((item: any) => ({
+        const searchResults = resolvedResults.slice(0, limitNum).map((item: any) => ({
             article: {
                 id: item.id,
                 slug: item.slug,
@@ -380,7 +410,7 @@ router.get('/semantic', async (c) => {
             return c.json({
                 success: true,
                 results: [],
-                ai_answer: null,
+                ai_answer: `The indexed BOA-Story corpus contains zero semantic matches for “${q}” under the current search threshold.`,
                 query: q
             });
         }
@@ -389,7 +419,7 @@ router.get('/semantic', async (c) => {
         const placeholders = articleIds.map(() => '?').join(',');
         const articles = await c.env.DB.prepare(`
             SELECT 
-                a.id, a.slug, a.title, a.summary, a.content,
+                a.id, a.slug, a.title, a.summary, a.content, a.source_url,
                 a.country_code, c.name as country_name, c.flag_emoji,
                 a.sector_id, s.name as sector_name,
                 a.hero_image_url, a.reading_time_minutes, a.published_at
@@ -407,12 +437,12 @@ router.get('/semantic', async (c) => {
 
         // 4. (Optional) Pass chunks to LLM for summary generation
         let aiSummary: string | null = null;
-        const topResults = sorted.slice(0, 5);
+        const topResults = sorted.slice(0, 12);
 
         if (topResults.length > 0) {
             aiSummary = await getCached(
                 c.env,
-                CACHE_KEYS.searchAiSummary(q),
+                CACHE_KEYS.searchAiSummary(`${q}:depth-v4`),
                 async () => {
                     try {
                         const contextChunks = topResults.map((item: any, i: number) => {
@@ -420,11 +450,11 @@ router.get('/semantic', async (c) => {
                             // Use specific chunk text if available
                             const content = bestMatches.get(item.id)?.text || item.summary || '';
                             const country = item.country_name || 'Africa';
-                            return `[${i + 1}] "${title}" (${country}): ${content.slice(0, 500)}`; // Increased context
+                            return `[${i + 1}] "${title}" (${country})\nPublished: ${item.published_at || 'date unavailable'}\nSource URL: ${item.source_url || 'unavailable'}\nEvidence: ${content.slice(0, 1200)}`;
                         }).join('\n\n');
 
-                        const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: User Query: "${q}"\n\nRelevant Intelligence Briefs:\n${contextChunks}\n\nProvide a synthesis:`;
-                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.5 });
+                        const prompt = `System: You are BOA-Story's evidence synthesis desk. Use only the numbered records, cite them inline as [1], [2], separate facts from analysis, and surface contradictions and gaps.\nUser: Research query: "${q}"\n\nRelevant records:\n${contextChunks}\n\nProvide a complete synthesis:`;
+                        const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' });
                         return aiResponse || null;
                     } catch (aiError) {
                         console.error('RAG summary generation failed:', aiError);

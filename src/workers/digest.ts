@@ -29,13 +29,23 @@ interface DigestArticle {
     published_at: string;
 }
 
+
+// Public origins for links inside emails. bestofafrica.com is unregistered —
+// links must point at the live site, and unsubscribe at the backend endpoint
+// (RFC 8058-style one-click) carrying the subscription id as the token.
+const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
+const unsubscribeUrl = (env: Env, subscriptionId: string) => {
+    const apiBase = (env.PUBLIC_API_URL || '').replace(/\/$/, '');
+    return apiBase ? `${apiBase}/api/v1/newsletter/unsubscribe?token=${encodeURIComponent(subscriptionId)}` : '#';
+};
+
 // ───────────────────────────────────────────────────────────────────────────────
 // Generate Daily Digest Content
 // ───────────────────────────────────────────────────────────────────────────────
 export async function generateDailyDigest(
     env: Env,
     subscription: DigestSubscription
-): Promise<{ subject: string; html: string; text: string }> {
+): Promise<{ subject: string; html: string; text: string } | null> {
 
     // Get top articles from last 24 hours
     let query = `
@@ -71,19 +81,15 @@ export async function generateDailyDigest(
     const articles = await env.DB.prepare(query).bind(...bindings).all<DigestArticle>();
     const articleList = articles.results || [];
 
-    if (articleList.length === 0) {
-        return {
-            subject: 'No new articles today',
-            html: '<p>No new articles matching your preferences were published today.</p>',
-            text: 'No new articles matching your preferences were published today.',
-        };
-    }
+    // Nothing matched the subscriber's filters — skip the send entirely. A
+    // daily "no new articles" email is spam that trains readers to ignore us.
+    if (articleList.length === 0) return null;
 
     // Generate summary of the day's news
     let aiSummary = '';
     try {
-        const briefContext = articleList.slice(0, 5).map((a, i) =>
-            `${i + 1}. "${a.title}" (${a.country_name}): ${a.summary?.slice(0, 150) || ''}`
+        const briefContext = articleList.slice(0, 10).map((a, i) =>
+            `${i + 1}. "${a.title}" (${a.country_name}, ${a.published_at || 'date unavailable'}): ${a.summary?.slice(0, 800) || 'summary unavailable'}`
         ).join('\n');
 
         // RAG: Get Global Context
@@ -96,21 +102,21 @@ export async function generateDailyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const prompt = `System: You are an executive briefing writer. Synthesize internal articles with global context.
+        const prompt = `System: You are BOA-Story's executive evidence editor. Synthesize only the supplied reporting. Distinguish what the records say from your analysis, and never turn coverage volume into a market claim.
 
 User: Global Context: ${globalContext}
 
 Internal Coverage:
 ${briefContext}
 
-Write a 3-4 sentence Executive Summary connecting our stories to the global picture.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 250 })) || '';
+Write a detailed daily briefing with: a direct lead; the most consequential dated developments and named actors; connections and tensions across countries or sectors; practical implications; counter-signals; coverage gaps; and three questions to verify next. Cite the numbered internal records inline. If the evidence is thin, identify exactly what is missing.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for digest:', error);
     }
 
     // Generate HTML email
-    const html = generateDigestHTML(articleList, aiSummary, 'daily');
+    const html = generateDigestHTML(articleList, aiSummary, 'daily', siteBase(env), unsubscribeUrl(env, subscription.id));
     const text = generateDigestText(articleList, aiSummary, 'daily');
 
     return {
@@ -126,7 +132,7 @@ Write a 3-4 sentence Executive Summary connecting our stories to the global pict
 export async function generateWeeklyDigest(
     env: Env,
     subscription: DigestSubscription
-): Promise<{ subject: string; html: string; text: string }> {
+): Promise<{ subject: string; html: string; text: string } | null> {
 
     // Get top articles from last 7 days
     const articles = await env.DB.prepare(`
@@ -144,6 +150,7 @@ export async function generateWeeklyDigest(
     `).all<DigestArticle>();
 
     const articleList = articles.results || [];
+    if (articleList.length === 0) return null; // nothing this week — skip the send
 
     // Group by sector
     const bySector: Record<string, DigestArticle[]> = {};
@@ -157,7 +164,7 @@ export async function generateWeeklyDigest(
     let aiSummary = '';
     try {
         const sectorSummaries = Object.entries(bySector).map(([sector, arts]) =>
-            `${sector}: ${arts.length} articles, top story: "${arts[0].title}"`
+            `${sector}: ${arts.length} articles\n${arts.slice(0, 6).map((article, index) => `  ${index + 1}. ${article.title} (${article.country_name || 'country unavailable'}, ${article.published_at || 'date unavailable'}): ${(article.summary || 'summary unavailable').slice(0, 900)}`).join('\n')}`
         ).join('\n');
 
         // RAG: Get Weekly Global Context
@@ -170,20 +177,20 @@ export async function generateWeeklyDigest(
             globalContext = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('; ');
         } catch (e) { }
 
-        const prompt = `System: You are a strategic analyst. Write a weekly briefing connecting our coverage to major external events.
+        const prompt = `System: You are BOA-Story's weekly evidence editor. Use only the supplied records. Coverage count measures BOA-Story reporting activity, not economic performance. Separate facts, synthesis and uncertainty.
 
 User: Major External Events: ${globalContext}
 
 Our Sector Coverage:
 ${sectorSummaries}
 
-Write a 5-sentence "Week in Review" analyzing how our coverage reflects or misses these broader trends.`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 300 })) || '';
+Write a rigorous Week in Review covering: the week's central finding; a dated chronology; country and sector differences; named actors; mechanisms and consequences; counter-evidence; what BOA-Story covered heavily or missed; implications for operators and policymakers; source limitations; and a prioritized verification agenda. Cite the supplied story titles inline.`;
+        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (error) {
         console.error('Failed to generate AI summary for weekly digest:', error);
     }
 
-    const html = generateWeeklyDigestHTML(bySector, aiSummary);
+    const html = generateWeeklyDigestHTML(bySector, aiSummary, siteBase(env), unsubscribeUrl(env, subscription.id));
     const text = generateDigestText(articleList, aiSummary, 'weekly');
 
     return {
@@ -201,43 +208,17 @@ export async function sendDigestEmail(
     to: string,
     subject: string,
     html: string,
-    text: string
+    _text: string
 ): Promise<boolean> {
-    // Check for Resend API key
-    const resendKey = (env as Record<string, any>).RESEND_API_KEY;
-
-    if (resendKey) {
-        try {
-            const response = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendKey}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    from: 'BOA-Story <digest@bestofafrica.com>',
-                    to: [to],
-                    subject,
-                    html,
-                    text,
-                }),
-            });
-
-            if (!response.ok) {
-                console.error('Resend API error:', await response.text());
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Failed to send email via Resend:', error);
-            return false;
-        }
-    }
-
-    // Fallback: Log the email (would be sent via Email Workers in production)
-    console.log(`[EMAIL] To: ${to}, Subject: ${subject}`);
-    return true;
+    // Delegate to the shared transactional sender (Cloudflare EMAIL binding →
+    // Resend → MailChannels) so the digest lights up with the same domain
+    // onboarding as OTP/welcome mail. The old local implementation only knew
+    // Resend and, without a key, LOGGED the email and returned true — the cron
+    // then reported "Sent digest to …" while delivering nothing.
+    const { sendEmail } = await import('../lib/email');
+    const sent = await sendEmail(env, { to, subject, html });
+    if (!sent) console.error(`[digest] delivery failed for ${to}`);
+    return sent;
 }
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -257,9 +238,10 @@ export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): P
             const digest = frequency === 'daily'
                 ? await generateDailyDigest(env, sub)
                 : await generateWeeklyDigest(env, sub);
+            if (!digest) continue; // nothing matched this subscriber's filters
 
-            await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
-            console.log(`Sent ${frequency} digest to ${sub.email}`);
+            const sent = await sendDigestEmail(env, sub.email, digest.subject, digest.html, digest.text);
+            if (sent) console.log(`Sent ${frequency} digest to ${sub.email}`);
         } catch (error) {
             console.error(`Failed to send digest to ${sub.email}:`, error);
         }
@@ -271,11 +253,11 @@ export async function processDigests(env: Env, frequency: 'daily' | 'weekly'): P
 // ───────────────────────────────────────────────────────────────────────────────
 // HTML Templates
 // ───────────────────────────────────────────────────────────────────────────────
-function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: string): string {
+function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: string, site: string, unsubUrl: string): string {
     const articleItems = articles.map(a => `
         <tr>
             <td style="padding: 16px 0; border-bottom: 1px solid #e5e5e5;">
-                <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                <a href="${site}/posts/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
                     ${a.title}
                 </a>
                 <div style="color: #666; font-size: 14px; margin-top: 4px;">
@@ -316,8 +298,8 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
         </div>
         
         <div style="background: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #666;">
-            <a href="https://bestofafrica.com" style="color: #0d6efd;">Visit BOA-Story</a> |
-            <a href="https://bestofafrica.com/unsubscribe" style="color: #0d6efd;">Unsubscribe</a>
+            <a href="${site}" style="color: #0d6efd;">Visit BOA-Story</a> |
+            <a href="${unsubUrl}" style="color: #0d6efd;">Unsubscribe</a>
         </div>
     </div>
 </body>
@@ -325,13 +307,13 @@ function generateDigestHTML(articles: DigestArticle[], aiSummary: string, type: 
     `;
 }
 
-function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiSummary: string): string {
+function generateWeeklyDigestHTML(bySector: Record<string, DigestArticle[]>, aiSummary: string, site: string, unsubUrl: string): string {
     const sectorSections = Object.entries(bySector).map(([sector, articles]) => `
         <div style="margin: 20px 0;">
             <h3 style="color: #d4af37; border-bottom: 2px solid #d4af37; padding-bottom: 8px;">${sector}</h3>
             ${articles.slice(0, 3).map(a => `
                 <div style="margin: 12px 0;">
-                    <a href="https://bestofafrica.com/articles/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
+                    <a href="${site}/posts/${a.slug}" style="color: #0d6efd; text-decoration: none; font-weight: 600;">
                         ${a.title}
                     </a>
                     <span style="color: #666; font-size: 12px;"> • ${a.country_name || 'Africa'}</span>

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { request } from '../services/api';
+import { MEMBER_PREVIEW_MODE } from '../config/flags';
 
 interface MemberData {
   tier: string;
@@ -20,8 +21,10 @@ const MemberContext = createContext<MemberContextType | undefined>(undefined);
 
 export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('boa_auth_token'));
-  const [memberData, setMemberData] = useState<MemberData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [memberData, setMemberData] = useState<MemberData | null>(MEMBER_PREVIEW_MODE ? {
+    tier: 'enterprise', name: 'Member Preview', expires_in_days: null,
+  } : null);
+  const [isLoading, setIsLoading] = useState(!MEMBER_PREVIEW_MODE);
 
   // Sync token to localStorage
   useEffect(() => {
@@ -35,6 +38,11 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Validate token with server on mount or token change
   useEffect(() => {
+    if (MEMBER_PREVIEW_MODE) {
+      setMemberData({ tier: 'enterprise', name: 'Member Preview', expires_in_days: null });
+      setIsLoading(false);
+      return;
+    }
     if (!token) {
       setIsLoading(false);
       return;
@@ -88,7 +96,7 @@ export const MemberProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <MemberContext.Provider value={{ isMember: !!token && !!memberData, memberData, token, login, logout, isLoading }}>
+    <MemberContext.Provider value={{ isMember: MEMBER_PREVIEW_MODE || (!!token && !!memberData), memberData, token, login, logout, isLoading }}>
       {children}
     </MemberContext.Provider>
   );

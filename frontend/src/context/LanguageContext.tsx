@@ -1,8 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { LanguageCode } from '../types';
-import { SUPPORTED_LANGUAGES } from '../types';
-export { SUPPORTED_LANGUAGES };
+import { SUPPORTED_LANGUAGES as CONTENT_LANGUAGES } from '../types';
+import { TRANSLATIONS } from '../i18n/dict';
+import { useQueryClient } from '@tanstack/react-query';
+// Article and interface language are one reader preference. Selecting a locale
+// changes the application chrome and is also passed to article queries so the
+// stored article translation is served when available.
+export const SUPPORTED_LANGUAGES = CONTENT_LANGUAGES;
 
 interface LanguageContextType {
     language: LanguageCode;
@@ -14,6 +19,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
+    const queryClient = useQueryClient();
     // 1. Initialize from URL or LocalStorage or Default
     const [language, setLanguageState] = useState<LanguageCode>(() => {
         if (typeof window !== 'undefined') {
@@ -26,17 +32,32 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     });
 
     const setLanguage = (lang: LanguageCode) => {
-        setLanguageState(lang);
+        const supported = SUPPORTED_LANGUAGES.some(language => language.code === lang) ? lang : 'en';
+        setLanguageState(supported);
         if (typeof window !== 'undefined') {
-            localStorage.setItem('boa_lang', lang);
+            localStorage.setItem('boa_lang', supported);
             // Update HTML dir attribute for global CSS support
-            const dir = SUPPORTED_LANGUAGES.find(l => l.code === lang)?.dir || 'ltr';
+            const dir = SUPPORTED_LANGUAGES.find(l => l.code === supported)?.dir || 'ltr';
             document.documentElement.dir = dir;
-            document.documentElement.lang = lang;
+            document.documentElement.lang = supported;
+            // Reader endpoints derive their locale from this preference. Mark
+            // active data stale so lists, reports and dashboards refresh into
+            // the newly requested language instead of retaining an English
+            // React Query snapshot under an unchanged key.
+            void queryClient.invalidateQueries({ refetchType: 'active' });
         }
     };
 
     const dir = SUPPORTED_LANGUAGES.find((l: { code: string }) => l.code === language)?.dir || 'ltr';
+
+    // Apply text direction + lang on mount and whenever the language changes, so a
+    // persisted RTL choice (e.g. Arabic) is honoured on reload, not only on switch.
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.dir = dir;
+            document.documentElement.lang = language;
+        }
+    }, [language, dir]);
 
     // UI Translation Dictionary
     const translations: Record<LanguageCode, Record<string, string>> = {
@@ -60,11 +81,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
             "intel.new_articles": "NEW",
             "intel.loading_market": "Loading stories...",
             "intel.processing": "Loading story feed...",
-            "home.badge": "BOA-Story — Beyond the Headlines",
+            "home.badge": "BOA-Story, Beyond the Headlines",
             "home.cta_primary": "Read the stories",
             "home.cta_secondary": "Browse Countries",
             "home.top_intel": "Top Stories",
-            "home.top_intel_sub": "Real, grounded reporting from across the continent — beyond charity ads and disaster headlines.",
+            "home.top_intel_sub": "Real, grounded reporting from across the continent, beyond charity ads and disaster headlines.",
             "home.read_brief": "Read Story",
             "home.partners": "Community",
             "home.partners_sub": "People making this project possible.",
@@ -334,9 +355,17 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    // Translation helper
+    // Translation helper. Resolution order: shared chrome dict (current lang) →
+    // legacy inline dict (current lang) → shared chrome dict (English) → fallback → key.
     const t = (key: string, fallback?: string) => {
-        return translations[language]?.[key] || fallback || key;
+        return (
+            TRANSLATIONS[language]?.[key] ??
+            translations[language]?.[key] ??
+            TRANSLATIONS.en?.[key] ??
+            translations.en?.[key] ??
+            fallback ??
+            key
+        );
     };
 
     return (

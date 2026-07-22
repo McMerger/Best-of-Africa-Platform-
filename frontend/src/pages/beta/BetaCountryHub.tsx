@@ -13,14 +13,18 @@ import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { useSetBreadcrumb } from '@/context/BreadcrumbContext';
 import { KO_FI_URL } from '../../constants/beta';
+import { CountryFlag } from '../../components/CountryFlag';
+import { ScrollReveal } from '../../components/beta/ScrollReveal';
+import { stripMarkdown, heroThumb } from '@/lib/utils';
 import type { ArticleListItem } from '../../types';
+import { EditorialContent } from '../../components/EditorialContent';
+import { sourcedEditorialImage } from '../../lib/editorialImage';
+import { PhotoCredit } from '../../components/PhotoCredit';
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
-
-/** Strip leading/trailing Markdown bold markers and whitespace from a string. */
-const stripMarkdown = (text: string): string =>
-  text.replace(/^\*{1,2}\s*/g, '').replace(/\s*\*{1,2}$/g, '').trim();
 
 /**
  * Generate stable-looking placeholder scores for the paywall blur preview.
@@ -37,6 +41,12 @@ const previewScores = (code: string): number[] => {
   ];
 };
 
+const formatEvidenceValue = (value: number, unit: string) => {
+  if (unit === 'USD') return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2 }).format(value);
+  if (unit === 'USD per person') return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(value);
+};
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; delay?: number }) => (
@@ -50,29 +60,30 @@ const ScoreBar = ({ label, value, delay = 0 }: { label: string; value: number; d
         initial={{ width: 0 }}
         animate={{ width: `${value}%` }}
         transition={{ duration: 0.9, ease: 'easeOut', delay }}
-        className="h-full bg-gradient-to-r from-[#C9A84C]/50 to-[#C9A84C] rounded-full"
+        className="h-full bg-gradient-to-r from-[#0F1F3D]/50 to-[#0F1F3D] rounded-full"
       />
     </div>
   </div>
 );
 
-const ArticleCard = ({ article }: { article: ArticleListItem }) => (
+// Deterministic local fallback so broken/missing article heroes show a real
+// editorial photo (not a flickering random pick or the branded "B" box).
+const ArticleCard = ({ article }: { article: ArticleListItem }) => {
+  const { t } = useLanguage();
+  const image = sourcedEditorialImage(article);
+  return (
   <Link
     to={`/posts/${article.slug}`}
     className="group block bg-card rounded-2xl border border-foreground/10 overflow-hidden hover:border-foreground/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1"
   >
-    <div className="aspect-[16/9] overflow-hidden bg-background/20 relative">
-      <img
-        src={article.hero_image_url || `/images/v2_editorial_${Math.floor(Math.random() * 2) + 1}.png`}
-        alt={article.title}
-        loading="lazy"
-        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent mix-blend-multiply" />
+    <div className="min-h-28 sm:aspect-[16/9] overflow-hidden bg-navy relative">
+      {image ? <img src={heroThumb(image)} alt={stripMarkdown(article.title)} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.025] transition-transform duration-500" /> : <div className="flex min-h-28 items-end p-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Source-linked country reporting</div>}
+      <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
+      {image && <PhotoCredit credit={article.image_credit} sourceUrl={article.image_source_url} className="absolute bottom-2 left-3 rounded bg-navy/80 px-2 py-1 text-white" />}
     </div>
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {article.sector_name && (
-        <span className="text-[10px] font-bold uppercase tracking-widest text-accent mb-3 block">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-accent-ink mb-3 block">
           {article.sector_name}
         </span>
       )}
@@ -80,12 +91,13 @@ const ArticleCard = ({ article }: { article: ArticleListItem }) => (
         {stripMarkdown(article.title)}
       </h3>
       {article.summary && (
-        <p className="text-[14px] text-foreground/50 mt-3 line-clamp-2 leading-relaxed">{article.summary}</p>
+        <p className="text-[14px] text-foreground/60 mt-3 line-clamp-2 leading-relaxed">{stripMarkdown(article.summary)}</p>
       )}
-      <p className="text-[11px] text-foreground/30 mt-4">{article.reading_time_minutes} min read</p>
+      <p className="text-[11px] text-foreground/60 mt-4">{article.reading_time_minutes} {t('article.min_read', 'min read')}</p>
     </div>
   </Link>
-);
+  );
+};
 
 const SkeletonCard = () => (
   <div className="bg-card rounded-2xl border border-foreground/10 overflow-hidden animate-pulse">
@@ -103,9 +115,10 @@ const SkeletonCard = () => (
 export const BetaCountryHub = () => {
   const { code } = useParams<{ code: string }>();
   const { isMember } = useMember();
+  const { t } = useLanguage();
   const upperCode = (code || '').toUpperCase();
 
-  const [countryQuery, outlookQuery, narrativeQuery, articlesQuery] = useQueries({
+  const [countryQuery, outlookQuery, narrativeQuery, articlesQuery, dossierQuery] = useQueries({
     queries: [
       {
         queryKey: ['country', upperCode],
@@ -127,28 +140,40 @@ export const BetaCountryHub = () => {
         queryFn: () => api.getArticles({ country: upperCode, limit: '9' }),
         staleTime: 5 * 60 * 1000,
         enabled: !!upperCode },
+      {
+        queryKey: ['country-dossier', upperCode],
+        queryFn: () => api.getCountryDossier(upperCode),
+        staleTime: 24 * 60 * 60 * 1000,
+        enabled: !!upperCode && isMember },
     ] });
 
   const country = countryQuery.data?.country;
   const stats = countryQuery.data?.stats;
   const outlook = outlookQuery.data?.outlook;
+  const evidence = outlookQuery.data?.evidence;
   const sectorOpportunities = outlookQuery.data?.sector_opportunities ?? [];
   const narratives = narrativeQuery.data?.narratives ?? [];
   const sectorCoverage = narrativeQuery.data?.sector_coverage ?? [];
   const articles: ArticleListItem[] = (articlesQuery.data?.data ?? []) as ArticleListItem[];
+  const dossier = dossierQuery.data?.dossier;
+  const provenance = dossierQuery.data?.provenance;
+  const officialProfile = dossier?.macroeconomics.official_profile || dossier?.macroeconomics.world_bank;
 
   const isLoading = countryQuery.isLoading;
+
+  // Show the country name in the breadcrumb instead of the raw code.
+  useSetBreadcrumb(country?.name ?? null);
 
   if (!isLoading && !country && countryQuery.isFetched) {
     return (
       <div className="flex flex-col">
         
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-32">
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-20 md:py-32">
           <Globe size={48} className="text-primary/20 mb-6" />
-          <h1 className="font-serif text-3xl text-primary mb-3">Country not found</h1>
-          <p className="text-primary/50 mb-8">We couldn't find coverage data for "{upperCode}".</p>
+          <h1 className="font-serif text-3xl text-primary mb-3">{t('hub.not_found', 'Country not found')}</h1>
+          <p className="text-primary/50 mb-8">{t('hub.not_found_desc', "We couldn't find coverage data for")} "{upperCode}".</p>
           <Link to="/countries" className="text-accent font-semibold hover:opacity-80 transition-opacity flex items-center gap-2">
-            <ArrowLeft size={14} /> Back to all countries
+            <ArrowLeft size={14} /> {t('hub.back_all', 'Back to all countries')}
           </Link>
         </div>
         
@@ -157,7 +182,6 @@ export const BetaCountryHub = () => {
   }
 
   const countryName = country?.name ?? upperCode;
-  const flagEmoji = country?.flag_emoji ?? '🌍';
   const region = country?.region ?? '';
   const investmentHighlights: string[] = Array.isArray(country?.investment_highlights)
     ? country!.investment_highlights
@@ -174,34 +198,33 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative min-h-[60vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-foreground/10">
+      <div className="app-hero relative border-b border-border bg-card px-4 py-12 sm:px-6 md:py-16">
         <motion.div 
-          className="absolute inset-0 z-0"
+          className="hidden"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}
         >
-          <div className="absolute inset-0 bg-background/60 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_country_hero.png" 
-            alt="Country Landscape" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+          <img
+            src="/images/v2_country_hero.webp"
+            alt="Country Landscape"
+            className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
           />
+          <div className="absolute inset-0 z-10 hero-scrim" />
         </motion.div>
 
-        <div className="max-w-5xl mx-auto w-full relative z-30">
+        <div className="page-container">
           <Link
             to="/countries"
-            className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm transition-colors mb-12 group uppercase tracking-widest font-bold"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-navy text-sm transition-colors mb-8 group"
           >
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
-            All 54 Countries
+            {t('hub.all_54', 'All 54 Countries')}
           </Link>
 
           <div className="flex flex-col md:flex-row items-start md:items-end gap-8">
             {isLoading ? (
               <div className="w-24 h-24 bg-foreground/10 rounded-3xl animate-pulse" />
             ) : (
-              <span className="text-[5rem] md:text-[7rem] leading-none drop-shadow-2xl">{flagEmoji}</span>
+              <CountryFlag code={upperCode} title={countryName} size={64} className="!rounded-lg border border-border" />
             )}
             <div className="flex-1 pb-2">
               {isLoading ? (
@@ -212,18 +235,18 @@ export const BetaCountryHub = () => {
               ) : (
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full backdrop-blur-md">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-accent-ink">
                       {region ? (region.toLowerCase().endsWith('africa') ? region : `${region} Africa`) : 'Africa'}
                     </span>
                     {stats?.article_count != null && (
-                      <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground/70 bg-foreground/5 border border-foreground/10 px-4 py-1.5 rounded-full backdrop-blur-md">
-                        {stats.article_count} {stats.article_count === 1 ? 'story' : 'stories'}
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                        {stats.article_count} {stats.article_count === 1 ? t('hub.story', 'story') : t('hub.stories', 'stories')}
                       </span>
                     )}
                   </div>
-                  <h1 className="font-serif text-[4rem] md:text-[6rem] leading-[0.95] tracking-tighter mb-4 drop-shadow-2xl">{countryName}</h1>
+                  <h1 className="font-serif text-navy text-[2.75rem] md:text-[4.5rem] leading-[1] tracking-tight mb-4">{countryName}</h1>
                   {country?.description && (
-                    <p className="text-foreground/70 max-w-2xl leading-relaxed text-[1.125rem] font-serif italic drop-shadow-md">{country.description}</p>
+                    <p className="text-muted-foreground max-w-2xl leading-relaxed text-base md:text-lg">{stripMarkdown(country.description)}</p>
                   )}
                 </motion.div>
               )}
@@ -234,10 +257,10 @@ export const BetaCountryHub = () => {
           {investmentHighlights.length > 0 && (
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 1 }}
-              className="flex flex-wrap gap-2 mt-12"
+              className="flex flex-wrap gap-x-5 gap-y-2 mt-8"
             >
               {investmentHighlights.map(h => (
-                <span key={h} className="text-[11px] uppercase tracking-widest font-bold text-foreground/80 bg-foreground/10 border border-foreground/20 px-4 py-2 rounded-full backdrop-blur-md">
+                <span key={h} className="text-xs text-muted-foreground">
                   {h}
                 </span>
               ))}
@@ -246,41 +269,21 @@ export const BetaCountryHub = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-16">
+      <div className="page-container page-stack py-12 md:py-16">
 
         {/* ── Sentiment Scores (members only) ────────────────────────────── */}
         <motion.section 
           initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}
-          className="bg-card rounded-3xl border border-foreground/10 p-8 md:p-12 shadow-2xl relative overflow-hidden"
+          className={`${!isMember ? 'hidden' : ''} page-section section-frame relative overflow-hidden`}
         >
           <div className="flex items-center gap-4 mb-10">
             <BarChart2 size={24} className="text-accent" />
-            <h2 className="font-serif text-[2rem] text-foreground leading-none">Sentiment Scores</h2>
+            <h2 className="font-serif text-[2rem] text-foreground leading-none">Evidence quality</h2>
           </div>
 
           {!isMember ? (
-            <div className="relative bg-card rounded-2xl border border-foreground/5 p-8 overflow-hidden">
-              {/* blurred placeholder preview */}
-              <div className="space-y-6 blur-md pointer-events-none select-none opacity-40" aria-hidden="true">
-                {['Investment Readiness', 'Narrative Strength', 'Media Presence', 'Engagement Level'].map((l, i) => (
-                  <ScoreBar key={l} label={l} value={previewScores(upperCode)[i]} delay={i * 0.1} />
-                ))}
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-center rounded-2xl z-10">
-                <Lock size={32} className="text-accent mb-4" />
-                  <p className="font-serif text-3xl font-semibold text-foreground mb-2">Backer-Only Data</p>
-                  <p className="text-lg text-foreground/50 mb-8 max-w-sm text-center">
-                    Full sentiment scores, perception gaps, and sector signals.
-                  </p>
-                <a
-                  href={KO_FI_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-accent text-card font-bold px-8 py-4 rounded-xl text-sm hover:brightness-110 transition-all uppercase tracking-widest shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-                >
-                  Become a Founding Member
-                </a>
-              </div>
+            <div className="rounded-xl border border-border bg-background p-6 text-sm leading-relaxed text-muted-foreground">
+              Sign in to inspect source coverage, review status, methodology and known evidence limitations. BOA does not display fabricated preview scores.
             </div>
           ) : outlookQuery.isLoading ? (
             <div className="space-y-6 animate-pulse">
@@ -294,16 +297,44 @@ export const BetaCountryHub = () => {
                 </div>
               ))}
             </div>
-          ) : outlook ? (
-            <div className="space-y-6">
-              <ScoreBar label="Investment Readiness" value={outlook.investment_readiness} delay={0} />
-              <ScoreBar label="Narrative Strength" value={outlook.narrative_strength} delay={0.1} />
-              <ScoreBar label="Media Presence" value={outlook.media_presence} delay={0.2} />
-              <ScoreBar label="Engagement Level" value={outlook.engagement_level} delay={0.3} />
+          ) : evidence && outlook ? (
+            <div>
+              <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Published evidence</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.published_articles}</p></div>
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Sectors evidenced</p><p className="mt-2 font-serif text-3xl text-navy">{evidence.sectors_covered}</p></div>
+                <div className="bg-background p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Evidence status</p><p className="mt-2 font-serif text-2xl capitalize text-navy">{evidence.status}</p></div>
+              </div>
+              <p className="mt-6 text-sm leading-relaxed text-muted-foreground">{outlook.methodology}</p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">{evidence.limitations.map(item => <li key={item} className="flex gap-3"><span className="text-accent-ink">•</span>{item}</li>)}</ul>
+              {outlook.investment_commentary && (
+                <div className="mt-10 border-t border-border pt-8">
+                  <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-ink">Member evidence dossier</p>
+                      <h3 className="mt-2 font-serif text-2xl text-navy">Country reporting brief</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{evidence.source_records.length} source records reviewed</p>
+                  </div>
+                  <EditorialContent content={outlook.investment_commentary} className="prose-sm max-w-none text-foreground/80" />
+                  {evidence.source_records.length > 0 && (
+                    <details className="mt-8 rounded-xl border border-border bg-background p-5">
+                      <summary className="cursor-pointer text-sm font-semibold text-navy">Inspect source window</summary>
+                      <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm text-muted-foreground marker:font-bold marker:text-accent-ink">
+                        {evidence.source_records.map(source => (
+                          <li key={`${source.record}-${source.title}`} className="flex gap-3">
+                            <span className="font-semibold text-accent-ink">[{source.record}]</span>
+                            <span>{source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className="hover:text-navy hover:underline">{stripMarkdown(source.title)}</a> : stripMarkdown(source.title)}{source.published_at ? ` · ${new Date(source.published_at).toLocaleDateString()}` : ''}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center text-foreground/40 text-lg">
-              Outlook data unavailable for this country.
+              The country evidence request did not complete. The published stories, sector coverage and official country record on this page remain the current source layer.
             </div>
           )}
         </motion.section>
@@ -313,7 +344,7 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <TrendingUp size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Sector Activity</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.sector_activity', 'Sector Activity')}</h2>
             </div>
             <div className="grid sm:grid-cols-2 gap-6">
               {(sectorOpportunities.length > 0 ? sectorOpportunities : sectorCoverage.map(s => ({
@@ -329,12 +360,12 @@ export const BetaCountryHub = () => {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-serif text-foreground text-[1.25rem]">{sector.name}</span>
                     <span className="text-[11px] text-accent font-bold tracking-widest bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase">
-                      {sector.articles} {sector.articles === 1 ? 'story' : 'stories'}
+                      {sector.articles} {sector.articles === 1 ? t('hub.story', 'story') : t('hub.stories', 'stories')}
                     </span>
                   </div>
                   {sector.avg_engagement > 0 && (
                     <p className="text-sm text-foreground/40">
-                      Avg. engagement: {sector.avg_engagement.toFixed(1)}
+                      {t('hub.avg_engagement', 'Avg. engagement:')} {sector.avg_engagement.toFixed(1)}
                     </p>
                   )}
                 </motion.div>
@@ -348,7 +379,7 @@ export const BetaCountryHub = () => {
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
             <div className="flex items-center gap-4 mb-10">
               <Globe size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Key Narratives</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.key_narratives', 'Key Narratives')}</h2>
             </div>
             <div className="space-y-6">
               {narratives.slice(0, 4).map((n, i) => (
@@ -380,48 +411,79 @@ export const BetaCountryHub = () => {
         {/* ── Situation Report (if available) ─────────────────────────────── */}
         {isMember && country?.ai_situation_report && (
           <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.05)]">
+            <div className="bg-card rounded-3xl p-12 text-foreground relative overflow-hidden border border-accent/20 shadow-[0_0_40px_rgba(15,31,61,0.05)]">
               <div className="absolute top-0 right-0 p-8 opacity-10">
                  <Globe size={120} />
               </div>
               <div className="inline-block text-[11px] font-bold tracking-widest text-accent uppercase bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-8">
-                Situation Report
+                {t('hub.situation_report', 'Situation Report')}
               </div>
-              <p className="text-foreground/80 font-serif leading-[1.8] text-[1.5rem] max-w-3xl italic">{country.ai_situation_report}</p>
+              <EditorialContent content={country.ai_situation_report} className="relative max-w-4xl text-[15px] leading-7 text-foreground/80 md:text-base" />
             </div>
           </motion.section>
         )}
 
         {/* ── Portal Links ───────────────────────────────────────────────────── */}
+        {isMember && (dossierQuery.isLoading || (dossier && officialProfile)) && (
+          <section>
+            <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-ink">Official country evidence</p>
+                <h2 className="mt-2 font-serif text-3xl text-navy">Economic and trade record</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">Every value keeps the period published by its provider. The retrieval date records when BOA checked the source; it never makes an older observation look new.</p>
+              </div>
+              {provenance?.retrieved_at && <p className="shrink-0 text-xs font-semibold text-navy">Sources checked {new Date(provenance.retrieved_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>}
+            </div>
+            {dossierQuery.isLoading ? <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="h-32 animate-pulse rounded-xl border border-border bg-card" />)}</div> : dossier && officialProfile && <div className="mt-8 space-y-8">
+              <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
+                {officialProfile.indicators.slice(0, 12).map(indicator => <a href={indicator.source_url || officialProfile.source_url} target="_blank" rel="noreferrer" key={indicator.code} className="group min-w-0 bg-card p-5 transition-colors hover:bg-muted/60"><p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{indicator.name}</p><p className="mt-3 break-words font-serif text-2xl text-navy">{formatEvidenceValue(indicator.value, indicator.unit)}</p><p className="mt-1 text-xs text-muted-foreground">{indicator.unit} · {'period_status' in indicator && indicator.period_status === 'estimate_or_projection' ? 'projection' : 'observation'} {indicator.year}</p><p className="mt-3 text-[10px] font-bold uppercase tracking-wider text-accent-ink group-hover:underline">{officialProfile.source_name} ↗</p></a>)}
+              </div>
+              <div className="rounded-xl border border-border bg-card p-5 sm:p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-accent-ink">{dossier.trade.provider} · {'totalExports' in dossier.trade ? 'official trade record' : 'official external-sector outlook'}</p><a href={dossier.trade.source_url} target="_blank" rel="noreferrer" className="text-xs font-bold text-navy hover:underline">Inspect provider record ↗</a></div>
+                {'totalExports' in dossier.trade ? <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Exports · {dossier.trade.export_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.totalExports, 'USD')}</p></div>
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Imports · {dossier.trade.import_year || dossier.trade.year}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.totalImports, 'USD')}</p></div>
+                  <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Recorded difference</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.balance, 'USD')}</p></div>
+                </div> : <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
+                  {dossier.trade.current_account_percent_gdp !== undefined && <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Current-account balance · {dossier.trade.year} {dossier.trade.period_status === 'estimate_or_projection' ? 'projection' : 'observation'}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{dossier.trade.current_account_percent_gdp.toLocaleString(undefined, { maximumFractionDigits: 2 })}% of GDP</p></div>}
+                  {dossier.trade.current_account_usd !== undefined && <div className="min-w-0 bg-card p-4"><p className="text-xs text-muted-foreground">Current-account balance · {dossier.trade.year} {dossier.trade.period_status === 'estimate_or_projection' ? 'projection' : 'observation'}</p><p className="mt-2 break-words font-serif text-xl text-navy sm:text-2xl">{formatEvidenceValue(dossier.trade.current_account_usd, 'USD')}</p></div>}
+                </div>}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{dossier.freshness.map(source => <a key={`${source.provider}-${source.source_url}`} href={source.source_url} target="_blank" rel="noreferrer" className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-navy/30"><p className="text-xs font-bold text-navy">{source.provider}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Observation period: {source.observation_period}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Checked {new Date(source.checked_at).toLocaleDateString()}</p></a>)}</div>
+              {provenance && <div className="border-l-2 border-navy pl-5 text-sm leading-relaxed text-muted-foreground"><p>{provenance.methodology}</p><p className="mt-2 text-xs">Sources: {provenance.sources.map(source => source.name).join(' · ')}</p></div>}
+            </div>}
+          </section>
+        )}
+
         {(country?.business_portal_url || country?.visa_portal_url || country?.tourism_portal_url) && (
           <section>
             <div className="flex items-center gap-3 mb-6">
               <ExternalLink size={18} className="text-accent" />
-              <h2 className="font-serif text-2xl text-primary">Official Resources</h2>
+              <h2 className="font-serif text-2xl text-primary">{t('hub.official_resources', 'Official Resources')}</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               {country.business_portal_url && (
                 <a href={country.business_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Business Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.business_portal', 'Business Portal')}
                 </a>
               )}
               {country.visa_portal_url && (
                 <a href={country.visa_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Visa Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.visa_portal', 'Visa Portal')}
                 </a>
               )}
               {country.tourism_portal_url && (
                 <a href={country.tourism_portal_url} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-background border border-primary/10 hover:border-accent/40 px-4 py-2.5 rounded-xl text-sm font-medium text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Tourism Portal
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.tourism_portal', 'Tourism Portal')}
                 </a>
               )}
               {isMember && (
                 <Link to={`/countries/${upperCode}/narratives`}
                   className="inline-flex items-center gap-2 bg-background/5 border border-primary/10 hover:border-accent/40 hover:bg-background px-4 py-2.5 rounded-xl text-sm font-bold text-primary transition-colors">
-                  <ExternalLink size={13} className="text-accent" /> Narrative Diplomacy Toolkit (Gov)
+                  <ExternalLink size={13} className="text-accent" /> {t('hub.narrative_toolkit', 'Narrative Diplomacy Toolkit (Gov)')}
                 </Link>
               )}
             </div>
@@ -433,14 +495,14 @@ export const BetaCountryHub = () => {
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-4">
               <FileText size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Stories from {countryName}</h2>
+              <h2 className="font-serif text-[2rem] text-foreground">{t('hub.stories_from', 'Stories from')} {countryName}</h2>
             </div>
             {articles.length > 0 && (
               <Link
                 to={`/posts?country=${upperCode}`}
                 className="text-[13px] text-accent font-bold uppercase tracking-widest hover:text-foreground transition-colors"
               >
-                View all →
+                {t('hub.view_all', 'View all →')}
               </Link>
             )}
           </div>
@@ -459,10 +521,12 @@ export const BetaCountryHub = () => {
                       <ArticleCard article={article} />
                     </div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/50 rounded-2xl z-10">
-                      <Lock size={24} className="text-accent mb-3" />
-                      <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
-                        Founding Members Only
-                      </p>
+                      <ScrollReveal className="flex flex-col items-center" intensity={0.6}>
+                        <Lock size={24} className="text-accent mb-3" />
+                        <p className="text-sm font-bold uppercase tracking-widest text-foreground text-center px-4">
+                          {t('landing.members_only', 'Founding Members Only')}
+                        </p>
+                      </ScrollReveal>
                     </div>
                   </div>
                 ) : (
@@ -475,27 +539,27 @@ export const BetaCountryHub = () => {
           ) : (
             <div className="bg-card rounded-3xl border border-foreground/10 p-16 text-center shadow-xl">
               <Globe size={48} className="text-foreground/20 mx-auto mb-6" />
-              <p className="text-foreground/60 font-serif text-[1.5rem]">No stories published for {countryName} yet.</p>
-              <p className="text-foreground/30 text-lg mt-2">We are monitoring this market continuously.</p>
+              <p className="text-foreground/60 font-serif text-[1.5rem]">{t('hub.no_stories_pre', 'No stories published for')} {countryName}{t('hub.no_stories_post', ' yet.')}</p>
+              <p className="text-foreground/30 text-lg mt-2">{t('hub.monitoring', 'We are monitoring this market continuously.')}</p>
             </div>
           )}
         </motion.section>
 
         {/* ── Member CTA (non-members) ───────────────────────────────────────── */}
         {!isMember && (
-          <section className="text-center py-8">
+          <ScrollReveal className="block text-center py-8" intensity={0.9}>
             <p className="text-primary/40 text-sm mb-5">
-              Unlock the full {countryName} hub — scores, narratives, sector trends, and more.
+              {t('hub.unlock_pre', 'Unlock the full')} {countryName}{t('hub.unlock_post', ' hub, scores, narratives, sector trends, and more.')}
             </p>
             <a
               href={KO_FI_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-accent text-card font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+              className="inline-block bg-accent text-navy font-semibold px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(15,31,61,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
             >
-              Become a Founding Member
+              {t('article.become_member', 'Become a Founding Member')}
             </a>
-          </section>
+          </ScrollReveal>
         )}
 
       </div>

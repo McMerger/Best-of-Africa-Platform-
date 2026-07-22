@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles, AlertCircle } from 'lucide-react';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { EditorialContent } from '../EditorialContent';
 
 type Message = {
   id: string;
@@ -61,7 +62,7 @@ export const BetaChatWidget = () => {
       };
       
       setMessages(prev => [...prev, analystMessage]);
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'analyst',
@@ -78,14 +79,14 @@ export const BetaChatWidget = () => {
     <>
       {/* Floating Action Button */}
       <motion.button
-        className="fixed bottom-6 right-6 z-50 p-4 bg-background text-foreground rounded-full shadow-lg border border-primary/20 hover:bg-background/90 hover:scale-105 transition-all flex items-center justify-center"
+        className="fixed bottom-[calc(4.65rem+env(safe-area-inset-bottom))] right-3 z-50 p-3 sm:right-6 sm:p-4 lg:bottom-6 bg-background text-foreground rounded-full shadow-lg border border-primary/20 hover:bg-background/90 hover:scale-105 transition-all flex items-center justify-center"
         onClick={() => setIsOpen(true)}
         initial={{ scale: 0 }}
         animate={{ scale: isOpen ? 0 : 1 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <MessageCircle size={24} />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
       </motion.button>
 
       {/* Chat Window */}
@@ -95,7 +96,7 @@ export const BetaChatWidget = () => {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[350px] sm:w-[400px] h-[500px] max-h-[80vh] bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
+            className="fixed bottom-[calc(4.65rem+env(safe-area-inset-bottom))] right-3 z-50 w-[calc(100vw-1.5rem)] sm:right-6 sm:w-[560px] h-[min(760px,72dvh)] sm:h-[min(760px,82dvh)] lg:bottom-6 bg-background rounded-2xl shadow-2xl border border-primary/10 flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-background text-foreground p-4 flex justify-between items-center shrink-0">
@@ -103,7 +104,7 @@ export const BetaChatWidget = () => {
                 <Sparkles size={18} className="text-accent" />
                 <div>
                   <h3 className="font-serif text-lg leading-tight">Ask the Analyst</h3>
-                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">AI-Powered Research</p>
+                  <p className="text-[10px] text-foreground/60 uppercase tracking-wider font-bold">Source-grounded briefing</p>
                 </div>
               </div>
               <button 
@@ -121,7 +122,7 @@ export const BetaChatWidget = () => {
                   key={msg.id} 
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl p-3 ${
+                  <div className={`max-w-[92%] rounded-2xl p-4 ${
                     msg.role === 'user' 
                       ? 'bg-background text-foreground rounded-br-sm' 
                       : msg.isError 
@@ -129,7 +130,9 @@ export const BetaChatWidget = () => {
                         : 'bg-background border border-primary/10 text-primary rounded-bl-sm shadow-sm'
                   }`}>
                     {msg.isError && <AlertCircle size={14} className="inline mr-1.5 mb-0.5" />}
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                    {msg.role === 'user' || msg.isError
+                      ? <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                      : <EditorialContent content={msg.content} className="editorial-content-compact text-sm" />}
                     
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-primary/10">

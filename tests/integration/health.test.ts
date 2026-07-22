@@ -65,14 +65,15 @@ describe('Health Check Endpoints', () => {
 
         it('should return unhealthy status when database fails', async () => {
             // Create env with failing database
+            // The health route calls prepare(sql).first() directly (no bind).
+            const failingStatement = {
+                bind: () => failingStatement,
+                first: () => Promise.reject(new Error('DB Connection Failed')),
+                all: () => Promise.reject(new Error('DB Connection Failed')),
+                run: () => Promise.reject(new Error('DB Connection Failed')),
+            };
             const failingEnv = createMockEnv({
-                DB: {
-                    prepare: () => ({
-                        bind: () => ({
-                            first: () => Promise.reject(new Error('DB Connection Failed')),
-                        }),
-                    }),
-                } as unknown as D1Database,
+                DB: { prepare: () => failingStatement } as unknown as D1Database,
             });
 
             const req = new Request('http://localhost/health/deep');

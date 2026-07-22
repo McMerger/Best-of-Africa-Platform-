@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../../types';
 import { requireApiKey, rateLimit } from '../../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../../lib/cache';
 import { callConfiguredAI } from '../../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -94,43 +94,55 @@ router.get('/sector/:id', async (c) => {
         `).bind(sectorId).all(),
     ]);
 
-    // Generate Sector Outlook
-    let aiOutlook = "Sector performance is stable.";
-    if (recentArticles.results && recentArticles.results.length > 0) {
-        const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
+    const headlines = (recentArticles.results as Array<{ title: string }> || []).map(row => row.title).join('; ');
+    const sectorName = String((sector as Record<string, unknown>).name || 'This sector');
+    const evidenceFallback = headlines
+        ? `Recent BOA reporting for ${sectorName} includes: ${headlines}. Open the linked records for dates, actors, mechanisms and source limitations.`
+        : `The ${sectorName} record is currently grounded in the country and regional coverage totals shown below.`;
+    const outlookKey = CACHE_KEYS.intelSectorAnalysis(sectorId);
+    const trendKey = `sector:${sectorId}:trend_analysis`;
+
+    const generateOutlook = async () => {
+        if (!headlines) return evidenceFallback;
         try {
-            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Sector: ${sector.name}\nHeadlines: ${headlines}`;
-            const response = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
-            aiOutlook = response?.trim() || aiOutlook;
-        } catch (e) { /* Ignore */ }
+            const prompt = `System: You are BOA-Story's sector evidence editor. Use only the supplied headlines and do not infer market performance from reporting volume.\nUser: Sector: ${sectorName}\nHeadlines: ${headlines}`;
+            const response = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nSynthesize only supported evidence in depth: dated developments, companies and institutions named, documented mechanisms, regulatory context, country differences, stakeholder effects, operational implications, dependencies, counter-evidence, alternative explanations, limitations, claim ledger and diligence questions.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
+            return response?.trim() || evidenceFallback;
+        } catch { return evidenceFallback; }
+    };
+
+    const generateTrendAnalysis = async () => {
+        try {
+            const query = `${sectorName} Africa sector trends outlook`;
+            const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
+            const vector = (embedding as Record<string, any>).data[0];
+            const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+            const context = relevant.matches.map(match => (match.metadata as Record<string, any>).title).join('\n');
+            if (!context) return evidenceFallback;
+            const prompt = `System: You are BOA-Story's sector evidence editor. Use only the supplied context and distinguish reported facts from synthesis.\nUser: Sector: ${sectorName}. Recent context:\n${context}`;
+            const response = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProvide chronology, actors, documented mechanisms, country differences, stakeholder effects, implications, contradictions, alternative explanations, limitations, source gaps, a claim ledger and verification priorities.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
+            return response?.trim() || evidenceFallback;
+        } catch { return evidenceFallback; }
+    };
+
+    const [cachedOutlook, cachedTrend] = await Promise.all([
+        getCachedValue<string>(c.env, outlookKey),
+        getCachedValue<string>(c.env, trendKey),
+    ]);
+    if (!cachedOutlook || !cachedTrend) {
+        c.executionCtx.waitUntil(Promise.all([
+            cachedOutlook ? Promise.resolve(cachedOutlook) : getCached(c.env, outlookKey, generateOutlook, { ttl: CACHE_TTL.ARCHIVE }),
+            cachedTrend ? Promise.resolve(cachedTrend) : getCached(c.env, trendKey, generateTrendAnalysis, { ttl: CACHE_TTL.ARCHIVE }),
+        ]).then(() => undefined));
     }
 
     return c.json({
-        sector: { ...sector, ai_outlook: aiOutlook },
+        sector: { ...sector, ai_outlook: cachedOutlook || evidenceFallback },
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         recent_articles: recentArticles.results || [],
         top_performers: topPerformers.results || [],
-        ai_trend_analysis: await getCached(
-            c.env,
-            `sector:${sectorId}:trend_analysis`,
-            async () => {
-                try {
-                    const query = `${(sector as Record<string, any>).name} Africa sector trends outlook`;
-                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as Record<string, any>).data[0];
-                    const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-                    const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
-
-                    if (!context) return "Sector data currently being aggregated.";
-
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Sector: ${(sector as Record<string, any>).name}. recent Context:\n${context}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.5 });
-                    return aiResponse?.trim();
-                } catch (e) { return null; }
-            },
-            { ttl: 3600 * 24 } // Cache for 24h
-        )
+        ai_trend_analysis: cachedTrend || evidenceFallback,
     });
 });
 

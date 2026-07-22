@@ -10,11 +10,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center uppercase tracking-[0.04em] font-sans font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E0C0A]",
+  "inline-flex items-center justify-center uppercase tracking-[0.04em] font-sans font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   {
     variants: {
       variant: {
-        primary: "bg-gradient-to-br from-[#C9A84C] to-[#E8C96A] text-card shadow-[0_4px_24px_rgba(201,168,76,0.3)]",
+        primary: "bg-accent text-white hover:bg-navy-mid",
         ghost: "bg-transparent border border-accent/40 text-accent hover:bg-accent/10",
       },
       size: {
@@ -39,9 +39,6 @@ export const GoldButton = React.forwardRef<HTMLButtonElement, GoldButtonProps>(
       <motion.button
         ref={ref}
         className={cn(buttonVariants({ variant, size, className }))}
-        whileHover={{ scale: 1.02, boxShadow: variant === 'primary' ? '0 8px 32px rgba(201,168,76,0.4)' : '0 4px 16px rgba(201,168,76,0.15)' }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
         {...props}
       >
         {children}

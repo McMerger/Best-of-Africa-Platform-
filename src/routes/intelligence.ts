@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, CountryReport, AudienceInsights } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 import { validate, CountryCodeParamSchema, UuidParamSchema, AiChatSchema, AiReframeSchema, AiReformatSchema } from '../lib';
 import { z } from 'zod';
@@ -38,7 +38,9 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
 
   // Get country first (quick lookup, no cache needed)
   const country = await c.env.DB.prepare(
-    'SELECT * FROM countries WHERE code = ?'
+    `SELECT code, name, region, COALESCE(flag_emoji, '') AS flag_emoji,
+            COALESCE(NULLIF(description, ''), name || ' country reporting evidence from BOA-Story.') AS description
+     FROM countries WHERE code = ?`
   ).bind(code).first();
 
   if (!country) {
@@ -55,15 +57,13 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         articleCount,
         topSectors,
         recentArticles,
-        viewStats,
-        sectorSentiment,
       ] = await Promise.all([
         c.env.DB.prepare(
           "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
         ).bind(code).first<{ total: number }>(),
 
         c.env.DB.prepare(`
-          SELECT s.id, s.name, s.icon, COUNT(a.id) as count
+          SELECT s.id, s.name, COALESCE(s.icon, 'bar-chart') AS icon, COUNT(a.id) as count
           FROM sectors s
           JOIN articles a ON a.sector_id = s.id
           WHERE a.country_code = ? AND a.status = 'published'
@@ -73,27 +73,14 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         `).bind(code).all(),
 
         c.env.DB.prepare(`
-          SELECT id, slug, title, summary, sector_id, published_at, engagement_score
+          SELECT id, slug, title, COALESCE(summary, title) AS summary,
+                 COALESCE(sector_id, 'general') AS sector_id,
+                 COALESCE(published_at, updated_at, created_at) AS published_at,
+                 COALESCE(engagement_score, 0) AS engagement_score
           FROM articles
           WHERE country_code = ? AND status = 'published'
           ORDER BY published_at DESC
           LIMIT 10
-        `).bind(code).all(),
-
-        c.env.DB.prepare(`
-          SELECT 
-            SUM(view_count) as total_views,
-            AVG(engagement_score) as avg_engagement,
-            AVG(avg_read_time_seconds) as avg_read_time
-          FROM articles
-          WHERE country_code = ? AND status = 'published'
-        `).bind(code).first(),
-
-        c.env.DB.prepare(`
-          SELECT sector_id, AVG(engagement_score) as sentiment
-          FROM articles
-          WHERE country_code = ? AND status = 'published'
-          GROUP BY sector_id
         `).bind(code).all(),
       ]);
 
@@ -105,12 +92,16 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
         WHERE a.id IS NULL
       `).bind(code).all<{ name: string }>();
 
-      // Calculate scores
-      const engagementScore = (viewStats as Record<string, any>)?.avg_engagement || 0;
-      const investmentScore = Math.min(100, (articleCount?.total || 0) * 10 + engagementScore * 20);
-      const tourismScore = topSectors.results?.some((s: any) => s.id === 'tourism')
-        ? Math.min(100, engagementScore * 30 + 50)
-        : 30;
+      const recommendationKey = `intel:country:${code}:recommendations:v2`;
+      const cachedRecommendations = await getCachedValue<string[]>(c.env, recommendationKey);
+      const recommendationFallback = (recentArticles.results as any[]).slice(0, 3).map((article, index) =>
+        `${index + 1}. Verify the institutions, dates and primary documents behind “${article.title}”. The BOA-Story record was published ${article.published_at || 'on an unrecorded date'} and should be checked against current official, regulatory and financial evidence before a decision.`
+      );
+      if (!cachedRecommendations && recentArticles.results?.length) {
+        c.executionCtx.waitUntil(
+          getCached(c.env, recommendationKey, () => generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []), { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+      }
 
       return {
         country: country as any,
@@ -120,11 +111,15 @@ router.get('/country/:code/report', validate('param', CountryCodeParamSchema), a
           count: s.count,
         })),
         recent_articles: recentArticles.results as any || [],
-        sentiment_score: Math.round(engagementScore * 100) / 100,
-        investment_readiness_score: Math.round(investmentScore),
-        tourism_appeal_score: Math.round(tourismScore),
+        evidence_profile: {
+          published_articles: Number(articleCount?.total || 0),
+          sectors_represented: (topSectors.results || []).length,
+          source_records_reviewed: (recentArticles.results || []).length,
+          latest_reported_at: (recentArticles.results?.[0] as Record<string, any> | undefined)?.published_at || 'No published country record',
+        },
+        methodology: 'BOA-Story does not infer sentiment, investment readiness or tourism appeal from article count, engagement or sector mentions. Use the source-linked recommendations and primary evidence instead.',
         narrative_gaps: (gaps.results || []).map((g: any) => g.name),
-        recommendations: await generateAIRecommendations(c.env, (country as Record<string, any>).name, recentArticles.results || []),
+        recommendations: cachedRecommendations || recommendationFallback,
       } as CountryReport;
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -181,7 +176,7 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
-          SELECT a.id, a.slug, a.title, a.country_code, c.name as country_name,
+          SELECT a.id, a.slug, a.title, a.summary, a.source_url, a.country_code, c.name as country_name,
                  a.view_count, a.engagement_score, a.published_at
           FROM articles a
           JOIN countries c ON a.country_code = c.code
@@ -200,30 +195,37 @@ router.get('/sector/:id/trends', validate('param', UuidParamSchema), async (c) =
         `).bind(sectorId).all(),
       ]);
 
-      const aiReport = await getCached(
-        c.env,
-        CACHE_KEYS.intelSectorAnalysis(sectorId),
-        async () => {
-          const headlines = (topArticles.results as any[]).slice(0, 10).map(a => `- ${a.title} (Engagement: ${a.engagement_score})`).join('\n');
-          if (!headlines) return "Insufficient data for deep analysis.";
+      const sectorAnalysisKey = CACHE_KEYS.intelSectorAnalysis(sectorId);
+      const generateSectorReport = async () => {
+          const evidence = (topArticles.results as any[]).slice(0, 10).map((article, index) =>
+            `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nCoverage engagement: ${article.engagement_score ?? 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
+          ).join('\n---\n');
+          if (!evidence) return "Insufficient evidence for deep analysis.";
 
           try {
-            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Based on these top performing articles:\n${headlines}\n\nIdentify 3 detailed growth signals and 2 potential regulatory risks. Use professional financial tone.`;
-            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
+            const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered reporting records. Cite records inline, distinguish facts from analysis, and treat engagement as audience activity rather than market performance. Do not call a development a growth signal or regulatory risk unless the record supports that classification.\nUser: Produce a sector evidence analysis with chronology, named actors, cross-country differences, operational and policy implications, counter-signals, limitations, and next diligence steps.\n\nRecords:\n${evidence}`;
+            const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
             return aiResponse?.trim();
           } catch (e) {
             return "Analysis currently unavailable.";
           }
-        },
-        { ttl: CACHE_TTL.INTEL }
-      );
+      };
+      const aiReport = await getCachedValue<string>(c.env, sectorAnalysisKey);
+      if (!aiReport && topArticles.results?.length) {
+        c.executionCtx.waitUntil(
+          getCached(c.env, sectorAnalysisKey, generateSectorReport, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+      }
+      const immediateSectorReport = (topArticles.results as any[]).slice(0, 6).map((article, index) =>
+        `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+      ).join('\n\n') || `The sector report is grounded in the country, regional and monthly coverage records returned with this response.`;
 
       return {
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         monthly_trend: monthlyTrend.results || [],
         top_articles: topArticles.results || [],
-        ai_analyst_report: aiReport
+        ai_analyst_report: aiReport || immediateSectorReport
       };
     },
     { ttl: CACHE_TTL.INTEL } // 30 minutes
@@ -410,7 +412,7 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     // 2. Search Vector Database (RAG)
     // Query best-of-africa-content index
     const vectorResults = await c.env.VECTORS.query(queryVector, {
-      topK: 5,
+      topK: 10,
       returnMetadata: true
     });
 
@@ -418,21 +420,29 @@ router.post('/ai-chat', validate('json', AiChatSchema), async (c) => {
     const matches = vectorResults.matches || [];
     const contextDocs = matches.map(m => {
       const meta = m.metadata as Record<string, any>;
-      return `Title: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nDate: ${meta.published_at}`;
+      return `[Source ${m.id}]\nTitle: ${meta.title || 'Unknown'}\nSnippet: ${meta.text || ''}\nPublished: ${meta.published_at || 'date unavailable'}\nURL: ${meta.source_url || meta.url || 'URL unavailable'}`;
     }).join('\n---\n');
 
-    // 4. Generate Response with Gemini
-    const systemPrompt = `You are the AI Market Consultant for "BOA-Story", a strategic storytelling platform. 
-    Current Date: ${new Date().toLocaleDateString()}.
-    Use the provided Real-Time Context to answer the user's question about African markets. 
-    If the context is relevant, cite it. If not, rely on your general knowledge but mention you are missing specific real-time data on that niche.
-    Be professional, concise, and investor-focused.
+    // 4. Generate the evidence response with the enforced information model.
+    const systemPrompt = `You are the research synthesis layer for BOA-Story. Current date: ${new Date().toISOString().slice(0, 10)}.
+
+Write a detailed, decision-useful answer using ONLY the supplied evidence. Never fill gaps with general knowledge, invented figures, assumed market conditions, or generic claims such as "the outlook remains stable". Cite claims inline as [Source ID]. Distinguish reported facts from your synthesis.
+
+Use this structure when the evidence supports it:
+1. Direct answer — a precise 2-4 sentence conclusion.
+2. Evidence — dated facts, actors, amounts and locations, each with citations.
+3. Context and chronology — what changed and when.
+4. Implications — separately for investors/operators and government/policy users; label these as analysis.
+5. Counter-evidence and uncertainty — contradictions, missing records and source limitations.
+6. What to verify next — concrete primary documents or data needed for diligence.
+
+Aim for 3,200-4,800 words when evidence is sufficiently rich. Include an evidence boundary, full chronology, documented mechanisms, implementation status, named stakeholders, first-, second- and conditional-order implications, alternative explanations, counter-evidence, source limitations, a full claim ledger and prioritized verification steps. If the retrieved record is thin, do not pad the response: explain exactly what is missing and provide a shorter answer. Never issue an investment recommendation, country-risk score, forecast, safety rating or probability unless the supplied evidence contains a dated methodology supporting it.
     
     REAL-TIME CONTEXT FROM DATABASE:
     ${contextDocs}`;
 
     const prompt = `System: ${systemPrompt}\nUser: ${message}`;
-    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.5 });
+    const llmResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
 
     return c.json({
       response: llmResponse,
@@ -541,13 +551,22 @@ router.post('/reformat', validate('json', AiReformatSchema), async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 async function generateAIRecommendations(env: Env, countryName: string, articles: any[]): Promise<string[]> {
   try {
-    const topStories = articles.slice(0, 3).map(a => a.title).join('; ');
+    const evidence = articles.slice(0, 12).map((article, index) =>
+      `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}`
+    ).join('\n\n');
+    if (!evidence) return [];
 
-    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Country: ${countryName}. News: ${topStories}`;
-    const text = await callConfiguredAI(env, { prompt, max_tokens: 200, temperature: 0.5 });
+    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records. Do not infer market growth, investment readiness, political stability or tourism appeal from article volume or engagement. Distinguish reported facts from analysis and cite record numbers inline.
 
-    // Parse response (simple heuristic)
-    return (text || '').split('\n').filter((l: string) => l.includes('- ')).map((l: string) => l.replace(/^- /, '').trim()).slice(0, 3);
+User: Produce exactly three substantive next-step recommendations for a reader researching ${countryName}. Each recommendation must be 500-700 words and contain: the supported finding, named actors and dates, documented mechanism, affected stakeholders, immediate and conditional implications, a counter-signal or alternative explanation, evidence limitations, and concrete primary-source verification steps. If a recommendation cannot be supported, explain the missing evidence instead. Return ONLY a valid JSON array of three strings.
+
+RECORDS:
+${evidence}`;
+    const text = await callConfiguredAI(env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
+
+    const jsonMatch = (text || '').match(/\[[\s\S]*\]/);
+    const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    return Array.isArray(parsed) ? parsed.filter(item => typeof item === 'string' && item.trim()).slice(0, 3) : [];
 
   } catch (e) {
     return [];

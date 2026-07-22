@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DesktopIcon, PersonIcon, StarIcon, PaperPlaneIcon } from '@radix-ui/react-icons';
 import { Badge } from '@/components/ui/badge';
+import { EditorialContent } from '@/components/EditorialContent';
 
 
 interface IntelligenceSidebarProps {
@@ -106,9 +107,11 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({ open, 
                                     : 'bg-background text-foreground'
                                     }`}>
                                     <span className="block mb-1 text-[10px] font-bold uppercase tracking-widest opacity-50">
-                                        {msg.role === 'system' ? 'Analysis' : 'Input'}
+                                        {msg.role === 'user' ? 'Your question' : 'Briefing'}
                                     </span>
-                                    {msg.content}
+                                    {msg.role === 'user'
+                                      ? msg.content
+                                      : <EditorialContent content={msg.content} className="editorial-content-compact" />}
                                 </div>
                             </div>
                         ))}

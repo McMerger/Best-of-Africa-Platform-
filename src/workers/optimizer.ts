@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, OptimizationMessage } from '../types';
-import { generateHeadlineVariants, fillNarrativeGap } from '../lib/ai';
+import { generateHeadlineVariants, fillNarrativeGap, MODELS } from '../lib/ai';
 import { findNarrativeGaps, indexArticle } from '../lib/vectorize';
 import { updateArticleEngagement } from '../lib/analytics';
 
@@ -113,15 +113,15 @@ export async function processOptimizationTask(
                 await env.DB.prepare(`
                     INSERT INTO articles (
                         id, slug, title, subtitle, content, summary,
-                        country_code, sector_id, tags,
-                        status, published_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
+                        country_code, sector_id, tags, generation_model,
+                        status, moderation_status, published_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL)
                 `).bind(
                     articleId, slug,
                     generated.title, generated.subtitle,
                     generated.content, generated.summary,
                     message.country_code, message.sector_id,
-                    JSON.stringify(generated.tags)
+                    JSON.stringify(generated.tags), MODELS.TEXT_GENERATION
                 ).run();
             }
         } else {

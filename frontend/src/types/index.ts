@@ -12,6 +12,8 @@ export interface Country {
     tourism_highlights: string[];
     flag_emoji: string;
     hero_image_url: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     diplomacy_score: number;
     image_strength_score: number;
     fdi_inflow_usd?: number;
@@ -43,14 +45,33 @@ export interface Article {
     sector_id: string;
     tags: string[];
     hero_image_url: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     reading_time_minutes: number;
     view_count: number;
     engagement_score: number;
     published_at: string;
     is_sponsored: boolean;
     // Optional fields populated by the API depending on context / member status
+    // The single-article endpoint JOINs country + sector and merges these in.
+    country_name?: string;
+    flag_emoji?: string;
+    sector_name?: string;
+    sector_icon?: string;
     author_name?: string;
     paywall?: boolean;
+    // Provenance: the original reporting this brief is based on.
+    source_url?: string | null;
+    source_title?: string | null;
+    source_published_at?: string | null;
+    // Two-tier content model: 1 = human-reviewed magazine story (personal
+    // byline, preferred on the front), 0 = automated briefing coverage.
+    curated?: number;
+    // Languages of the served blocks ('en' | 'fr' | 'ar' | 'pt'). Titles and
+    // standfirsts are overlaid from stored translations when available; bodies
+    // stay English until long-form translations are regenerated properly.
+    title_language?: string;
+    content_language?: string;
     meta_title?: string;
     meta_description?: string;
     ai_sentiment_score?: number;
@@ -62,7 +83,13 @@ export interface Article {
     generation_prompt_version?: string;
     ai_headline_variants?: string;
     ai_video_url?: string;
-    ai_context?: { key_takeaways: string[]; strategic_implication: string };
+    ai_context?: {
+        key_takeaways: string[];
+        strategic_implication: string;
+        limitations?: string[];
+        diligence_questions?: string[];
+        claim_ledger?: string[];
+    };
 }
 
 export interface CalendarEvent {
@@ -95,13 +122,16 @@ export interface ArticleListItem {
     sector_id: string;
     sector_name: string;
     hero_image_url: string;
-    ai_image_url?: string;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     ai_video_url?: string;
     audio_url?: string;
     audio_duration_seconds?: number;
     reading_time_minutes: number;
     published_at: string;
     engagement_score?: number;
+    // 1 = human-reviewed magazine story (personal byline), 0 = briefing coverage.
+    curated?: number;
 }
 
 export interface Dashboard {
@@ -165,12 +195,10 @@ export interface SearchResult {
 
 export interface PlatformAnalytics {
     market_summary: string;
-    stability_index: string;
-    stability_score: number;
-    sentiment_pct: number;
-    sentiment_trend: 'up' | 'down';
-    sector_trends: { id: string; name: string; trend: string; article_count: number }[];
+    sector_trends: { id: string; name: string; trend: 'coverage_up' | 'coverage_down' | 'coverage_flat'; article_count: number; previous_article_count: number; coverage_change: number }[];
     total_articles_7d: number;
+    coverage: { countries_7d: number; sectors_7d: number; source_records_7d: number; previous_articles_7d: number; coverage_change_7d: number; total_views_7d: number; audience_response: number; latest_reported_at: string };
+    methodology: string;
     updated_at: string;
 }
 

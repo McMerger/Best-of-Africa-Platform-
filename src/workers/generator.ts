@@ -4,14 +4,12 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
-import { generateArticle as generateArticleContent, identifyCountry, identifySector, analyzeSentiment, generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
-import { uploadImage } from '../lib/media';
-import { indexArticle } from '../lib/vectorize';
+import { generateArticle as generateArticleContent, identifyCountry, identifySector, generateArticleImage, buildHeroPrompt, ARTICLE_PROMPT_VERSION, MODELS } from '../lib/ai';
+import { uploadImage, uploadArticleHero, makeHeroVariant, heroVariantKey } from '../lib/media';
+import { generateAudioNarration } from '../lib/audio';
 import { autoTranslateArticle } from '../lib/translate';
-import { onArticlePublished } from '../lib/alerts';
-import { autoPostArticle } from '../lib/social';
 import { checkContentIntegrity } from '../lib';
-import { fullEnrich } from '../lib/enrichment';
+import { publisherNameForArticle } from '../lib/source-attribution';
 
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -30,7 +28,7 @@ export async function generateArticleFromQueue(
     try {
         // Get ingested item
         const item = await env.DB.prepare(`
-      SELECT i.*, s.country_code as source_country, s.sector_id as source_sector
+      SELECT i.*, s.country_code as source_country, s.sector_id as source_sector, s.name as source_name
       FROM ingested_items i
       LEFT JOIN sources s ON i.source_id = s.id
       WHERE i.id = ?
@@ -48,16 +46,33 @@ export async function generateArticleFromQueue(
 
         const itemData = item as Record<string, any>;
 
-        // Identify country and sector if not provided by source
-        let countryCode = itemData.source_country;
-        let sectorId = itemData.source_sector;
+        // Classify the story itself. A publisher's home country or default beat is
+        // provenance, not evidence that every syndicated story concerns that market.
+        const countryCode = await identifyCountry(env, itemData.title || '', itemData.content || '');
+        const sectorId = await identifySector(env, itemData.title || '', itemData.content || '');
 
-        if (!countryCode) {
-            countryCode = await identifyCountry(env, itemData.title, itemData.content || '');
-        }
-
-        if (!sectorId) {
-            sectorId = await identifySector(env, itemData.title, itemData.content || '');
+        // ── Fair-share guard ──────────────────────────────────────────────────
+        // The mission is balanced coverage of all 54 nations, but the news feed
+        // mirrors mainstream media's heavy Nigeria/South-Africa bias. Without a
+        // check, scarce AI budget keeps piling onto already-saturated countries
+        // while most of the continent stays under-covered. Probabilistically skip
+        // items for over-represented countries (more skew → higher skip rate, but
+        // always let ~15% through so genuine news still lands) BEFORE spending any
+        // generation budget, freeing it for under-covered nations.
+        if (countryCode) {
+            const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM articles WHERE country_code = ?').bind(countryCode).first();
+            const n = ((row as Record<string, any>)?.n as number) || 0;
+            const FAIR_SHARE = 600; // generous per-country ceiling before throttling kicks in
+            if (n > FAIR_SHARE) {
+                const skipProb = Math.min(0.85, 1 - FAIR_SHARE / n);
+                if (Math.random() < skipProb) {
+                    await env.DB.prepare(
+                        "UPDATE ingested_items SET status = 'rejected', rejection_reason = ? WHERE id = ?"
+                    ).bind(`fair-share skip: ${countryCode} already has ${n} articles`, message.ingested_item_id).run();
+                    console.log(`Fair-share skip: ${countryCode} (${n} articles) to keep pan-African coverage balanced`);
+                    return;
+                }
+            }
         }
 
         // Get country and sector names for prompt
@@ -74,8 +89,8 @@ export async function generateArticleFromQueue(
             sectorName = (sector as Record<string, any>)?.name;
         }
 
-        // Direct generation on the backend using Gemini
-        console.log(`Generating article synchronously on the backend using Gemini...`);
+        // Direct generation on the backend using the enforced information model.
+        console.log(`Generating article synchronously on the backend using ${MODELS.TEXT_GENERATION}...`);
 
         // Generate article content
         const generated = await generateArticleContent(
@@ -90,21 +105,8 @@ export async function generateArticleFromQueue(
             throw new Error('generateArticle returned empty title or content');
         }
 
-        // Enrich the article with intelligence data
-        if (countryName) {
-            try {
-                console.log(`Enriching article for ${countryName}...`);
-                const enrichmentMarkdown = await fullEnrich(env, countryName, sectorName ?? undefined);
-                if (enrichmentMarkdown) {
-                    generated.content += enrichmentMarkdown;
-                }
-            } catch (err) {
-                console.error('Article enrichment failed:', err);
-            }
-        }
-
         const articleId = crypto.randomUUID();
-        const readingTime = Math.ceil(generated.content.split(/\\s+/).length / 200);
+        const readingTime = Math.max(1, Math.ceil(generated.content.split(/\s+/).length / 200));
         const slug = generateSlug(generated.title);
 
         await env.DB.prepare(`
@@ -112,9 +114,10 @@ export async function generateArticleFromQueue(
                 id, slug, title, subtitle, content, summary,
                 country_code, sector_id, tags,
                 reading_time_minutes, source_url, source_title, source_published_at,
-                generation_prompt_version,
-                status, published_at, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                hero_image_url, image_credit, image_source_url,
+                generation_model, generation_prompt_version, ai_investor_brief,
+                status, moderation_status, published_at, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL, datetime('now'))
         `).bind(
             articleId, slug,
             generated.title,
@@ -126,43 +129,38 @@ export async function generateArticleFromQueue(
             generated.tags ? JSON.stringify(generated.tags) : '[]',
             readingTime,
             itemData.url           ?? null,
-            itemData.title         ?? null,
+            publisherNameForArticle(itemData),
             itemData.published_at  ?? null,
+            itemData.image_url ?? null,
+            itemData.image_url ? (itemData.image_credit || itemData.source_name) : null,
+            itemData.image_url ? (itemData.image_source_url || itemData.url) : null,
+            MODELS.TEXT_GENERATION,
             ARTICLE_PROMPT_VERSION,
+            generated.investor_brief,
         ).run();
 
         // Mark as completed
         await env.DB.prepare(`
-            UPDATE ingested_items SET status = 'completed' WHERE id = ?
-        `).bind(message.ingested_item_id).run();
+            UPDATE ingested_items SET status = 'completed', article_id = ? WHERE id = ?
+        `).bind(articleId, message.ingested_item_id).run();
 
-        console.log(`Successfully generated and published article: ${articleId} from item: ${message.ingested_item_id}`);
+        console.log(`Successfully generated article pending editorial audit: ${articleId} from item: ${message.ingested_item_id}`);
 
-        // Async follow-up tasks (Image, Translation, Vector indexing)
+        // Async preparation tasks. Search indexing and distribution wait for approval.
         // We do this in the background so it doesn't block the queue consumer.
         // For queue consumers, waitUntil is not explicitly needed if the worker stays alive,
         // but we'll await them to ensure they complete within the generous queue limits.
+        // Audio narration ships with the article (the UI shows Listen buttons on
+        // every card — audio must exist, not be a member-gated maybe).
         try {
-            const imagePrompt = `African editorial photography: \${generated.title}. Photojournalistic, high quality.`;
-            const imageBuffer = await generateArticleImage(env, imagePrompt);
-            if (imageBuffer) {
-                const imageKey = `articles/\${articleId}/hero.png`;
-                const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
-                if (imageUrl) {
-                    await env.DB.prepare('UPDATE articles SET ai_image_url = ? WHERE id = ?').bind(imageUrl, articleId).run();
-                }
-            }
-        } catch (err) { console.error('Image gen failed:', err); }
+            await generateAudioNarration(env, articleId, generated.title, generated.content);
+        } catch (err) { console.error('Audio gen failed:', err); }
 
         try {
             await autoTranslateArticle(env, articleId, {
                 title: generated.title, subtitle: generated.subtitle, summary: generated.summary, content: generated.content, country_code: countryCode ?? null,
             });
         } catch (err) { console.error('Translation failed:', err); }
-
-        try {
-            await indexArticle(env, articleId, generated.title, generated.content, { country_code: countryCode ?? null, sector_id: sectorId ?? null });
-        } catch (err) { console.error('Vectorization failed:', err); }
 
     } catch (error) {
         console.error('Article generation failed:', error);
@@ -179,6 +177,292 @@ export async function generateArticleFromQueue(
 
 // Alias for queue handler compatibility
 export const generateArticle = generateArticleFromQueue;
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Pending-item Recovery (Cron)
+//
+// Items are inserted as 'pending' and immediately enqueued to CONTENT_QUEUE. If
+// the generation step is down (e.g. Workers AI quota exhausted → circuit breaker
+// OPEN), those queue messages fail and dead-letter, leaving the ingested_item
+// stranded at 'pending' forever — and dedup stops re-ingestion from re-queuing it.
+// This re-enqueues the oldest stranded items in a small bounded batch so the
+// backlog drains automatically once generation capacity returns.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function recoverPendingItems(env: Env, limit = 10): Promise<number> {
+    // Don't flood the queue while text generation is down (breaker OPEN) — there's
+    // no point re-enqueuing into a failing AI. Resumes automatically once the
+    // breaker closes (AI capacity restored).
+    try {
+        const cb = await env.CACHE.get('cb:ai-text-gen', 'json') as { state?: string } | null;
+        if (cb?.state === 'OPEN') {
+            console.log('[generator] Skipping recovery: ai-text-gen breaker is OPEN.');
+            return 0;
+        }
+    } catch { /* KV unavailable — proceed */ }
+
+    const stranded = await env.DB.prepare(`
+        SELECT id, source_id
+        FROM ingested_items
+        WHERE status = 'pending'
+          AND article_id IS NULL
+          AND created_at < datetime('now', '-15 minutes')
+        ORDER BY created_at ASC
+        LIMIT ?
+    `).bind(limit).all<{ id: string; source_id: string }>();
+
+    const rows = stranded.results || [];
+    for (const r of rows) {
+        await env.CONTENT_QUEUE.send({
+            type: 'generate_article', ingested_item_id: r.id, source_id: r.source_id, priority: 'normal',
+        });
+    }
+    if (rows.length) console.log(`[generator] Re-enqueued ${rows.length} stranded pending item(s).`);
+    return rows.length;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Hero-image backfill (Cron — every minute, small batch)
+//
+// A third of the archive was published while Workers AI image generation was
+// over quota, leaving hero_image_url empty (the UI shows category fallbacks).
+// This works newest-first so the most-visible articles get real imagery first,
+// and stops the batch on the first failure (model unavailable / breaker open)
+// so it never burns the budget in a down period. Self-terminates once the
+// backlog is empty.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillHeroImages(env: Env, batch = 5): Promise<number> {
+    // Retained as a compatibility no-op for older scheduled deployments.
+    // BOA no longer generates or backfills synthetic editorial photography.
+    void env; void batch;
+    return 0;
+    /* c8 ignore start */
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, sector_id
+        FROM articles INDEXED BY idx_articles_hero_missing
+        WHERE status = 'published' AND (hero_image_url IS NULL OR hero_image_url = '')
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; sector_id: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
+            const imageBuffer = await generateArticleImage(env, imagePrompt);
+            if (!imageBuffer) break; // model unavailable — retry next cron tick
+            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer!);
+            if (imageUrl) {
+                await env.DB.prepare('UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?').bind(imageUrl, a.id).run();
+                done++;
+            }
+        } catch (err) {
+            console.error('[backfill-hero] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-hero] Generated ${done} hero image(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Hero regeneration (Cron — every minute, small batch)
+//
+// The archive's heroes were generated by SDXL-lightning (plastic AI-stock
+// look); the pipeline now uses FLUX.1-schnell (verified photographic quality).
+// Regenerates hero_regen=0 articles MOST-VISIBLE FIRST (curated, then by
+// views, then recency) so the front of the site improves within hours while
+// the long tail follows. Marks rows even when generation is skipped-as-done
+// only on success; on model failure it stops the batch and retries next tick.
+// Self-terminates when the whole archive is flux-era.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function regenerateHeroImages(env: Env, batch = 5): Promise<number> {
+    // Retained as a compatibility no-op for older scheduled deployments.
+    void env; void batch;
+    return 0;
+    /* c8 ignore start */
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, sector_id
+        FROM articles INDEXED BY idx_articles_regen_pending
+        WHERE status = 'published' AND (hero_regen IS NULL OR hero_regen = 0)
+        ORDER BY curated DESC, view_count DESC, published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; sector_id: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const imagePrompt = buildHeroPrompt(a.title, a.sector_id, a.summary);
+            const imageBuffer = await generateArticleImage(env, imagePrompt);
+            if (!imageBuffer) break; // model unavailable — retry next cron tick
+            const imageUrl = await uploadArticleHero(env, a.id, imageBuffer!);
+            if (imageUrl) {
+                await env.DB.prepare(
+                    'UPDATE articles SET hero_image_url = ?, hero_variant = 1, hero_regen = 1 WHERE id = ?'
+                ).bind(imageUrl, a.id).run();
+                done++;
+            }
+        } catch (err) {
+            console.error('[regen-hero] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[regen-hero] Regenerated ${done} hero image(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Hero-variant backfill (Cron — every minute, small batch)
+//
+// Articles whose heroes predate variant generation ship a 1024² (~170KB) image
+// to phones. This walks hero_variant=0 articles newest-first, resizes the
+// stored original to the 768w JPEG variant, and marks the row. No AI involved;
+// self-terminates when every hero has a variant.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillHeroVariants(env: Env, batch = 4): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, hero_image_url
+        FROM articles INDEXED BY idx_articles_variant_missing
+        WHERE status = 'published'
+          AND hero_image_url LIKE '%/assets/articles/%'
+          AND (hero_variant IS NULL OR hero_variant = 0)
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; hero_image_url: string }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const key = decodeURIComponent(a.hero_image_url.replace(/^.*\/assets\//, ''));
+            const obj = await env.MEDIA.get(key);
+            if (obj) {
+                const bytes = new Uint8Array(await obj.arrayBuffer());
+                const variant = await makeHeroVariant(bytes);
+                if (variant) await uploadImage(env, heroVariantKey(key), variant, 'image/jpeg');
+                // Mark done even when no variant was produced (source ≤768w or
+                // undecodable) so the cron never loops on the same rows.
+            }
+            await env.DB.prepare('UPDATE articles SET hero_variant = 1 WHERE id = ?').bind(a.id).run();
+            done++;
+        } catch (err) {
+            console.error('[backfill-variant] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-variant] Processed ${done} hero variant(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Audio-narration backfill (Cron — every minute, small batch)
+// ───────────────────────────────────────────────────────────────────────────────
+// Sector Backfill (Cron — per-minute, self-terminating)
+//
+// ~6k older articles predate sector assignment (sector_id NULL), making them
+// invisible to sector filters, trends and kickers. Classify newest-first with
+// the text model; stories that fit no business sector (sports, culture,
+// politics, human interest) get the honest 'general' sector — a real sectors
+// row, so the FK holds and the article permanently leaves the NULL queue.
+// ───────────────────────────────────────────────────────────────────────────────
+const SECTOR_IDS = ['tourism', 'energy', 'agriculture', 'technology', 'infrastructure', 'finance', 'manufacturing', 'healthcare'];
+
+export async function backfillSectors(env: Env, batch = 8): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary FROM articles INDEXED BY idx_articles_sector_missing
+        WHERE status = 'published' AND sector_id IS NULL
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const { MODELS } = await import('../lib/ai');
+            const res = await (env.AI as Record<string, any>).run(MODELS.FAST_TEXT_GENERATION, {
+                messages: [
+                    { role: 'system', content: 'Classify the news item into exactly one sector id from: tourism, energy, agriculture, technology, infrastructure, finance, manufacturing, healthcare. If none fits (sports, culture, politics, human interest), reply none. Reply with the single word only.' },
+                    { role: 'user', content: `${a.title}\n\n${(a.summary || '').slice(0, 300)}` },
+                ],
+                max_tokens: 8,
+                temperature: 0,
+            });
+            const out = String((res as Record<string, any>)?.response || '').toLowerCase();
+            const sector = SECTOR_IDS.find(s => out.includes(s)) || 'general';
+            await env.DB.prepare('UPDATE articles SET sector_id = ? WHERE id = ?').bind(sector, a.id).run();
+            done++;
+        } catch (err) {
+            console.error('[backfill-sectors] failed for', a.id, err);
+            break; // model unavailable — retry next tick
+        }
+    }
+    if (done) console.log(`[backfill-sectors] Classified ${done} article(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Audio Backfill (Cron — per-minute, self-terminating)
+//
+// Audio was member-gated and on-demand only, and its stored URLs pointed at the
+// disabled r2.dev subdomain — so despite Listen buttons on every card, zero
+// articles had working audio. Narrates the summary (short, cheap) newest-first;
+// self-terminates when every published article has audio.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function backfillAudio(env: Env, batch = 3): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, content
+        FROM articles INDEXED BY idx_articles_audio_missing
+        WHERE status = 'published' AND (audio_url IS NULL OR audio_url = '')
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; content: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const res = await generateAudioNarration(env, a.id, a.title, a.content || a.summary || '');
+            if (!res) break; // TTS unavailable — retry next tick rather than loop
+            done++;
+        } catch (err) {
+            console.error('[backfill-audio] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[backfill-audio] Narrated ${done} article(s).`);
+    return done;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Audio Regeneration (Cron — per-minute, self-terminating)
+//
+// The first 5,680 narrations were MeloTTS — robotic, and the model died
+// server-side on 2026-07-09. Re-narrate them with the Deepgram Aura voice,
+// newest-first (they are the articles readers actually play), overwriting the
+// same R2 key so existing audio URLs keep working. Runs INSTEAD of the
+// coverage backfill each tick until the regen queue drains — fixing the voice
+// on audible articles beats adding audio to ones nobody has reached yet.
+// ───────────────────────────────────────────────────────────────────────────────
+export async function regenerateAudio(env: Env, batch = 3): Promise<number> {
+    const rows = await env.DB.prepare(`
+        SELECT id, title, summary, content
+        FROM articles INDEXED BY idx_articles_audio_regen
+        WHERE status = 'published' AND audio_url IS NOT NULL AND (audio_regen IS NULL OR audio_regen < 2)
+        ORDER BY published_at DESC
+        LIMIT ?
+    `).bind(batch).all<{ id: string; title: string; summary: string | null; content: string | null }>();
+
+    let done = 0;
+    for (const a of rows.results || []) {
+        try {
+            const res = await generateAudioNarration(env, a.id, a.title, a.content || a.summary || '');
+            if (!res) break; // TTS unavailable — retry next tick
+            done++;
+        } catch (err) {
+            console.error('[regen-audio] failed for', a.id, err);
+            break;
+        }
+    }
+    if (done) console.log(`[regen-audio] Re-narrated ${done} article(s) with Aura 2.`);
+    return done;
+}
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Stale Task Fallback (Cron — every 2 minutes)
@@ -243,18 +527,8 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                 throw new Error('generateArticle returned empty title or content');
             }
 
-            // Enrich the article with intelligence data
-            if (payload.country_name) {
-                try {
-                    console.log(`[generator] Enriching article for ${payload.country_name}...`);
-                    const enrichmentMarkdown = await fullEnrich(env, payload.country_name, payload.sector_name ?? undefined);
-                    if (enrichmentMarkdown) {
-                        generated.content += enrichmentMarkdown;
-                    }
-                } catch (err) {
-                    console.error('[generator] Article enrichment failed:', err);
-                }
-            }
+            const countryCode = await identifyCountry(env, payload.title || '', payload.content || '');
+            const sectorId = await identifySector(env, payload.title || '', payload.content || '');
 
             const articleId = crypto.randomUUID();
             const readingTime = Math.ceil(generated.content.split(/\s+/).length / 200);
@@ -265,35 +539,35 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     id, slug, title, subtitle, content, summary,
                     country_code, sector_id, tags,
                     reading_time_minutes, source_url, source_title, source_published_at,
-                    generation_prompt_version,
-                    status, published_at, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'), datetime('now'))
+                    generation_model, generation_prompt_version,
+                    status, moderation_status, published_at, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL, datetime('now'))
             `).bind(
                 articleId, slug,
                 generated.title,
                 generated.subtitle ?? null,
                 generated.content,
                 generated.summary ?? null,
-                payload.country_code ?? null,
-                payload.sector_id    ?? null,
+                countryCode,
+                sectorId,
                 generated.tags ? JSON.stringify(generated.tags) : '[]',
                 readingTime,
                 payload.url           ?? null,
                 payload.title         ?? null,
                 payload.published_at  ?? null,
+                MODELS.TEXT_GENERATION,
                 ARTICLE_PROMPT_VERSION,
             ).run();
 
             // 4. Image generation (independent — failure does not block article)
-            try {
-                const imagePrompt = `African editorial photography: ${generated.title}. Photojournalistic, high quality.`;
+            if (false) try {
+                const imagePrompt = buildHeroPrompt(generated.title, payload.sector_id ?? null, generated.summary);
                 const imageBuffer = await generateArticleImage(env, imagePrompt);
                 if (imageBuffer) {
-                    const imageKey = `articles/${articleId}/hero.png`;
-                    const imageUrl = await uploadImage(env, imageKey, imageBuffer, 'image/png');
+                    const imageUrl = await uploadArticleHero(env, articleId, imageBuffer!);
                     if (imageUrl) {
                         await env.DB.prepare(
-                            'UPDATE articles SET ai_image_url = ? WHERE id = ?'
+                            'UPDATE articles SET hero_image_url = ?, hero_variant = 1 WHERE id = ?'
                         ).bind(imageUrl, articleId).run();
                     }
                 } else {
@@ -310,23 +584,13 @@ export async function processStaleArticleTasks(env: Env): Promise<void> {
                     subtitle:     generated.subtitle,
                     summary:      generated.summary,
                     content:      generated.content,
-                    country_code: payload.country_code ?? null,
+                    country_code: countryCode,
                 });
             } catch (transErr) {
                 console.error(`[generator] Translation failed for article ${articleId}:`, transErr);
             }
 
-            // 6. Vector indexing (independent — failure does not block article)
-            try {
-                await indexArticle(env, articleId, generated.title, generated.content, {
-                    country_code: payload.country_code ?? null,
-                    sector_id:    payload.sector_id    ?? null,
-                });
-            } catch (vecErr) {
-                console.error(`[generator] Vectorization failed for article ${articleId}:`, vecErr);
-            }
-
-            // 7. Mark task done and update ingested_item status
+            // 6. Mark task done. Search indexing and distribution wait for approval.
             await env.DB.prepare(`
                 UPDATE agent_tasks
                 SET status = 'completed',

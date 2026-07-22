@@ -46,7 +46,7 @@ export async function generateCountryBrief(
 
     // Get recent articles
     const articles = await env.DB.prepare(`
-        SELECT a.title, a.summary, s.name as sector_name, a.published_at
+        SELECT a.title, a.summary, a.source_title, a.source_url, s.name as sector_name, a.published_at
         FROM articles a
         LEFT JOIN sectors s ON a.sector_id = s.id
         WHERE a.country_code = ? AND a.status = 'published'
@@ -67,18 +67,18 @@ export async function generateCountryBrief(
     const economics = await getKeyEconomicStats(env, countryCode);
 
     // Generate executive summary
-    const articleContext = (articles.results || []).slice(0, 5).map((a: any) =>
-        `${a.title}: ${a.summary?.slice(0, 100) || ''}`
+    const articleContext = (articles.results || []).slice(0, 10).map((a: any, index: number) =>
+        `[${index + 1}] ${a.published_at || 'date unavailable'} — ${a.title}\nSector: ${a.sector_name || 'unavailable'}\nSource: ${a.source_title || 'unavailable'} | ${a.source_url || 'URL unavailable'}\nEvidence: ${(a.summary || 'summary unavailable').slice(0, 1000)}`
     ).join('\n');
 
     let aiSummary = '';
     try {
-        const prompt = `System: You are a senior analyst writing executive country briefs for investors. Be concise and focus on opportunities and risks.
+        const prompt = `System: You are BOA-Story's country evidence editor. Be comprehensive, source-explicit and exact. Separate reported facts, analysis, uncertainty and missing evidence.
 
-User: Write a 3-4 paragraph executive summary for ${c.name} based on recent coverage:
+User: Write a full country evidence brief for ${c.name} based on recent coverage:
 
 ${articleContext}`;
-        aiSummary = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
+        aiSummary = (await callConfiguredAI(env, { prompt: `${prompt}\n\nUse only this evidence. Include chronology, exact named actors and figures, documented mechanisms, stakeholder effects, policy and operating implications, alternative explanations, counter-evidence, limitations, a claim ledger, and prioritized verification steps. Do not invent missing facts.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (e) {
         console.error('AI summary failed:', e);
     }
@@ -155,7 +155,7 @@ export async function generateSectorAnalysis(
 
     // Recent articles
     const articles = await env.DB.prepare(`
-        SELECT a.title, a.summary, c.name as country_name, a.published_at
+        SELECT a.title, a.summary, a.source_title, a.source_url, c.name as country_name, a.published_at
         FROM articles a
         LEFT JOIN countries c ON a.country_code = c.code
         WHERE a.sector_id = ? AND a.status = 'published'
@@ -166,15 +166,15 @@ export async function generateSectorAnalysis(
     // analysis
     let aiAnalysis = '';
     try {
-        const context = (articles.results || []).slice(0, 5).map((a: any) =>
-            `${a.title} (${a.country_name})`
+        const context = (articles.results || []).slice(0, 10).map((a: any, index: number) =>
+            `[${index + 1}] ${a.published_at || 'date unavailable'} — ${a.title}\nCountry: ${a.country_name || 'unavailable'}\nSource: ${a.source_title || 'unavailable'} | ${a.source_url || 'URL unavailable'}\nEvidence: ${(a.summary || 'summary unavailable').slice(0, 1000)}`
         ).join('\n');
 
-        const prompt = `System: You are a sector analyst. Provide a concise industry outlook with opportunities and trends.
+        const prompt = `System: You are BOA-Story's sector evidence editor. Produce a comprehensive, source-explicit analysis and separate facts, supported interpretation, uncertainty and missing evidence.
 
 User: Write a sector analysis for "${s.name}" across Africa based on:
 ${context}`;
-        aiAnalysis = (await callConfiguredAI(env, { prompt, max_tokens: 400 })) || '';
+        aiAnalysis = (await callConfiguredAI(env, { prompt: `${prompt}\n\nProduce a detailed evidence record: market context, dated developments, actors, documented mechanisms, country differences, regulatory implications, operational constraints, dependencies, counter-evidence, alternative explanations, limitations, claim ledger and further diligence. Do not estimate absent figures.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' })) || '';
     } catch (e) {
         console.error('AI analysis failed:', e);
     }
@@ -226,13 +226,13 @@ export function generateReportHTML(report: ReportData): string {
     <div class="header">
         <h1>${report.title}</h1>
         <div class="subtitle">${report.subtitle}</div>
-        <div class="date">Generated: ${new Date(report.generated_at).toLocaleDateString()}</div>
+        <div class="date">Prepared: ${new Date(report.generated_at).toLocaleDateString()}</div>
     </div>
     
     ${sectionsHTML}
     
     <div class="footer">
-        <p>This report was generated by the BOA-Story Platform.</p>
+        <p>Prepared by the BOA-Story briefing desk.</p>
         <p>© ${new Date().getFullYear()} BOA-Story. All rights reserved.</p>
     </div>
 </body>

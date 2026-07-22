@@ -5,8 +5,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, OptimizationMessage } from '../../types';
-import { generateHeadlineVariants, fillNarrativeGap } from '../../lib/ai';
-import { findNarrativeGaps, indexArticle } from '../../lib/vectorize';
+import { generateHeadlineVariants, fillNarrativeGap, MODELS } from '../../lib/ai';
+import { findNarrativeGaps } from '../../lib/vectorize';
 import { updateArticleEngagement } from '../../lib/analytics';
 
 
@@ -66,8 +66,8 @@ export async function fillContentGaps(env: Env): Promise<void> {
             meta_title, meta_description,
             reading_time_minutes,
             generation_model, generation_prompt_version,
-            status, published_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', datetime('now'))
+            status, moderation_status, published_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending_audit', 'pending', NULL)
         `).bind(
                     articleId,
                     slug,
@@ -81,16 +81,9 @@ export async function fillContentGaps(env: Env): Promise<void> {
                     generated.title,
                     generated.summary?.slice(0, 160),
                     readingTime,
-                    'gemini-2.5-pro',
+                    MODELS.TEXT_GENERATION,
                     'v1-gap-fill'
                 ).run();
-
-                // Index in Vectorize
-                await indexArticle(env, articleId, generated.title, generated.content, {
-                    country_code: c.code,
-                    sector_id: sector.id,
-                    published_at: new Date().toISOString(),
-                });
 
                 console.log(`Created gap-fill article: ${articleId}`);
 

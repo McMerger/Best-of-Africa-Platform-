@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '../../services/api';
 import { CalendarIcon, MapPinIcon, UsersIcon, ArrowRightIcon, CheckCircleIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
+import { stripMarkdown } from '@/lib/utils';
 
+// Local fallback imagery rotated by index so events without a hero_image_url
+// don't all share one (previously external, washed-out) photo.
 export const BetaEvents: React.FC = () => {
-    const { data: eventsData, isLoading } = useQuery({
+    const { data: eventsData, isLoading, isError, refetch } = useQuery({
         queryKey: ['events'],
         queryFn: () => api.getCorporateEvents()
     });
@@ -57,60 +60,53 @@ export const BetaEvents: React.FC = () => {
     };
 
     const events = eventsData?.data || [];
-    const { scrollY } = useScroll();
 
     return (
         <div className="min-h-screen bg-background text-foreground pb-24">
             <SEO 
                 title="Summits & Events | BOA-Story" 
-                description="Exclusive forums, summits, and executive roundtables focused on African markets."
+                description="Verified forums, summits, and roundtables focused on African markets when records are available."
             />
             
             {/* Header */}
-            <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-foreground/10">
-                <motion.div 
-                  className="absolute inset-0 z-0"
-                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
-                >
-                  <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-light z-20" />
-                  <img 
-                    src="/images/v2_events_concrete_1780371229306.png" 
-                    alt="African Executive Summit" 
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
-                  />
-                </motion.div>
-
-                <div className="max-w-6xl mx-auto w-full relative z-30">
-                    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
-                            <UsersIcon size={14} />
-                            Private Network
-                        </div>
-                        <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-                            Summits & <br className="hidden md:block"/>Executive Forums
+            <div className="app-hero border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
+                <div className="max-w-6xl mx-auto w-full">
+                    <div>
+                        <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story Network</p>
+                        <h1 className="max-w-3xl break-words text-foreground text-[clamp(2.35rem,11vw,4.5rem)] font-serif leading-[1.02] md:leading-[0.96] tracking-tight mb-6">
+                            Summits & Executive Forums
                         </h1>
-                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl leading-[1.8] drop-shadow-md">
-                            Connect with industry leaders, investors, and policymakers shaping the future of African markets at our curated events.
+                        <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
+                            Browse event records only when dates, locations and registration details are available from the event system.
                         </p>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
             {/* Event List */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 mt-16">
+            <div className="max-w-6xl mx-auto px-5 sm:px-6 mt-12 md:mt-14">
                 {isLoading ? (
-                    <div className="space-y-12">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-64 rounded-3xl bg-card border border-foreground/10 animate-pulse" />
-                        ))}
+                    <div className="rounded-xl border border-border bg-card p-8" role="status">
+                        <p className="mb-6 text-sm font-medium text-foreground/60">Loading scheduled events…</p>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="h-28 rounded-lg bg-muted animate-pulse" />
+                            ))}
+                        </div>
+                    </div>
+                ) : isError ? (
+                    <div className="text-center py-16 text-foreground/60 bg-card rounded-xl border border-foreground/10">
+                        <CalendarIcon className="w-10 h-10 mx-auto mb-5 opacity-50" />
+                        <h2 className="text-[2rem] font-serif mb-4">Event records could not be loaded</h2>
+                        <p className="mx-auto max-w-xl text-base leading-7">The service did not return a verified schedule. No placeholder events are being shown.</p>
+                        <Button type="button" variant="outline" onClick={() => refetch()} className="mt-6">Retry event records</Button>
                     </div>
                 ) : events.length === 0 ? (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-32 text-foreground/40 bg-card rounded-3xl border border-foreground/10 shadow-2xl">
-                        <CalendarIcon className="w-16 h-16 mx-auto mb-6 opacity-50" />
+                    <div className="text-center py-16 text-foreground/50 bg-card rounded-xl border border-foreground/10">
+                        <CalendarIcon className="w-10 h-10 mx-auto mb-5 opacity-50" />
                         <h2 className="text-[2rem] font-serif mb-4">No upcoming events</h2>
                         <p className="text-[1.125rem] font-light">Check back later for newly scheduled summits.</p>
-                    </motion.div>
+                    </div>
                 ) : (
                     <div className="grid gap-12">
                         {events.map((event: any, index: number) => (
@@ -120,17 +116,9 @@ export const BetaEvents: React.FC = () => {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: "-100px" }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="bg-card text-foreground rounded-3xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row shadow-2xl group hover:border-accent/30 transition-colors duration-500"
+                                className="bg-card text-foreground rounded-xl border border-foreground/10 overflow-hidden flex flex-col md:flex-row group hover:border-accent/30 transition-colors"
                             >
-                                <div className="md:w-5/12 relative overflow-hidden h-72 md:h-auto">
-                                    <div 
-                                        className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-1000"
-                                        style={{ backgroundImage: `url(${event.hero_image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800'})` }}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent md:hidden" />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-card hidden md:block" />
-                                </div>
-                                <div className="p-10 md:p-14 md:w-7/12 flex flex-col justify-center z-10">
+                                <div className="z-10 flex w-full flex-col justify-center p-5 sm:p-8 md:p-12">
                                     <div className="flex flex-wrap items-center gap-4 mb-6">
                                         <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full">
                                             {event.event_type}
@@ -141,12 +129,12 @@ export const BetaEvents: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <h2 className="text-[2.5rem] font-serif leading-none text-foreground mb-6">{event.title}</h2>
-                                    <p className="text-foreground/60 mb-10 text-[1.125rem] font-light leading-[1.8] line-clamp-3">
-                                        {event.description}
+                                    <h2 className="mb-5 break-words font-serif text-[clamp(1.85rem,8vw,2.5rem)] leading-[1.05] text-foreground md:mb-6">{stripMarkdown(event.title)}</h2>
+                                    <p className="mb-7 text-base font-light leading-7 text-foreground/60 line-clamp-4 md:mb-10 md:text-[1.125rem] md:leading-[1.8]">
+                                        {stripMarkdown(event.description)}
                                     </p>
                                     
-                                    <div className="grid grid-cols-2 gap-6 mb-10 bg-foreground/5 border border-foreground/10 rounded-2xl p-6">
+                                    <div className="mb-8 grid grid-cols-1 gap-4 rounded-xl border border-foreground/10 bg-foreground/5 p-4 min-[520px]:grid-cols-2 md:mb-10 md:gap-6 md:rounded-2xl md:p-6">
                                         <div className="flex items-center gap-3 text-[15px] font-light text-foreground/80">
                                             <CalendarIcon className="w-5 h-5 text-accent" />
                                             {new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -164,7 +152,7 @@ export const BetaEvents: React.FC = () => {
                                         <Button 
                                             onClick={() => handleRegisterClick(event)}
                                             disabled={event.status !== 'Open' && event.status !== 'Upcoming'}
-                                            className="w-full sm:w-auto rounded-xl gap-3 bg-background text-primary hover:bg-accent px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
+                                            className="w-full sm:w-auto rounded-xl gap-3 bg-accent text-navy hover:bg-gold-italic px-8 py-6 font-bold uppercase tracking-widest text-[11px]"
                                         >
                                             Register Interest <ArrowRightIcon size={16} />
                                         </Button>
@@ -184,7 +172,7 @@ export const BetaEvents: React.FC = () => {
                         <DialogDescription className="text-foreground/60 font-light text-[1.125rem]">
                             {isSuccess 
                                 ? 'We have received your registration details.'
-                                : selectedEvent?.title}
+                                : stripMarkdown(selectedEvent?.title)}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -196,7 +184,7 @@ export const BetaEvents: React.FC = () => {
                                 Our team will be in touch shortly with your confirmation and attendance details.
                             </p>
                             <Button 
-                                className="w-full rounded-xl px-8 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px]"
+                                className="w-full rounded-xl px-8 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px]"
                                 onClick={() => setIsDialogOpen(false)}
                             >
                                 Close
@@ -251,7 +239,7 @@ export const BetaEvents: React.FC = () => {
                             <DialogFooter className="pt-6">
                                 <Button 
                                     type="submit" 
-                                    className="w-full rounded-xl gap-3 px-8 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all"
+                                    className="w-full rounded-xl gap-3 px-8 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(15,31,61,0.2)] transition-all"
                                     disabled={registerMutation.isPending}
                                 >
                                     {registerMutation.isPending ? 'Submitting...' : 'Complete Registration'}

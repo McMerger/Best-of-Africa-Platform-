@@ -32,6 +32,15 @@ const AFRICAN_COUNTRY_CODES: Record<string, string> = {
     'Mozambique': '508',
     'DRC': '180',
     'Cameroon': '120',
+    'Benin': '204', 'Burkina Faso': '854', 'Burundi': '108', 'Cape Verde': '132',
+    'Cabo Verde': '132', 'Central African Republic': '140', 'Chad': '148', 'Comoros': '174',
+    'Republic of the Congo': '178', 'Congo': '178', 'Democratic Republic of the Congo': '180',
+    'Djibouti': '262', 'Equatorial Guinea': '226', 'Eritrea': '232', 'Eswatini': '748',
+    'Gabon': '266', 'Gambia': '270', 'Guinea': '324', 'Guinea-Bissau': '624',
+    'Lesotho': '426', 'Liberia': '430', 'Libya': '434', 'Madagascar': '450', 'Malawi': '454',
+    'Mali': '466', 'Mauritania': '478', 'Niger': '562', 'Sao Tome and Principe': '678',
+    'SÃ£o TomÃ© and PrÃ­ncipe': '678', 'Seychelles': '690', 'Sierra Leone': '694',
+    'Somalia': '706', 'South Sudan': '728', 'Sudan': '729', 'Togo': '768',
 };
 
 // Key commodity codes (HS2)
@@ -74,7 +83,34 @@ export interface TradeBalance {
     topImportPartners: { partner: string; value: number }[];
     topExportCommodities: { commodity: string; value: number }[];
     topImportCommodities: { commodity: string; value: number }[];
+    source_name: 'UN Comtrade' | 'World Bank World Development Indicators';
+    source_url: string;
+    retrieved_at: string;
 }
+
+export function aggregateTradeTotal(records: unknown): number | null {
+    if (!Array.isArray(records)) return null;
+    const totals = records
+        .filter((record): record is Record<string, unknown> => Boolean(record) && typeof record === 'object')
+        .filter(record => record.cmdCode === undefined || String(record.cmdCode).toUpperCase() === 'TOTAL')
+        .filter(record => record.partnerCode === undefined || Number(record.partnerCode) === 0)
+        .filter(record => record.partner2Code === undefined || Number(record.partner2Code) === 0)
+        .map(record => Number(record.primaryValue))
+        .filter(value => Number.isFinite(value) && value > 0);
+    // The preview API can repeat an aggregate across customs/mode dimensions.
+    // Never add those rows together; retain the largest explicit national total.
+    return totals.length ? Math.max(...totals) : null;
+}
+
+const fetchWithTimeout = async (url: string, timeoutMs = 8000): Promise<Response> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        return await fetch(url, { headers: { Accept: 'application/json' }, signal: controller.signal });
+    } finally {
+        clearTimeout(timeout);
+    }
+};
 
 /**
  * Fetch trade data from UN Comtrade API
@@ -148,106 +184,78 @@ export async function fetchTradeData(
 export async function getTradeBalance(
     env: Env,
     countryName: string,
-    year?: number
+    year?: number,
+    options: { refresh?: boolean; lookbackYears?: number; timeoutMs?: number } = {},
 ): Promise<TradeBalance | null> {
-    const cacheKey = `trade-balance:${countryName}:${year || 'latest'}`;
+    const cacheKey = `trade-balance:v2:${countryName}:${year || 'latest'}`;
 
     const cached = await env.CACHE.get(cacheKey, 'json') as TradeBalance | null;
-    if (cached) return cached;
+    if (cached && !options.refresh) return cached;
 
     const countryCode = AFRICAN_COUNTRY_CODES[countryName];
     if (!countryCode) return null;
 
-    const targetYear = year || new Date().getFullYear() - 1;
+    const targetYear = year || new Date().getFullYear();
+    const lookbackYears = year ? 1 : Math.max(3, options.lookbackYears || 6);
+    const deadline = Date.now() + Math.max(1000, options.timeoutMs || 8000);
 
     try {
-        // Fetch exports
-        const exportsUrl = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
-        exportsUrl.searchParams.set('reporterCode', countryCode);
-        exportsUrl.searchParams.set('period', targetYear.toString());
-        exportsUrl.searchParams.set('flowCode', 'X');
-        exportsUrl.searchParams.set('partner2Code', '0');
+        for (let offset = 0; offset < lookbackYears; offset++) {
+            const remainingMs = deadline - Date.now();
+            if (remainingMs < 500) break;
+            const candidateYear = targetYear - offset;
+            const makeUrl = (flowCode: 'X' | 'M') => {
+                const url = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
+                url.searchParams.set('reporterCode', countryCode);
+                url.searchParams.set('period', candidateYear.toString());
+                url.searchParams.set('flowCode', flowCode);
+                url.searchParams.set('partnerCode', '0');
+                url.searchParams.set('partner2Code', '0');
+                url.searchParams.set('cmdCode', 'TOTAL');
+                return url;
+            };
 
-        // Fetch imports  
-        const importsUrl = new URL('https://comtradeapi.un.org/public/v1/preview/C/A/HS');
-        importsUrl.searchParams.set('reporterCode', countryCode);
-        importsUrl.searchParams.set('period', targetYear.toString());
-        importsUrl.searchParams.set('flowCode', 'M');
-        importsUrl.searchParams.set('partner2Code', '0');
+            const [exportsRes, importsRes] = await Promise.all([
+                fetchWithTimeout(makeUrl('X').toString(), Math.min(4000, remainingMs)),
+                fetchWithTimeout(makeUrl('M').toString(), Math.min(4000, remainingMs)),
+            ]);
+            if (!exportsRes.ok || !importsRes.ok) continue;
 
-        const [exportsRes, importsRes] = await Promise.all([
-            fetch(exportsUrl.toString()),
-            fetch(importsUrl.toString())
-        ]);
+            const exportsData = await exportsRes.json() as Record<string, any>;
+            const importsData = await importsRes.json() as Record<string, any>;
 
-        const exportsData = await exportsRes.json() as Record<string, any>;
-        const importsData = await importsRes.json() as Record<string, any>;
+        const totalExports = aggregateTradeTotal(exportsData.data);
+        const totalImports = aggregateTradeTotal(importsData.data);
 
-        let totalExports = 0;
-        let totalImports = 0;
-        const exportPartners: Record<string, number> = {};
-        const importPartners: Record<string, number> = {};
-        const exportCommodities: Record<string, number> = {};
-        const importCommodities: Record<string, number> = {};
+            // A successful HTTP response containing no observations is not a
+            // zero-trade economy. Walk backward to the latest reported period.
+            if (totalExports === null || totalImports === null) continue;
 
-        // Process exports
-        if (exportsData.data) {
-            for (const record of exportsData.data) {
-                const value = record.primaryValue || 0;
-                totalExports += value;
-
-                const partner = record.partnerDesc || 'Unknown';
-                exportPartners[partner] = (exportPartners[partner] || 0) + value;
-
-                const commodity = record.cmdDesc || 'Unknown';
-                exportCommodities[commodity] = (exportCommodities[commodity] || 0) + value;
-            }
-        }
-
-        // Process imports
-        if (importsData.data) {
-            for (const record of importsData.data) {
-                const value = record.primaryValue || 0;
-                totalImports += value;
-
-                const partner = record.partnerDesc || 'Unknown';
-                importPartners[partner] = (importPartners[partner] || 0) + value;
-
-                const commodity = record.cmdDesc || 'Unknown';
-                importCommodities[commodity] = (importCommodities[commodity] || 0) + value;
-            }
-        }
-
-        const balance: TradeBalance = {
+            const balance: TradeBalance = {
             country: countryName,
-            year: targetYear,
+            year: candidateYear,
             totalExports,
             totalImports,
             balance: totalExports - totalImports,
-            topExportPartners: Object.entries(exportPartners)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([partner, value]) => ({ partner, value })),
-            topImportPartners: Object.entries(importPartners)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([partner, value]) => ({ partner, value })),
-            topExportCommodities: Object.entries(exportCommodities)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([commodity, value]) => ({ commodity, value })),
-            topImportCommodities: Object.entries(importCommodities)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([commodity, value]) => ({ commodity, value })),
-        };
+            topExportPartners: [],
+            topImportPartners: [],
+            topExportCommodities: [],
+            topImportCommodities: [],
+                source_name: 'UN Comtrade',
+                source_url: `https://comtradeplus.un.org/TradeFlow?Classification=HS&Frequency=A&Period=${candidateYear}&Reporters=${countryCode}&Partners=0&Flows=X%2CM&CommodityCodes=TOTAL`,
+                retrieved_at: new Date().toISOString(),
+            };
 
-        await env.CACHE.put(cacheKey, JSON.stringify(balance), { expirationTtl: 86400 });
+            // Preserve the last verified observation without an expiry. The
+            // dossier refresh policy records when it was checked again.
+            await env.CACHE.put(cacheKey, JSON.stringify(balance));
 
-        return balance;
+            return balance;
+        }
+        return cached;
     } catch (error) {
         console.error('Trade balance fetch error:', error);
-        return null;
+        return cached;
     }
 }
 

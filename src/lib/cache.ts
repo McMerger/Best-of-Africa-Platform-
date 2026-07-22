@@ -18,6 +18,19 @@ interface CachedValue<T> {
     ttl: number;
 }
 
+/** Read a cached value without triggering its expensive producer. */
+export async function getCachedValue<T>(env: Env, key: string): Promise<T | null> {
+    try {
+        const cached = await env.CACHE.get(`cache:${key}`, 'json') as CachedValue<T> | null;
+        if (!cached) return null;
+        const age = Math.floor(Date.now() / 1000) - cached.timestamp;
+        return age <= cached.ttl ? cached.data : null;
+    } catch (error) {
+        console.error(`Cache read error for key ${key}:`, error);
+        return null;
+    }
+}
+
 /**
  * Generic caching wrapper for any async fetch function.
  * Uses Cloudflare KV for persistent caching.
@@ -128,27 +141,27 @@ export const CACHE_KEYS = {
 
     // Search optimization keys
     searchSuggest: (q: string) => `search:suggest:${q.toLowerCase().substring(0, 20)}`,
-    searchAiSummary: (q: string) => `search:ai:${q.toLowerCase().trim().substring(0, 50)}`,
+    searchAiSummary: (q: string) => `search:ai:depth-v5:${q.toLowerCase().trim().substring(0, 50)}`,
 
     // Analytics dashboard keys
     analyticsDashboard: (period: string) => `analytics:dashboard:${period}`,
 
     // Intelligence API keys
-    intelCountryReport: (code: string) => `intel:country:${code}:report`,
-    intelSectorTrends: (id: string) => `intel:sector:${id}:trends`,
+    intelCountryReport: (code: string) => `intel:country:${code}:report:depth-v7`,
+    intelSectorTrends: (id: string) => `intel:sector:${id}:trends:depth-v5`,
     intelAudienceReach: () => 'intel:audience:reach',
-    countryOutlook: (code: string) => `country:${code}:outlook`,
-    articleContext: (id: string) => `article:${id}:ai_context`,
-    narrativeSynthesis: (code: string) => `narrative:synthesis:${code}`,
-    sectorOutlook: (id: string) => `sector:${id}:outlook`,
-    countryRelationships: (code: string) => `country:${code}:relationships`,
-    countrySituation: (code: string) => `country:${code}:situation`,
-    globalBriefing: 'home:global-briefing',
-    intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis`,
-    adminContentRecs: 'admin:content-recommendations',
-    analyticsContentStrategy: 'analytics:content-strategy',
-    marketSentiment: (code: string) => `market:sentiment:${code}`,
-    sectorSupplyChain: (id: string) => `market:supply-chain:${id}`,
+    countryOutlook: (code: string) => `country:${code}:outlook:depth-v6`,
+    articleContext: (id: string) => `article:${id}:ai_context:depth-v7`,
+    narrativeSynthesis: (code: string) => `narrative:synthesis:${code}:depth-v5`,
+    sectorOutlook: (id: string) => `sector:${id}:outlook:depth-v5`,
+    countryRelationships: (code: string) => `country:${code}:relationships:depth-v7`,
+    countrySituation: (code: string) => `country:${code}:situation:depth-v5`,
+    globalBriefing: 'home:global-briefing:depth-v5',
+    intelSectorAnalysis: (id: string) => `intel:sector:${id}:analysis:depth-v5`,
+    adminContentRecs: 'admin:content-recommendations:depth-v5',
+    analyticsContentStrategy: 'analytics:content-strategy:depth-v5',
+    marketSentiment: (code: string) => `market:sentiment:${code}:depth-v5`,
+    sectorSupplyChain: (id: string) => `market:supply-chain:${id}:depth-v5`,
 
 } as const;
 
@@ -158,4 +171,5 @@ export const CACHE_TTL = {
     DYNAMIC: 120,       // 2 minutes - latest articles, analytics dashboard
     DASHBOARD: 600,     // 10 minutes - dashboard summary, summaries
     INTEL: 1800,        // 30 minutes - intelligence reports
+    ARCHIVE: 2592000,   // 30 days - immutable published-article enrichments
 } as const;

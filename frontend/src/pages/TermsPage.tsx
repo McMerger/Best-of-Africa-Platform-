@@ -1,34 +1,62 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { SEO } from '../components/SEO';
+
+const SECTIONS = [
+    { id: 'acceptance', title: '1. Acceptance of Terms' },
+    { id: 'ip', title: '2. Intellectual Property' },
+    { id: 'disclaimer', title: '3. Disclaimer' },
+    { id: 'termination', title: '4. Termination' },
+];
 
 export const TermsPage: React.FC = () => {
     return (
         <>
-            <div className="container py-20 max-w-3xl">
-                <header className="mb-12 border-b border-border pb-8">
-                    <h1 className="mb-4 text-4xl font-serif font-extrabold tracking-tight text-foreground md:text-5xl">Terms of Service</h1>
-                    <p className="text-sm text-muted-foreground font-mono uppercase tracking-widest">Last Updated: January 2026</p>
+            <SEO title="Terms of Service" description="The terms governing use of the Best of Africa platform and its content." />
+            <div className="container py-14 md:py-20 max-w-3xl">
+                <header className="app-hero mb-10 rounded-lg border-b border-border p-6 sm:p-8">
+                    <h1 className="mb-4 text-4xl font-serif font-semibold tracking-tight text-ink md:text-5xl">Terms of Service</h1>
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Last Updated: June 2026</p>
                 </header>
 
-                <div className="prose prose-lg prose-gray max-w-none text-muted-foreground dark:prose-invert">
-                    <section className="mb-10">
-                        <h2 className="mb-4 text-2xl font-bold text-foreground">1. Acceptance of Terms</h2>
+                {/* Table of contents */}
+                <nav aria-label="On this page" className="mb-12 rounded-xl border border-border bg-card p-6">
+                    <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-blue">On this page</h2>
+                    <ul className="space-y-2">
+                        {SECTIONS.map(s => (
+                            <li key={s.id}>
+                                <a href={`#${s.id}`} className="text-accent hover:text-gold-italic transition-colors text-sm font-medium">{s.title}</a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+
+                <div className="max-w-none text-ink-soft [&_p]:leading-[1.8] [&_p]:text-base">
+                    <section id="acceptance" className="mb-10 scroll-mt-24">
+                        <h2 className="mb-4 text-2xl font-bold text-ink">1. Acceptance of Terms</h2>
                         <p>By accessing the Best of Africa platform, you agree to these terms. Usage of premium intelligence requires a valid subscription.</p>
                     </section>
 
-                    <section className="mb-10">
-                        <h2 className="mb-4 text-2xl font-bold text-foreground">2. Intellectual Property</h2>
+                    <section id="ip" className="mb-10 scroll-mt-24">
+                        <h2 className="mb-4 text-2xl font-bold text-ink">2. Intellectual Property</h2>
                         <p>All reports, analysis, and content are the property of Best of Africa. Redistribution without license is prohibited.</p>
                     </section>
 
-                    <section className="mb-10">
-                        <h2 className="mb-4 text-2xl font-bold text-foreground">3. Disclaimer</h2>
+                    <section id="disclaimer" className="mb-10 scroll-mt-24">
+                        <h2 className="mb-4 text-2xl font-bold text-ink">3. Disclaimer</h2>
                         <p>Market intelligence is provided for informational purposes only and does not constitute financial advice.</p>
                     </section>
 
-                    <section className="mb-10">
-                        <h2 className="mb-4 text-2xl font-bold text-foreground">4. Termination</h2>
+                    <section id="termination" className="mb-10 scroll-mt-24">
+                        <h2 className="mb-4 text-2xl font-bold text-ink">4. Termination</h2>
                         <p>We reserve the right to terminate access for violation of these terms.</p>
                     </section>
+                </div>
+
+                <div className="mt-12 border-t border-border pt-6 text-sm text-ink-blue">
+                    See also: <Link to="/privacy" className="text-accent hover:text-gold-italic font-medium">Privacy Policy</Link>
+                    {' · '}
+                    <Link to="/contact" className="text-accent hover:text-gold-italic font-medium">Contact Us</Link>
                 </div>
             </div>
         </>

@@ -3,6 +3,12 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Cloudflare Email Sending — native transactional email binding (env.EMAIL).
+# Requires onboarding the FROM domain once: `wrangler email sending enable <domain>`.
+send_email = [
+  { name = "EMAIL" }
+]
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # D1 DATABASE - Articles, Users, Countries, Analytics
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -45,6 +51,10 @@ binding = "CONTENT_QUEUE"
 queue = "content-generation"
 
 [[queues.producers]]
+binding = "TRANSLATION_QUEUE"
+queue = "article-translations"
+
+[[queues.producers]]
 binding = "OPTIMIZATION_QUEUE"
 queue = "headline-optimization"
 
@@ -52,6 +62,12 @@ queue = "headline-optimization"
 queue = "content-generation"
 max_batch_size = 1      # Process one at a time — AI generation can run >30s
 max_batch_timeout = 60  # Maximum batch timeout allowed by Cloudflare is 60s
+max_retries = 5
+
+[[queues.consumers]]
+queue = "article-translations"
+max_batch_size = 1
+max_batch_timeout = 5
 max_retries = 5
 
 [[queues.consumers]]
@@ -98,6 +114,12 @@ crons = [
 [vars]
 ENVIRONMENT = "production"
 API_VERSION = "v1"
+# Public origin of this worker — used to build absolute URLs for uploaded media
+# (article hero images) so the Pages frontend can load them cross-origin.
+PUBLIC_API_URL = "https://best-of-africa-backend.cortesmailles01.workers.dev"
+# Public origin of the reader-facing site; sitemap/RSS/podcast links point here.
+# Switch to https://bestofafrica.com once the domain is registered and wired.
+PUBLIC_SITE_URL = "https://best-of-africa.pages.dev"
 # Comma-separated extra CORS origins beyond bestofafrica.com (e.g. staging domain).
 # For local frontend dev add "http://localhost:5173" to .dev.vars instead.
 ADDITIONAL_ORIGINS = "https://best-of-africa.pages.dev"

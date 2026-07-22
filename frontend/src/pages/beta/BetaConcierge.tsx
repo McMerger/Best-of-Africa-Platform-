@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { api } from '../../services/api';
 import { PlaneIcon, BriefcaseIcon, BuildingIcon, CheckCircleIcon, ArrowRightIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 import { SEO } from '../../components/SEO';
 
 export const BetaConcierge: React.FC = () => {
-    const { scrollY } = useScroll();
     
     // Form State
     const [name, setName] = useState('');
@@ -37,14 +36,16 @@ export const BetaConcierge: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Field names must match BookingRequestSchema (guest_*); the schema
+        // strips unknown keys, so the old contact_*/destination payload was
+        // rejected with "guest_email is required" on every submission.
         bookingMutation.mutate({
-            contact_name: name,
-            contact_email: email,
-            organization,
+            guest_name: name,
+            guest_email: email,
+            guest_organization: organization,
             service_type: serviceType,
-            destination,
-            requirements: details,
-            dates: "TBD" // Defaulting dates for initial inquiry
+            requirements: [destination && `Destination: ${destination}.`, details]
+                .filter(Boolean).join(' '),
         });
     };
 
@@ -56,31 +57,29 @@ export const BetaConcierge: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-20 px-6 overflow-hidden border-b border-foreground/10">
+            <div className="app-hero border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
                 <motion.div 
-                  className="absolute inset-0 z-0"
-                  style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
+                  className="hidden"
                 >
-                  <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-                  <div className="gradient-overlay-light z-20" />
-                  <img 
-                    src="/images/v2_concierge_concrete_1780371218016.png" 
-                    alt="African Luxury Concierge Desk" 
-                    className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
+                  <img
+                    src="/images/v2_concierge.webp"
+                    alt="African Luxury Concierge Desk"
+                    className="w-full h-[120%] object-cover object-center absolute top-[-10%] hero-photo"
                   />
+                  <div className="absolute inset-0 z-10 hero-scrim" />
                 </motion.div>
 
-                <div className="max-w-6xl mx-auto w-full relative z-30">
+                <div className="max-w-6xl mx-auto w-full text-foreground">
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-                        <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
+                        <div className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
                             <BriefcaseIcon size={14} />
                             Private Client Services
                         </div>
-                        <h1 className="text-[4rem] md:text-[5.5rem] font-serif leading-[0.9] tracking-tighter mb-8 drop-shadow-2xl">
-                            Concierge & <br className="hidden md:block"/>Corporate Services
+                        <h1 className="max-w-3xl text-foreground text-[2.75rem] md:text-[4.5rem] font-serif leading-[0.96] tracking-tight mb-6">
+                            Concierge & Corporate Services
                         </h1>
-                        <p className="text-[1.125rem] font-light text-foreground/70 max-w-2xl leading-[1.8] drop-shadow-md">
-                            We facilitate seamless market entry, executive travel, and complex site visits across the continent. Flawless execution.
+                        <p className="text-lg text-foreground/65 max-w-2xl leading-relaxed">
+                            Submit a brief for travel, site-visit or market-entry research. We confirm scope, available support, providers and costs before any engagement begins.
                         </p>
                     </motion.div>
                 </div>
@@ -93,7 +92,7 @@ export const BetaConcierge: React.FC = () => {
                     <div>
                         <h2 className="text-[2.5rem] font-serif mb-6 leading-tight">Our Expertise</h2>
                         <p className="text-foreground/60 text-[1.125rem] leading-[1.8] font-light">
-                            Doing business in Africa requires local knowledge and flawless execution. Our specialized booking and concierge team leverages direct VIP partnerships to ensure your executive trips and site visits are perfectly orchestrated.
+                            Requirements differ by country and city. We review each request individually and distinguish research support from services that require an independently verified local provider.
                         </p>
                     </div>
 
@@ -104,7 +103,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Executive Travel</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Secure transportation, VIP airport protocols, and Tier-1 hotel reservations with exclusive corporate rates.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Research on routes, accommodation and transport options, with provider availability and current terms confirmed before engagement.</p>
                             </div>
                         </div>
 
@@ -114,7 +113,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Site Visits</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Complex multi-city itineraries, translator/guide services, and secure transport for industrial or real estate site visits.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Planning support for multi-city visits, including requirements that may need licensed guides, translators or transport providers.</p>
                             </div>
                         </div>
 
@@ -124,7 +123,7 @@ export const BetaConcierge: React.FC = () => {
                             </div>
                             <div>
                                 <h3 className="font-serif text-[1.5rem] mb-2 text-foreground">Market Entry Support</h3>
-                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Coordination of local meetings, visa assistance, and high-level government or corporate introductions.</p>
+                                <p className="text-[15px] font-light text-foreground/50 leading-relaxed">Source-linked market research and meeting preparation. Introductions, legal advice and visa services require separate confirmation.</p>
                             </div>
                         </div>
                     </div>
@@ -132,7 +131,7 @@ export const BetaConcierge: React.FC = () => {
 
                 {/* Right Column: Booking Form */}
                 <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="lg:col-span-7">
-                    <div className="bg-card text-foreground rounded-3xl border border-foreground/10 p-10 md:p-14 shadow-2xl relative overflow-hidden">
+                    <div className="bg-card text-foreground rounded-xl border border-foreground/10 p-8 md:p-10 relative overflow-hidden">
                         {isSuccess ? (
                             <div className="flex flex-col items-center justify-center py-20 text-center h-full">
                                 <CheckCircleIcon className="w-24 h-24 text-accent mb-8" />
@@ -141,7 +140,7 @@ export const BetaConcierge: React.FC = () => {
                                     Our concierge team will review your requirements and reach out within 24 hours to begin orchestrating your engagement.
                                 </p>
                                 <Button 
-                                    className="rounded-xl px-10 py-6 bg-background text-primary hover:bg-accent font-bold uppercase tracking-widest text-[11px]"
+                                    className="rounded-xl px-10 py-6 bg-accent text-navy hover:bg-gold-italic font-bold uppercase tracking-widest text-[11px]"
                                     onClick={() => setIsSuccess(false)}
                                 >
                                     Submit Another Request
@@ -231,7 +230,7 @@ export const BetaConcierge: React.FC = () => {
                                     <div className="pt-6">
                                         <Button 
                                             type="submit" 
-                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-card hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(212,175,55,0.2)] transition-all"
+                                            className="w-full rounded-xl gap-3 px-10 py-6 bg-accent text-navy hover:brightness-110 font-bold uppercase tracking-widest text-[11px] shadow-[0_0_30px_rgba(15,31,61,0.2)] transition-all"
                                             disabled={bookingMutation.isPending}
                                         >
                                             {bookingMutation.isPending ? 'Submitting...' : 'Submit Inquiry'} <ArrowRightIcon size={16} />

@@ -26,3 +26,4 @@ export { moonshotOAuthRouter } from './moonshot-oauth';
 export { geminiOAuthRouter } from './gemini-oauth';
 export { membersRouter } from './members';
 export { seoRouter } from './seo';
+export { translationRouter } from './translation';

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, MixerVerticalIcon, RocketIcon } from '@radix-ui/react-icons';
 import { Link } from 'react-router-dom';
+import { stripMarkdown } from '@/lib/utils';
 
 interface CountryEventsProps {
     countryCode: string;
@@ -65,7 +66,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                                             <CalendarIcon className="h-3 w-3" /> {new Date(event.date_start).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
                                         </span>
                                     </div>
-                                    <h4 className="font-bold text-base group-hover:text-primary transition-colors">{event.title}</h4>
+                                    <h4 className="font-bold text-base group-hover:text-primary transition-colors">{stripMarkdown(event.title)}</h4>
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                         <MixerVerticalIcon className="h-3 w-3" /> {event.location}
                                     </div>
@@ -84,7 +85,7 @@ export const CountryEvents: React.FC<CountryEventsProps> = ({ countryCode }) => 
                             {event.ai_context_brief && (
                                 <div className="mt-4 pt-4 border-t border-border/50 text-[11px] text-muted-foreground italic flex gap-2 items-start">
                                     <RocketIcon className="h-3 w-3 mt-0.5 text-primary shrink-0" />
-                                    <span>{event.ai_context_brief}</span>
+                                    <span>{stripMarkdown(event.ai_context_brief)}</span>
                                 </div>
                             )}
                         </CardContent>

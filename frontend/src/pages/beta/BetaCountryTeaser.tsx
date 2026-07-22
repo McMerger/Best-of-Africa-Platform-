@@ -6,7 +6,10 @@ import { Link } from 'react-router-dom';
 import { } from '../../components/beta';
 import { api } from '../../services/api';
 import { KO_FI_URL } from '../../constants/beta';
+import { useLanguage } from '@/context/LanguageContext';
+import { CountryFlag } from '../../components/CountryFlag';
 import type { Country } from '../../types';
+import { MEMBER_PREVIEW_MODE } from '../../config/flags';
 
 // ─── Countries API response shape ────────────────────────────────────────────
 interface CountryEntry extends Partial<Country> {
@@ -19,7 +22,7 @@ interface CountriesApiResponse {
   by_region: Record<string, RegionData>;
 }
 
-// No hardcoded fallback — countries are always fetched from the API.
+// No hardcoded fallback, countries are always fetched from the API.
 
 const REGIONS = ['All', 'North', 'West', 'East', 'Central', 'Southern'] as const;
 type Region = typeof REGIONS[number];
@@ -38,20 +41,15 @@ const CountryCard = ({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
+      initial={false}
     >
       <Link
         to={`/countries/${country.code.toLowerCase()}`}
-        className="group relative bg-background rounded-xl overflow-hidden border border-primary/8 flex flex-col text-left transition-colors duration-300 hover:border-accent/60 hover:shadow-[0_8px_40px_rgba(28,24,20,0.12)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.1)] p-5 block h-full"
+        className="group relative bg-white rounded-lg overflow-hidden border border-border flex flex-col text-left transition-colors hover:border-accent/60 p-4 block h-full"
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-3xl drop-shadow-sm">{country.flag_emoji || '🌍'}</span>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-accent/70 bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
+          <CountryFlag code={country.code} title={country.name} size={36} />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-accent-ink bg-accent/10 px-2 py-1 rounded-full border border-accent/15">
             {country.region}
           </span>
         </div>
@@ -59,9 +57,9 @@ const CountryCard = ({
           {country.name}
         </h3>
         {tag && (
-          <p className="text-[11px] text-primary/40 font-medium leading-tight line-clamp-1">{tag}</p>
+          <p className="text-[11px] text-primary/70 font-medium leading-tight line-clamp-1">{tag}</p>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#C9A84C]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0F1F3D]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl" />
       </Link>
     </motion.div>
   );
@@ -82,8 +80,9 @@ const CountryCardSkeleton = () => (
 export const BetaCountryTeaser = () => {
   const [activeRegion, setActiveRegion] = useState<Region>('All');
   const [search, setSearch] = useState('');
+  const { t } = useLanguage();
 
-  const { data, isLoading } = useQuery<CountriesApiResponse>({
+  const { data, isLoading, isError } = useQuery<CountriesApiResponse>({
     queryKey: ['countries'],
     queryFn: api.getCountries,
     staleTime: 24 * 60 * 60 * 1000 });
@@ -128,38 +127,40 @@ export const BetaCountryTeaser = () => {
     <div className="selection:bg-accent selection:text-primary">
       
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20">
+      <div className="max-w-7xl mx-auto px-5 py-12 sm:px-6 md:py-16">
 
         {/* Header */}
-        <header className="mb-14 text-center">
-          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
+        <header className="app-hero -mx-1 mb-10 max-w-4xl rounded-lg p-6 sm:p-8 md:p-10">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent-ink text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
-            54 African Nations
+            {t('countries.badge', '54 African Nations')}
           </div>
-          <h1 className="font-serif text-[40px] md:text-[60px] leading-tight mb-4">
-            One Continent. Every Story.
+          <h1 className="break-words font-serif text-[clamp(2.25rem,11vw,3.25rem)] leading-[1.08] md:leading-[1.04] mb-5">
+            {t('countries.title', 'One Continent. Every Story.')}
           </h1>
-          <p className="text-lg text-primary/60 max-w-2xl mx-auto leading-relaxed">
-            From the Atlantic to the Indian Ocean — narrative deep-dives for every African nation, coming to Founding Members.
+          <p className="text-base md:text-lg text-primary/70 max-w-2xl leading-relaxed">
+            {MEMBER_PREVIEW_MODE
+              ? 'From the Atlantic to the Indian Ocean, open every country hub and move directly into its reporting record.'
+              : t('countries.subtitle', 'From the Atlantic to the Indian Ocean, narrative deep-dives for every African nation, coming to Founding Members.')}
           </p>
         </header>
 
         {/* Search */}
-        <div className="relative max-w-md mx-auto mb-10">
+        <div className="relative max-w-md mb-8">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search countries or sectors…"
-            aria-label="Search countries or sectors"
+            placeholder={t('countries.search_ph', 'Search countries or sectors...')}
+            aria-label={t('countries.search_aria', 'Search countries or sectors')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full bg-background border border-primary/10 rounded-xl pl-10 pr-4 py-3 text-sm text-primary placeholder:text-primary/30 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/30 transition-all"
+            className="w-full bg-white border border-border rounded-xl pl-10 pr-4 py-3 text-sm text-ink placeholder:text-ink-mute focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary/70 transition-colors p-1"
-              aria-label="Clear search"
+              aria-label={t('countries.clear', 'Clear search')}
             >
               {/* m9 FIX: use lucide X icon instead of literal × string */}
               <X size={14} />
@@ -169,19 +170,19 @@ export const BetaCountryTeaser = () => {
 
         {/* Regional Tabs */}
         {!search && (
-          <div className="flex overflow-x-auto gap-2 mb-10 pb-1 justify-start sm:justify-center flex-nowrap scrollbar-hide">
+          <div className="grid grid-cols-2 gap-2 mb-10 sm:flex sm:flex-wrap sm:justify-center">
             {REGIONS.map(region => (
               <button
                 key={region}
                 onClick={() => setActiveRegion(region)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`min-h-11 px-3 py-2 rounded-lg sm:rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeRegion === region
-                    ? 'bg-accent text-card shadow-[0_4px_16px_rgba(201,168,76,0.3)]'
-                    : 'bg-background/5 text-primary/60 hover:bg-foreground/10 hover:text-primary border border-primary/8'
+                    ? 'bg-accent text-navy shadow-[0_4px_16px_rgba(15,31,61,0.3)]'
+                    : 'bg-background/5 text-primary/70 hover:bg-foreground/10 hover:text-primary border border-primary/8'
                 }`}
               >
-                {region}
-                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-card/70' : 'text-primary/30'}`}>
+                {t('countries.region_' + region.toLowerCase(), region)}
+                <span className={`ml-1.5 text-[11px] ${activeRegion === region ? 'text-navy' : 'text-primary/70'}`}>
                   {regionCounts[region]}
                 </span>
               </button>
@@ -192,18 +193,29 @@ export const BetaCountryTeaser = () => {
         {/* Search result count */}
         {search.length >= 2 && (
           <p className="text-center text-primary/40 text-sm mb-8">
-            {filtered.length} {filtered.length === 1 ? 'country' : 'countries'} matching "{search}"
+            {filtered.length} {filtered.length === 1 ? t('countries.country', 'country') : t('countries.countries', 'countries')} {t('countries.matching', 'matching')} "{search}"
           </p>
         )}
 
         {/* Country Grid */}
         <motion.div
           layout
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-16"
+          className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-16"
         >
           <AnimatePresence mode="popLayout">
             {isLoading
               ? Array.from({ length: 54 }).map((_, i) => <CountryCardSkeleton key={i} />)
+              : isError
+                ? (
+                  <div className="col-span-full rounded-xl border border-border bg-card px-5 py-10 text-center">
+                    <p className="font-serif text-2xl text-navy">Continue through the continental index</p>
+                    <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-muted-foreground">The directory request did not complete. The continental evidence dashboard and source-linked search remain open.</p>
+                    <div className="mt-6 grid gap-3 min-[420px]:grid-cols-2">
+                      <Link to="/dashboards/overview" className="rounded-md bg-navy px-4 py-3 text-sm font-semibold text-white">Continental dashboard</Link>
+                      <Link to="/search" className="rounded-md border border-border px-4 py-3 text-sm font-semibold text-navy">Search evidence</Link>
+                    </div>
+                  </div>
+                )
               : filtered.length > 0
                 ? filtered.map(country => (
                     <CountryCard
@@ -218,7 +230,7 @@ export const BetaCountryTeaser = () => {
                     className="col-span-full text-center py-20 text-primary/40"
                   >
                     <Globe size={40} className="mx-auto mb-4 opacity-30" />
-                    <p className="text-lg">No countries found for "{search}"</p>
+                    <p className="text-lg">{search ? `${t('countries.none_found', 'No countries found for')} “${search}”` : 'No country records matched the selected region.'}</p>
                   </motion.div>
                 )
             }
@@ -226,17 +238,24 @@ export const BetaCountryTeaser = () => {
         </motion.div>
 
         {/* Bottom CTA */}
-        <div className="text-center">
-          <p className="text-primary/40 text-sm mb-5">Full country story hubs unlock for Founding Members</p>
-          <a
-            href={KO_FI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block bg-accent text-card font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(201,168,76,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
-          >
-            Unlock All 54 Country Hubs — Join as a Founding Member
-          </a>
-        </div>
+        {MEMBER_PREVIEW_MODE ? (
+          <div className="rounded-xl border border-accent/25 bg-accent/10 px-5 py-5 text-center">
+            <p className="font-serif text-xl text-navy">All 54 country hubs are open in member preview.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Choose any country above to inspect its full reporting and intelligence record.</p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <p className="text-primary/70 text-sm mb-5">{t('countries.cta_note', 'Full country story hubs unlock for Founding Members')}</p>
+            <a
+              href={KO_FI_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-accent text-navy font-semibold font-sans px-10 py-4 rounded-xl shadow-[0_4px_24px_rgba(15,31,61,0.3)] hover:brightness-110 transition-all hover:-translate-y-0.5"
+            >
+              {t('countries.cta_btn', 'Unlock All 54 Country Hubs, Join as a Founding Member')}
+            </a>
+          </div>
+        )}
       </div>
     </div>
   );

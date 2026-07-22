@@ -22,6 +22,7 @@ export interface Env {
 
     // Queues
     CONTENT_QUEUE: Queue;
+    TRANSLATION_QUEUE: Queue;
     OPTIMIZATION_QUEUE: Queue;
 
     // Analytics
@@ -36,6 +37,27 @@ export interface Env {
     JWT_SECRET: string;
     NEWS_API_KEY: string;
     ADMIN_API_KEY: string;
+
+    // Transactional email (see src/lib/email.ts for provider order).
+    // EMAIL is the Cloudflare Email Sending binding (wrangler.toml send_email);
+    // it only delivers once a domain is onboarded to the account.
+    EMAIL?: {
+        send: (message: {
+            to: string;
+            from: { email: string; name?: string };
+            subject: string;
+            html: string;
+            text?: string;
+        }) => Promise<unknown>;
+    };
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;
+    EMAIL_FROM_NAME?: string;
+
+    // Public origin of the reader-facing site (sitemap/RSS/podcast URLs).
+    PUBLIC_SITE_URL?: string;
+    // Public origin of this worker (media/audio URLs, email unsubscribe links).
+    PUBLIC_API_URL?: string;
 
     // Optional Provider keys (set via `wrangler secret put`)
     // ZeroClaw can also use user-configured keys stored in D1 (ai_providers table)
@@ -97,6 +119,8 @@ export interface Country {
     tourism_highlights: string[] | null;
     flag_emoji: string | null;
     hero_image_url: string | null;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     visa_portal_url: string | null;
     business_portal_url: string | null;
     tourism_portal_url: string | null;
@@ -131,6 +155,8 @@ export interface Article {
     meta_title: string | null;
     meta_description: string | null;
     hero_image_url: string | null;
+    image_credit?: string | null;
+    image_source_url?: string | null;
     reading_time_minutes: number | null;
     source_url: string | null;
     source_title: string | null;
@@ -304,9 +330,13 @@ export interface CountryReport {
     article_count: number;
     top_sectors: { sector: Sector; count: number }[];
     recent_articles: ArticleListItem[];
-    sentiment_score: number;
-    investment_readiness_score: number;
-    tourism_appeal_score: number;
+    evidence_profile: {
+        published_articles: number;
+        sectors_represented: number;
+        source_records_reviewed: number;
+        latest_reported_at: string;
+    };
+    methodology: string;
     narrative_gaps: string[];
     recommendations: string[];
 }

@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { publicSiteBase } from './public-url';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Format Article as Tweet
@@ -14,9 +15,9 @@ export function formatTweet(article: {
     country_code: string | null;
     sector_name: string | null;
     slug: string;
-}): string {
+}, siteBase = 'https://best-of-africa.pages.dev'): string {
     // Max tweet length is 280 chars
-    const url = `https://bestofafrica.com/articles/${article.slug}`;
+    const url = `${siteBase.replace(/\/$/, '')}/posts/${encodeURIComponent(article.slug)}`;
     const urlLength = 23; // t.co shortens all URLs to 23 chars
 
     // Country flag emoji mapping (subset)
@@ -127,7 +128,7 @@ export async function autoPostArticle(
 
     // 2. Fallback: Generate if missing
     if (!tweet) {
-        tweet = formatTweet(article);
+        tweet = formatTweet(article, publicSiteBase(env));
     }
 
     console.log(`[SOCIAL] Auto-posting article: ${article.id}`);

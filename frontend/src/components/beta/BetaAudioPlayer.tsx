@@ -117,7 +117,7 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
       <div className="flex items-center gap-4">
         <button 
           onClick={handlePlayClick}
-          className="w-10 h-10 rounded-full bg-accent text-card flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
+          className="w-10 h-10 rounded-full bg-accent text-navy flex items-center justify-center hover:brightness-110 transition-all shrink-0 shadow-lg shadow-accent/20"
           aria-label={isThisTrackPlaying && isPlaying ? 'Pause' : 'Play'}
         >
           {isThisTrackPlaying && isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" className="ml-1" />}
@@ -127,8 +127,8 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
           <div className="text-sm font-medium text-foreground">
             {isThisTrackPlaying ? 'Now Playing globally' : 'Listen to this article'}
           </div>
-          <div className="text-[10px] text-foreground/40">
-            {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'High-quality TTS narration.'}
+          <div className="text-[10px] text-foreground/70">
+            {isThisTrackPlaying ? 'Controls are available at the bottom of your screen.' : 'Audio narration of this briefing.'}
           </div>
         </div>
       </div>
@@ -136,7 +136,7 @@ export const BetaAudioPlayer = ({ slug, title = 'Article Audio', subtitle, image
       {audioData?.url.includes('best-of-africa-media.r2.dev/audio/tts') && (
         <div className="flex items-center gap-2 mt-1 px-1">
           <AlertCircle size={10} className="text-accent/50" />
-          <span className="text-[10px] text-foreground/30 italic">TTS mode — Premium integration pending.</span>
+          <span className="text-[10px] text-foreground/30 italic">TTS mode, Premium integration pending.</span>
         </div>
       )}
     </div>

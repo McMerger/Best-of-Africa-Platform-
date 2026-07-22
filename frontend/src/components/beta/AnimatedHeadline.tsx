@@ -21,10 +21,10 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
   };
 
   return (
-    <motion.h2
+    <motion.h1
       ref={ref}
-      // text-foreground overrides the global @layer base { h2 { text-foreground } } which maps to navy blue
-      className={`text-foreground ${className}`}
+      // Colour is supplied by the caller via className (e.g. text-white on the navy hero band).
+      className={className}
       variants={container}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
@@ -34,6 +34,6 @@ export const AnimatedHeadline = ({ text, className = "" }: { text: string; class
           {word}
         </motion.span>
       ))}
-    </motion.h2>
+    </motion.h1>
   );
 };

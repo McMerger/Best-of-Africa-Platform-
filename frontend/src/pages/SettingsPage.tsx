@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { PersonIcon, BellIcon, LockClosedIcon, ExitIcon, IdCardIcon, EnvelopeClosedIcon, LightningBoltIcon, UpdateIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { SEO } from '../components/SEO';
 import { toast } from 'sonner';
 
 const AVAILABLE_COUNTRIES = [
@@ -20,7 +22,7 @@ const AVAILABLE_SECTORS = [
 ];
 
 export const SettingsPage: React.FC = () => {
-    const { logout } = useAuth();
+    const { logout, isAuthenticated } = useAuth();
     const [user, setUser] = useState(() => {
         const saved = localStorage.getItem('boa_client_info');
         if (saved) {
@@ -54,6 +56,32 @@ export const SettingsPage: React.FC = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Option lists for the preference pickers, sourced live so EVERY sector (8)
+    // and country (54) is offered, not a hardcoded subset. Falls back to the
+    // constants if the API is unavailable. Stored value: sector id / country name.
+    const [sectorOptions, setSectorOptions] = useState<{ id: string; name: string }[]>(
+        AVAILABLE_SECTORS.map(s => ({ id: s, name: s })));
+    const [countryOptions, setCountryOptions] = useState<string[]>(AVAILABLE_COUNTRIES);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const s = await (api as any).getSectors();
+                if (s?.data?.length) setSectorOptions(s.data.map((x: any) => ({ id: x.id, name: x.name })));
+            } catch { /* keep fallback */ }
+            try {
+                const c = await (api as any).getCountries();
+                if (c?.by_region) {
+                    const names = Object.values(c.by_region)
+                        .flatMap((r: any) => (r.countries || []).map((x: any) => x.name))
+                        .filter(Boolean)
+                        .sort((a: string, b: string) => a.localeCompare(b));
+                    if (names.length) setCountryOptions(names);
+                }
+            } catch { /* keep fallback */ }
+        })();
+    }, []);
 
     useEffect(() => {
         const fetchPrefs = async () => {
@@ -121,8 +149,28 @@ export const SettingsPage: React.FC = () => {
         }
     };
 
+    // AUTH GATE, no settings form is shown to unauthenticated visitors (spec §3.10)
+    if (!isAuthenticated) {
+        return (
+            <div className="container py-20 max-w-4xl">
+                <SEO title="Settings" description="Manage your Best of Africa account, preferences, and subscription." />
+                <div className="mx-auto flex max-w-md flex-col items-center rounded-xl border border-white/10 bg-navy px-8 py-14 text-center text-white shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
+                    <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-accent/30 bg-navy-card shadow-[0_0_40px_rgba(15,31,61,0.3)]">
+                        <LockClosedIcon className="h-7 w-7 text-accent" />
+                    </div>
+                    <h1 className="mb-3 text-2xl font-serif font-bold">Sign in to access your settings</h1>
+                    <p className="mb-8 text-sm text-white/60">Your account, preferences, and subscription live behind a secure login.</p>
+                    <Button asChild className="bg-accent text-navy hover:bg-gold-italic font-bold uppercase tracking-widest px-8">
+                        <Link to="/login">Sign In</Link>
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
+            <SEO title="Settings" description="Manage your Best of Africa account, preferences, and subscription." />
             <div className="container py-20 max-w-4xl">
                 <header className="mb-12 border-b border-border pb-8">
                     <h1 className="mb-2 text-4xl font-serif font-black tracking-tight text-foreground">Control Center</h1>
@@ -132,10 +180,9 @@ export const SettingsPage: React.FC = () => {
                 <div className="grid gap-10">
                     <div className="flex justify-end -mb-4">
                         <Button
-                            variant={isEditing ? "default" : "outline"}
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="px-8 font-bold"
+                            className="px-8 font-bold bg-accent text-navy hover:bg-gold-italic"
                         >
                             {isSaving && <UpdateIcon className="w-4 h-4 mr-2 animate-spin" />}
                             {isEditing ? 'Save Changes' : 'Edit Profile'}
@@ -221,7 +268,7 @@ export const SettingsPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <Label>Tracked Countries</Label>
                                     <div className="flex flex-wrap gap-2">
-                                        {AVAILABLE_COUNTRIES.map(country => {
+                                        {countryOptions.map(country => {
                                             const isActive = preferences.countries_of_interest.includes(country);
                                             return (
                                                 <Badge
@@ -244,20 +291,20 @@ export const SettingsPage: React.FC = () => {
                                 <div className="space-y-4">
                                     <Label>Tracked Sectors</Label>
                                     <div className="flex flex-wrap gap-2">
-                                        {AVAILABLE_SECTORS.map(sector => {
-                                            const isActive = preferences.sectors_of_interest.includes(sector);
+                                        {sectorOptions.map(sector => {
+                                            const isActive = preferences.sectors_of_interest.includes(sector.id);
                                             return (
                                                 <Badge
-                                                    key={sector}
+                                                    key={sector.id}
                                                     variant={isActive ? "default" : "outline"}
                                                     className={cn(
                                                         "px-3 py-1 cursor-pointer transition-colors capitalize",
                                                         !isEditing && "opacity-70 cursor-not-allowed",
                                                         isActive ? "bg-accent text-primary" : "hover:bg-accent/10 hover:text-accent"
                                                     )}
-                                                    onClick={() => toggleArrayItem('sectors_of_interest', sector)}
+                                                    onClick={() => toggleArrayItem('sectors_of_interest', sector.id)}
                                                 >
-                                                    {sector}
+                                                    {sector.name}
                                                 </Badge>
                                             );
                                         })}

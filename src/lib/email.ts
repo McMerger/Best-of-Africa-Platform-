@@ -7,47 +7,121 @@ export interface EmailParams {
     fromName?: string;
 }
 
+// Only the email-relevant env fields are needed here.
+export interface EmailEnv {
+    // Cloudflare Email Sending binding (preferred). Requires the FROM domain to be
+    // onboarded via `wrangler email sending enable <domain>`.
+    EMAIL?: {
+        send: (message: {
+            to: string;
+            from: { email: string; name?: string };
+            subject: string;
+            html: string;
+            text?: string;
+        }) => Promise<unknown>;
+    };
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;       // e.g. "members@yourdomain.com" (must be on a verified domain)
+    EMAIL_FROM_NAME?: string;  // e.g. "BOA-Story"
+}
+
+// Minimal HTML → plain-text for the email text/plain part (improves deliverability).
+function htmlToText(html: string): string {
+    return html
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 /**
- * Sends an email using Cloudflare's native MailChannels integration.
- * Requires TXT _mailchannels DNS record on the sending domain.
+ * Sends a transactional email.
+ *
+ * Provider order:
+ *   1. Resend — used when RESEND_API_KEY is set (recommended). Requires a verified
+ *      sending domain in Resend and EMAIL_FROM on that domain.
+ *   2. MailChannels — legacy fallback. NOTE: the free Cloudflare Workers integration
+ *      was discontinued in 2024, so this will fail unless you have a paid setup.
+ *
+ * Returns true on success, false on failure (never throws).
  */
-export async function sendEmail({
-    to,
-    toName,
-    subject,
-    html,
-    fromEmail = 'members@bestofafrica.com',
-    fromName = 'BOA-Story',
-}: EmailParams): Promise<boolean> {
+export async function sendEmail(
+    env: EmailEnv | undefined,
+    { to, toName, subject, html, fromEmail, fromName }: EmailParams
+): Promise<boolean> {
+    const from = fromEmail || env?.EMAIL_FROM;
+    if (!from) {
+        console.error('[Email Configuration] EMAIL_FROM is required; refusing to claim an unverified sender domain.');
+        return false;
+    }
+    const fromDisplay = fromName || env?.EMAIL_FROM_NAME || 'BOA-Story';
+
+    // 1. Cloudflare Email Sending (preferred — native binding, no API key)
+    if (env?.EMAIL?.send) {
+        try {
+            await env.EMAIL.send({
+                to,
+                from: { email: from, name: fromDisplay },
+                subject,
+                html,
+                text: htmlToText(html),
+            });
+            return true;
+        } catch (err) {
+            console.error('[Cloudflare Email Sending Error]', err);
+            // fall through to other providers
+        }
+    }
+
+    // 2. Resend
+    if (env?.RESEND_API_KEY) {
+        try {
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: `${fromDisplay} <${from}>`,
+                    to: [to],
+                    subject,
+                    html,
+                }),
+            });
+            if (res.ok) return true;
+            console.error('[Resend Error]', res.status, await res.text());
+            // fall through to legacy provider
+        } catch (err) {
+            console.error('[Resend Exception]', err);
+        }
+    }
+
+    // 3. MailChannels (legacy fallback)
     try {
         const payload = {
-            personalizations: [
-                {
-                    to: [{ email: to, name: toName || to }],
-                },
-            ],
-            from: { email: fromEmail, name: fromName },
-            subject: subject,
-            content: [
-                {
-                    type: 'text/html',
-                    value: html,
-                },
-            ],
+            personalizations: [{ to: [{ email: to, name: toName || to }] }],
+            from: { email: from, name: fromDisplay },
+            subject,
+            content: [{ type: 'text/html', value: html }],
         };
 
+        // MailChannels' free Workers tier is discontinued; this is a last
+        // resort that usually fails. The send is awaited on the login request
+        // path now, so bound it — an untimed fetch to a dead service would
+        // hang the response.
         const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(5000),
         });
 
         if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('[MailChannels Error]', response.status, errorBody);
+            console.error('[MailChannels Error]', response.status, await response.text());
             return false;
         }
-
         return true;
     } catch (err) {
         console.error('[MailChannels Exception]', err);
@@ -63,7 +137,7 @@ export interface RegistrationConfirmationParams {
     event: { title: string; date?: string; date_start?: string; location?: string };
 }
 
-export async function sendRegistrationConfirmation({
+export async function sendRegistrationConfirmation(env: EmailEnv | undefined, {
     confirmationCode,
     user_email,
     user_name,
@@ -98,7 +172,7 @@ export async function sendRegistrationConfirmation({
         </div>
     </div>`;
 
-    return sendEmail({
+    return sendEmail(env, {
         to: user_email,
         toName: user_name,
         subject: `Registration Confirmed: ${event.title} [${confirmationCode}]`,
@@ -109,7 +183,7 @@ export async function sendRegistrationConfirmation({
 /**
  * Convenience method to send the standardized Member Welcome Email.
  */
-export async function sendWelcomeEmail(email: string, name: string, tier: string): Promise<boolean> {
+export async function sendWelcomeEmail(env: EmailEnv | undefined, email: string, name: string, tier: string): Promise<boolean> {
     const tierDisplay = tier === 'enterprise' ? 'Founding Patron' : tier === 'premium' ? 'Founding Member' : 'Supporter';
     
     const html = `
@@ -134,7 +208,7 @@ export async function sendWelcomeEmail(email: string, name: string, tier: string
     </div>
     `;
 
-    return sendEmail({
+    return sendEmail(env, {
         to: email,
         toName: name,
         subject: 'Your Access to BOA-Story',

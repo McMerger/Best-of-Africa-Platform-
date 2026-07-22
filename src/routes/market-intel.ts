@@ -6,8 +6,13 @@
 import { Hono } from 'hono';
 import type { Env, Variables, MarketIntelligence } from '../types';
 import { requireApiKey, rateLimit } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
+import {
+    getSectorPerformanceCache,
+    refreshSectorPerformance,
+    sectorPerformanceCacheIsFresh,
+} from '../lib/sector-performance';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -44,7 +49,9 @@ router.get('/sector/:id', async (c) => {
     const sectorId = c.req.param('id');
 
     const sector = await c.env.DB.prepare(
-        'SELECT * FROM sectors WHERE id = ?'
+        `SELECT id, name, COALESCE(icon, 'bar-chart') AS icon, COALESCE(color, '#0F1F3D') AS color,
+                COALESCE(NULLIF(description, ''), 'BOA-Story reporting evidence for this sector across African countries.') AS description
+         FROM sectors WHERE id = ?`
     ).bind(sectorId).first();
 
     if (!sector) {
@@ -76,13 +83,13 @@ router.get('/sector/:id', async (c) => {
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
-            SELECT a.id, a.slug, a.title, a.summary, a.country_code,
+            SELECT a.id, a.slug, a.title, a.summary, a.source_url, a.country_code,
                    c.name as country_name, a.published_at
             FROM articles a
             JOIN countries c ON a.country_code = c.code
             WHERE a.sector_id = ? AND a.status = 'published'
             ORDER BY a.published_at DESC
-            LIMIT 5
+            LIMIT 10
         `).bind(sectorId).all(),
 
         c.env.DB.prepare(`
@@ -94,46 +101,37 @@ router.get('/sector/:id', async (c) => {
         `).bind(sectorId).all(),
     ]);
 
-    // Generate Sector Outlook
-    let aiOutlook = "Sector performance is stable.";
-    if (recentArticles.results && recentArticles.results.length > 0) {
-        const headlines = (recentArticles.results as any[]).map(r => r.title).join('; ');
-        try {
-            const prompt = `You are a Senior Investment Analyst. Write a 2-sentence market outlook based on these headlines.
-Sector: ${sector.name}
-Headlines: ${headlines}`;
-            const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-            aiOutlook = text || aiOutlook;
-        } catch (e) { /* Ignore */ }
+    const evidence = (recentArticles.results as any[]).map((article, index) =>
+        `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
+    ).join('\n---\n');
+    const sectorAnalysisKey = `sector:${sectorId}:evidence-analysis:v5`;
+    const generateSectorAnalysis = async () => {
+            if (!evidence) return 'Insufficient evidence for a current sector analysis.';
+            try {
+                const prompt = `System: You are BOA-Story's sector evidence desk. Use only the numbered records, cite them inline, distinguish facts from analysis, and explain cross-country differences, chronology, actors, operational and policy implications, counter-signals, limitations and next diligence steps. Never infer market growth from reporting or engagement volume.\nUser: Produce a complete evidence analysis for Africa's ${(sector as Record<string, any>).name} sector.\n\nRecords:\n${evidence}`;
+                return await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
+            } catch (error) {
+                console.error('Sector evidence analysis failed', error);
+                return null;
+            }
+    };
+    const sectorAnalysis = await getCachedValue<string>(c.env, sectorAnalysisKey);
+    if (!sectorAnalysis && evidence) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, sectorAnalysisKey, generateSectorAnalysis, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
     }
+    const immediateSectorAnalysis = (recentArticles.results as any[]).slice(0, 6).map((article, index) =>
+        `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+    ).join('\n\n') || `${(sector as Record<string, any>).name} is represented by the country, regional and published coverage records in this profile.`;
 
     return c.json({
-        sector: { ...sector, ai_outlook: aiOutlook },
+        sector: { ...sector, ai_outlook: sectorAnalysis || immediateSectorAnalysis },
         by_country: countryBreakdown.results || [],
         by_region: regionBreakdown.results || [],
         recent_articles: recentArticles.results || [],
         top_performers: topPerformers.results || [],
-        ai_trend_analysis: await getCached(
-            c.env,
-            `sector:${sectorId}:trend_analysis`,
-            async () => {
-                try {
-                    const query = `${(sector as Record<string, any>).name} Africa sector trends outlook`;
-                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as Record<string, any>).data[0];
-                    const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
-                    const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
-
-                    if (!context) return "Sector data currently being aggregated.";
-
-                    const prompt = `Provide a 3-sentence executive trend analysis for this sector in Africa. Focus on growth drivers.
-Sector: ${(sector as Record<string, any>).name}. recent Context:
-${context}`;
-                    return await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-                } catch (e) { return null; }
-            },
-            { ttl: 3600 * 24 } // Cache for 24h
-        )
+        ai_trend_analysis: sectorAnalysis || immediateSectorAnalysis,
     });
 });
 
@@ -153,59 +151,22 @@ router.get('/sector/:id/trends', async (c) => {
         return c.json({ error: 'not_found', message: 'Sector not found' }, 404);
     }
 
-    // Fetch market metrics from new table
-    const metrics = await c.env.DB.prepare(`
-        SELECT year, market_size_usd, growth_rate, 
-               investment_volume_usd, regulatory_outlook, top_companies_json
-        FROM market_metrics
-        WHERE sector_id = ?
-        ORDER BY year DESC
-        LIMIT 5
-    `).bind(sectorId).all();
-
-    // Parse JSON fields and format response
-    const trends = (metrics.results || []).map((m: any) => ({
-        year: m.year,
-        market_size: m.market_size_usd,
-        growth_rate: m.growth_rate,
-        investment_volume: m.investment_volume_usd,
-        regulatory_outlook: m.regulatory_outlook
-    }));
-
-    // Extract top companies from most recent year
-    let topCompanies: string[] = [];
-    if (metrics.results && metrics.results.length > 0) {
-        const latestMetric = metrics.results[0] as Record<string, any>;
-        if (latestMetric.top_companies_json) {
-            try {
-                topCompanies = JSON.parse(latestMetric.top_companies_json);
-            } catch (_e) {
-                topCompanies = [];
-            }
-        }
-    }
-
-    // Calculate year-over-year change
-    let yoyChange = null;
-    if (trends.length >= 2) {
-        const current = trends[0].market_size || 0;
-        const previous = trends[1].market_size || 0;
-        if (previous > 0) {
-            yoyChange = Number((((current - previous) / previous) * 100).toFixed(1));
-        }
+    const performanceSnapshot = await getSectorPerformanceCache(c.env) || await refreshSectorPerformance(c.env);
+    const marketPerformance = performanceSnapshot?.data.find(item => item.sector_id === sectorId);
+    if (!marketPerformance) {
+        return c.json({
+            error: 'official_series_refresh_failed',
+            message: 'The official performance series for this sector has not been saved yet.',
+            source_name: 'World Bank World Development Indicators',
+            source_url: 'https://data.worldbank.org/indicator',
+        }, 503);
     }
 
     return c.json({
         sector,
-        trends,
-        top_companies: topCompanies,
-        summary: {
-            latest_year: trends[0]?.year || null,
-            current_market_size: trends[0]?.market_size || null,
-            current_growth_rate: trends[0]?.growth_rate || null,
-            yoy_change: yoyChange,
-            regulatory_outlook: trends[0]?.regulatory_outlook || 'Unknown'
-        }
+        market_performance: marketPerformance,
+        methodology: performanceSnapshot?.methodology,
+        updated_at: performanceSnapshot?.retrieved_at || new Date().toISOString(),
     });
 });
 
@@ -216,8 +177,8 @@ router.get('/country/:code/outlook', async (c) => {
     const code = c.req.param('code').toUpperCase();
 
     const country = await c.env.DB.prepare(`
-        SELECT code, name, region, flag_emoji, description,
-               diplomacy_score, image_strength_score, gdp_usd, population
+        SELECT code, name, region, COALESCE(flag_emoji, '') AS flag_emoji,
+               COALESCE(NULLIF(description, ''), name || ' country reporting evidence from BOA-Story.') AS description
         FROM countries WHERE code = ?
     `).bind(code).first();
 
@@ -225,7 +186,7 @@ router.get('/country/:code/outlook', async (c) => {
         return c.json({ error: 'not_found', message: 'Country not found' }, 404);
     }
 
-    const [sectorOpportunities, articleStats, narrativeStrength] = await Promise.all([
+    const [sectorOpportunities, articleStats, narrativeStrength, recentRecords] = await Promise.all([
         c.env.DB.prepare(`
             SELECT s.id, s.name, s.icon, COUNT(a.id) as articles,
                    AVG(a.engagement_score) as avg_engagement
@@ -250,47 +211,79 @@ router.get('/country/:code/outlook', async (c) => {
             FROM narrative_strategies
             WHERE country_code = ? AND status = 'active'
         `).bind(code).first(),
+        c.env.DB.prepare(`
+            SELECT a.slug, a.title, COALESCE(a.summary, a.title) AS summary,
+                   COALESCE(a.published_at, a.updated_at, a.created_at) AS published_at,
+                   COALESCE(NULLIF(a.source_title, ''), a.title) AS source_title,
+                   a.source_url,
+                   s.name AS sector_name
+            FROM articles a
+            LEFT JOIN sectors s ON s.id = a.sector_id
+            WHERE a.country_code = ? AND a.status = 'published'
+            ORDER BY a.published_at DESC
+            LIMIT 15
+        `).bind(code).all<Record<string, any>>(),
     ]);
 
     const countryData = country as Record<string, any>;
+    const sourceRecords = recentRecords.results || [];
+    const evidenceContext = sourceRecords.map((record, index) =>
+        `[${index + 1}] ${record.published_at} — ${record.title}\nSector: ${record.sector_name || 'General coverage'}\n${record.summary.slice(0, 1200)}\nSource: ${record.source_title} | ${record.source_url || `/stories/${record.slug}`}`
+    ).join('\n\n');
 
-    // Generate Investment Commentary
-    const investmentCommentary = await getCached(
-        c.env,
-        CACHE_KEYS.countryOutlook(code),
-        async () => {
-            // Retrieve recent headlines
-            const recent = await c.env.DB.prepare(`SELECT title FROM articles WHERE country_code = ? ORDER BY published_at DESC LIMIT 3`).bind(code).all();
-            const context = (recent.results || []).map((a: any) => a.title).join('; ');
+    const evidenceBriefingKey = `${CACHE_KEYS.countryOutlook(code)}:evidence-contract-v3`;
+    const generateEvidenceBriefing = async () => {
+            if (!evidenceContext) return `The current BOA-Story evidence window contains zero published records for ${countryData.name}. That observed zero is the finding: no country-level inference can be supported from this dataset until reporting records enter the window.`;
+            const prompt = `System: You are BOA-Story's country evidence editor. Use only the numbered records. This is not an investment rating. Do not infer economic performance, political stability, policy quality, tourism safety or investability from article volume, engagement or narrative fields. Cite records inline and distinguish reported fact, supported interpretation and unresolved question.
 
-            try {
-                const prompt = `You are a Strategic Investment Analyst for ${countryData.name}. 
-Write a 3-sentence "Investment Thesis" based on these recent headlines.
-Highlight one key opportunity and one potential risk.
-Tone: Professional, direct, balance sheet focused.
+User: Produce a complete evidence briefing for ${countryData.name}. Cover the reporting window, dated chronology, named institutions and decision-makers, sector-by-sector developments, documented mechanisms, implementation status, affected stakeholders, cross-record connections, immediate and conditional implications, counter-signals, alternative explanations, source limitations, missing primary documents, a claim ledger and prioritized verification steps. Explain technical or policy details in plain language.
 
-Headlines: ${context || 'General economic outlook stable.'}`;
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
-                return text || `Investment outlook for ${countryData.name} remains stable with emerging opportunities in key sectors. Monitor regional dynamics.`;
-            } catch (e) {
-                console.error('AI Commentary Failed', e);
-                return `Investment outlook for ${countryData.name} remains stable.`;
-            }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
+RECORDS:
+${evidenceContext}`;
+            return callConfiguredAI(c.env, { prompt, max_tokens: 6500, temperature: 0.15, response_profile: 'evidence-brief' });
+    };
+    const evidenceBriefing = await getCachedValue<string>(c.env, evidenceBriefingKey);
+    if (!evidenceBriefing && evidenceContext) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, evidenceBriefingKey, generateEvidenceBriefing, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const immediateCountryBriefing = sourceRecords.slice(0, 6).map((record, index) =>
+        `${index + 1}. ${record.title} (${record.published_at || 'date not recorded'}, ${record.sector_name || 'general coverage'}). ${(record.summary || '').slice(0, 420)}`
+    ).join('\n\n') || `The current BOA-Story evidence window contains zero published records for ${countryData.name}. No country-level inference is supported from this dataset until reporting records enter the window.`;
 
     return c.json({
         country: countryData,
         outlook: {
-            investment_readiness: Math.round((countryData.image_strength_score || 50) * 2),
-            narrative_strength: (narrativeStrength as Record<string, any>)?.avg_effectiveness || 0,
-            media_presence: (articleStats as Record<string, any>)?.total_articles || 0,
-            engagement_level: (articleStats as Record<string, any>)?.avg_engagement || 0,
-            investment_commentary: investmentCommentary
+            investment_commentary: evidenceBriefing || immediateCountryBriefing,
+            methodology: 'This source-linked briefing analyzes BOA-Story reporting records. It does not infer investment readiness, stability, safety or economic performance from coverage or engagement.'
         },
-        sector_opportunities: sectorOpportunities.results || [],
-        stats: articleStats,
+        sector_opportunities: [],
+        sector_coverage: sectorOpportunities.results || [],
+        evidence: {
+            published_articles: Number((articleStats as Record<string, any>)?.total_articles || 0),
+            sectors_covered: (sectorOpportunities.results || []).length,
+            active_narrative_strategies: Number((narrativeStrength as Record<string, any>)?.strategies || 0),
+            status: sourceRecords.length > 0 ? 'source-linked' : 'zero published records in the evidence window',
+            source_records: sourceRecords.map((record, index) => ({
+                record: index + 1,
+                title: record.title,
+                published_at: record.published_at,
+                source_title: record.source_title,
+                source_url: record.source_url || `/stories/${record.slug}`,
+            })),
+            limitations: [
+                'Article volume is reporting coverage, not market opportunity or country performance.',
+                'The briefing is bounded by the latest 15 published records and can omit developments outside that window.',
+                'Article summaries do not replace audited accounts, legal instruments, regulatory filings or implementation data.',
+                'Every consequential conclusion requires verification against the primary documents identified in the briefing.',
+            ]
+        },
+        stats: {
+            total_articles: Number((articleStats as Record<string, any>)?.total_articles || 0),
+            total_views: Number((articleStats as Record<string, any>)?.total_views || 0),
+            average_audience_response: Number(Number((articleStats as Record<string, any>)?.avg_engagement || 0).toFixed(1)),
+        },
     });
 });
 
@@ -411,238 +404,25 @@ router.get('/reports/sector/:id', requireApiKey, rateLimit, async (c) => {
 // GET /market-intel/performance - -Powered Sector Performance (for MarketIntelPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/performance', async (c) => {
-    // Parse lens (defaults to investor)
-    const lens = (c.req.query('lens') || 'investor') as string;
-    const validLenses = ['investor', 'government', 'explorer'];
-    const activeLens = validLenses.includes(lens) ? lens : 'investor';
-    // 1. Get base sector data with article stats
-    const sectors = await c.env.DB.prepare(`
-        SELECT s.id, s.name,
-               COUNT(a.id) as article_count,
-               SUM(a.view_count) as total_views,
-               AVG(a.engagement_score) as avg_engagement
-        FROM sectors s
-        LEFT JOIN articles a ON a.sector_id = s.id AND a.status = 'published'
-        GROUP BY s.id
-    `).all();
-
-    // 2. Get financial metrics for data-grounded scoring
-    const metrics = await c.env.DB.prepare(`
-        SELECT sector_id, growth_rate, regulatory_outlook 
-        FROM market_metrics 
-        WHERE year = 2026
-    `).all();
-
-    const metricMap = new Map();
-    (metrics.results || []).forEach((m: any) => {
-        metricMap.set(m.sector_id, m);
-    });
-
-    // 3. Generate -powered performance metrics per sector (RAG-enhanced)
-    const performance = await Promise.all((sectors.results || []).map(async (s: any) => {
-        const metric = metricMap.get(s.id);
-
-        // --- RAG-Enhanced Sector Analysis (cached 6h per sector) ---
-        const aiResult = await getCached(
-            c.env,
-            `perf:rag:${s.id}:${activeLens}:v3`,
-            async () => {
-                // 1. Get recent articles with titles + summaries for context depth
-                const recentArticles = await c.env.DB.prepare(`
-                    SELECT title, summary, engagement_score, published_at FROM articles
-                    WHERE sector_id = ? AND status = 'published'
-                    ORDER BY published_at DESC
-                    LIMIT 8
-                `).bind(s.id).all();
-
-                const articles = (recentArticles.results || []) as any[];
-                if (articles.length === 0) {
-                    return { score: null, volatility: null, insight: null };
-                }
-
-                // 2. RAG: Vector search for the most investment-relevant content in this sector
-                let ragContext = '';
-                try {
-                    const lensQueries: Record<string, string> = {
-                        investor: `${s.name} Africa intrinsic value earnings stability margin of safety investment outlook`,
-                        government: `${s.name} Africa governance regulatory policy development impact trade integration`,
-                        explorer: `${s.name} Africa tourism hospitality destinations safety cultural experiences`
-                    };
-                    const query = lensQueries[activeLens];
-                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as Record<string, any>).data[0];
-                    const relevant = await c.env.VECTORS.query(vector, {
-                        topK: 5,
-                        returnMetadata: 'all',
-                        filter: { sector_id: s.id }
-                    });
-                    ragContext = relevant.matches
-                        .map(m => (m.metadata as Record<string, any>)?.text || (m.metadata as Record<string, any>)?.title || '')
-                        .filter(Boolean)
-                        .join('\n---\n')
-                        .slice(0, 2000);
-                } catch (e) { /* RAG unavailable, proceed with DB data */ }
-
-                // 3. Calculate engagement variance for volatility signal
-                const scores = articles.map(a => a.engagement_score || 0).filter(s => s > 0);
-                const avgEng = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-                const variance = scores.length > 1
-                    ? Math.sqrt(scores.reduce((sum, sc) => sum + Math.pow(sc - avgEng, 2), 0) / scores.length)
-                    : 0;
-
-                // 4. Build rich context for 
-                const articleContext = articles.map((a, i) =>
-                    `${i + 1}. "${a.title}" — ${(a.summary || '').slice(0, 150)} [Engagement: ${a.engagement_score || 'N/A'}]`
-                ).join('\n');
-
-                const financialContext = metric
-                    ? `Growth Rate: ${metric.growth_rate}%, Regulatory Outlook: ${metric.regulatory_outlook}`
-                    : 'No financial data available';
-
-                try {
-                    const systemMsg = activeLens === 'investor'
-                        ? `You are a VALUE INVESTMENT STRATEGIST trained in the Benjamin Graham school. You analyze African sector performance through the lens of intrinsic value, margin of safety, earnings stability, and financial strength.
-
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries (signal quality)
-- Engagement variance (${variance.toFixed(1)} stddev — high variance = volatile sentiment)
-- Financial metrics when available
-- RAG-retrieved deep context from the knowledge base
-
-Produce a GRAHAM-STYLE assessment:
-
-1. **Score (0-100)**: Based on VALUE INVESTMENT thesis. Consider:
-   - Does the sector exhibit stable, predictable earnings patterns?
-   - Is the sector trading below intrinsic value (margin of safety)?
-   - Are financial fundamentals strong (low debt, high dividends)?
-   - Is there defensive value (pension-grade) or enterprising value?
-   Score guide: 80+ = Strong intrinsic value with margin of safety. 60-79 = Enterprising value, requires monitoring. 40-59 = Speculative, insufficient margin. <40 = Overvalued or deteriorating.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on earnings consistency, NOT price momentum.
-   - Stable earnings across articles = Low. Mixed signals = Med. Erratic/conflicting = High.
-
-3. **Insight**: One precise sentence (max 15 words) stating the Graham-style value assessment.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                        : activeLens === 'government'
-                            ? `You are a CHIEF POLICY STRATEGIST advising African heads of state. You analyze sector performance through governance quality, fiscal sustainability, development impact, and regulatory frameworks.
-
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries
-- Engagement variance (${variance.toFixed(1)} stddev)
-- Financial metrics when available
-- RAG-retrieved deep context
-
-Produce a GOVERNANCE ASSESSMENT:
-
-1. **Score (0-100)**: Based on GOVERNANCE & POLICY outlook. Consider:
-   - Is the regulatory environment supportive or restrictive?
-   - What is the development impact (jobs, GDP contribution, SDG alignment)?
-   - Is there political stability and policy continuity in this sector?
-   Score guide: 80+ = Priority sector, strong governance support. 60-79 = Strategic potential, some regulatory gaps. 40-59 = Monitor, governance risks present. <40 = Diplomatic caution, significant policy risk.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on regulatory certainty and political stability.
-
-3. **Insight**: One precise sentence (max 15 words) summarizing the governance/policy take.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`
-                            : `You are a PREMIER AFRICA TRAVEL STRATEGIST for discerning global travelers. You analyze sector relevance through the lens of tourism potential, hospitality infrastructure, cultural richness, and travel safety.
-
-Analyze the "${s.name}" sector using ALL provided data:
-- Recent article headlines and summaries
-- Engagement variance (${variance.toFixed(1)} stddev)
-- Financial metrics when available
-- RAG-retrieved deep context
-
-Produce an EXPLORER ASSESSMENT:
-
-1. **Score (0-100)**: Based on TOURISM & EXPLORER appeal. Consider:
-   - Does this sector enhance travel experiences (hospitality, infrastructure, culture)?
-   - Is there visitor-relevant safety and accessibility?
-   - Are there unique, world-class experiences in this sector?
-   Score guide: 80+ = Unmissable, world-class tourism relevance. 60-79 = Highly recommended for travelers. 40-59 = Worth exploring if combined with other sectors. <40 = Limited traveler relevance.
-
-2. **Volatility ("Low"/"Med"/"High")**: Based on travel safety consistency and seasonal variations.
-
-3. **Insight**: One precise sentence (max 15 words) summarizing the explorer/tourism take.
-
-Respond ONLY with valid JSON:
-{"score": <number>, "volatility": "<Low|Med|High>", "insight": "<string>"}`;
-
-                    const userMsg = `SECTOR: ${s.name}
-ARTICLES (${articles.length} recent):
-                            ${articleContext}
-
-FINANCIAL DATA: ${financialContext}
-ARTICLE COUNT: ${s.article_count} total | AVG ENGAGEMENT: ${Math.round(avgEng)} / 100 | ENGAGEMENT STDDEV: ${variance.toFixed(1)}
-TOTAL VIEWS: ${s.total_views || 0}
-
-${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
-
-                    const raw = await callConfiguredAI(c.env, {
-                        prompt: `${systemMsg}\n\n${userMsg}`,
-                        max_tokens: 150,
-                        temperature: 0.2
-                    });
-                    const match = raw.match(/\{.*\}/s);
-                    if (match) {
-                        const parsed = JSON.parse(match[0]);
-                        const score = typeof parsed.score === 'number' ? Math.min(98, Math.max(5, parsed.score)) : null;
-                        const vol = ['Low', 'Med', 'High'].includes(parsed.volatility) ? parsed.volatility : null;
-                        const insight = typeof parsed.insight === 'string' ? parsed.insight.slice(0, 100) : null;
-                        return { score, volatility: vol, insight };
-                    }
-                    return { score: null, volatility: null, insight: null };
-                } catch (e) {
-                    return { score: null, volatility: null, insight: null };
-                }
-            },
-            { ttl: 3600 * 6 } // Cache results for 6 hours
-        );
-
-        // --- Blend score with data-grounded score (70% , 30% data) ---
-        let dataScore = 50;
-        if (metric?.growth_rate) {
-            dataScore = Math.min(98, Math.max(40, 40 + (metric.growth_rate * 5)));
-        } else if (s.avg_engagement) {
-            dataScore = Math.round(s.avg_engagement);
+    const lens = c.req.query('lens') || 'investor';
+    const cached = await getSectorPerformanceCache(c.env);
+    if (cached) {
+        if (!sectorPerformanceCacheIsFresh(cached)) {
+            c.executionCtx.waitUntil(refreshSectorPerformance(c.env).then(() => undefined));
         }
+        return c.json({ ...cached, lens });
+    }
 
-        let finalScore: number;
-        if (aiResult.score !== null) {
-            finalScore = Math.round(aiResult.score * 0.7 + dataScore * 0.3);
-        } else {
-            finalScore = dataScore;
-        }
-
-        // --- Volatility: prefer , fallback to data ---
-        let volatility = aiResult.volatility || 'Med';
-        if (!aiResult.volatility) {
-            if (metric?.regulatory_outlook) {
-                volatility = metric.regulatory_outlook === 'Positive' ? 'Low' :
-                    metric.regulatory_outlook === 'Volatile' ? 'High' : 'Med';
-            } else {
-                volatility = s.article_count > 20 ? 'Low' : s.article_count > 5 ? 'Med' : 'High';
-            }
-        }
-
-        return {
-            sector_id: s.id,
-            sector_name: s.name,
-            growth_yoy: finalScore,
-            volatility,
-            article_count: s.article_count || 0,
-            total_views: s.total_views || 0,
-            ai_insight: aiResult.insight || null
-        };
-    }));
-
-    return c.json({
-        data: performance,
-        updated_at: new Date().toISOString()
-    });
+    const refreshed = await refreshSectorPerformance(c.env);
+    if (!refreshed) {
+        return c.json({
+            error: 'official_series_refresh_failed',
+            message: 'The official sector series could not be retrieved and no verified snapshot has been saved yet.',
+            source_name: 'World Bank World Development Indicators',
+            source_url: 'https://data.worldbank.org/indicator',
+        }, 503);
+    }
+    return c.json({ ...refreshed, lens });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -651,7 +431,7 @@ ${ragContext ? `DEEP CONTEXT (from knowledge base):\n${ragContext}` : ''}`;
 router.get('/founder-log', async (c) => {
     return c.json(await getCached(
         c.env,
-        'founder-log:weekly',
+        'founder-log:weekly:depth-v6',
         async () => {
             // Fetch articles from the last 14 days
             const recentArticles = await c.env.DB.prepare(`
@@ -669,7 +449,7 @@ router.get('/founder-log', async (c) => {
             const totalThisWeek = articles.length;
 
             const prompt = `System: You are the independent, solo founder and lead researcher of "BOA-Story", a platform dedicated to covering African business, economies, and culture beyond mainstream narratives.
-You are writing a transparent, 3-paragraph "What I'm working on" update for your most dedicated supporters on Ko-fi.
+You are writing a transparent, three-part "What I'm working on" update for your most dedicated supporters on Ko-fi.
 Keep the tone grounded, authentic, slightly tired but passionate, and completely human. No corporate jargon. No AI-isms like "Ah," or "In conclusion".
 
 User: Based on the fact that we published ${totalThisWeek} articles recently:
@@ -679,12 +459,12 @@ Write the update. Format it exactly as a JSON array of 3 objects, where each obj
 - date: "Month Year" (e.g., "${new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())}")
 - tag: a short 1-2 word tag (e.g., "Research Log", "Platform Update", "Founder Note")
 - title: A punchy, conversational title for the paragraph
-- body: The paragraph text (3-4 sentences max)
+- body: A developed 500-700 word entry explaining the reporting work, specific countries or sectors covered, source discoveries, what was learned, what remains uncertain, editorial tradeoffs, and what happens next. Do not pretend that publication volume proves market impact.
 
 Return ONLY the raw JSON array.`;
 
             try {
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 500, temperature: 0.6 });
+                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 3600, temperature: 0.35, response_profile: 'structured-analysis', structured_output: true });
                 const match = text.match(/\[.*\]/s);
                 if (match) {
                     return JSON.parse(match[0]);
@@ -711,130 +491,137 @@ Return ONLY the raw JSON array.`;
 // GET /market-intel/leading-sector - Top performing sector (for MarketIntelPage header)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/leading-sector', async (c) => {
-    return c.json(await getCached(
-        c.env,
-        'leading-sector-insight',
-        async () => {
-            const result = await c.env.DB.prepare(`
-                SELECT s.id, s.name,
-                       SUM(a.view_count) as total_views,
-                       COUNT(a.id) as article_count
-                FROM sectors s
-                INNER JOIN articles a ON a.sector_id = s.id 
-                WHERE a.status = 'published' 
-                  AND a.published_at > datetime('now', '-7 days')
-                GROUP BY s.id
-                ORDER BY total_views DESC
-                LIMIT 1
-            `).first() as Record<string, any> | null;
+    const snapshot = await getSectorPerformanceCache(c.env) || await refreshSectorPerformance(c.env);
+    const comparable = (snapshot?.data || []).filter(item =>
+        ['agriculture', 'energy', 'infrastructure', 'manufacturing'].includes(item.sector_id)
+        && item.headline_unit === '%'
+    );
+    const leading = [...comparable].sort((a, b) => b.headline_value - a.headline_value)[0];
+    if (!leading) {
+        return c.json({ error: 'official_series_refresh_failed', message: 'No comparable real-growth sector series has been saved yet.' }, 503);
+    }
+    return c.json({
+        name: leading.sector_name,
+        sector_id: leading.sector_id,
+        metric: leading.indicator_name,
+        value: leading.headline_value,
+        unit: leading.headline_unit,
+        comparison_value: leading.comparison_value,
+        comparison_unit: leading.comparison_unit,
+        period_start: leading.period_start,
+        period_end: leading.period_end,
+        countries_reported: leading.countries_reported,
+        methodology: 'Ranks only the directly comparable annual real-growth WDI proxies for agriculture, broad industry, fixed investment and manufacturing. It does not compare incompatible credit, digital-adoption, health-spending or travel-receipts series.',
+        source_name: leading.source_name,
+        source_url: leading.source_url,
+        updated_at: snapshot?.retrieved_at || new Date().toISOString(),
+    });
+});
 
-            if (!result) {
-                return { name: 'General Market', growth: 0, trend: 'flat', updated_at: new Date().toISOString() };
-            }
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /market-intel/coverage-pulse — the free-visitor intelligence view.
+// Every number here is REAL coverage data. Its predecessor blended pseudo-
+// metrics ("stability 100/moderate", identical perception/reality rows) that
+// read as meaningless to visitors — because they were.
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/coverage-pulse', async (c) => {
+    const data = await getCached(c.env, 'coverage:pulse:evidence-contract-v2', async () => {
+        const [totals, topSector, countries, thinnest] = await Promise.all([
+            c.env.DB.prepare(`
+                SELECT COUNT(*) AS stories, COUNT(DISTINCT country_code) AS countries
+                FROM articles
+                WHERE status = 'published' AND published_at > datetime('now', '-7 days')
+            `).first<{ stories: number; countries: number }>(),
+            c.env.DB.prepare(`
+                SELECT s.name, COUNT(*) AS n
+                FROM articles a JOIN sectors s ON s.id = a.sector_id
+                WHERE a.status = 'published' AND a.published_at > datetime('now', '-7 days')
+                  AND s.id != 'general'
+                GROUP BY s.id ORDER BY n DESC LIMIT 1
+            `).first<{ name: string; n: number }>(),
+            c.env.DB.prepare(`
+                SELECT c.code AS country_code, c.name AS country_name,
+                       SUM(CASE WHEN a.published_at > datetime('now', '-7 days') THEN 1 ELSE 0 END) AS this_week,
+                       SUM(CASE WHEN a.published_at <= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS last_week
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    AND a.published_at > datetime('now', '-14 days')
+                GROUP BY c.code
+                HAVING this_week > 0 OR last_week > 0
+                ORDER BY this_week DESC, (this_week - last_week) DESC, c.name ASC
+            `).all<{ country_code: string; country_name: string; this_week: number; last_week: number }>(),
+            c.env.DB.prepare(`
+                SELECT c.region, COUNT(a.id) AS n
+                FROM countries c
+                LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
+                    AND a.published_at > datetime('now', '-7 days')
+                GROUP BY c.region ORDER BY n ASC LIMIT 1
+            `).first<{ region: string; n: number }>(),
+        ]);
 
-            const articles = await c.env.DB.prepare(`
-                SELECT title FROM articles 
-                WHERE sector_id = ? AND status = 'published' AND published_at > datetime('now', '-7 days')
-                ORDER BY view_count DESC LIMIT 5
-            `).bind(result.id).all();
-
-            const headlines = (articles.results || []).map((a: any) => a.title).join('; ');
-
-            let growth = 0;
-            let trend = 'flat';
-            
-            try {
-                const prompt = `You are an expert market analyst for African economies. Evaluate these recent headlines for the "${result.name}" sector:
-Headlines: ${headlines}
-
-Provide a realistic short-term growth percentage estimate (-100 to +100) and an overall sentiment trend ('up', 'down', or 'flat').
-Return ONLY valid JSON matching this schema: {"growth": number, "trend": "up" | "down" | "flat"}`;
-
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
-                const match = text.match(/\{.*\}/s);
-                if (match) {
-                    const parsed = JSON.parse(match[0]);
-                    growth = typeof parsed.growth === 'number' ? parsed.growth : 0;
-                    trend = ['up', 'down', 'flat'].includes(parsed.trend) ? parsed.trend : 'flat';
-                }
-            } catch (e) {
-                growth = Math.min(5 + (result.article_count * 0.8), 20);
-                trend = 'up';
-            }
-
-            return {
-                name: result.name,
-                growth: parseFloat(Number(growth).toFixed(1)),
-                trend,
-                updated_at: new Date().toISOString()
-            };
-        },
-        { ttl: 3600 } // Cache for 1 hour
-    ));
+        return {
+            stories_7d: totals?.stories || 0,
+            countries_7d: totals?.countries || 0,
+            most_reported_sector: topSector ? { name: topSector.name, stories: topSector.n } : { name: 'Zero qualifying sector stories', stories: 0 },
+            // Compatibility alias. This is editorial volume, never performance.
+            top_sector: topSector ? { name: topSector.name, stories: topSector.n } : { name: 'Zero qualifying sector stories', stories: 0 },
+            countries: countries.results || [],
+            thinnest_region: thinnest ? { region: thinnest.region, stories: thinnest.n } : { region: 'Zero configured regions', stories: 0 },
+            updated_at: new Date().toISOString(),
+        };
+    }, { ttl: 600 });
+    return c.json(data);
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /market-intel/sentiment-divergence - Country reality vs perception (for NarrativesPage)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sentiment-divergence', async (c) => {
-    const countries = await c.env.DB.prepare(`
-        SELECT c.code, c.name,
-                        c.diplomacy_score,
-                        c.image_strength_score,
-                        COUNT(a.id) as article_count,
-                        AVG(a.engagement_score) as avg_engagement
-        FROM countries c
-        LEFT JOIN articles a ON a.country_code = c.code AND a.status = 'published'
-        GROUP BY c.code
-        ORDER BY article_count DESC
-        LIMIT 5
-                        `).all();
+    const rows = await c.env.DB.prepare(`
+        WITH coverage AS (
+            SELECT c.code, c.name, c.region,
+                   SUM(CASE WHEN a.published_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) AS this_week,
+                   SUM(CASE WHEN a.published_at >= datetime('now', '-14 days')
+                             AND a.published_at < datetime('now', '-7 days') THEN 1 ELSE 0 END) AS last_week,
+                   AVG(CASE WHEN a.published_at >= datetime('now', '-7 days') THEN a.engagement_score END) AS audience_response,
+                   MAX(a.published_at) AS latest_reported_at
+            FROM countries c
+            LEFT JOIN articles a
+              ON a.country_code = c.code
+             AND a.status = 'published'
+             AND a.published_at >= datetime('now', '-14 days')
+            GROUP BY c.code, c.name, c.region
+        ),
+        ranked AS (
+            SELECT *,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY region
+                       ORDER BY this_week DESC, last_week DESC, name
+                   ) AS rn
+            FROM coverage
+        )
+        SELECT code, name, region, this_week, last_week, audience_response, latest_reported_at
+        FROM ranked
+        WHERE rn = 1 AND (this_week > 0 OR last_week > 0)
+        ORDER BY region
+    `).all<Record<string, any>>();
 
-    const divergence = await Promise.all((countries.results || []).map(async (c: any) => {
-        // Reality Check (RAG)
-        const reality = await getCached(
-            c.env,
-            CACHE_KEYS.marketSentiment(c.code),
-            async () => {
-                const query = `political stability economic outlook ${c.name}`;
-                try {
-                    const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                    const vector = (embedding as Record<string, any>).data[0];
-                    const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                    const context = relevant.matches.map((m: any) => (m.metadata as Record<string, any>).title).join('\n');
-
-                    const prompt = `You are a Risk Analyst. Grade the "Reality" of investing in this country 0-100 (100 = Excellent). Return ONLY the number.
-Country: ${c.name}.Recent News: 
-${context}`;
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 10, temperature: 0.1 });
-                    const score = parseInt(text.replace(/[^0-9]/g, ''));
-                    return isNaN(score) ? 50 : score;
-                } catch (e) { return 50; }
-            },
-            { ttl: CACHE_TTL.DASHBOARD }
-        );
-
-        // Perception is purely the engagement score (media attention), scaled
-        const perception = Math.round((c.avg_engagement || 0) * 1.2);
-        const gap = reality - perception;
-
-        return {
-            country_code: c.code,
-            country_name: c.name,
-            reality_score: reality,
-            perception_score: perception,
-            gap: gap
-        };
+    const countries = (rows.results || []).map(row => ({
+        country_code: row.code,
+        country_name: row.name,
+        region: row.region,
+        coverage_this_week: Number(row.this_week || 0),
+        coverage_last_week: Number(row.last_week || 0),
+        coverage_change: Number(row.this_week || 0) - Number(row.last_week || 0),
+        audience_response: row.audience_response === null ? 0 : Number(Number(row.audience_response).toFixed(1)),
+        latest_reported_at: row.latest_reported_at || 'No published record in the fourteen-day comparison window',
     }));
 
-    const avgGap = divergence.length > 0
-        ? Math.round(divergence.reduce((sum, d) => sum + d.gap, 0) / divergence.length)
-        : 25;
-
     return c.json({
-        average_divergence: avgGap,
-        countries: divergence,
-        updated_at: new Date().toISOString()
+        evidence_scope: 'One highest-coverage country per configured region, using two consecutive seven-day windows',
+        countries,
+        methodology: 'BOA-Story does not calculate a reality-versus-perception score from headlines, engagement, diplomacy or image fields. The replacement fields report weekly editorial coverage and descriptive audience activity only.',
+        updated_at: new Date().toISOString(),
     });
 });
 
@@ -893,83 +680,31 @@ router.post('/metrics', requireApiKey, async (c) => {
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sector/:id/analytics', async (c) => {
     const sectorId = c.req.param('id');
-
-    const [articleStats, recentArticles] = await Promise.all([
-        c.env.DB.prepare(`
-            SELECT COUNT(*) as count, AVG(engagement_score) as avg_engagement
-            FROM articles 
-            WHERE sector_id = ? AND status = 'published'
-                        `).bind(sectorId).first(),
-
-        c.env.DB.prepare(`
-            SELECT engagement_score FROM articles 
-            WHERE sector_id = ? AND status = 'published' 
-            AND published_at > datetime('now', '-30 days')
-            ORDER BY published_at DESC
-            LIMIT 20
-                        `).bind(sectorId).all()
-    ]);
-
-    const stats = articleStats as Record<string, any>;
-    const articles = (recentArticles.results || []) as any[];
-
-    // Calculate volatility from engagement variance
-    const scores = articles.map(a => a.engagement_score || 50);
-    const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 50;
-    const variance = scores.length > 0
-        ? scores.reduce((sum, s) => sum + Math.pow(s - avgScore, 2), 0) / scores.length
-        : 0;
-    const volatilityScore = Math.sqrt(variance);
-
-    const volatilityIndex = volatilityScore > 20 ? 'HIGH'
-        : volatilityScore > 10 ? 'MODERATE'
-            : 'LOW';
-
-    // Supply chain status based on article count and engagement
-    // Supply Chain Analysis
-    const supplyChain = await getCached(
-        c.env,
-        CACHE_KEYS.sectorSupplyChain(sectorId),
-        async () => {
-            const query = `supply chain logistics disruption shortage ${sectorId}`; // simplified query using sectorId as keyword proxy
-            try {
-                const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                const vector = (embedding as Record<string, any>).data[0];
-                const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
-
-                const prompt = `Analyze supply chain health for the sector based on this context:
-Sector Context:
-${context}
-
-Return ONLY valid JSON matching this schema: {"upstream":"Stable"|"Strain"|"Blockage", "midstream":"Stable"|"Strain"|"Blockage", "downstream":"Stable"|"Strain"|"Blockage"}`;
-
-                const text = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.1 });
-                const match = text.match(/\{.*\}/s);
-                return match ? JSON.parse(match[0]) : { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
-            } catch (e) {
-                return { upstream: 'Stable', midstream: 'Strain', downstream: 'Stable' };
-            }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
-
-    const upstream = supplyChain.upstream;
-    const midstream = supplyChain.midstream;
-    const downstream = supplyChain.downstream;
-
-    // Confidence score based on data quality
-    const articleCount = articles.length;
-    const confidence = Math.min(95, 70 + (articleCount / 5) + (scores.length / 2));
+    const evidence = await c.env.DB.prepare(`
+        SELECT COUNT(*) AS stories_30d,
+               COUNT(DISTINCT country_code) AS countries_30d,
+               COUNT(DISTINCT COALESCE(NULLIF(source_url, ''), NULLIF(source_title, ''), id)) AS source_records_30d,
+               SUM(COALESCE(view_count, 0)) AS views_30d,
+               AVG(engagement_score) AS audience_response,
+               MAX(published_at) AS latest_reported_at
+        FROM articles
+        WHERE sector_id = ? AND status = 'published'
+          AND published_at >= datetime('now', '-30 days')
+    `).bind(sectorId).first<Record<string, any>>();
 
     return c.json({
         sector_id: sectorId,
-        volatility_index: volatilityIndex,
-        volatility_score: Math.round(volatilityScore),
-        supply_chain: { upstream, midstream, downstream },
-        confidence: Number(confidence.toFixed(1)),
-        data_points: articleCount,
-        updated_at: new Date().toISOString()
+        data_points: Number(evidence?.stories_30d || 0),
+        coverage: {
+            stories_30d: Number(evidence?.stories_30d || 0),
+            countries_30d: Number(evidence?.countries_30d || 0),
+            source_records_30d: Number(evidence?.source_records_30d || 0),
+            views_30d: Number(evidence?.views_30d || 0),
+            audience_response: evidence?.audience_response === null ? 0 : Number(Number(evidence?.audience_response || 0).toFixed(1)),
+            latest_reported_at: evidence?.latest_reported_at || 'No story published in the current 30-day window',
+        },
+        methodology: 'BOA-Story does not infer market volatility, supply-chain health or confidence from article engagement or headline synthesis. Coverage fields describe platform reporting activity only.',
+        updated_at: new Date().toISOString(),
     });
 });
 
@@ -983,8 +718,7 @@ router.get('/sector/:id/trend-history', async (c) => {
     const weeklyData = await c.env.DB.prepare(`
         SELECT 
             strftime('%W', published_at) as week,
-                        COUNT(*) as count,
-                        AVG(engagement_score) as avg_engagement
+                        COUNT(*) as count
         FROM articles 
         WHERE sector_id = ? AND status = 'published' 
         AND published_at > datetime('now', '-35 days')
@@ -995,22 +729,14 @@ router.get('/sector/:id/trend-history', async (c) => {
 
     const data = (weeklyData.results || []) as any[];
 
-    // Generate 5-point trend from data
-    let trend: number[];
-    if (data.length >= 2) {
-        trend = data.map(d => Math.round(d.avg_engagement || d.count * 5));
-    } else {
-        // Not enough data for a trend - return empty
-        trend = [];
-    }
-
-    // Ensure values are in 0-30 range for sparkline
-    const normalizedTrend = trend.map(v => Math.min(30, Math.max(5, v / 3)));
+    const trend = data.map(d => Number(d.count || 0));
+    const direction = trend.length < 2 ? 'flat' : trend[trend.length - 1] > trend[0] ? 'up' : trend[trend.length - 1] < trend[0] ? 'down' : 'flat';
 
     return c.json({
         sector_id: sectorId,
-        trend: normalizedTrend,
-        direction: normalizedTrend[4] > normalizedTrend[0] ? 'up' : 'down',
+        trend,
+        direction,
+        methodology: 'Weekly points are published BOA-Story article counts. Direction describes coverage momentum, not market performance.',
         updated_at: new Date().toISOString()
     });
 });
@@ -1023,61 +749,30 @@ router.get('/sector/:id/velocity', async (c) => {
 
     return c.json(await getCached(
         c.env,
-        `sector-velocity-${sectorId}`,
+        `sector-velocity:${sectorId}:evidence-contract-v2`,
         async () => {
-            const metrics = await c.env.DB.prepare(`
-                SELECT growth_rate, investment_volume_usd, market_size_usd
-                FROM market_metrics
-                WHERE sector_id = ?
-                ORDER BY year DESC
-                LIMIT 1
-            `).bind(sectorId).first() as Record<string, any>;
-
             const articleStats = await c.env.DB.prepare(`
-                SELECT COUNT(*) as count
+                SELECT SUM(CASE WHEN published_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) AS current_30d,
+                       SUM(CASE WHEN published_at < datetime('now', '-30 days') THEN 1 ELSE 0 END) AS previous_30d,
+                       COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-30 days') THEN country_code END) AS countries_30d,
+                       COUNT(DISTINCT CASE WHEN published_at >= datetime('now', '-30 days') THEN COALESCE(NULLIF(source_url, ''), NULLIF(source_title, ''), id) END) AS source_records_30d
                 FROM articles
                 WHERE sector_id = ? AND status = 'published'
-                AND published_at > datetime('now', '-30 days')
+                AND published_at > datetime('now', '-60 days')
             `).bind(sectorId).first() as Record<string, any>;
 
-            const sector = await c.env.DB.prepare(`SELECT name FROM sectors WHERE id = ?`).bind(sectorId).first() as Record<string, any>;
-
-            let cagr = metrics?.growth_rate;
-            let dealFlow = metrics?.investment_volume_usd || metrics?.market_size_usd || 0;
-            const activeProjects = articleStats?.count || 0;
-
-            if (cagr === undefined && sector) {
-                try {
-                    const articles = await c.env.DB.prepare(`
-                        SELECT title FROM articles 
-                        WHERE sector_id = ? AND status = 'published'
-                        ORDER BY published_at DESC LIMIT 5
-                    `).bind(sectorId).all();
-                    const headlines = (articles.results || []).map((a: any) => a.title).join('; ');
-                    
-                    const prompt = `You are an expert economic analyst. Based on these headlines for the ${sector.name} sector in Africa: "${headlines}", estimate a realistic 5-year Compound Annual Growth Rate (CAGR) percentage.
-Return ONLY valid JSON matching this schema: {"cagr": number}`;
-
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.1 });
-                    const match = text.match(/\{.*\}/s);
-                    if (match) {
-                        const parsed = JSON.parse(match[0]);
-                        if (typeof parsed.cagr === 'number') {
-                            cagr = parsed.cagr;
-                        }
-                    }
-                } catch (e) {
-                    cagr = 8.5; // Final fallback if fails
-                }
-            } else if (cagr === undefined) {
-                cagr = 8.5;
-            }
+            const current = Number(articleStats?.current_30d || 0);
+            const previous = Number(articleStats?.previous_30d || 0);
 
             return {
                 sector_id: sectorId,
-                cagr_5yr: Number(Number(cagr).toFixed(1)),
-                deal_flow_usd: dealFlow,
-                active_projects: activeProjects,
+                coverage_stories_30d: current,
+                coverage_previous_30d: previous,
+                coverage_change: current - previous,
+                countries_covered_30d: Number(articleStats?.countries_30d || 0),
+                source_records_30d: Number(articleStats?.source_records_30d || 0),
+                reporting_window_days: 30,
+                methodology: 'Velocity is the observed change in BOA-Story publishing volume between consecutive 30-day windows. It is not CAGR, deal flow, project count or sector performance.',
                 updated_at: new Date().toISOString()
             };
         },
@@ -1089,10 +784,11 @@ Return ONLY valid JSON matching this schema: {"cagr": number}`;
 // GET /market-intel/opportunities - High-growth intersections
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/opportunities', async (c) => {
-    return c.json(await getCached(
-        c.env,
-        'strategic-opportunities',
-        async () => {
+    const cacheKey = 'strategic-opportunities:depth-v8';
+    const cached = await getCachedValue<{ data: any[]; updated_at?: string }>(c.env, cacheKey);
+    if (cached) return c.json(cached);
+
+    const generateOpportunities = async () => {
             const opportunities = await c.env.DB.prepare(`
                 SELECT 
                     c.code as country_code,
@@ -1100,13 +796,14 @@ router.get('/opportunities', async (c) => {
                     s.id as sector_id,
                     s.name as sector_name,
                     COUNT(a.id) as article_count,
-                    AVG(a.engagement_score) as avg_score
+                    AVG(a.engagement_score) as avg_score,
+                    MAX(a.published_at) as latest_reported_at
                 FROM articles a
                 JOIN countries c ON a.country_code = c.code
                 JOIN sectors s ON a.sector_id = s.id
                 WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
                 GROUP BY c.code, s.id
-                ORDER BY avg_score DESC
+                ORDER BY article_count DESC, latest_reported_at DESC
                 LIMIT 6
             `).all();
 
@@ -1114,35 +811,73 @@ router.get('/opportunities', async (c) => {
             
             if (items.length === 0) return { data: [] };
 
-            const formatted = await Promise.all(items.map(async (o: any) => {
+            const formatOpportunity = async (o: any) => {
                 const recentArticles = await c.env.DB.prepare(`
-                    SELECT title FROM articles 
+                    SELECT id, slug, title, summary, published_at, source_title, source_url FROM articles
                     WHERE country_code = ? AND sector_id = ? AND status = 'published'
-                    ORDER BY (engagement_score * 1.0 / ((julianday('now') - julianday(published_at)) + 1)) DESC LIMIT 3
+                    ORDER BY published_at DESC LIMIT 12
                 `).bind(o.country_code, o.sector_id).all();
 
-                const headlines = (recentArticles.results || []).map((a: any) => a.title).join('; ');
+                const sourceRecords = recentArticles.results || [];
+                const evidence = sourceRecords.map((article: any, index: number) =>
+                    `[${index + 1}] ${article.published_at || 'date unavailable'} — ${article.title}\n${article.summary || 'Summary unavailable.'}\nSource: ${article.source_title || 'source unavailable'} | ${article.source_url || 'URL unavailable'}`
+                ).join('\n\n');
                 
-                let generatedTitle = `${o.sector_name} Activity`;
-                let generatedSummary = `Analysis pending for ${o.country_name}.`;
+                let generatedTitle = `${o.country_name} ${o.sector_name} evidence brief`;
+                let generatedSummary = sourceRecords.slice(0, 6).map((article: any, index: number) =>
+                    `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}. ${article.summary || 'The record does not include a usable summary.'}`
+                ).join('\n\n') || 'No source-linked records are available for a substantive brief.';
+                let whyItMatters = `This is a reporting-led watchlist, not an investment recommendation. BOA-Story recorded ${Number(o.article_count || 0)} published items at this country-sector intersection during the measured window. The records identify developments requiring primary-source verification, but coverage volume, recency and audience activity cannot establish market size, profitability, policy durability, investability or future returns. Readers should use the dated findings below to locate the responsible institutions, operating entities and original documents before drawing a decision.
+
+The decision value lies in the record trail, not the ranking. A reader can compare announcement dates with later implementation evidence, identify which institution owns each obligation, distinguish a financing commitment from a disbursement, and test whether reported activity has reached affected businesses, workers or communities. The current window can reveal where scrutiny should begin, but it cannot show the full operating history or the developments that attracted little coverage. Before treating any pattern as durable, verify the legal instrument, funding source, delivery timetable, counterparties, audited performance and current regulatory position. Compare those primary materials with contrary records, delayed milestones and independent reporting. If the evidence remains announcement-led, the responsible conclusion is that the intersection requires further reporting rather than that it represents a validated opportunity.`;
+                let evidencePoints: string[] = sourceRecords.slice(0, 8).map((article: any, index: number) =>
+                    `[${index + 1}] ${article.published_at || 'Date unavailable'}: ${article.title}; source: ${article.source_title || article.source_url || 'not supplied'}.`
+                );
+                let counterSignals: string[] = [
+                    'Coverage volume and audience activity do not establish market growth, profitability or investment readiness.',
+                    'The records may repeat the same underlying announcement and therefore may not represent independent confirmation.',
+                    'Article summaries do not replace audited financial statements, regulatory filings, contracts or implementation data.',
+                    'The current reporting window can omit slower-moving constraints, failed projects and developments that received little coverage.',
+                ];
+                let diligenceQuestions: string[] = [
+                    'Which primary financial statements, regulatory filings and official notices substantiate the reported developments?',
+                    'Which named entity is legally responsible for delivery, financing, oversight and performance reporting?',
+                    'What dated implementation milestones have been completed, delayed, revised or cancelled?',
+                    'Which claims are independently corroborated rather than repeated from a single announcement or press release?',
+                    'What evidence would contradict the apparent direction of the current reporting record?',
+                ];
+                let claimLedger: string[] = [`This intersection is prominent in BOA-Story's current reporting set; records [1-${Math.max(1, Math.min(sourceRecords.length, 8))}] support that coverage observation, which changes if deduplication or a wider reporting window materially alters the count.`];
                 
                 try {
-                    const prompt = `You are a strategic investment advisor. Based on these top headlines for ${o.sector_name} in ${o.country_name}, synthesize the core opportunity.
-Headlines: ${headlines}
+                    const prompt = `System: You are BOA-Story's evidence desk. Assess a reporting-led watchlist item using only the numbered records. This is not a recommendation. Never infer growth, deal flow, stability, investability or future returns from coverage volume or audience engagement. Cite record numbers inline and separate reported facts from analysis.
 
-Return valid JSON with two fields:
-- "title": A compelling, punchy 4-7 word headline describing the opportunity.
-- "summary": A concise 2-sentence summary of the investment or strategic thesis.
-JSON format ONLY.`;
-                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 150, temperature: 0.3 });
+User: Build a detailed watchlist brief for ${o.sector_name} in ${o.country_name}. Return ONLY valid JSON with this exact schema:
+{
+  "title": "specific 5-10 word evidence-led title",
+  "executive_summary": "350-500 words covering chronology, actors, documented mechanisms, stakeholder effects and implications with inline [n] citations",
+  "why_it_matters": "250-350 words clearly labeled as analysis, including immediate, medium-term and conditional implications",
+  "evidence_points": ["6-10 specific dated, cited findings"],
+  "counter_signals": ["4-7 contradictions, alternative explanations, constraints or source limitations"],
+  "diligence_questions": ["5-8 concrete questions requiring primary-source verification"],
+  "claim_ledger": ["major conclusion — supporting [n] records — evidence that would change the conclusion"]
+}
+
+RECORDS:
+${evidence}`;
+                    const text = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
                     const match = text.match(/\{.*\}/s);
                     if (match) {
                         const parsed = JSON.parse(match[0]);
                         if (parsed.title) generatedTitle = parsed.title;
-                        if (parsed.summary) generatedSummary = parsed.summary;
+                        if (typeof parsed.executive_summary === 'string' && parsed.executive_summary.trim().split(/\s+/).length >= 250) generatedSummary = parsed.executive_summary;
+                        if (typeof parsed.why_it_matters === 'string' && parsed.why_it_matters.trim().split(/\s+/).length >= 150) whyItMatters = parsed.why_it_matters;
+                        if (Array.isArray(parsed.evidence_points) && parsed.evidence_points.length >= 4) evidencePoints = parsed.evidence_points.slice(0, 10);
+                        if (Array.isArray(parsed.counter_signals) && parsed.counter_signals.length >= 3) counterSignals = parsed.counter_signals.slice(0, 7);
+                        if (Array.isArray(parsed.diligence_questions) && parsed.diligence_questions.length >= 4) diligenceQuestions = parsed.diligence_questions.slice(0, 8);
+                        if (Array.isArray(parsed.claim_ledger) && parsed.claim_ledger.length >= 1) claimLedger = parsed.claim_ledger.slice(0, 10);
                     }
                 } catch (e) {
-                    // Fallback to generic text on error
+                    // Preserve the evidence-limited fallback rather than inventing a thesis.
                 }
 
                 return {
@@ -1152,14 +887,92 @@ JSON format ONLY.`;
                     sector_name: o.sector_name,
                     title: generatedTitle,
                     summary: generatedSummary,
-                    score: Math.round(o.avg_score || 0)
+                    why_it_matters: whyItMatters,
+                    evidence_points: evidencePoints,
+                    counter_signals: counterSignals,
+                    diligence_questions: diligenceQuestions,
+                    claim_ledger: claimLedger,
+                    coverage_stories: Number(o.article_count || 0),
+                    audience_response: Math.round(o.avg_score || 0),
+                    latest_reported_at: o.latest_reported_at,
+                    score: Math.round(o.avg_score || 0),
+                    methodology: 'Ranked by BOA-Story reporting volume and recency. Audience response is descriptive platform activity, not an opportunity score.'
                 };
-            }));
+            };
+
+            // Keep long structured generations below the shared model's
+            // concurrency pressure point so cards do not fall into fallback.
+            const formatted: any[] = [];
+            for (let index = 0; index < items.length; index += 2) {
+                formatted.push(...await Promise.all(items.slice(index, index + 2).map(formatOpportunity)));
+            }
 
             return { data: formatted, updated_at: new Date().toISOString() };
-        },
-        { ttl: 3600 * 12 } // Cache for 12 hours
-    ));
+    };
+    c.executionCtx.waitUntil(
+        getCached(c.env, cacheKey, generateOpportunities, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+    );
+    return c.json(await buildImmediateOpportunities(c.env));
 });
+
+async function buildImmediateOpportunities(env: Env) {
+    const opportunities = await env.DB.prepare(`
+        SELECT c.code AS country_code, c.name AS country_name,
+               s.id AS sector_id, s.name AS sector_name,
+               COUNT(a.id) AS article_count, AVG(a.engagement_score) AS avg_score,
+               MAX(a.published_at) AS latest_reported_at
+        FROM articles a
+        JOIN countries c ON a.country_code = c.code
+        JOIN sectors s ON a.sector_id = s.id
+        WHERE a.status = 'published' AND a.published_at > datetime('now', '-30 days')
+        GROUP BY c.code, s.id
+        ORDER BY article_count DESC, latest_reported_at DESC
+        LIMIT 6
+    `).all<Record<string, any>>();
+
+    const data = await Promise.all((opportunities.results || []).map(async opportunity => {
+        const recent = await env.DB.prepare(`
+            SELECT title, summary, published_at, source_title, source_url
+            FROM articles
+            WHERE country_code = ? AND sector_id = ? AND status = 'published'
+            ORDER BY published_at DESC LIMIT 8
+        `).bind(opportunity.country_code, opportunity.sector_id).all<Record<string, any>>();
+        const records = recent.results || [];
+        const evidencePoints = records.slice(0, 8).map((article, index) =>
+            `[${index + 1}] ${article.published_at || 'Date not recorded'}: ${article.title}; source: ${article.source_title || article.source_url || 'source not supplied'}.`
+        );
+        return {
+            country_code: opportunity.country_code,
+            country_name: opportunity.country_name,
+            sector_id: opportunity.sector_id,
+            sector_name: opportunity.sector_name,
+            title: `${opportunity.country_name} ${opportunity.sector_name} evidence brief`,
+            summary: records.slice(0, 6).map((article, index) =>
+                `${index + 1}. ${article.title} (${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`
+            ).join('\n\n'),
+            why_it_matters: `BOA-Story recorded ${Number(opportunity.article_count || 0)} published reports at this country-sector intersection in the current 30-day window. That identifies a reporting-led watchlist for primary-source review; it does not establish growth, profitability, policy durability or investability. Verify the named institutions, legal instruments, financing, implementation milestones and contrary evidence behind the linked records before making a decision.`,
+            evidence_points: evidencePoints,
+            counter_signals: [
+                'Reporting volume and audience activity are not measures of market growth or investment readiness.',
+                'Several records may repeat the same announcement rather than provide independent confirmation.',
+                'The 30-day window can omit older constraints, failed projects and developments receiving little coverage.',
+            ],
+            diligence_questions: [
+                'Which primary filings, legal instruments and official notices substantiate these reports?',
+                'Which named entity owns delivery, financing, oversight and performance reporting?',
+                'Which milestones have been completed, delayed, revised or cancelled?',
+                'What current evidence would contradict the apparent pattern in these records?',
+            ],
+            claim_ledger: [`The intersection is prominent in the current BOA-Story reporting set; records [1-${Math.max(1, evidencePoints.length)}] support that coverage observation.`],
+            coverage_stories: Number(opportunity.article_count || 0),
+            audience_response: Math.round(Number(opportunity.avg_score || 0)),
+            latest_reported_at: opportunity.latest_reported_at,
+            score: Math.round(Number(opportunity.avg_score || 0)),
+            methodology: 'Ranked by BOA-Story reporting volume and recency. Audience response is descriptive platform activity, not an opportunity score.',
+        };
+    }));
+
+    return { data, updated_at: new Date().toISOString() };
+}
 
 export { router as marketIntelRouter };

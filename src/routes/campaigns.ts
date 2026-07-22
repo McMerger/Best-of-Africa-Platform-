@@ -16,7 +16,7 @@ router.get('/', async (c) => {
 
     let query = `
         SELECT c.*, 
-               (SELECT COUNT(*) FROM articles a WHERE a.sponsor_id = c.sponsor_id AND a.is_sponsored = 1) as article_count
+               (SELECT COUNT(*) FROM articles a WHERE a.sponsor_id = c.client_id AND a.is_sponsored = 1) as article_count
         FROM campaigns c
         WHERE 1=1
     `;
@@ -325,6 +325,88 @@ router.get('/:id/analytics', async (c) => {
             end_date: data.end_date
         }
     });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// GET /campaigns/:id/timeseries - Real daily impression/click series
+// ───────────────────────────────────────────────────────────────────────────────
+router.get('/:id/timeseries', async (c) => {
+    const id = c.req.param('id');
+    const days = Math.min(parseInt(c.req.query('days') || '14', 10) || 14, 90);
+
+    const rows = await c.env.DB.prepare(`
+        SELECT date(created_at) AS day,
+               SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END) AS impressions,
+               SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS clicks
+        FROM campaign_events
+        WHERE campaign_id = ? AND created_at >= date('now', ?)
+        GROUP BY day
+        ORDER BY day ASC
+    `).bind(id, `-${days} days`).all();
+
+    return c.json({ success: true, data: rows.results || [] });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns/:id/track - Record an impression/click (also keeps totals in sync)
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/:id/track', async (c) => {
+    const id = c.req.param('id');
+    let body: Record<string, any> = {};
+    try { body = await c.req.json(); } catch { /* allow empty */ }
+    const eventType = body.event_type === 'click' ? 'click' : 'impression';
+
+    const campaign = await c.env.DB.prepare('SELECT id FROM campaigns WHERE id = ?').bind(id).first();
+    if (!campaign) return c.json({ success: false, error: 'not_found' }, 404);
+
+    await c.env.DB.prepare(
+        "INSERT INTO campaign_events (id, campaign_id, event_type) VALUES (?, ?, ?)"
+    ).bind(crypto.randomUUID(), id, eventType).run();
+
+    // Keep the campaign's running totals consistent with the event log.
+    const col = eventType === 'click' ? 'clicks' : 'impressions';
+    await c.env.DB.prepare(
+        `UPDATE campaigns SET ${col} = COALESCE(${col}, 0) + 1 WHERE id = ?`
+    ).bind(id).run();
+
+    return c.json({ success: true });
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// POST /campaigns/track-impression - Record a sponsored-article impression.
+// Called on the reader-side render; resolves the article's sponsor to its active
+// campaign server-side so nothing is tamperable and non-sponsored views are no-ops.
+// ───────────────────────────────────────────────────────────────────────────────
+router.post('/track-impression', async (c) => {
+    let body: Record<string, any> = {};
+    try { body = await c.req.json(); } catch { /* ignore */ }
+    const articleId = body.article_id as string | undefined;
+    const eventType = body.event_type === 'click' ? 'click' : 'impression';
+    if (!articleId) return c.json({ success: false, error: 'article_id required' }, 400);
+
+    const art = await c.env.DB.prepare(
+        "SELECT sponsor_id FROM articles WHERE id = ? AND is_sponsored = 1"
+    ).bind(articleId).first<{ sponsor_id: string | null }>();
+    if (!art?.sponsor_id) return c.json({ success: true, skipped: 'not_sponsored' });
+
+    // article.sponsor_id is the sponsoring client; campaigns link via client_id.
+    // Prefer an active campaign for that client, else the most recent.
+    const camp = await c.env.DB.prepare(`
+        SELECT id FROM campaigns WHERE client_id = ?
+        ORDER BY (LOWER(status) IN ('active', 'live', 'running')) DESC, created_at DESC
+        LIMIT 1
+    `).bind(art.sponsor_id).first<{ id: string }>();
+    if (!camp?.id) return c.json({ success: true, skipped: 'no_campaign' });
+
+    await c.env.DB.prepare(
+        "INSERT INTO campaign_events (id, campaign_id, event_type) VALUES (?, ?, ?)"
+    ).bind(crypto.randomUUID(), camp.id, eventType).run();
+    const col = eventType === 'click' ? 'clicks' : 'impressions';
+    await c.env.DB.prepare(
+        `UPDATE campaigns SET ${col} = COALESCE(${col}, 0) + 1 WHERE id = ?`
+    ).bind(camp.id).run();
+
+    return c.json({ success: true });
 });
 
 export { router as campaignsRouter };

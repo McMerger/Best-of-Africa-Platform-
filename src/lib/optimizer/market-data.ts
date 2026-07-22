@@ -459,11 +459,14 @@ User: Generate booking page content.`;
 // Generate Event Descriptions
 // ───────────────────────────────────────────────────────────────────────────────
 export async function generateEventDescriptions(env: Env): Promise<void> {
-    // Find events without -generated descriptions or with stale descriptions
+    // Find events without -generated descriptions or with stale descriptions.
+    // Columns are date_start/category — the old date/event_type names never
+    // existed, so this step threw D1_ERROR on every optimizer tick (masked
+    // until the engagement-score subrequest bomb ahead of it was defused).
     const events = await env.DB.prepare(`
-        SELECT id, title, location, country_code, date, event_type, description
+        SELECT id, title, location, country_code, date_start, category, description
         FROM events
-        WHERE description IS NULL 
+        WHERE description IS NULL
            OR description = ''
            OR length(description) < 50
         LIMIT 5
@@ -475,7 +478,7 @@ export async function generateEventDescriptions(env: Env): Promise<void> {
                 SELECT name FROM countries WHERE code = ?
             `).bind(event.country_code).first<{ name: string }>();
 
-            const prompt = `System: Generate a professional 2-3 sentence description for this African business event. Tone: Authoritative, exclusive, opportunity-focused. Event: ${event.title}. Type: ${event.event_type}. Location: ${event.location}, ${country?.name || 'Africa'}. Date: ${event.date}. Output only the description text, no JSON.
+            const prompt = `System: Generate a professional 2-3 sentence description for this African business event. Tone: Authoritative, exclusive, opportunity-focused. Event: ${event.title}. Type: ${event.category}. Location: ${event.location}, ${country?.name || 'Africa'}. Date: ${event.date_start}. Output only the description text, no JSON.
 
 User: Generate the event description.`;
             const aiResRaw = await callConfiguredAI(env, { prompt, max_tokens: 150, temperature: 0.7 });

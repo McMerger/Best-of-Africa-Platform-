@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env } from '../types';
+import { publicArticleUrl, publicSiteBase } from './public-url';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // LinkedIn Posting
@@ -27,7 +28,7 @@ export async function postToLinkedIn(
     }
 
     // Format LinkedIn post
-    const articleUrl = `https://bestofafrica.com/articles/${article.slug}`;
+    const articleUrl = publicArticleUrl(env, article.slug);
     const hashtags = [
         '#Africa',
         '#AfricaBusiness',
@@ -105,7 +106,7 @@ export async function sendSlackAlert(
         return true;
     }
 
-    const articleUrl = `https://bestofafrica.com/articles/${article.slug}`;
+    const articleUrl = publicArticleUrl(env, article.slug);
 
     const payload = {
         blocks: [
@@ -191,7 +192,7 @@ export async function sendTeamsAlert(
 
     if (!webhookUrl) return true;
 
-    const articleUrl = `https://bestofafrica.com/articles/${article.slug}`;
+    const articleUrl = publicArticleUrl(env, article.slug);
 
     const payload = {
         '@type': 'MessageCard',
@@ -201,7 +202,7 @@ export async function sendTeamsAlert(
         sections: [{
             activityTitle: article.title,
             activitySubtitle: `${article.country_name || 'Africa'} | ${article.sector_name || 'General'}`,
-            activityImage: 'https://bestofafrica.com/logo.png',
+            activityImage: `${publicSiteBase(env)}/logo.png`,
             facts: [{
                 name: 'Summary',
                 value: article.summary?.slice(0, 200) || 'New article published',

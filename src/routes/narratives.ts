@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { Env, Variables, NarrativeStrategy, Country } from '../types';
 import { requireAdmin } from '../lib/auth';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -100,24 +100,29 @@ router.get('/country/:code', async (c) => {
     const countryData = country as Record<string, any>;
 
     // Narrative Synthesis (The "Story So Far")
-    const narrativeArc = await getCached(
-        c.env,
-        CACHE_KEYS.narrativeSynthesis(code),
-        async () => {
+    const narrativeArcKey = CACHE_KEYS.narrativeSynthesis(code);
+    const generateNarrativeArc = async () => {
             if (!articles.results || articles.results.length === 0) return "No narrative data available yet.";
 
             const context = (articles.results as any[]).map(a => `- ${a.title} (Tone: ${a.tone})`).join('\n');
 
             try {
                 const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.7 });
+                const aiResponse = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProvide a full synthesis with dated evidence, named narrative sponsors and affected stakeholders, documented framing mechanisms, competing narratives, country differences, distribution channels when supplied, counter-evidence, alternative explanations, source limitations, claim ledger and what requires verification. Do not infer unsupported sentiment or impact.`, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
                 return aiResponse?.trim() || "Narrative synthesis unavailable.";
             } catch (e) {
                 return "Narrative synthesis unavailable.";
             }
-        },
-        { ttl: CACHE_TTL.DASHBOARD }
-    );
+    };
+    const narrativeArc = await getCachedValue<string>(c.env, narrativeArcKey);
+    if (!narrativeArc && articles.results?.length) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, narrativeArcKey, generateNarrativeArc, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+    const immediateNarrativeArc = (articles.results as any[]).slice(0, 6).map((article, index) =>
+        `${index + 1}. ${article.title}${article.narrative_theme ? ` — ${article.narrative_theme}` : ''}${article.tone ? ` (${article.tone})` : ''}.`
+    ).join('\n\n') || `${countryData.name} is represented by its active strategies, aligned reporting and sector coverage in this record.`;
 
     const gapAnalysis = "Gap analysis module pending update.";
 
@@ -125,7 +130,7 @@ router.get('/country/:code', async (c) => {
         country: {
             ...countryData,
             ...processCountries([country as unknown as Country])[0],
-            narrative_arc: narrativeArc // -Synthesized Story
+            narrative_arc: narrativeArc || immediateNarrativeArc
         },
         active_strategies: (narratives.results || []).map((n: any) => ({
             ...n,

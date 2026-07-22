@@ -2,6 +2,7 @@ import { useAudio } from '../../context/AudioContext';
 import { Play, Pause, SkipForward, X, Volume2, ListMusic } from 'lucide-react';
 
 import { useState } from 'react';
+import { stripMarkdown } from '@/lib/utils';
 
 export const BetaGlobalPlayer = () => {
     const [showQueue, setShowQueue] = useState(false);
@@ -30,7 +31,7 @@ export const BetaGlobalPlayer = () => {
     const hasNext = currentIndex < playlist.length - 1;
 
     return (
-        <div className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[100] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-12 duration-500 ease-out">
+        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-3 sm:right-8 lg:bottom-8 z-[100] flex flex-col items-end gap-3 animate-in slide-in-from-bottom-12 duration-500 ease-out">
             
             {/* Queue Popover */}
             {showQueue && playlist.length > 0 && (
@@ -57,11 +58,11 @@ export const BetaGlobalPlayer = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className={`text-sm truncate ${idx === currentIndex ? 'text-primary font-bold' : 'text-foreground font-medium'}`}>
-                                        {track.title}
+                                        {stripMarkdown(track.title)}
                                     </div>
                                     {track.subtitle && (
                                         <div className="text-xs text-muted-foreground truncate">
-                                            {track.subtitle}
+                                            {stripMarkdown(track.subtitle)}
                                         </div>
                                     )}
                                 </div>
@@ -93,11 +94,11 @@ export const BetaGlobalPlayer = () => {
                 {/* Track Info */}
                 <div className="flex flex-col min-w-0 max-w-[160px] sm:max-w-[220px] cursor-pointer" onClick={() => setShowQueue(!showQueue)}>
                     <div className="text-[13px] font-bold text-foreground truncate leading-tight">
-                        {currentTrack.title}
+                        {stripMarkdown(currentTrack.title)}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                         <div className="text-[10px] text-muted-foreground truncate font-medium">
-                            {currentTrack.subtitle || "Audio Briefing"}
+                            {stripMarkdown(currentTrack.subtitle) || "Audio Briefing"}
                         </div>
                         <span className="text-[9px] font-mono text-muted-foreground/50 hidden sm:inline-block">
                             {formatTime(currentTime)} / {formatTime(duration)}

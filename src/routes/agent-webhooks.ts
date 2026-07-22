@@ -2,8 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { z } from 'zod';
 import { validate } from '../lib';
-import { generateArticleImage, ARTICLE_PROMPT_VERSION } from '../lib/ai';
-import { uploadImage } from '../lib/media';
+import { evaluateArticleDepth, identifyCountry, identifySector, ARTICLE_PROMPT_VERSION, MIN_PUBLISHABLE_ARTICLE_WORDS, MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS, MODELS } from '../lib/ai';
 import { autoTranslateArticle } from '../lib/translate';
 import { generateAudioNarration } from '../lib/audio';
 
@@ -59,7 +58,7 @@ router.get('/status', async (c) => {
     const { limit = '5' } = c.req.query();
     const recentLimit = Math.max(1, Math.min(50, parseInt(limit) || 5));
 
-    const [taskCounts, recentTasks, latestArticle, providerConfig, stalled, metricsRows] = await Promise.all([
+    const [taskCounts, recentTasks, latestArticle, stalled, metricsRows] = await Promise.all([
         // Task counts by status (last 24h)
         c.env.DB.prepare(`
             SELECT status, COUNT(*) as count
@@ -85,15 +84,6 @@ router.get('/status', async (c) => {
             ORDER BY published_at DESC
             LIMIT 1
         `).first<{ title: string; slug: string; published_at: string; country_code: string }>(),
-
-        // Active provider info (label only, no keys)
-        c.env.DB.prepare(`
-            SELECT provider, label, model, last_test_status, last_tested_at
-            FROM ai_providers
-            WHERE is_active = 1
-            ORDER BY is_default DESC, created_at ASC
-            LIMIT 1
-        `).first<Record<string, unknown>>(),
 
         // Stalled tasks: processing past their TTL
         c.env.DB.prepare(`
@@ -141,10 +131,10 @@ router.get('/status', async (c) => {
         tasks_24h: { pending, processing, completed: completed24h, failed: failed24h, stalled: stalledCount },
         recent_tasks: recentTasks.results || [],
         latest_article: latestArticle || null,
-        active_provider: providerConfig || {
-            provider: 'gemini',
-            label: 'Google Gemini',
-            model: 'gemini-2.5-pro',
+        active_provider: {
+            provider: 'workers_ai',
+            label: 'Cloudflare Workers AI',
+            model: MODELS.TEXT_GENERATION,
         },
         metrics_7d: metricsRows.results || [],
         generated_at: new Date().toISOString(),
@@ -353,6 +343,20 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
         return c.json({ error: 'not_found', message: 'Task not found' }, 404);
     }
 
+    // A Worker/agent may report transport-level success while returning a thin
+    // draft. Treat that as a failed attempt so the existing retry/backoff path
+    // can request a substantive replacement instead of publishing it.
+    if (taskMeta.type === 'generate_article' && payload.status === 'completed') {
+        const generated = payload.result as Record<string, any> | undefined;
+        const professionalBrief = generated?.investor_brief || generated?.ai_investor_brief || '';
+        const depth = evaluateArticleDepth(generated?.content, professionalBrief);
+        if (!depth.publishable) {
+            payload.status = 'failed';
+            payload.errorMessage = `Depth quality gate: article ${depth.articleWords}/${MIN_PUBLISHABLE_ARTICLE_WORDS} words; professional brief ${depth.briefWords}/${MIN_PUBLISHABLE_INVESTOR_BRIEF_WORDS} words`;
+            payload.result = undefined;
+        }
+    }
+
     let finalStatus = payload.status;
 
     if (payload.status === 'failed') {
@@ -416,7 +420,7 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
         tasksSeen:   1,
         tasksDone:   finalStatus === 'completed' ? 1 : 0,
         tasksFailed: finalStatus === 'failed' ? 1 : 0,
-        modelUsed:   payload.modelUsed,
+        modelUsed:   MODELS.TEXT_GENERATION,
         tokensUsed:  payload.tokensUsed,
         error:       payload.errorMessage,
     }));
@@ -443,27 +447,30 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                         .slice(0, 80);
                     const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
                     const articleId = crypto.randomUUID();
+                    const countryCode = await identifyCountry(c.env, cleanTitle, generated.content);
+                    const sectorId = await identifySector(c.env, cleanTitle, generated.content);
 
                     await c.env.DB.prepare(`
                         INSERT INTO articles (
                             id, slug, title, subtitle, content, summary,
                             country_code, sector_id, tags,
                             reading_time_minutes, source_url, source_title, source_published_at,
-                            generation_prompt_version, ai_investor_brief,
+                            generation_model, generation_prompt_version, ai_investor_brief,
                             engagement_score,
-                            status, published_at, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'published', datetime('now'), datetime('now'))
+                            status, moderation_status, published_at, created_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'pending_audit', 'pending', NULL, datetime('now'))
                     `).bind(
                         articleId, slug,
                         cleanTitle, cleanSubtitle || null,
                         generated.content, cleanSummary || null,
-                        originalPayload.country_code || null,
-                        originalPayload.sector_id    || null,
+                        countryCode,
+                        sectorId,
                         generated.tags ? JSON.stringify(generated.tags) : '[]',
                         readingTime,
                         originalPayload.url          || null,
                         originalPayload.title        || null,
                         originalPayload.published_at || null,
+                        MODELS.TEXT_GENERATION,
                         ARTICLE_PROMPT_VERSION,
                         generated.investor_brief || generated.ai_investor_brief || null,
                     ).run();
@@ -482,32 +489,14 @@ router.post('/tasks/complete', validate('json', CompleteTaskSchema), async (c) =
                             subtitle:     generated.subtitle,
                             summary:      generated.summary,
                             content:      generated.content,
-                            country_code: originalPayload.country_code,
+                            country_code: countryCode,
                         });
                     } catch (translateError) {
                         console.error(`[enrichment] Translation failed for article ${articleId}:`, translateError);
                     }
 
                     try {
-                        const imagePrompt = `Professional editorial journalism photo for an article titled: "${generated.title}". Subject: ${originalPayload.country_name || 'Africa'} ${originalPayload.sector_name || 'Business'}. Photorealistic, high quality, 8k.`;
-                        const imageBuffer = await generateArticleImage(c.env, imagePrompt);
-
-                        if (imageBuffer) {
-                            const imageKey = `articles/${articleId}/hero.png`;
-                            const imageUrl = await uploadImage(c.env, imageKey, imageBuffer, 'image/png');
-                            await c.env.DB.prepare(
-                                'UPDATE articles SET hero_image_url = ? WHERE id = ?'
-                            ).bind(imageUrl, articleId).run();
-                        } else {
-                            console.warn(`[enrichment] Image generation returned null for article ${articleId}`);
-                        }
-                    } catch (imageError) {
-                        console.error(`[enrichment] Hero image failed for article ${articleId}:`, imageError);
-                    }
-
-                    try {
-                        const script = `${generated.title}. ${generated.summary}`;
-                        await generateAudioNarration(c.env, articleId, generated.title, script);
+                        await generateAudioNarration(c.env, articleId, generated.title, generated.content);
                     } catch (audioError) {
                         console.error(`[enrichment] Audio generation failed for article ${articleId}:`, audioError);
                     }
@@ -568,7 +557,7 @@ router.use('/metrics', async (c, next) => {
 
 router.post('/metrics', validate('json', MetricSchema), async (c) => {
     const body = await c.req.json() as z.infer<typeof MetricSchema>;
-    await writeAgentMetric(c.env.DB, body);
+    await writeAgentMetric(c.env.DB, { ...body, modelUsed: MODELS.TEXT_GENERATION });
     return c.json({ success: true });
 });
 

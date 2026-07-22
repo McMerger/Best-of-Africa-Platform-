@@ -1,298 +1,141 @@
 import { useQuery } from '@tanstack/react-query';
-import { ShieldAlert, TrendingUp, Activity, BarChart2, AlertCircle } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { Activity, ArrowRight, BarChart3, ExternalLink, Globe2, Scale } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
-import { useMember } from '../../context/MemberContext';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { BetaInteractiveMap } from '../../components/beta/BetaInteractiveMap';
+import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
+import { DataReadingGuide } from '../../components/PageReadingGuide';
+
+const compact = (value: number) => new Intl.NumberFormat('en', { notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(value);
+const valueWithUnit = (value: number, unit: string) => unit === 'current US$' ? `$${compact(value)}` : `${compact(value)} ${unit}`;
+const changeWithUnit = (value: number, unit: string) => {
+  const sign = value > 0 ? '+' : '';
+  if (unit === 'percentage points') return `${sign}${value.toFixed(1)} pp`;
+  if (unit === 'current US$') return `${sign}$${compact(value)}`;
+  return `${sign}${compact(value)} ${unit}`;
+};
+const period = (start: number, end: number) => start === end ? String(end) : `${start}–${end}`;
 
 export const BetaIntelligence = () => {
-  const { scrollY } = useScroll();
-  const { isMember } = useMember();
-  const navigate = useNavigate();
-
-  const { data: opportunities, isLoading: isLoadingOpp } = useQuery({
-    queryKey: ['strategic-opportunities'],
-    queryFn: api.getStrategicOpportunities,
-    staleTime: 5 * 60 * 1000,
-    enabled: isMember,
+  const { view: requestedView = 'overview' } = useParams<{ view?: string }>();
+  const view = ['overview', 'sectors', 'methodology'].includes(requestedView) ? requestedView : 'overview';
+  const query = useQuery({
+    queryKey: ['sector-market-performance', 'market-v2'],
+    queryFn: () => api.getSectorPerformance('investor'),
+    staleTime: 12 * 60 * 60 * 1000,
   });
 
-  const { data: sentiment, isLoading: isLoadingSent } = useQuery({
-    queryKey: ['sentiment-divergence'],
-    queryFn: api.getSentimentDivergence,
-    staleTime: 5 * 60 * 1000,
-    enabled: isMember,
-  });
+  const performance = query.data;
+  const signalCount = performance?.data.reduce((total, sector) => total + 1 + sector.dimensions.length, 0) || 0;
+  const coverageValues = performance?.data.flatMap(sector => [sector.continent_coverage_pct, ...sector.dimensions.map(item => item.coverage_pct)]) || [];
+  const averageCoverage = coverageValues.length ? coverageValues.reduce((sum, value) => sum + value, 0) / coverageValues.length : 0;
 
-  const { data: analytics, isLoading: isLoadingAnalytics } = useQuery({
-    queryKey: ['platform-analytics'],
-    queryFn: () => api.getPlatformAnalytics(),
-    staleTime: 5 * 60 * 1000,
-    enabled: isMember,
-  });
+  return <div className="min-h-screen bg-background pb-24 text-foreground">
+    <SEO title="African Market Intelligence | BOA-Story" description="Official multi-indicator African sector performance, country breadth, structural conditions and decision diligence."/>
 
-  if (!isMember) {
-    return <Navigate to="/posts" replace />;
-  }
-
-  const isLoading = isLoadingOpp || isLoadingSent || isLoadingAnalytics;
-
-  return (
-    <div className="pb-24 bg-background text-foreground min-h-screen">
-      <SEO 
-        title="Market Intelligence | BOA-Story" 
-        description="Deep analytics and opportunities across the continent."
-      />
-
-      {/* Header */}
-      <div className="relative min-h-[50vh] flex flex-col justify-end pt-32 pb-16 px-6 overflow-hidden border-b border-foreground/10">
-        <motion.div 
-          className="absolute inset-0 z-0"
-          style={{ y: useTransform(scrollY, [0, 800], [0, 200]), scale: 1.05 }}
-        >
-          <div className="absolute inset-0 bg-background/70 mix-blend-multiply z-10" />
-          <div className="gradient-overlay-light z-20" />
-          <img 
-            src="/images/v2_intel_concrete_1780358106973.png" 
-            alt="Futuristic African Trading Floor" 
-            className="w-full h-[120%] object-cover object-center absolute top-[-10%]"
-          />
+    <header className="overflow-hidden border-b border-white/15 bg-navy text-white">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-10 sm:px-6 md:py-16 lg:grid-cols-[minmax(0,1.45fr)_minmax(19rem,.55fr)] lg:items-end lg:px-8 lg:py-20">
+        <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}}>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[.18em] text-white/65"><span>BOA evidence desk</span><span className="h-1 w-1 rounded-full bg-white/40"/><span>Market performance</span></div>
+          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.8rem,7vw,6.4rem)] leading-[.91] tracking-[-.045em]">African markets, measured sector by sector.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/75 md:text-xl md:leading-8">Read official measures of output, access, infrastructure, investment and operating conditions—without unsupported composite scores or newsroom-volume proxies.</p>
+          <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row"><Link to="/dashboards/overview" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-5 text-sm font-bold text-navy">Open continental economy</Link><Link to="/countries" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/30 px-5 text-sm font-bold text-white">Compare country records</Link></div>
         </motion.div>
-
-        <div className="max-w-6xl mx-auto w-full relative z-30">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: "easeOut" }}>
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
-                  <Activity size={14} className="animate-pulse" />
-                  Live Data
-                </span>
-              </div>
-              <h1 className="font-serif text-[4rem] md:text-[5rem] leading-[0.9] tracking-tighter mb-4 drop-shadow-2xl">Market <br className="hidden md:block"/>Intelligence</h1>
-              <p className="text-foreground/70 max-w-2xl leading-[1.8] text-[1.125rem] font-serif italic drop-shadow-md">
-                Algorithmic insights tracking strategic opportunities, sentiment divergence, and sector velocity across 54 African nations.
-              </p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4, duration: 0.8 }}>
-              <Link 
-                to="/dashboards/overview" 
-                className="flex items-center gap-3 bg-accent text-card px-8 py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:brightness-110 transition-all w-fit shrink-0 shadow-[0_0_30px_rgba(212,175,55,0.3)]"
-              >
-                <BarChart2 size={16} />
-                Continental Dashboard
-              </Link>
-            </motion.div>
-          </div>
-        </div>
+        <aside className="border-t border-white/20 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0" aria-label="Dataset status">
+          <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/55">Current evidence release</p>
+          <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 lg:grid-cols-1">
+            <div><dt className="text-xs text-white/55">Sector dossiers</dt><dd className="mt-1 font-serif text-3xl text-white">{performance?.sectors_measured ?? '—'}</dd></div>
+            <div><dt className="text-xs text-white/55">Countries in scope</dt><dd className="mt-1 font-serif text-3xl text-white">{performance?.countries_in_scope ?? '—'}</dd></div>
+            <div className="col-span-2 lg:col-span-1"><dt className="text-xs text-white/55">Evidence source</dt><dd className="mt-1 text-sm font-semibold leading-5 text-white">{performance?.source_name || 'World Bank World Development Indicators'}</dd></div>
+          </dl>
+        </aside>
       </div>
+    </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 space-y-20">
-        
-        {/* Platform Analytics Summary */}
-        <section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {isLoading ? (
-               [1,2,3].map(i => <div key={i} className="h-40 bg-foreground/5 rounded-3xl border border-foreground/10 animate-pulse" />)
-            ) : analytics && (
-              <>
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl relative overflow-hidden group hover:border-accent/30 transition-colors">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-bl-full -mr-8 -mt-8 pointer-events-none group-hover:bg-accent/5 transition-colors" />
-                  <div className="flex items-center gap-3 mb-6 text-foreground/50">
-                    <TrendingUp size={20} />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Market Stability</span>
-                  </div>
-                  <div className="text-[3rem] font-serif text-foreground mb-2 leading-none">{analytics.stability_score}<span className="text-xl text-foreground/30">/100</span></div>
-                  <div className="text-sm text-foreground/60 font-light">{analytics.stability_index}</div>
-                </motion.div>
+    <IntelligenceTrustPanel updatedAt={performance?.retrieved_at} sourceLabel={performance?.source_name || 'World Bank World Development Indicators'}/>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} viewport={{ once: true }} className="bg-card rounded-3xl border border-foreground/10 p-8 shadow-2xl relative overflow-hidden group hover:border-accent/30 transition-colors">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/5 rounded-bl-full -mr-8 -mt-8 pointer-events-none group-hover:bg-accent/5 transition-colors" />
-                  <div className="flex items-center gap-3 mb-6 text-foreground/50">
-                    <BarChart2 size={20} />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Sentiment Trend</span>
-                  </div>
-                  <div className="flex items-baseline gap-4 mb-2">
-                    <span className="text-[3rem] font-serif text-foreground leading-none">{analytics.sentiment_pct}%</span>
-                    <span className={`text-[11px] uppercase tracking-widest font-bold px-3 py-1 rounded-full border ${analytics.sentiment_trend === 'up' ? 'text-accent border-accent/30 bg-accent/10' : 'text-red-400 border-red-400/30 bg-red-400/10'}`}>
-                      {analytics.sentiment_trend === 'up' ? '↑ Positive' : '↓ Negative'}
-                    </span>
-                  </div>
-                  <div className="text-sm text-foreground/60 font-light">Overall platform sentiment</div>
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} viewport={{ once: true }} className="bg-accent rounded-3xl border border-accent/20 p-8 shadow-[0_0_40px_rgba(212,175,55,0.15)] relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-card/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none" />
-                  <div className="flex items-center gap-3 mb-6 text-card/70">
-                    <Activity size={20} />
-                    <span className="text-[11px] font-bold uppercase tracking-widest">Activity Pulse</span>
-                  </div>
-                  <div className="text-[3rem] font-serif text-card mb-2 leading-none">{analytics.total_articles_7d}</div>
-                  <div className="text-sm text-card/80 font-semibold">Intelligence briefings published (7d)</div>
-                </motion.div>
-              </>
-            )}
-          </div>
-          
-          {!isLoading && analytics && (
-            <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-8 bg-card border border-accent/20 rounded-2xl p-6 text-foreground flex items-start gap-4 shadow-xl">
-              <AlertCircle size={24} className="text-accent shrink-0" />
-              <p className="text-[1.125rem] leading-[1.6] font-light">
-                <span className="font-bold text-accent mr-3 tracking-widest uppercase text-[11px]">Note:</span>
-                {analytics.market_summary}
-              </p>
-            </motion.div>
-          )}
-        </section>
-
-        {/* Interactive Map Section */}
-        <motion.section initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-          <div className="flex items-center gap-4 mb-4">
-            <Activity size={24} className="text-accent" />
-            <h2 className="font-serif text-[2rem] text-foreground">Interactive Sentiment Map</h2>
-          </div>
-          <p className="text-lg text-foreground/50 mb-8 font-light">Real-time sentiment divergence mapped across the continent. Click a highlighted market to view its intelligence hub.</p>
-          <div className="h-[500px] md:h-[600px] w-full rounded-3xl overflow-hidden border border-foreground/10 shadow-2xl relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/80 pointer-events-none z-10" />
-            {isLoadingSent ? (
-              <div className="w-full h-full bg-foreground/5 animate-pulse" />
-            ) : sentiment?.countries ? (
-              <BetaInteractiveMap 
-                data={sentiment.countries.map((c: any) => ({
-                  country_code: c.country_code,
-                  country_name: c.country_name,
-                  score: c.gap > 0 ? Math.min(c.gap * 2, 100) : 10 // Map positive divergence gaps to score
-                }))}
-                onCountryClick={(code) => navigate(`/countries/${code}`)}
-              />
-            ) : (
-              <div className="w-full h-full bg-card flex items-center justify-center text-foreground/40 text-xl font-serif">
-                Map data unavailable
-              </div>
-            )}
-          </div>
-        </motion.section>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
-          
-          {/* Strategic Opportunities */}
-          <motion.section initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="flex items-center gap-4 mb-4">
-              <TrendingUp size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Opportunities</h2>
-            </div>
-            <p className="text-lg text-foreground/50 mb-8 font-light">Algorithmically identified high-leverage sectors across the continent.</p>
-
-            <div className="space-y-6">
-              {isLoadingOpp ? (
-                [1,2,3].map(i => <div key={i} className="h-32 bg-foreground/5 rounded-2xl border border-foreground/10 animate-pulse" />)
-              ) : opportunities?.data && opportunities.data.length > 0 ? (
-                opportunities.data.map((opp, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="bg-card rounded-2xl border border-foreground/10 p-8 hover:border-accent/40 transition-all duration-500 hover:-translate-y-1 shadow-xl group relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-accent/20 to-transparent group-hover:from-accent group-hover:to-accent/50 transition-colors" />
-                    <div className="flex flex-wrap items-center gap-4 mb-4">
-                      <span className="text-[11px] font-bold uppercase tracking-widest text-accent bg-accent/10 px-3 py-1.5 rounded-full border border-accent/20">
-                        Score: {Math.round(opp.score * 100)}
-                      </span>
-                      <span className="text-xs font-bold uppercase tracking-widest text-foreground/40">{opp.country_name} • {opp.sector_name}</span>
-                    </div>
-                    <h3 className="font-serif text-2xl text-foreground mb-3 leading-snug">{opp.title}</h3>
-                    <p className="text-[15px] text-foreground/60 line-clamp-3 leading-relaxed font-light">{opp.summary}</p>
-                    <div className="mt-6">
-                      <Link to={`/countries/${opp.country_code}`} className="text-[11px] uppercase tracking-widest text-accent font-bold hover:text-foreground transition-colors">
-                        View {opp.country_name} Hub →
-                      </Link>
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="p-12 text-center text-foreground/40 font-serif text-xl bg-card rounded-3xl border border-foreground/10 shadow-xl">
-                  No critical opportunities identified at this time.
-                </div>
-              )}
-            </div>
-          </motion.section>
-
-          {/* Sentiment Divergence */}
-          <motion.section initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }}>
-            <div className="flex items-center gap-4 mb-4">
-              <ShieldAlert size={24} className="text-accent" />
-              <h2 className="font-serif text-[2rem] text-foreground">Sentiment Divergence</h2>
-            </div>
-            <p className="text-lg text-foreground/50 mb-8 font-light">Tracking the gap between mainstream perception and on-the-ground reality.</p>
-
-            <div className="bg-card rounded-3xl border border-foreground/10 overflow-hidden shadow-2xl">
-              {isLoadingSent ? (
-                <div className="h-[500px] bg-foreground/5 animate-pulse" />
-              ) : sentiment?.countries && sentiment.countries.length > 0 ? (
-                <div className="divide-y divide-white/5">
-                  <div className="grid grid-cols-12 gap-4 p-6 bg-foreground/5 text-[10px] font-bold uppercase tracking-widest text-foreground/40">
-                    <div className="col-span-5">Market</div>
-                    <div className="col-span-3 text-center">Perception</div>
-                    <div className="col-span-3 text-center">Reality</div>
-                    <div className="col-span-1 text-right">Gap</div>
-                  </div>
-                  {sentiment.countries.map((c, i) => (
-                    <motion.div 
-                      key={c.country_code}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.05 }}
-                      className="grid grid-cols-12 gap-4 p-6 items-center hover:bg-foreground/5 transition-colors border-l-2 border-transparent hover:border-accent"
-                    >
-                      <div className="col-span-5 flex items-center gap-3">
-                        <Link to={`/countries/${c.country_code}`} className="font-serif text-lg text-foreground hover:text-accent transition-colors">
-                          {c.country_name}
-                        </Link>
-                      </div>
-                      <div className="col-span-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-foreground/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-red-400/80" style={{ width: `${c.perception_score}%` }} />
-                          </div>
-                          <span className="text-xs font-mono text-foreground/40 w-6 text-right">{c.perception_score}</span>
-                        </div>
-                      </div>
-                      <div className="col-span-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-foreground/5 rounded-full overflow-hidden">
-                            <div className="h-full bg-accent" style={{ width: `${c.reality_score}%` }} />
-                          </div>
-                          <span className="text-xs font-mono text-foreground/40 w-6 text-right">{c.reality_score}</span>
-                        </div>
-                      </div>
-                      <div className="col-span-1 text-right">
-                        <span className="text-[14px] font-bold text-accent">+{c.gap}</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-12 text-center text-foreground/40 font-serif text-xl">
-                  Insufficient data to calculate sentiment divergence.
-                </div>
-              )}
-            </div>
-            
-            {sentiment && (
-              <div className="mt-6 flex justify-between items-center text-[11px] uppercase tracking-widest text-foreground/30 px-4 font-bold">
-                <span>Avg Divergence: <strong className="text-foreground/60">{sentiment.average_divergence} pts</strong></span>
-                <span>Updated: {new Date(sentiment.updated_at).toLocaleDateString()}</span>
-              </div>
-            )}
-          </motion.section>
-
-        </div>
+    <nav className="sticky top-[4.5rem] z-30 border-b border-navy/15 bg-white/95 backdrop-blur-md lg:top-16" aria-label="Market intelligence sections">
+      <div className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+        {[['overview','Performance matrix'],['sectors','Sector dossiers'],['methodology','Methodology']].map(([slug,label]) => <Link key={slug} to={`/intelligence/${slug}`} aria-current={view === slug ? 'page' : undefined} className={`shrink-0 rounded-md px-4 py-2.5 text-sm font-bold transition-colors ${view === slug ? 'bg-navy text-white' : 'text-navy/70 hover:bg-navy/5 hover:text-navy'}`}>{label}</Link>)}
       </div>
+    </nav>
+
+    <div className="mx-auto mt-10 w-full max-w-[1400px] px-5 sm:px-6 md:mt-14 lg:px-8">
+      <main className="page-stack min-w-0">
+        {query.isLoading && <section className="grid animate-pulse gap-4 sm:grid-cols-2"><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-96 rounded-2xl bg-navy/5 sm:col-span-2"/></section>}
+        {query.isError && <section className="rounded-2xl border border-border bg-white p-8"><p className="text-xs font-bold uppercase tracking-[.16em] text-navy/60">Official dataset request failed</p><h2 className="mt-2 font-serif text-3xl text-navy">The sector-performance record could not be loaded.</h2><button onClick={() => query.refetch()} className="mt-6 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Retry official data</button></section>}
+
+        {performance && view === 'overview' && <>
+          <section className="page-section">
+            <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Cross-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Compare sectors without hiding what the numbers mean</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">Each sector uses the measure that fits it. Read the measure’s name and unit before comparing movement or country coverage. BOA does not blend unrelated measures into one score.</p></div>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                [BarChart3,'Sectors measured',performance.sectors_measured,'sector dossiers'],
+                [Activity,'Official signals',signalCount,'primary and supporting series'],
+                [Globe2,'Countries in scope',performance.countries_in_scope,'African markets'],
+                [Scale,'Average data coverage',`${averageCoverage.toFixed(0)}%`,'average share of 54 countries represented'],
+              ].map(([Icon,label,value,detail]) => { const MetricIcon=Icon as typeof Activity; return <article key={label as string} className="rounded-2xl border border-border bg-white p-5 md:p-6"><MetricIcon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{label as string}</p><p className="mt-2 font-serif text-3xl text-navy">{value as string | number}</p><p className="mt-2 text-xs text-muted-foreground">{detail as string}</p></article>; })}
+            </div>
+          </section>
+
+          <DataReadingGuide subject="the market-intelligence dashboard" />
+
+          <section className="page-section rounded-2xl border border-border bg-white p-5 md:p-8" aria-labelledby="market-analysis-path">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[.08em] text-navy/60">From indicator to informed judgment</p>
+              <h2 id="market-analysis-path" className="mt-2 font-serif text-3xl text-navy md:text-4xl">A fuller way to understand sector performance</h2>
+              <p className="mt-4 readable-copy">Performance is not one number. A useful reading connects the sector’s recorded level, its direction of change, how widely that direction appears across countries, and the conditions that may support or constrain it.</p>
+            </div>
+            <ol className="mt-7 grid gap-4 md:grid-cols-2">
+              {[
+                ['Establish the level', 'Read the latest median and its unit. This describes the middle reporting country, not the continent’s combined market size and not every country.'],
+                ['Test the direction', 'Compare the median change with the share of countries moving higher. A positive median with narrow country breadth may reflect a concentrated rather than widespread shift.'],
+                ['Examine operating conditions', 'Read access, infrastructure, cost, capacity and investment measures alongside the headline. They can explain important constraints without proving causation.'],
+                ['Check decision relevance', 'Move from the continental pattern to country dossiers, local regulation, competition, demand, currency exposure and implementation conditions before making a market decision.'],
+              ].map(([title,body],index) => <li key={title} className="grid grid-cols-[2.25rem_1fr] gap-3 rounded-xl bg-navy/[.035] p-4 md:p-5"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">{index+1}</span><div><h3 className="text-base font-bold text-navy">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p></div></li>)}
+            </ol>
+          </section>
+
+          <section className="page-section overflow-hidden rounded-2xl border border-border bg-white">
+            <div className="border-b border-border px-5 py-6 md:px-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Eight-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy">What the latest available country data shows</h2><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">The large value is the middle country reading. “Higher” only describes direction; whether it is favourable depends on what the indicator measures.</p></div>
+            <div className="divide-y divide-border">
+              {performance.data.map(sector => <article key={sector.sector_id} className="grid gap-5 px-5 py-6 md:px-8 lg:grid-cols-[1.2fr_.8fr_1fr_auto] lg:items-center">
+                <div><p className="text-[9px] font-bold uppercase tracking-[.12em] text-muted-foreground">{sector.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{sector.sector_name}</h3><p className="mt-2 text-xs leading-5 text-muted-foreground">{sector.indicator_name} · {period(sector.period_start,sector.period_end)}</p></div>
+                <div><p className="text-[9px] uppercase tracking-[.1em] text-muted-foreground">Middle country reading · {sector.headline_label}</p><p className="mt-1 font-serif text-2xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-1 text-xs text-muted-foreground">{changeWithUnit(sector.comparison_value,sector.comparison_unit)} versus the previous available reading</p></div>
+                <div className="grid grid-cols-2 gap-3"><div><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">countries reading higher</span></div><div><strong className="block text-lg text-navy">{sector.continent_coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">of 54 countries covered</span></div></div>
+                <Link to={`/sectors/${sector.sector_id}/trends`} className="inline-flex items-center gap-2 text-xs font-semibold text-navy">Full dossier <ArrowRight size={14}/></Link>
+              </article>)}
+            </div>
+          </section>
+        </>}
+
+        {performance && view === 'sectors' && <section className="page-section">
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Detailed sector guides</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Understand each sector one measure at a time</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">Start with the main measure, then use the three supporting measures to see structure and operating conditions. The questions at the end show what still requires investigation.</p></div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {performance.data.map(sector => <article key={sector.sector_id} className="flex flex-col rounded-2xl border border-border bg-white p-5 md:p-6">
+              <div className="flex items-start justify-between gap-3 border-b border-border pb-4"><div><p className="text-[9px] font-bold uppercase tracking-[.12em] text-muted-foreground">{sector.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{sector.sector_name}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy">{sector.direction}</span></div>
+              <div className="py-5"><p className="text-[10px] uppercase tracking-[.1em] text-muted-foreground">{sector.headline_label}</p><p className="mt-2 font-serif text-4xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Middle reading across {sector.countries_reported} countries · {period(sector.period_start,sector.period_end)} · half of the countries fall between {sector.dispersion_low.toFixed(1)} and {sector.dispersion_high.toFixed(1)}</p><p className="mt-4 text-sm leading-6 text-navy/80"><strong>What this measures:</strong> {sector.scope}</p></div>
+              <div className="grid gap-2">{sector.dimensions.map(item => <div key={item.indicator_code} className="rounded-lg border border-border bg-navy/[.025] p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-navy">{item.label}</p><p className="mt-0.5 text-[9px] text-muted-foreground">{item.indicator_code} · {period(item.period_start,item.period_end)}</p></div><span className="text-right text-sm font-semibold text-navy">{valueWithUnit(item.value,item.unit)}</span></div><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-muted-foreground"><span>{changeWithUnit(item.comparison_value,item.comparison_unit)} median change</span><span>{item.markets_rising_pct.toFixed(0)}% rising</span><span>{item.coverage_pct.toFixed(0)}% coverage</span></div></div>)}</div>
+              <div className="mt-5 border-t border-border pt-4"><p className="text-[9px] font-bold uppercase tracking-[.12em] text-navy/60">Questions to check next</p><ol className="mt-3 space-y-2">{sector.diligence_questions.slice(0,2).map((question,index) => <li key={question} className="grid grid-cols-[1.25rem_1fr] gap-2 text-xs leading-5 text-muted-foreground"><span>{index+1}.</span><span>{question}</span></li>)}</ol></div>
+              <Link to={`/sectors/${sector.sector_id}/trends`} className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs font-semibold text-navy">Open complete performance dossier <ArrowRight size={14}/></Link>
+            </article>)}
+          </div>
+        </section>}
+
+        {performance && view === 'methodology' && <section className="page-section">
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Evidence discipline</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">How to read the market record</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">The dashboard is designed to preserve differences between growth, scale, access, concentration, cost and capacity rather than collapsing them into an unsupported score.</p></div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            {[
+              ['Primary performance','Each sector has one named output, spending, credit, adoption or external-demand proxy. Its scope and limitation are visible beside the value.'],
+              ['Supporting dimensions','Three additional indicators test market structure or operating conditions. Their own units, years and country coverage remain intact.'],
+              ['Country comparison','Headline values are country medians. Country leaders, laggards, middle-half dispersion and breadth show how much continental summaries conceal.'],
+              ['No automatic verdict','Higher is not always better: rising lending rates, grid losses or concentration can be adverse or contextual. No field is converted into a return forecast or investment recommendation.'],
+            ].map(([title,body],index) => <article key={title} className="rounded-2xl border border-border bg-white p-6"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">{index+1}</span><h3 className="mt-5 font-serif text-2xl text-navy">{title}</h3><p className="mt-3 text-sm leading-7 text-muted-foreground">{body}</p></article>)}
+          </div>
+          <div className="mt-6 rounded-2xl bg-navy p-6 text-white md:p-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-white/60">Published methodology</p><p className="mt-4 text-sm leading-7 text-white/75">{performance.methodology}</p><a href={performance.source_url} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex items-center gap-1 text-xs font-semibold text-white underline underline-offset-4">Inspect {performance.source_name} <ExternalLink size={12}/></a></div>
+        </section>}
+      </main>
     </div>
-  );
+  </div>;
 };

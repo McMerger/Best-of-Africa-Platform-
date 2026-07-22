@@ -5,6 +5,7 @@ import { Shield, Target, FileText, ArrowLeft, Activity, Globe, MessageSquare } f
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { stripMarkdown } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 export const BetaNarrativeToolkit: React.FC = () => {
@@ -43,7 +44,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+            className="bg-accent text-navy font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
           >
             Inquire About Access
           </a>
@@ -64,7 +65,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
+        <div className="app-hero relative overflow-hidden border-b border-accent/20 bg-background px-6 pb-20 pt-16 text-foreground">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-6xl mx-auto relative z-10">
@@ -152,7 +153,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                       <MessageSquare className="text-accent" /> The Story So Far
                     </h3>
                     <div className="prose prose-sm md:prose-base prose-p:text-primary/70 max-w-none">
-                      <p className="whitespace-pre-wrap">{countryData?.country.narrative_arc}</p>
+                      <p>{stripMarkdown(countryData?.country.narrative_arc)}</p>
                     </div>
                   </div>
 
@@ -209,7 +210,7 @@ export const BetaNarrativeToolkit: React.FC = () => {
                           <Link key={article.id} to={`/posts/${article.slug}`} className="block group">
                             <div className="text-xs font-bold text-accent mb-1 truncate">{article.narrative_theme || 'Organic Alignment'}</div>
                             <h4 className="font-serif text-primary group-hover:text-accent transition-colors leading-snug line-clamp-2">
-                              {article.title}
+                              {stripMarkdown(article.title)}
                             </h4>
                           </Link>
                         ))

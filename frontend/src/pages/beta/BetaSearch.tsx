@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SearchIcon, SparklesIcon, GlobeIcon, FileTextIcon, LayersIcon, ArrowRightIcon, XIcon } from 'lucide-react';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
+import { EditorialContent } from '../../components/EditorialContent';
+import { stripMarkdown } from '@/lib/utils';
 
 const FILTER_TABS = [
     { id: 'all', label: 'All Results', icon: LayersIcon },
@@ -46,7 +48,7 @@ export const BetaSearch: React.FC = () => {
             try {
                 const res = await api.search(inputValue);
                 const items = [
-                    ...(res.results || []).slice(0, 3).map((r: any) => ({ type: 'article', label: r.article?.title || r.title, slug: r.article?.slug || r.slug })),
+                    ...(res.results || []).slice(0, 3).map((r: any) => ({ type: 'article', label: stripMarkdown(r.article?.title || r.title), slug: r.article?.slug || r.slug })),
                 ];
                 setSuggestions(items);
             } catch { setSuggestions([]); }
@@ -78,21 +80,20 @@ export const BetaSearch: React.FC = () => {
                 description="Search thousands of African business intelligence briefings, country profiles, and sector analysis."
             />
 
-            {/* Search Header */}
-            <div className="bg-background pt-32 pb-16 px-6 border-b border-foreground/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/5 via-transparent to-transparent pointer-events-none" />
+            {/* Search Header, navy band (spec §3.1) */}
+            <div className="app-hero border-b border-border bg-card px-5 py-12 text-foreground sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">
                             <SparklesIcon size={14} /> Intelligence Search
                         </p>
-                        <h1 className="font-serif text-[3.5rem] md:text-[4.5rem] font-bold leading-[0.9] tracking-tighter mb-12 text-foreground">
-                            What are you <br className="hidden md:block"/><span className="text-accent italic">researching?</span>
+                        <h1 className="break-words font-serif text-foreground text-[clamp(2.35rem,11vw,4rem)] leading-[1.02] md:leading-[0.96] tracking-tight mb-8">
+                            What are you researching?
                         </h1>
-                        {/* Search Input */}
+                        {/* Search Input, dark navy field with gold border */}
                         <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setShowSuggestions(false); }}>
-                            <div className="flex items-center gap-4 bg-card/80 backdrop-blur-xl border border-foreground/10 rounded-[2rem] px-8 py-6 focus-within:border-accent/60 focus-within:bg-card focus-within:shadow-[0_0_40px_rgba(212,175,55,0.15)] transition-all group">
-                                <SearchIcon className="w-6 h-6 text-foreground/40 group-focus-within:text-accent shrink-0 transition-colors" />
+                            <div className="flex min-w-0 items-center gap-3 overflow-hidden bg-background border border-border rounded-xl px-4 md:px-6 py-4 focus-within:border-accent transition-colors group">
+                                <SearchIcon className="w-5 h-5 text-foreground/40 group-focus-within:text-accent shrink-0 transition-colors" />
                                 <input
                                     ref={inputRef}
                                     id="search-input"
@@ -100,12 +101,12 @@ export const BetaSearch: React.FC = () => {
                                     value={inputValue}
                                     onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true); }}
                                     onFocus={() => setShowSuggestions(true)}
-                                    placeholder="Search Africa intelligence, countries, sectors..."
-                                    className="flex-1 bg-transparent text-foreground placeholder:text-foreground/30 text-[1.25rem] font-light outline-none"
+                                    placeholder="Search countries, sectors or companies"
+                                    className="min-w-0 flex-1 bg-transparent text-foreground placeholder:text-foreground/40 text-base md:text-lg outline-none"
                                     autoComplete="off"
                                 />
                                 {inputValue && (
-                                    <button onClick={() => { setInputValue(''); setDebouncedQ(''); setSearchParams({}); setSuggestions([]); inputRef.current?.focus(); }} className="text-foreground/30 hover:text-foreground transition-colors bg-foreground/5 rounded-full p-2">
+                                    <button onClick={() => { setInputValue(''); setDebouncedQ(''); setSearchParams({}); setSuggestions([]); inputRef.current?.focus(); }} className="text-foreground/40 hover:text-foreground transition-colors p-2">
                                         <XIcon className="w-5 h-5" />
                                     </button>
                                 )}
@@ -124,7 +125,7 @@ export const BetaSearch: React.FC = () => {
                                             <Link
                                                 key={i}
                                                 to={`/posts/${s.slug}`}
-                                                className="flex items-center gap-4 px-8 py-5 hover:bg-foreground/5 transition-colors border-b border-foreground/5 last:border-0 group"
+                                                className="group flex items-center gap-3 border-b border-foreground/5 px-4 py-4 transition-colors last:border-0 hover:bg-foreground/5 sm:gap-4 sm:px-8 sm:py-5"
                                                 onClick={() => setShowSuggestions(false)}
                                             >
                                                 <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
@@ -141,16 +142,28 @@ export const BetaSearch: React.FC = () => {
                 </div>
             </div>
 
-            <div className="max-w-4xl mx-auto px-6 py-16">
+            <div className="max-w-4xl mx-auto px-5 py-14 sm:px-6 sm:py-16">
 
                 {/* Empty State */}
                 {!debouncedQ && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-24 text-foreground/40">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-14 md:py-24 text-foreground/40 overflow-hidden">
                         <div className="w-24 h-24 rounded-full bg-card border border-foreground/5 mx-auto mb-8 flex items-center justify-center">
                             <SearchIcon className="w-10 h-10 text-foreground/20" />
                         </div>
-                        <p className="text-[1.5rem] font-serif text-foreground mb-3">Start typing to search across all Africa intelligence</p>
-                        <p className="text-[1.125rem] font-light">Try: "Nigeria fintech", "Kenya infrastructure", "Rwanda agriculture"</p>
+                        <p className="text-xl md:text-[1.5rem] font-serif text-foreground mb-3">Search the intelligence graph</p>
+                        <p className="mb-8 text-sm leading-relaxed text-muted-foreground">Start with a country, sector, company, project or decision question.</p>
+                        <div className="grid gap-3 text-left sm:grid-cols-2">
+                            {[
+                                'Compare Ghana and Rwanda for manufacturing investment',
+                                'Solar projects in East Africa',
+                                'Nigerian companies operating in Kenya',
+                                'Lithium, railways and export corridors',
+                            ].map(query => (
+                                <button key={query} type="button" onClick={() => { setInputValue(query); setShowSuggestions(false); }} className="rounded-lg border border-border bg-card p-4 text-sm leading-relaxed text-navy hover:border-accent hover:bg-accent/5">
+                                    {query}
+                                </button>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
 
@@ -165,30 +178,28 @@ export const BetaSearch: React.FC = () => {
 
                 {/* Quick Answer Card */}
                 {analystAnswer && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card text-foreground p-8 md:p-10 rounded-3xl mb-12 border border-accent/20 shadow-[0_0_40px_rgba(212,175,55,0.1)] relative overflow-hidden">
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative mb-10 overflow-hidden rounded-xl border border-accent/20 bg-card p-5 text-foreground sm:p-8 md:mb-12 md:p-10">
                         <div className="absolute inset-0 bg-accent/5 pointer-events-none" />
                         <div className="flex items-center gap-4 mb-6 relative z-10">
                             <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center border border-accent/30">
                                 <SparklesIcon className="text-accent w-6 h-6" />
                             </div>
-                            <h3 className="font-serif text-[2rem] text-foreground">Analyst Synthesis</h3>
+                            <h3 className="font-serif text-[1.65rem] text-foreground sm:text-[2rem]">Research answer</h3>
                         </div>
-                        <p className="text-foreground/80 leading-[1.8] text-[1.125rem] font-light relative z-10">
-                            {analystAnswer}
-                        </p>
+                        <EditorialContent content={analystAnswer} className="relative z-10 text-foreground/80" />
                     </motion.div>
                 )}
 
                 {/* Filter Tabs */}
                 {results.length > 0 && !isLoading && (
-                    <div className="flex flex-wrap items-center gap-3 mb-10 pb-6 border-b border-foreground/10">
+                    <div className="mobile-scroll-strip -mx-4 mb-8 gap-2 border-b border-foreground/10 px-4 pb-5 sm:mx-0 sm:flex-wrap sm:px-0 md:mb-10 md:gap-3">
                         {FILTER_TABS.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveFilter(tab.id)}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${
                                     activeFilter === tab.id
-                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(212,175,55,0.3)]'
+                                        ? 'bg-accent text-primary shadow-[0_0_20px_rgba(15,31,61,0.3)]'
                                         : 'bg-card text-foreground/50 hover:text-foreground border border-foreground/5 hover:border-foreground/20'
                                 }`}
                             >
@@ -204,7 +215,7 @@ export const BetaSearch: React.FC = () => {
                 {!isLoading && debouncedQ && (
                     <div className="space-y-6">
                         {filtered.length === 0 && !isError ? (
-                            <div className="py-24 text-center text-foreground/40">
+                            <div className="py-14 md:py-24 text-center text-foreground/40">
                                 <p className="text-[1.5rem] font-serif text-foreground mb-2">No results for "{debouncedQ}"</p>
                                 <p className="text-[1.125rem] font-light">Try different keywords or a broader search term</p>
                             </div>
@@ -227,7 +238,7 @@ export const BetaSearch: React.FC = () => {
                                     >
                                         <Link
                                             to={`/posts/${slug}`}
-                                            className="group block bg-card rounded-3xl border border-foreground/10 p-8 hover:border-accent/40 hover:bg-foreground/5 transition-all shadow-xl hover:shadow-[0_0_30px_rgba(212,175,55,0.1)]"
+                                        className="group block rounded-xl border border-foreground/10 bg-card p-5 transition-all hover:border-accent/40 hover:bg-foreground/5 sm:rounded-2xl sm:p-8"
                                         >
                                             <div className="flex items-start justify-between gap-6">
                                                 <div className="flex-1 min-w-0">
@@ -239,23 +250,23 @@ export const BetaSearch: React.FC = () => {
                                                         </div>
                                                     )}
                                                     <h3 className="font-serif text-[1.75rem] leading-snug text-foreground mb-4 group-hover:text-accent transition-colors">
-                                                        {title}
+                                                        {stripMarkdown(title)}
                                                     </h3>
                                                     {summary && (
                                                         <p className="text-[1.125rem] font-light text-foreground/50 line-clamp-2 leading-[1.8]">
-                                                            {summary}
+                                                            {stripMarkdown(summary)}
                                                         </p>
                                                     )}
                                                     {relevanceNote && (
                                                         <div className="mt-6 flex items-center gap-3 bg-background/50 p-4 rounded-xl border border-accent/20">
                                                             <SparklesIcon className="text-accent w-4 h-4 shrink-0" />
                                                             <p className="text-[13px] text-foreground/80 font-light italic">
-                                                                {relevanceNote}
+                                                                {stripMarkdown(relevanceNote)}
                                                             </p>
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="w-12 h-12 rounded-full bg-foreground/5 border border-foreground/10 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:border-accent transition-all mt-2">
+                                                <div className="mt-2 hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 transition-all group-hover:border-accent group-hover:bg-accent sm:flex">
                                                     <ArrowRightIcon className="w-5 h-5 text-foreground/50 group-hover:text-primary transition-colors" />
                                                 </div>
                                             </div>
@@ -268,8 +279,13 @@ export const BetaSearch: React.FC = () => {
                 )}
 
                 {isError && (
-                    <div className="py-24 text-center text-destructive/80">
-                        <p className="text-[1.125rem]">Search is temporarily unavailable. Please try again.</p>
+                    <div className="rounded-xl border border-border bg-card px-5 py-12 text-center md:py-16">
+                        <p className="font-serif text-2xl text-navy">Continue through the evidence index</p>
+                        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">This search request did not complete. Country records and the latest source-linked reporting remain available directly.</p>
+                        <div className="mt-6 flex flex-col justify-center gap-3 min-[420px]:flex-row">
+                            <Link to="/countries" className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Browse countries</Link>
+                            <Link to="/posts" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy">Latest reporting</Link>
+                        </div>
                     </div>
                 )}
             </div>

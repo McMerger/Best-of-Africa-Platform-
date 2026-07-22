@@ -5,7 +5,8 @@
 // Setup flow (one time):
 //   1. GET  //gemini/oauth/authorize  → redirects to Google consent screen
 //   2. User approves → Google redirects to //gemini/oauth/callback
-//   3. Tokens stored in KV — all generation uses Gemini from this point
+//   3. Tokens stored in KV for explicitly configured specialist integrations.
+// Informational generation remains pinned to Workers AI GPT-OSS 120B.
 //
 // The callback route is public (browser redirect won't carry Authorization header).
 // CSRF is handled via a time-limited state parameter validated against KV.
@@ -100,10 +101,10 @@ router.get('/callback', async (c) => {
 
     return c.json({
         success: true,
-        message: 'Gemini OAuth authorized. All AI generation will now use your Google subscription automatically.',
+        message: 'Gemini OAuth authorized for explicit specialist integrations. Informational generation remains pinned to GPT-OSS 120B.',
         token_expires_at: new Date(tokens.expires_at * 1000).toISOString(),
         scope: tokens.scope,
-        note: 'Tokens are stored in KV and auto-refreshed. No further action required.',
+        note: 'Tokens are stored in KV and auto-refreshed, but do not override the information-generation model.',
     });
 });
 
@@ -196,7 +197,7 @@ router.post('/bootstrap', async (c) => {
         refresh_token: refreshStatus,
         expires_at:    new Date(expiresAt * 1000).toISOString(),
         message:       body.refresh_token
-            ? 'Gemini subscription active. Tokens will auto-refresh — no further action needed.'
+            ? 'Gemini subscription stored for specialist integrations. Tokens will auto-refresh; informational generation remains on GPT-OSS 120B.'
             : `Access token stored. Expires ${new Date(expiresAt * 1000).toISOString()}. Add refresh_token to make it permanent.`,
     });
 });

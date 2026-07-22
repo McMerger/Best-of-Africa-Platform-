@@ -14,6 +14,13 @@ export default {
             },
         },
         extend: {
+            fontSize: {
+                /* Production reading sizes. `xs` is reserved for supporting
+                   metadata, while `sm` remains comfortably readable body copy. */
+                xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+                sm: ['0.9375rem', { lineHeight: '1.5rem' }],
+                base: ['1.0625rem', { lineHeight: '1.75rem' }],
+            },
             borderRadius: {
                 lg: 'var(--radius)',
                 md: 'calc(var(--radius) - 8px)',
@@ -52,7 +59,8 @@ export default {
                 },
                 accent: {
                     DEFAULT: 'hsl(var(--accent))',
-                    foreground: 'hsl(var(--accent-foreground))'
+                    foreground: 'hsl(var(--accent-foreground))',
+                    ink: 'hsl(var(--accent-ink))'
                 },
                 destructive: {
                     DEFAULT: 'hsl(var(--destructive))',
@@ -61,6 +69,27 @@ export default {
                 border: 'hsl(var(--border))',
                 input: 'hsl(var(--input))',
                 ring: 'hsl(var(--ring))',
+                /* ── Combined brand palette (Combination of both.md §1) ── */
+                navy: {
+                    DEFAULT: '#0F1F3D', /* navy-deep: hero bands, footer, login, admin */
+                    deep: '#0F1F3D',
+                    mid: '#112240',     /* secondary dark sections */
+                    card: '#1A2F50',    /* dark form cards / branded placeholders */
+                },
+                gold: {
+                    DEFAULT: '#0F1F3D', /* legacy alias: resolves to navy */
+                    italic: '#112240',
+                    deep: '#0F1F3D',    /* active state */
+                    light: '#FFFFFF',   /* disabled */
+                },
+                page: '#FFFFFF',        /* main content section bg — pure white */
+                surface: '#FFFFFF',     /* alternate light section bg — pure white */
+                ink: {
+                    DEFAULT: '#0F1F3D', /* text-primary */
+                    soft: '#374151',    /* legal body copy */
+                    blue: '#586C8D',    /* text-secondary / meta — darkened to meet WCAG AA (≈5.3:1 on white) */
+                    mute: '#9CA3AF',    /* placeholder / disabled */
+                },
                 chart: {
                     '1': 'hsl(var(--chart-1))',
                     '2': 'hsl(var(--chart-2))',

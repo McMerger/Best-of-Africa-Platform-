@@ -27,7 +27,7 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
 
     // Status config (Neutral/SaaS Style)
     const statusConfig = isStable
-        ? { color: "text-primary", bg: "bg-background/10", border: "border-primary/20", text: "Stable Analysis" }
+        ? { color: "text-primary", bg: "bg-background/10", border: "border-primary/20", text: "Stable" }
         : isVolatile
             ? { color: "text-foreground", bg: "bg-muted", border: "border-border", text: "Watchlist" }
             : { color: "text-muted-foreground", bg: "bg-muted/50", border: "border-border/50", text: "Developing" };
@@ -58,7 +58,7 @@ export const IntelligenceBriefing: React.FC<IntelligenceBriefingProps> = ({
             <CardContent className="relative z-10">
                 <div className="space-y-6 text-lg text-muted-foreground">
                     <p>
-                        Our analysts have analyzed <strong className="text-foreground">{articleCount} new reports</strong> in the last 24 hours.
+                        Coverage includes <strong className="text-foreground">{articleCount} new reports</strong> from the last 24 hours.
                         The primary narrative thread is <strong className="text-foreground">{trendingTopics[0]}</strong>, which is currently outpacing broader regional currents.
                     </p>
 

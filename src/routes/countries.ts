@@ -5,8 +5,9 @@
 
 import { Hono } from 'hono';
 import type { Env, Country } from '../types';
-import { getCached, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
+import { getCached, getCachedValue, CACHE_KEYS, CACHE_TTL } from '../lib/cache';
 import { callConfiguredAI } from '../lib/ai';
+import { isCountryEvidenceStale, readCountryEvidence, refreshCountryEvidence } from '../lib/country-evidence';
 
 const router = new Hono<{ Bindings: Env }>();
 
@@ -50,7 +51,7 @@ router.get('/', async (c) => {
 
         await Promise.all(regions.map(async (region) => {
             // Check cache for insight
-            const cacheKey = `insight:region:${region}`;
+            const cacheKey = `insight:region:v3:${region}`;
             const cachedInsight = await c.env.CACHE.get(cacheKey);
 
             if (cachedInsight) {
@@ -59,24 +60,34 @@ router.get('/', async (c) => {
             }
 
             try {
-                // RAG Search
-                const query = `${region} Africa business investment stability trends`;
-                const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
-                const vector = (embedding as Record<string, any>).data[0];
-                const relevant = await c.env.VECTORS.query(vector, { topK: 3, returnMetadata: true });
-                const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
+                const relevant = await c.env.DB.prepare(`
+                    SELECT a.title, a.summary, a.published_at, a.source_url, c.name AS country_name
+                    FROM articles a
+                    JOIN countries c ON c.code = a.country_code
+                    WHERE c.region = ? AND a.status = 'published'
+                    ORDER BY a.published_at DESC
+                    LIMIT 12
+                `).bind(region).all();
+                const context = (relevant.results || []).map((article: any, index) =>
+                    `[${index + 1}] ${article.title}\nCountry: ${article.country_name}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1100)}`
+                ).join('\n---\n');
+
+                const immediateBrief = (relevant.results || []).slice(0, 5).map((article: any, index) =>
+                    `${index + 1}. ${article.title} (${article.country_name}, ${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 320)}`
+                ).join('\n\n');
+                insights[region] = immediateBrief || `${region} Africa is represented by the country records and published coverage totals in this index.`;
 
                 if (context) {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Region: ${region}. News: ${context}`;
-                    const aiRes = await callConfiguredAI(c.env, { prompt, max_tokens: 100, temperature: 0.5 });
-                    const text = aiRes?.trim();
-                    if (text) {
-                        insights[region] = text;
-                        await c.env.CACHE.put(cacheKey, text, { expirationTtl: 3600 * 4 }); // 4 hours
-                    }
+                    const prompt = `System: You are BOA-Story's regional evidence desk. Use only the numbered reporting records. Describe reporting activity accurately; do not present coverage volume as proof of economic performance. Cite records inline and distinguish facts, supported interpretation, uncertainty and gaps.\nUser: Produce a full regional evidence brief for ${region} Africa covering chronology, actors, documented mechanisms, country and sector differences, stakeholder effects, practical implications, counter-signals, alternative explanations, source limitations, claim ledger and verification priorities.\n\nRecords:\n${context}`;
+                    c.executionCtx.waitUntil(
+                        callConfiguredAI(c.env, { prompt, max_tokens: 6000, temperature: 0.2, response_profile: 'evidence-brief' })
+                            .then(text => text?.trim() ? c.env.CACHE.put(cacheKey, text.trim(), { expirationTtl: CACHE_TTL.ARCHIVE }) : undefined)
+                            .then(() => undefined)
+                            .catch(error => console.error(`Regional brief refresh failed for ${region}`, error))
+                    );
                 }
             } catch (e) {
-                insights[region] = "Regional data currently updating.";
+                insights[region] = `${region} Africa is represented by the country records and published coverage totals in this index.`;
             }
         }));
 
@@ -85,7 +96,7 @@ router.get('/', async (c) => {
             by_region: Object.fromEntries(
                 Object.entries(grouped).map(([r, countries]) => [
                     r,
-                    { countries, ai_insight: insights[r] || "Stable business environment." }
+                    { countries, ai_insight: insights[r] || "No current source-linked regional briefing is available." }
                 ])
             ),
             total: cachedResult.length,
@@ -180,7 +191,7 @@ router.get('/:code', async (c) => {
                     "SELECT COUNT(*) as total FROM articles WHERE country_code = ? AND status = 'published'"
                 ).bind(code).first<{ total: number }>(),
                 c.env.DB.prepare(`
-                    SELECT id, slug, title, summary, sector_id, published_at
+                    SELECT id, slug, title, summary, sector_id, published_at, source_url
                     FROM articles
                     WHERE country_code = ? AND status = 'published'
                     ORDER BY published_at DESC
@@ -208,6 +219,27 @@ router.get('/:code', async (c) => {
         { ttl: CACHE_TTL.DASHBOARD } // 10 minutes
     );
 
+    const countrySituationKey = CACHE_KEYS.countrySituation(code);
+    const countrySituation = await getCachedValue<string>(c.env, countrySituationKey);
+    const situationEvidenceRows = stats.recent_articles as any[];
+    const situationFallback = situationEvidenceRows.length
+        ? situationEvidenceRows.map((article, index) => `${index + 1}. ${article.title} (${article.published_at || 'date not recorded'}). ${(article.summary || '').slice(0, 420)}`).join('\n\n')
+        : `${country.name} is represented by its country profile and the published coverage totals in this record.`;
+    if (!countrySituation && situationEvidenceRows.length) {
+        c.executionCtx.waitUntil(
+            getCached(c.env, countrySituationKey, async () => {
+                const evidence = situationEvidenceRows.map((article, index) =>
+                    `[${index + 1}] ${article.title}\nPublished: ${article.published_at || 'date unavailable'}\nSource URL: ${article.source_url || 'unavailable'}\nEvidence: ${(article.summary || '').slice(0, 1200)}`
+                ).join('\n---\n');
+                try {
+                    const prompt = `System: You are BOA-Story's country evidence desk. Use only the numbered records, cite them inline, distinguish reported facts from supported interpretation, identify contradictions, alternative explanations and gaps, and do not infer country conditions from coverage volume.\nUser: Produce a complete current situation dossier for ${country.name}, including scope, chronology, actors, documented mechanisms, stakeholder impacts, sector interactions, policy and operating implications, counter-signals, source limitations, a claim ledger and prioritized verification steps.\n\nRecords:\n${evidence}`;
+                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 7000, temperature: 0.2, response_profile: 'deep-analysis' });
+                    return aiResponse?.trim() || situationFallback;
+                } catch { return situationFallback; }
+            }, { ttl: CACHE_TTL.ARCHIVE }).then(() => undefined)
+        );
+    }
+
     return c.json({
         country: processCountries([country])[0],
         stats: {
@@ -215,20 +247,7 @@ router.get('/:code', async (c) => {
             top_sectors: stats.top_sectors,
         },
         recent_articles: stats.recent_articles,
-        ai_situation_report: await getCached(
-            c.env,
-            CACHE_KEYS.countrySituation(code),
-            async () => {
-                const headlines = (stats.recent_articles as any[]).map(a => a.title).join('; ');
-                if (!headlines) return "Monitoring situation.";
-                try {
-                    const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${headlines}`;
-                    const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 50, temperature: 0.5 });
-                    return aiResponse?.trim();
-                } catch { return "Status Normal."; }
-            },
-            { ttl: CACHE_TTL.DASHBOARD }
-        )
+        ai_situation_report: countrySituation || situationFallback
     });
 });
 
@@ -331,18 +350,13 @@ router.get('/:code/economics', async (c) => {
 
     const data = country as Record<string, any>;
 
-    // Calculate derived metrics
-    const gdpGrowth = null; // No mocked data
-    const stability = (data.image_strength_score || 0.5) > 0.6 ? 'Stable'
-        : (data.image_strength_score || 0.5) > 0.4 ? 'Moderate' : 'Volatile';
-
     return c.json({
         code: data.code,
         name: data.name,
-        gdp_growth: gdpGrowth !== null ? `+${gdpGrowth}%` : 'N/A',
-        stability: stability,
-        gdp_usd: data.gdp_usd,
-        population: data.population
+        recorded_gdp_usd: Number(data.gdp_usd || 0),
+        recorded_population: Number(data.population || 0),
+        evidence_fields_present: Number(data.gdp_usd != null) + Number(data.population != null),
+        methodology: 'These are the country table observations currently recorded by BOA-Story. This endpoint does not infer GDP growth or stability from media, engagement or image fields.'
     });
 });
 
@@ -373,15 +387,26 @@ router.get('/:code/relationships', async (c) => {
             const query = `diplomatic relations trade agreement partnership ${data.name}`;
             const embedding = await c.env.AI.run('@cf/baai/bge-base-en-v1.5', { text: [query] });
             const vector = (embedding as Record<string, any>).data[0];
-            const relevant = await c.env.VECTORS.query(vector, { topK: 5, returnMetadata: true });
+            const relevant = await c.env.VECTORS.query(vector, { topK: 8, returnMetadata: true });
 
-            const context = relevant.matches.map(m => (m.metadata as Record<string, any>).title).join('\n');
+            const context = relevant.matches.map((match, index) => {
+                const metadata = match.metadata as Record<string, any>;
+                return `[${index + 1}] ${metadata.published_at || 'date unavailable'} — ${metadata.title || 'Untitled record'}\n${metadata.text || metadata.summary || 'Evidence excerpt unavailable.'}\nURL: ${metadata.source_url || metadata.url || 'unavailable'}`;
+            }).join('\n\n');
             if (!context) return [];
 
-            // : Extract Partners
+            // Extract only relationships actually evidenced in the records.
             try {
-                const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: ${context}`;
-                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 300, temperature: 0.2 });
+                const prompt = `System: You are BOA-Story's diplomatic and trade evidence desk. Use only the numbered records. Do not infer a formal relationship from co-mention, and do not assign partnership strength, sentiment or strategic importance without explicit evidence. Cite records inline.
+
+User: Extract the documented relationships involving ${data.name}. Return ONLY a valid JSON array with this schema:
+[{"partner":"named country, institution or bloc","type":"documented relationship type","context":"250-400 words covering the dated event, actors, terms, documented mechanism, stakeholder effects, immediate and conditional implications, counter-signals, alternative explanations, source limitations, verification priorities and [n] citations"}]
+
+Exclude any relationship that cannot be supported. Return [] when evidence is insufficient.
+
+RECORDS:
+${context}`;
+                const aiResponse = await callConfiguredAI(c.env, { prompt, max_tokens: 4200, temperature: 0.2, response_profile: 'structured-analysis', structured_output: true });
                 const jsonMatch = (aiResponse || '').match(/\[.*\]/s);
                 return jsonMatch ? JSON.parse(jsonMatch[0]) : [];
             } catch (e) {
@@ -396,6 +421,91 @@ router.get('/:code/relationships', async (c) => {
         country_name: data.name,
         relationships: relationships,
         updated_at: new Date().toISOString()
+    });
+});
+
+// Detailed, source-explicit country dossier. External observations retain their
+// source year and unit; forecasts are separated from historical observations.
+router.get('/:code/dossier', async (c) => {
+    const code = c.req.param('code').toUpperCase();
+    const country = await c.env.DB.prepare('SELECT * FROM countries WHERE code = ?').bind(code).first<Record<string, any>>();
+    if (!country) return c.json({ error: 'not_found', message: 'Country not found' }, 404);
+
+    let [externalEvidence, events, sectors, evidence] = await Promise.all([
+        readCountryEvidence(c.env, code),
+        c.env.DB.prepare(`SELECT id, title, category, date_start, date_end, location, registration_url AS source_url
+            FROM events WHERE country_code = ? AND date_start >= date('now') ORDER BY date_start ASC LIMIT 12`).bind(code).all(),
+        c.env.DB.prepare(`SELECT s.id, s.name, COUNT(a.id) article_count, MAX(a.published_at) latest_evidence_at
+            FROM sectors s JOIN articles a ON a.sector_id=s.id
+            WHERE a.country_code=? AND a.status='published' GROUP BY s.id ORDER BY article_count DESC, s.name ASC`).bind(code).all(),
+        c.env.DB.prepare(`SELECT title, slug, summary, source_url, published_at, updated_at, reviewed_at
+            FROM articles WHERE country_code=? AND status='published' AND source_url IS NOT NULL
+            ORDER BY published_at DESC LIMIT 20`).bind(code).all(),
+    ]);
+
+    if (!externalEvidence) {
+        // This is only the first-ever cache fill. Scheduled rotation keeps all
+        // country snapshots warm thereafter, so normal readers never wait on
+        // World Bank, IMF or Comtrade network calls.
+        externalEvidence = await refreshCountryEvidence(c.env, { code, name: String(country.name) }, { fast: true });
+        if (externalEvidence) {
+            const enrichment = refreshCountryEvidence(c.env, { code, name: String(country.name) }).catch((error) => {
+                console.error(`Country evidence enrichment failed for ${code}:`, error);
+            });
+            try {
+                c.executionCtx.waitUntil(enrichment);
+            } catch {
+                void enrichment;
+            }
+        }
+    } else if (isCountryEvidenceStale(externalEvidence)) {
+        const refresh = refreshCountryEvidence(c.env, { code, name: String(country.name) }).catch((error) => {
+            console.error(`Country evidence background refresh failed for ${code}:`, error);
+        });
+        try {
+            c.executionCtx.waitUntil(refresh);
+        } catch {
+            void refresh;
+        }
+    }
+
+    if (!externalEvidence) {
+        return c.json({
+            error: 'evidence_refresh_in_progress',
+            message: 'The first verified official-source snapshot is being assembled. Retry shortly.',
+            country_code: code,
+        }, 503);
+    }
+
+    const portals = [
+        ['Business portal', country.business_portal_url], ['Visa portal', country.visa_portal_url],
+        ['Tourism portal', country.tourism_portal_url], ['Investment agency', country.investment_agency_url],
+    ].filter((entry) => entry[1]).map(([name, url]) => ({ name, url, source_type: 'official portal' }));
+
+    return c.json({
+        country: processCountries([country as Country])[0],
+        dossier: {
+            macroeconomics: {
+                ...externalEvidence.macroeconomics,
+            },
+            trade: externalEvidence.trade,
+            sector_evidence: sectors.results || [],
+            upcoming_events: events.results || [],
+            recent_source_record: evidence.results || [],
+            official_resources: portals,
+            freshness: externalEvidence.freshness,
+        },
+        provenance: {
+            sources: [
+                { name: 'World Bank Open Data', section: 'macroeconomics', url: 'https://data.worldbank.org/' },
+                { name: 'IMF DataMapper / World Economic Outlook', section: 'macroeconomics', url: 'https://www.imf.org/external/datamapper/' },
+                { name: 'UN Comtrade', section: 'trade', url: 'https://comtradeplus.un.org/' },
+                { name: 'BOA source-linked reporting', section: 'evidence', url: 'https://boa-story.com/stories' },
+            ],
+            generated_at: externalEvidence.retrieved_at,
+            retrieved_at: externalEvidence.retrieved_at,
+            methodology: 'Official observations retain their provider reporting period and unit. Retrieval time is shown separately and never changes an observation year. IMF projections are labelled separately from historical values. An empty provider response is never converted to a zero. The last verified snapshot is retained; World Bank goods-and-services totals can substitute for an unavailable UN Comtrade merchandise record, and an IMF current-account outlook is shown as external-sector evidence when neither provider returns verified trade totals.',
+        },
     });
 });
 

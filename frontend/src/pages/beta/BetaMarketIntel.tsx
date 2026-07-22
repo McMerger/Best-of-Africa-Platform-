@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // SUPPORTER FEED
-// A transparent, editorial look at what we're building — for Ko-fi backers.
+// A transparent, editorial look at what we're building, for Ko-fi backers.
 // Route: /intel
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -12,6 +12,8 @@ import { } from '../../components/beta';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { useMember } from '../../context/MemberContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { stripMarkdown } from '@/lib/utils';
 import { KO_FI_URL } from '../../constants/beta';
 
 // Dynamic content fetched via API
@@ -56,13 +58,13 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
         </div>
         <p className="font-serif text-xl font-semibold text-primary mb-2">Coverage Breakdown</p>
         <p className="text-sm text-primary/50 mb-6 max-w-sm">
-          Backers see exactly which countries and topics are getting research attention — updated as new stories are added.
+          Backers see exactly which countries and topics are getting research attention, updated as new stories are added.
         </p>
         <a
           href={KO_FI_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+          className="bg-accent text-navy font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
         >
           Support on Ko-fi
         </a>
@@ -117,7 +119,7 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
             <li key={sector.name} className="flex items-center justify-between">
               <span className="text-sm font-medium text-primary capitalize flex items-center gap-2">
                 {sector.name}
-                <Link to={`/sectors/${sector.id}/trends`} className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold hover:bg-accent hover:text-card transition-colors">
+                <Link to={`/sectors/${sector.id}/trends`} className="text-[10px] bg-accent/10 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider font-bold hover:bg-accent hover:text-navy transition-colors">
                   View Trends
                 </Link>
               </span>
@@ -137,6 +139,13 @@ function CoverageBlock({ isMember }: { isMember: boolean }) {
 export const BetaMarketIntel = () => {
   const { isMember } = useMember();
 
+  // Live funding progress from system_config (Ko-fi webhook keeps it current).
+  const { data: sysConfig } = useSystemConfig();
+  const fundGoal = Number(sysConfig?.['funding_goal']) || 800;
+  const fundRaised = Number(sysConfig?.['funding_raised']) || 304;
+  const fundCoffees = Number(sysConfig?.['funding_coffees']) || 62;
+  const fundPct = Math.min(100, Math.round((fundRaised / fundGoal) * 100));
+
   const { data: stats } = useQuery({
     queryKey: ['platform-stats'],
     queryFn: api.getPlatformStats,
@@ -151,13 +160,13 @@ export const BetaMarketIntel = () => {
     <div className="pb-24">
       <SEO
         title="Supporter Feed | BOA-Story"
-        description="A behind-the-scenes look at what we're building — for Ko-fi backers."
+        description="A behind-the-scenes look at what we're building, for Ko-fi backers."
       />
       
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="bg-background text-foreground pt-8 pb-16 px-6">
-        <div className="max-w-5xl mx-auto">
+      <div className="app-hero bg-background px-6 pb-16 pt-8 text-foreground">
+        <div className="page-container">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Heart size={12} />
             Supporter Feed
@@ -168,24 +177,25 @@ export const BetaMarketIntel = () => {
           <p className="text-foreground/50 text-lg max-w-xl leading-relaxed">
             An honest, behind-the-scenes look at what's being researched, what's being published, and where the project is headed. For the people making it possible.
           </p>
+          <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-ink-blue">Open to all · No login required</p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-14">
+      <div className="page-container content-split py-12 md:py-16">
 
         {/* ── Project Stats ──────────────────────────────────────────────── */}
         {stats && (
-          <section>
+          <section className="lg:col-span-2">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { value: stats.total_articles?.toLocaleString() ?? '—', label: 'Stories published' },
-                { value: stats.total_countries ?? '—', label: 'Countries covered' },
-                { value: stats.regions ?? '—', label: 'African regions' },
-                { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '—', label: 'Total reads' },
+                { value: stats.total_articles?.toLocaleString() ?? '-', label: 'Stories published' },
+                { value: stats.total_countries ?? '-', label: 'Countries covered' },
+                { value: stats.regions ?? '-', label: 'African regions' },
+                { value: stats.total_views ? `${(stats.total_views / 1000).toFixed(1)}k` : '-', label: 'Total reads' },
               ].map(({ value, label }) => (
-                <div key={label} className="bg-background rounded-xl border border-primary/8 p-5 text-center">
+                <div key={label} className="group bg-white rounded-xl border border-border border-t-[3px] border-t-accent/70 shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 text-center hover:shadow-[0_10px_30px_-10px_rgba(15,31,61,0.2)] hover:-translate-y-0.5 transition-all duration-300">
                   <p className="font-serif text-[2rem] font-bold text-accent leading-none mb-1">{value}</p>
-                  <p className="text-[11px] text-primary/40 uppercase tracking-widest font-medium">{label}</p>
+                  <p className="text-[11px] text-ink-blue uppercase tracking-widest font-medium">{label}</p>
                 </div>
               ))}
             </div>
@@ -193,7 +203,7 @@ export const BetaMarketIntel = () => {
         )}
 
         {/* ── Editorial Updates ─────────────────────────────────────────── */}
-        <section>
+        <section className="section-frame">
           <div className="flex items-center gap-3 mb-6">
             <BookOpen size={18} className="text-accent" />
             <h2 className="font-serif text-2xl text-primary">What I'm working on</h2>
@@ -222,8 +232,8 @@ export const BetaMarketIntel = () => {
                     </span>
                     <span className="text-[11px] text-primary/30">{update.date}</span>
                   </div>
-                  <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{update.title}</h3>
-                  <p className="text-sm text-primary/60 leading-relaxed">{update.body}</p>
+                  <h3 className="font-serif text-lg text-primary mb-2 leading-snug">{stripMarkdown(update.title)}</h3>
+                  <p className="text-sm text-primary/60 leading-relaxed">{stripMarkdown(update.body)}</p>
                 </motion.div>
               ))
             ) : (
@@ -235,50 +245,50 @@ export const BetaMarketIntel = () => {
         </section>
 
         {/* ── Coverage Breakdown (members only) ────────────────────────── */}
-        <section>
+        <section className="section-frame">
           <div className="flex items-center gap-3 mb-6">
             <MapPin size={18} className="text-accent" />
             <h2 className="font-serif text-2xl text-primary">Where we're reporting</h2>
             {!isMember && (
-              <span className="text-[11px] text-primary/40 font-medium">— backers only</span>
+              <span className="text-[11px] text-primary/40 font-medium">backers only</span>
             )}
           </div>
           <CoverageBlock isMember={isMember} />
         </section>
 
         {/* ── Ko-fi Progress ────────────────────────────────────────────── */}
-        <section className="bg-background rounded-2xl border border-primary/8 p-8">
+        <section className="section-frame">
           <div className="flex items-center gap-2 mb-5">
             <Coffee size={18} className="text-accent" />
             <h2 className="font-serif text-xl text-primary">Ko-fi goal progress</h2>
           </div>
           <div className="mb-3 flex justify-between items-end">
-            <span className="font-serif text-3xl font-bold text-primary">38%</span>
-            <span className="text-sm text-primary/40">of $800 goal</span>
+            <span className="font-serif text-3xl font-bold text-primary">{fundPct}%</span>
+            <span className="text-sm text-primary/40">of ${fundGoal.toLocaleString()} goal</span>
           </div>
           <div className="w-full h-2.5 bg-background/8 rounded-full overflow-hidden mb-4">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: '38%' }}
+              animate={{ width: `${fundPct}%` }}
               transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
               className="h-full bg-accent rounded-full"
             />
           </div>
           <p className="text-sm text-primary/50 mb-6 leading-relaxed">
-            62 coffees received so far. Each one goes directly toward keeping the platform live and the reporting going. This is what independent, community-backed journalism looks like.
+            {fundCoffees} coffees received so far. Each one goes directly toward keeping the platform live and the reporting going. This is what independent, community-backed journalism looks like.
           </p>
           <a
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-accent text-card font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
+            className="inline-flex items-center gap-2 bg-accent text-navy font-semibold px-6 py-3 rounded-xl text-sm hover:brightness-110 transition-all"
           >
             Buy me a coffee <ArrowRight size={14} />
           </a>
         </section>
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
-        <section className="bg-background rounded-2xl p-10 text-foreground text-center">
+        <section className="section-frame text-center lg:col-span-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-accent mb-4">Read the work</p>
           <h3 className="font-serif text-3xl mb-3">See the stories behind all of this.</h3>
           <p className="text-foreground/50 mb-8 max-w-md mx-auto">
@@ -286,7 +296,7 @@ export const BetaMarketIntel = () => {
           </p>
           <Link
             to="/posts"
-            className="inline-flex items-center gap-2 bg-accent text-card font-semibold px-8 py-4 rounded-xl hover:brightness-110 transition-all hover:-translate-y-0.5"
+            className="inline-flex items-center gap-2 bg-accent text-navy font-semibold px-8 py-4 rounded-xl hover:brightness-110 transition-all hover:-translate-y-0.5"
           >
             Browse all stories <ArrowRight size={15} />
           </Link>

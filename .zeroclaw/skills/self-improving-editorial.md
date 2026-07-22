@@ -69,7 +69,7 @@ Like an Automaton, your guidelines are your evolving identity. Synthesize the to
 ### Step 4: Guardrails
 
 - **Never delete** existing rules — only add or refine
-- **Never weaken** anti-hedging rules or quality standards
+- **Never weaken** certainty-calibration or quality standards
 - **Flag for human review** any proposed rule that would change scoring thresholds by more than ±10 points
 - Maximum 5 new rules per nightly run
 
@@ -80,9 +80,9 @@ Before saving any new rule, cross-reference it against the Automaton Constitutio
 
 The following core principles are immutable:
 - Authentic, grounded, human-centric prose
-- Anti-hedging stance (no "might", "could", "potentially")
+- Calibrated certainty: established facts are direct; projections, allegations and incomplete evidence are explicitly qualified
 - Africa-only focus
-- 400-800 word target length
+- Evidence-earned depth: 900-2,600 words when supported, with no padding quota
 - Mandatory article structure (TITLE / SUBTITLE / CONTENT / SUMMARY / TAGS)
 
 ## Step 6: Report Telemetry
@@ -98,6 +98,6 @@ Body: {
   "tasksSeen": <patterns analyzed>,
   "tasksDone": <rules added>,
   "tasksFailed": 0,
-  "modelUsed": "<model identifier>"
+  "modelUsed": "@cf/openai/gpt-oss-120b"
 }
 ```

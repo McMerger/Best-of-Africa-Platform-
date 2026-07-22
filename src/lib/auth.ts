@@ -14,22 +14,15 @@ type AppContext = Context<{ Bindings: Env; Variables: Variables }>;
 // ───────────────────────────────────────────────────────────────────────────────
 export async function requireAdmin(c: AppContext, next: Next) {
     const authHeader = c.req.header('Authorization');
-    const apiKey = c.req.header('X-Admin-Key');
+    const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const presented = c.req.header('X-Admin-Key') || bearer;
 
-    // Check admin API key
-    if (apiKey && apiKey === c.env.ADMIN_API_KEY) {
+    // ONLY the admin API key opens the admin surface. Member JWTs are signed
+    // with the same JWT_SECRET but carry no admin claim — the old "any valid
+    // JWT" branch meant every signed-in member had full admin access.
+    if (presented && c.env.ADMIN_API_KEY && presented === c.env.ADMIN_API_KEY) {
         await next();
         return;
-    }
-
-    // Check JWT bearer token
-    if (authHeader?.startsWith('Bearer ')) {
-        const token = authHeader.slice(7);
-        const isValid = await verifyJWT(token, c.env.JWT_SECRET);
-        if (isValid) {
-            await next();
-            return;
-        }
     }
 
     return c.json({ error: 'unauthorized', message: 'Invalid or missing authentication' }, 401);
@@ -166,7 +159,7 @@ export async function createJWT(userId: string, secret: string, expiresIn = 8640
     return `${message}.${signatureB64}`;
 }
 
-async function verifyJWT(token: string, secret: string): Promise<JWTPayload | null> {
+export async function verifyJWT(token: string, secret: string): Promise<JWTPayload | null> {
     try {
         const [headerB64, payloadB64, signatureB64] = token.split('.');
         if (!headerB64 || !payloadB64 || !signatureB64) return null;

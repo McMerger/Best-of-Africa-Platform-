@@ -10,6 +10,9 @@ dist/
 .env
 .env.local
 .dev.vars
+.cloudflare/
+frontend/.env.production.local
+frontend/.env.*.local
 
 # IDE
 .vscode/
@@ -27,3 +30,6 @@ logs/
 
 # Test
 coverage/
+
+# Local agent tooling (was a self-referential submodule — kept local, not tracked)
+zeroclaw/

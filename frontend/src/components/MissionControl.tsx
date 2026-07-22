@@ -60,8 +60,8 @@ export const MissionControl: React.FC = () => {
 
                     {/* Golden Pulse Background (CSS) */}
                     <div className="absolute inset-0 z-0 opacity-40">
-                        <div className="absolute inset-0 bg-gradient-to-br from-white via-amber-50/50 to-amber-100/20" />
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(251,191,36,0.12)_0%,transparent_50%)]" />
+                        <div className="absolute inset-0 bg-white" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(15,31,61,0.12)_0%,transparent_50%)]" />
                     </div>
 
                     {/* Content Layer */}
@@ -91,7 +91,7 @@ export const MissionControl: React.FC = () => {
                                                 "flex flex-col items-start gap-1 p-3 rounded-2xl border text-left transition-all",
                                                 role === r
                                                     ? "bg-accent/10 border-accent/50 text-accent shadow-sm"
-                                                    : "bg-foreground/40 border-border/50 hover:bg-foreground/60 text-foreground hover:border-amber-200"
+                                                    : "bg-foreground/40 border-border/50 hover:bg-foreground/60 text-foreground hover:border-accent"
                                             )}
                                         >
                                             <span className="text-xs font-bold uppercase">{r}</span>
@@ -168,7 +168,7 @@ export const MissionControl: React.FC = () => {
                                                     "cursor-pointer text-[10px] border-border/50 bg-foreground/40 transition-all text-foreground",
                                                     focus.sectors.includes(s.id)
                                                         ? "bg-accent/10 text-accent border-accent/50"
-                                                        : "opacity-60 hover:opacity-100 hover:border-amber-200"
+                                                        : "opacity-60 hover:opacity-100 hover:border-accent"
                                                 )}
                                             >
                                                 {s.name}

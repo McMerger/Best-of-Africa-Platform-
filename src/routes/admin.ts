@@ -9,6 +9,10 @@ import type { Env, Variables } from '../types';
 import { requireAdmin } from '../lib/auth';
 import { getCached, CACHE_KEYS } from '../lib/cache';
 import { validate, CreateArticleSchema } from '../lib';
+import { editorialApprovalFailure } from '../lib/editorial-quality';
+import { indexArticle } from '../lib/vectorize';
+import { onArticlePublished } from '../lib/alerts';
+import { autoPostArticle } from '../lib/social';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -265,6 +269,27 @@ router.post('/articles/:id/publish', async (c) => {
 });
 
 /**
+ * POST /admin/articles/:id/curate
+ * Toggle the curated (human-reviewed, personal byline, magazine-front) tier.
+ * Body: { curated: boolean } — defaults to true when omitted.
+ */
+router.post('/articles/:id/curate', async (c) => {
+    const id = c.req.param('id');
+    let curated = 1;
+    try {
+        const body = await c.req.json();
+        if (typeof body?.curated === 'boolean') curated = body.curated ? 1 : 0;
+    } catch { /* no body → curate */ }
+
+    const res = await c.env.DB.prepare(
+        `UPDATE articles SET curated = ?, updated_at = datetime('now') WHERE id = ?`
+    ).bind(curated, id).run();
+
+    if (!res.meta.changes) return c.json({ error: 'not_found' }, 404);
+    return c.json({ success: true, curated: !!curated });
+});
+
+/**
  * POST /admin/articles/:id/reject
  * Reject and archive article, logging the reason as feedback for agents.
  */
@@ -406,6 +431,43 @@ router.post('/clients', async (c) => {
 
     // Return API key only on creation (won't be retrievable later)
     return c.json({ id, api_key: apiKey }, 201);
+});
+
+// ───────────────────────────────────────────────────────────────────────────────
+// Operator Inbox — every inbound submission in one place. The public forms
+// (contact, consultation booking, event registration, newsletter) all store
+// to D1; without this endpoint nothing ever surfaced them to a human.
+// ───────────────────────────────────────────────────────────────────────────────
+
+router.get('/inbox', async (c) => {
+    const [contact, bookings, registrations, subscribers] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT id, name, organization, email, inquiry_type, message, created_at
+            FROM contact_submissions ORDER BY created_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(`
+            SELECT id, guest_name, guest_email, guest_organization, service_type,
+                   requirements, budget_range, urgency, status, created_at
+            FROM booking_requests ORDER BY created_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(`
+            SELECT r.id, r.event_id, e.title AS event_title, r.user_email, r.user_name,
+                   r.user_organization, r.ticket_type, r.status, r.confirmation_code, r.registered_at
+            FROM event_registrations r
+            LEFT JOIN events e ON e.id = r.event_id
+            ORDER BY r.registered_at DESC LIMIT 100
+        `).all(),
+        c.env.DB.prepare(
+            'SELECT COUNT(*) AS n FROM digest_subscriptions WHERE is_active = 1'
+        ).first<{ n: number }>(),
+    ]);
+
+    return c.json({
+        contact: contact.results || [],
+        bookings: bookings.results || [],
+        registrations: registrations.results || [],
+        newsletter_subscribers: subscribers?.n || 0,
+    });
 });
 
 // ───────────────────────────────────────────────────────────────────────────────
@@ -560,6 +622,8 @@ import { generateArticleImage } from '../lib/ai';
 import { uploadImage } from '../lib/media';
 
 router.post('/generate-images', async (c) => {
+    return c.json({ error: 'gone', message: 'Synthetic editorial image generation is permanently disabled. Supply a source-owned image URL, credit and source page instead.' }, 410);
+    /* compatibility code below is intentionally unreachable */
     const { limit = '10' } = c.req.query();
     const batchSize = Math.min(50, parseInt(limit));
 
@@ -591,7 +655,7 @@ router.post('/generate-images', async (c) => {
             if (imageBuffer) {
                 // Upload to R2
                 const key = `hero/${a.id}.png`;
-                const publicUrl = await uploadImage(c.env, key, imageBuffer, 'image/png');
+                const publicUrl = await uploadImage(c.env, key, imageBuffer!, 'image/png');
 
                 // Update DB
                 await c.env.DB.prepare(`
@@ -630,7 +694,8 @@ router.get('/articles/needs-audit', async (c) => {
 
     const articles = await c.env.DB.prepare(`
         SELECT a.id, a.title, a.content, a.summary, a.country_code, a.sector_id,
-               a.status, a.last_audited_at, a.created_at,
+               a.source_url, a.source_title, a.source_published_at,
+               a.status, a.moderation_status, a.last_audited_at, a.created_at,
                c.name as country_name, s.name as sector_name
         FROM articles a
         LEFT JOIN countries c ON a.country_code = c.code
@@ -644,6 +709,151 @@ router.get('/articles/needs-audit', async (c) => {
     return c.json({ data: articles.results || [], count: articles.results?.length || 0 });
 });
 
+// GET /admin/editorial/remediation-preview — read-only legacy corpus assessment.
+// Only objectively unverifiable records are eligible for automatic quarantine;
+// short or old records remain in the human/agent review queue.
+router.get('/editorial/remediation-preview', async (c) => {
+    const [counts, samples] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT
+                COUNT(*) AS published_total,
+                SUM(CASE WHEN last_audited_at IS NULL THEN 1 ELSE 0 END) AS unaudited,
+                SUM(CASE WHEN source_url IS NULL OR trim(source_url) = '' THEN 1 ELSE 0 END) AS missing_source,
+                SUM(CASE WHEN length(content) < 2500 THEN 1 ELSE 0 END) AS short_content
+            FROM articles
+            WHERE status = 'published'
+        `).first<Record<string, number>>(),
+        c.env.DB.prepare(`
+            SELECT id, slug, title, country_code, sector_id, created_at
+            FROM articles
+            WHERE status = 'published'
+              AND (source_url IS NULL OR trim(source_url) = '')
+            ORDER BY created_at DESC
+            LIMIT 25
+        `).all<Record<string, unknown>>(),
+    ]);
+
+    return c.json({
+        data: {
+            ...counts,
+            automatic_quarantine_rule: 'missing_source',
+            automatic_quarantine_candidates: counts?.missing_source || 0,
+            review_only: { short_content: counts?.short_content || 0 },
+            sample: samples.results || [],
+        },
+        generated_at: new Date().toISOString(),
+    });
+});
+
+// POST /admin/editorial/remediation/quarantine — reversible batch quarantine.
+// A caller must explicitly confirm the run. The narrow rule deliberately avoids
+// making subjective automated judgements about article length or writing style.
+router.post('/editorial/remediation/quarantine', async (c) => {
+    const body = await c.req.json<{ rule?: string; limit?: number; confirm?: boolean }>();
+    if (body.rule !== 'missing_source') {
+        return c.json({ error: 'unsupported_rule', message: 'Only missing_source can be quarantined automatically.' }, 400);
+    }
+    if (body.confirm !== true) {
+        return c.json({ error: 'confirmation_required', message: 'Set confirm to true after reviewing the preview.' }, 400);
+    }
+
+    const limit = Math.min(500, Math.max(1, Number(body.limit) || 100));
+    const runId = crypto.randomUUID();
+    const reason = 'No verifiable source URL was attached to this published record.';
+    const matched = await c.env.DB.prepare(`
+        SELECT COUNT(*) AS total FROM articles
+        WHERE status = 'published' AND (source_url IS NULL OR trim(source_url) = '')
+    `).first<{ total: number }>();
+
+    await c.env.DB.batch([
+        c.env.DB.prepare(`
+            INSERT INTO editorial_remediation_runs (id, rule, status, matched_count)
+            VALUES (?, 'missing_source', 'running', ?)
+        `).bind(runId, matched?.total || 0),
+        c.env.DB.prepare(`
+            INSERT INTO editorial_remediation_items (
+                run_id, article_id, previous_status, previous_moderation_status,
+                previous_moderation_score, reason
+            )
+            SELECT ?, id, status, moderation_status, moderation_score, ?
+            FROM articles
+            WHERE status = 'published' AND (source_url IS NULL OR trim(source_url) = '')
+            ORDER BY created_at ASC
+            LIMIT ?
+        `).bind(runId, reason, limit),
+        c.env.DB.prepare(`
+            UPDATE articles
+            SET status = 'pending_audit', moderation_status = 'flagged',
+                moderation_score = 0, updated_at = datetime('now')
+            WHERE id IN (
+                SELECT article_id FROM editorial_remediation_items WHERE run_id = ?
+            )
+        `).bind(runId),
+        c.env.DB.prepare(`
+            INSERT INTO article_feedback (
+                id, article_id, feedback_type, comment, is_processed_by_agent
+            )
+            SELECT ? || ':' || article_id, article_id, 'audit_fail',
+                   'Legacy remediation ' || ? || ': ' || reason, 0
+            FROM editorial_remediation_items WHERE run_id = ?
+        `).bind(runId, runId, runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_runs
+            SET status = 'completed',
+                processed_count = (SELECT COUNT(*) FROM editorial_remediation_items WHERE run_id = ?),
+                completed_at = datetime('now')
+            WHERE id = ?
+        `).bind(runId, runId),
+    ]);
+
+    const run = await c.env.DB.prepare(`
+        SELECT * FROM editorial_remediation_runs WHERE id = ?
+    `).bind(runId).first();
+    return c.json({ success: true, run });
+});
+
+// POST /admin/editorial/remediation/:runId/restore — emergency rollback for a run.
+router.post('/editorial/remediation/:runId/restore', async (c) => {
+    const runId = c.req.param('runId');
+    const run = await c.env.DB.prepare(`
+        SELECT id, status FROM editorial_remediation_runs WHERE id = ?
+    `).bind(runId).first<{ id: string; status: string }>();
+    if (!run) return c.json({ error: 'not_found' }, 404);
+    if (run.status === 'restored') return c.json({ error: 'already_restored' }, 409);
+
+    await c.env.DB.batch([
+        c.env.DB.prepare(`
+            UPDATE articles
+            SET status = COALESCE((
+                    SELECT previous_status FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ), status),
+                moderation_status = (
+                    SELECT previous_moderation_status FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ),
+                moderation_score = (
+                    SELECT previous_moderation_score FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ),
+                updated_at = datetime('now')
+            WHERE id IN (
+                SELECT article_id FROM editorial_remediation_items
+                WHERE run_id = ? AND restored_at IS NULL
+            ) AND status = 'pending_audit' AND moderation_status = 'flagged'
+        `).bind(runId, runId, runId, runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_items SET restored_at = datetime('now')
+            WHERE run_id = ? AND restored_at IS NULL
+        `).bind(runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_runs SET status = 'restored' WHERE id = ?
+        `).bind(runId),
+    ]);
+
+    return c.json({ success: true, run_id: runId, status: 'restored' });
+});
+
 // POST /admin/articles/:id/audit — submit audit result from ZeroClaw proactive-editorial skill
 router.post('/articles/:id/audit', async (c) => {
     const id = c.req.param('id');
@@ -654,20 +864,70 @@ router.post('/articles/:id/audit', async (c) => {
         recommendation: 'approve' | 'rewrite' | 'delete';
     }>();
 
-    const article = await c.env.DB.prepare('SELECT id, content FROM articles WHERE id = ?').bind(id).first<{ id: string; content: string }>();
+    const article = await c.env.DB.prepare(`
+        SELECT a.id, a.slug, a.title, a.summary, a.content, a.source_url,
+               a.country_code, a.sector_id, a.hero_image_url, s.name AS sector_name
+        FROM articles a LEFT JOIN sectors s ON s.id = a.sector_id
+        WHERE a.id = ?
+    `).bind(id).first<{
+        id: string; slug: string; title: string; summary: string | null; content: string;
+        source_url?: string | null; country_code: string | null; sector_id: string | null;
+        hero_image_url: string | null; sector_name: string | null;
+    }>();
     if (!article) return c.json({ error: 'not_found' }, 404);
 
-    // Update audit timestamp and optionally status
-    const newStatus = body.recommendation === 'delete' ? 'archived'
-        : body.recommendation === 'approve' ? 'published'
-        : undefined;
+    const qualityScore = Number(body.quality_score);
+    if (!Number.isFinite(qualityScore) || qualityScore < 0 || qualityScore > 100) {
+        return c.json({ error: 'invalid_quality_score', message: 'quality_score must be between 0 and 100' }, 400);
+    }
+    if (!['approve', 'rewrite', 'delete'].includes(body.recommendation)) {
+        return c.json({ error: 'invalid_recommendation' }, 400);
+    }
+    const approvalFailure = editorialApprovalFailure({
+        qualityScore,
+        passed: body.passed,
+        issues: body.issues || [],
+        recommendation: body.recommendation,
+        sourceUrl: article.source_url,
+    });
+    if (approvalFailure) {
+        return c.json({
+            error: 'quality_gate_failed',
+            message: approvalFailure,
+        }, 422);
+    }
 
-    const statusClause = newStatus ? `, status = '${newStatus}'` : '';
+    const newStatus = body.recommendation === 'approve' ? 'published'
+        : body.recommendation === 'delete' ? 'archived'
+        : 'pending_audit';
+    const moderationStatus = body.recommendation === 'approve' ? 'approved'
+        : body.recommendation === 'delete' ? 'rejected'
+        : 'pending';
+
     await c.env.DB.prepare(`
         UPDATE articles
-        SET last_audited_at = datetime('now'), updated_at = datetime('now')${statusClause}
+        SET status = ?, moderation_status = ?, moderation_score = ?,
+            last_audited_at = datetime('now'),
+            reviewed_at = CASE WHEN ? = 'approved' THEN datetime('now') ELSE reviewed_at END,
+            published_at = CASE WHEN ? = 'approved' THEN COALESCE(published_at, datetime('now')) ELSE published_at END,
+            updated_at = datetime('now')
         WHERE id = ?
-    `).bind(id).run();
+    `).bind(newStatus, moderationStatus, qualityScore / 100, moderationStatus, moderationStatus, id).run();
+
+    if (body.recommendation === 'approve') {
+        c.executionCtx.waitUntil(Promise.allSettled([
+            indexArticle(c.env, article.id, article.title, article.content, {
+                country_code: article.country_code ?? undefined,
+                sector_id: article.sector_id ?? undefined,
+            }),
+            onArticlePublished(c.env, article),
+            autoPostArticle(c.env, article),
+        ]).then(results => {
+            results.forEach(result => {
+                if (result.status === 'rejected') console.error('[editorial-publish] follow-up failed', result.reason);
+            });
+        }));
+    }
 
     // Log the audit as a feedback event for self-improvement
     if (!body.passed) {
@@ -677,7 +937,7 @@ router.post('/articles/:id/audit', async (c) => {
             VALUES (?, ?, 'audit_fail', ?, ?, 0)
         `).bind(
             feedbackId, id,
-            `Quality: ${body.quality_score}/100. Issues: ${body.issues.join('; ')}. Recommendation: ${body.recommendation}`,
+            `Quality: ${qualityScore}/100. Issues: ${(body.issues || []).join('; ')}. Recommendation: ${body.recommendation}`,
             article.content
         ).run();
     }
@@ -685,7 +945,7 @@ router.post('/articles/:id/audit', async (c) => {
     return c.json({
         success: true,
         article_id: id,
-        quality_score: body.quality_score,
+        quality_score: qualityScore,
         recommendation: body.recommendation,
         status_changed_to: newStatus || null,
     });

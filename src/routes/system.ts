@@ -31,6 +31,12 @@ router.get('/live/status', async (c) => {
 // POST /contact - Contact form submission
 // ───────────────────────────────────────────────────────────────────────────────
 router.post('/contact', async (c) => {
+    // Per-IP throttle — this endpoint writes unauthenticated input to D1 and
+    // feeds the operator inbox; without a limit it's a spam funnel.
+    const { throttle } = await import('../lib/ratelimit');
+    const limited = await throttle(c, 'contact');
+    if (limited) return limited;
+
     const body = await c.req.json();
     const { name, organization, email, inquiry_type, message } = body;
 

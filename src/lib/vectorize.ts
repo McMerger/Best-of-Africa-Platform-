@@ -49,7 +49,7 @@ export async function indexArticle(
         values: mainVector,
         metadata: {
             ...baseMetadata,
-            text: mainTextToEmbed.slice(0, 1000) // Preview for RAG
+            text: mainTextToEmbed.slice(0, 2200) // Rich source preview for evidence-grounded RAG
         },
     }];
 

@@ -3,12 +3,24 @@ import type { Env, Variables } from '../types';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-const BASE_URL = 'https://bestofafrica.com';
+// Crawlers and feed readers follow these URLs verbatim — they must point at
+// the site that actually serves traffic. bestofafrica.com is not registered
+// yet; when it is, set PUBLIC_SITE_URL in wrangler.toml and this follows.
+const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
+
+// RSS-sourced titles are stored with HTML entities (&#8211;, &amp;, …). Inside
+// CDATA nothing re-decodes them, so feed readers would display them literally.
+const decodeEntities = (s?: string | null): string => (s || '')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ');
 
 // ───────────────────────────────────────────────────────────────────────────────
 // GET /sitemap.xml
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/sitemap.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     // 1. Fetch all published articles
     const articles = await c.env.DB.prepare(
         "SELECT slug, published_at FROM articles WHERE status = 'published' ORDER BY published_at DESC"
@@ -73,6 +85,7 @@ router.get('/sitemap.xml', async (c) => {
 // GET /rss.xml
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/rss.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     // Fetch top 50 recent published articles
     const articles = await c.env.DB.prepare(`
         SELECT a.title, a.slug, a.summary, a.published_at, c.name as country_name 
@@ -97,10 +110,10 @@ router.get('/rss.xml', async (c) => {
         const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
         
         xml += `    <item>\n`;
-        xml += `      <title><![CDATA[${article.title}]]></title>\n`;
+        xml += `      <title><![CDATA[${decodeEntities(article.title)}]]></title>\n`;
         xml += `      <link>${url}</link>\n`;
         xml += `      <guid isPermaLink="true">${url}</guid>\n`;
-        xml += `      <description><![CDATA[${article.summary}]]></description>\n`;
+        xml += `      <description><![CDATA[${decodeEntities(article.summary)}]]></description>\n`;
         if (article.country_name) {
             xml += `      <category><![CDATA[${article.country_name}]]></category>\n`;
         }
@@ -121,13 +134,14 @@ router.get('/rss.xml', async (c) => {
 // GET /podcast.xml (Daily Pulse Podcast Feed)
 // ───────────────────────────────────────────────────────────────────────────────
 router.get('/podcast.xml', async (c) => {
+    const BASE_URL = siteBase(c.env);
     const articles = await c.env.DB.prepare(`
-        SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.hero_image_url
+        SELECT a.title, a.slug, a.summary, a.published_at, a.audio_url, a.audio_duration_seconds, a.audio_file_size, a.hero_image_url
         FROM articles a
         WHERE a.status = 'published' AND a.audio_url IS NOT NULL
-        ORDER BY a.published_at DESC 
+        ORDER BY a.published_at DESC
         LIMIT 50
-    `).all<{ title: string; slug: string; summary: string; published_at: string; audio_url: string; audio_duration_seconds: number; hero_image_url: string }>();
+    `).all<{ title: string; slug: string; summary: string; published_at: string; audio_url: string; audio_duration_seconds: number; audio_file_size: number | null; hero_image_url: string }>();
 
     let xml = `<?xml version="1.0" encoding="UTF-8" ?>\n`;
     xml += `<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:atom="http://www.w3.org/2005/Atom">\n`;
@@ -149,15 +163,15 @@ router.get('/podcast.xml', async (c) => {
         const pubDate = article.published_at ? new Date(article.published_at).toUTCString() : new Date().toUTCString();
         
         xml += `    <item>\n`;
-        xml += `      <title><![CDATA[${article.title}]]></title>\n`;
+        xml += `      <title><![CDATA[${decodeEntities(article.title)}]]></title>\n`;
         xml += `      <link>${url}</link>\n`;
         xml += `      <guid isPermaLink="true">${url}</guid>\n`;
-        xml += `      <description><![CDATA[${article.summary}]]></description>\n`;
+        xml += `      <description><![CDATA[${decodeEntities(article.summary)}]]></description>\n`;
         xml += `      <pubDate>${pubDate}</pubDate>\n`;
         
         if (article.audio_url) {
             const absoluteAudioUrl = article.audio_url.startsWith('http') ? article.audio_url : `${BASE_URL}${article.audio_url}`;
-            xml += `      <enclosure url="${absoluteAudioUrl}" type="audio/mpeg" length="${(article as any).audio_file_size || 0}" />\n`;
+            xml += `      <enclosure url="${absoluteAudioUrl}" type="audio/mpeg" length="${article.audio_file_size || 0}" />\n`;
             if (article.audio_duration_seconds) {
                 xml += `      <itunes:duration>${article.audio_duration_seconds}</itunes:duration>\n`;
             }

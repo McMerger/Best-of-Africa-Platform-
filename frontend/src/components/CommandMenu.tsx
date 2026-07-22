@@ -96,7 +96,7 @@ export const CommandMenu = () => {
                     <MagnifyingGlassIcon className="mr-2 h-5 w-5 shrink-0 opacity-50" />
                     <Input
                         className="flex h-12 w-full rouned-md bg-transparent py-3 text-lg outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-none focus-visible:ring-0 shadow-none text-foreground"
-                        placeholder="Search stories, countries, topics…"
+                        placeholder="Search stories, countries, topics..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -134,7 +134,7 @@ export const CommandMenu = () => {
                             <div className="grid gap-2 mt-4">
                                 {[
                                     { label: "New stories published", type: "UPDATE", time: "Just now" },
-                                    { label: "Regional analysis updated", type: "EVENT", time: "Recently" },
+                                    { label: "Regional briefing updated", type: "EVENT", time: "Recently" },
                                     { label: "Strategic briefing ready", type: "RISK", time: "Today" },
                                 ].map((signal, i) => (
                                     <div key={i} className="flex items-center justify-between p-2 rounded bg-muted/20 border border-transparent hover:border-primary/20 hover:bg-muted/40 cursor-default transition-all group">

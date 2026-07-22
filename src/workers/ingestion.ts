@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import type { Env, ContentGenerationMessage } from '../types';
+import { extractPublisherImage, normalizeEditorialImageUrl } from '../lib/editorial-images';
 
 // ───────────────────────────────────────────────────────────────────────────────
 // RSS Feed Parser (Simple)
@@ -13,9 +14,103 @@ interface RSSItem {
     link: string;
     description: string;
     pubDate: string;
+    imageUrl: string | null;
+    imageCredit: string | null;
+    publisherName: string | null;
+    publisherUrl: string | null;
 }
 
-async function parseRSS(url: string): Promise<RSSItem[]> {
+// ───────────────────────────────────────────────────────────────────────────────
+// Africa relevance gate — only ingest stories clearly about Africa.
+// Discovery (Google News) and broad feeds occasionally surface non-African items
+// (e.g. Ukraine/Crimea, Cyprus); requiring an explicit African keyword filters them
+// out before they ever reach generation, and is why such items had a null country.
+// ───────────────────────────────────────────────────────────────────────────────
+const AFRICA_KEYWORDS = [
+    'africa', 'african', 'sub-saharan', 'afrique', 'afrika',
+    'algeria', 'egypt', 'libya', 'morocco', 'tunisia', 'mauritania', 'western sahara',
+    'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
+    'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
+    'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
+    'benin', 'burkina faso', 'cape verde', 'cabo verde', "cote d'ivoire", "côte d'ivoire", 'ivory coast',
+    'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
+    'senegal', 'sierra leone', 'togo',
+    'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
+    'democratic republic of congo', 'equatorial guinea', 'gabon', 'sao tome',
+    'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
+    'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
+    'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar',
+    // Additional high-signal African cities / regions (avoid false-negatives)
+    'cape town', 'durban', 'pretoria', 'soweto', 'gauteng', 'limpopo', 'stellenbosch',
+    'marrakech', 'marrakesh', 'rabat', 'tangier', 'fez', 'tunis', 'alexandria', 'giza',
+    'ibadan', 'kano', 'port harcourt', 'abidjan', 'khartoum', 'douala', 'yaounde',
+    'mombasa', 'kisumu', 'gqeberha', 'kampala', 'lusaka', 'harare', 'bulawayo', 'maputo', 'gaborone',
+    'windhoek', 'kumasi', 'zanzibar', 'arusha', 'dodoma', 'freetown', 'monrovia', 'bamako',
+    'maghreb', 'sahel', 'horn of africa', 'east africa', 'west africa', 'southern africa',
+    'north africa', 'central africa', 'east african', 'west african',
+    // Irregular demonyms the open-ended prefix match can NOT derive from the
+    // country name ('morocco' matches 'moroccan'? No — the adjective drops the
+    // final o). Regular ones (nigerian, kenyan, ghanaian…) need no entry.
+    'moroccan', 'ivorian', 'somali', 'mozambican', 'burkinabe', 'comorian',
+    'seychellois', 'malagasy', 'mauritian', 'swazi',
+    // African subnational regions/provinces & more cities (further reduce false-negatives)
+    'tshwane', 'niassa', 'kwazulu', 'mpumalanga', 'western cape', 'eastern cape', 'free state',
+    'oromia', 'tigray', 'amhara', 'zanzibar', 'kaduna', 'enugu', 'ogun', 'rivers state',
+    'lubumbashi', 'kisangani', 'mwanza', 'oran', 'sfax', 'kumasi', 'mombasa', 'nampula',
+];
+
+// Stories whose HEADLINE centres on these places are foreign coverage that only
+// brushes Africa (e.g. "India slams Pakistan minister's remark on PM Modi's
+// Seychelles honor" — a Delhi story that mentions Seychelles once). A single
+// incidental African keyword must not admit them.
+const FOREIGN_PRIMARY = [
+    'india', 'indian', 'pakistan', 'pakistani', 'modi', 'new delhi', 'tamil nadu',
+    'maldives', 'sri lanka', 'bangladesh', 'nepal', 'china', 'chinese', 'beijing',
+    'russia', 'russian', 'ukraine', 'united states', 'america', 'washington',
+    'europe', 'european union', 'brazil', 'indonesia', 'philippines',
+    'france', 'french', 'paris', 'united kingdom', 'britain', 'british', 'england',
+    'germany', 'german', 'spain', 'spanish', 'italy', 'italian', 'gibraltar',
+    'australia', 'australian', 'new zealand', 'canada', 'canadian', 'japan', 'japanese',
+    // Middle East — a wave of Iran coverage ("Tehran's Streets Beat with
+    // Defiance", Mashhad, Strait of Hormuz) leaked through in July 2026
+    // because none of these were vetoed.
+    'iran', 'iranian', 'tehran', 'mashhad', 'khamenei', 'hormuz',
+    'israel', 'israeli', 'gaza', 'palestinian', 'lebanon', 'beirut',
+    'syria', 'syrian', 'iraq', 'iraqi', 'saudi', 'riyadh', 'qatar',
+    'yemen', 'afghanistan', 'taliban',
+];
+
+const kwRegex = (kw: string) => new RegExp('\\b' + kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+export function isAfricanContent(title: string, content = ''): boolean {
+    // Word-boundary on the leading edge (so "mali" doesn't match "normalize"),
+    // but allow trailing letters so adjectives/demonyms still match
+    // ("nigeria"→"nigerian", "morocco"→"moroccan", "benin"→"beninese").
+    const titleL = title.toLowerCase();
+    const bodyL = content.toLowerCase();
+
+    const titleHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(titleL)).length;
+    const foreignTitle = FOREIGN_PRIMARY.some(kw => kwRegex(kw).test(titleL));
+
+    // Headline names Africa and isn't centred elsewhere → in.
+    if (titleHits >= 1 && !foreignTitle) return true;
+    // Headline centred elsewhere needs multiple African signals to qualify
+    // (kills the Modi-Seychelles / Tamil-Nadu class of leak).
+    if (titleHits >= 2) return true;
+
+    const bodyHits = AFRICA_KEYWORDS.filter(kw => kwRegex(kw).test(bodyL)).length;
+    // No African headline: allow only clearly African bodies with no foreign
+    // headline focus (two distinct keywords, e.g. two countries or country+city).
+    if (!foreignTitle) return bodyHits >= 2;
+    // Foreign-centred headline that still names an African place ("China
+    // pledges $1bn for Kenya railway"): admit when the body is substantially
+    // African too. The Modi-Seychelles class stays out — its body names the
+    // African place once at most.
+    if (titleHits >= 1) return bodyHits >= 2;
+    return false;
+}
+
+export async function parseRSS(url: string): Promise<RSSItem[]> {
     try {
         const response = await fetch(url, {
             headers: { 'User-Agent': 'BestOfAfrica/1.0' },
@@ -37,6 +132,14 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
             const link = itemXml.match(/<link>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/link>/)?.[1] || '';
             const description = itemXml.match(/<description>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/)?.[1] || '';
             const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+            const rawImage =
+                itemXml.match(/<media:content[^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<enclosure[^>]+type=["']image\/[^"]+["'][^>]+url=["']([^"']+)["']/i)?.[1] ||
+                itemXml.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]+type=["']image\//i)?.[1] ||
+                null;
+            const imageCredit = itemXml.match(/<media:credit[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/media:credit>/i)?.[1]?.trim() || null;
+            const publisherMatch = itemXml.match(/<source(?:\s+url=["']([^"']+)["'])?[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/source>/i);
 
             if (title && link) {
                 items.push({
@@ -44,6 +147,34 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
                     link: link.trim(),
                     description: description.replace(/<[^>]*>/g, '').trim(),
                     pubDate: pubDate.trim(),
+                    imageUrl: normalizeEditorialImageUrl(rawImage, link.trim()),
+                    imageCredit,
+                    publisherName: publisherMatch?.[2]?.replace(/<[^>]*>/g, '').trim() || null,
+                    publisherUrl: publisherMatch?.[1]?.trim() || null,
+                });
+            }
+        }
+
+        // Several high-quality publishers expose Atom rather than RSS. Treating
+        // only <item> as valid silently excluded those feeds from the source mix.
+        const entryRegex = /<entry(?:\s[^>]*)?>([\s\S]*?)<\/entry>/g;
+        while ((match = entryRegex.exec(xml)) !== null) {
+            const entryXml = match[1];
+            const title = entryXml.match(/<title(?:\s[^>]*)?>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i)?.[1] || '';
+            const link = entryXml.match(/<link[^>]+(?:rel=["']alternate["'][^>]+)?href=["']([^"']+)["'][^>]*\/?\s*>/i)?.[1] || '';
+            const description = entryXml.match(/<(?:summary|content)(?:\s[^>]*)?>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/(?:summary|content)>/i)?.[1] || '';
+            const pubDate = entryXml.match(/<(?:published|updated)>(.*?)<\/(?:published|updated)>/i)?.[1] || '';
+            const rawImage = entryXml.match(/<media:(?:content|thumbnail)[^>]+url=["']([^"']+)["']/i)?.[1] || null;
+            if (title && link) {
+                items.push({
+                    title: title.replace(/<[^>]*>/g, '').trim(),
+                    link: link.trim(),
+                    description: description.replace(/<[^>]*>/g, '').trim(),
+                    pubDate: pubDate.trim(),
+                    imageUrl: normalizeEditorialImageUrl(rawImage, link.trim()),
+                    imageCredit: null,
+                    publisherName: null,
+                    publisherUrl: null,
                 });
             }
         }
@@ -59,7 +190,7 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
 // Full Content Scraper
 // Fetches and extracts main content from article URLs
 // ───────────────────────────────────────────────────────────────────────────────
-async function scrapeFullContent(url: string): Promise<string | null> {
+async function scrapeFullContent(url: string): Promise<{ content: string | null; imageUrl: string | null; imageCredit: string | null }> {
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
@@ -74,9 +205,10 @@ async function scrapeFullContent(url: string): Promise<string | null> {
 
         clearTimeout(timeoutId);
 
-        if (!response.ok) return null;
+        if (!response.ok) return { content: null, imageUrl: null, imageCredit: null };
 
         const html = await response.text();
+        const publisherImage = extractPublisherImage(html, url);
 
         // Extract main content using simple heuristics
         let content = '';
@@ -133,11 +265,14 @@ async function scrapeFullContent(url: string): Promise<string | null> {
             .trim();
 
         // Only return if we have substantial content (at least 200 chars)
-        return content.length > 200 ? content.slice(0, 10000) : null;
+        return {
+            content: content.length > 200 ? content.slice(0, 10000) : null,
+            ...publisherImage,
+        };
 
     } catch (error) {
         console.error(`Failed to scrape ${url}:`, error);
-        return null;
+        return { content: null, imageUrl: null, imageCredit: null };
     }
 }
 
@@ -182,16 +317,35 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
     let processed = 0;
     let queued = 0;
 
-    // Get active sources
+    // Rotate through sources least-recently-fetched first, processing only a
+    // bounded subset per invocation. Running every minute, this cycles full
+    // coverage over a few minutes while keeping each run well under the Worker
+    // subrequest / binding-call limits (which previously failed with
+    // "Too many subrequests" when all ~82 sources were fetched at once).
+    const SOURCES_PER_RUN = 6;
     const sourcesResult = await env.DB.prepare(`
     SELECT id, name, type, url, country_code, sector_id
     FROM sources
     WHERE is_active = 1
-  `).all();
+      AND id = (
+        SELECT s2.id FROM sources s2
+        WHERE s2.is_active = 1 AND s2.url = sources.url
+        ORDER BY s2.created_at ASC, s2.id ASC LIMIT 1
+      )
+    ORDER BY last_fetched_at ASC
+    LIMIT ?
+  `).bind(SOURCES_PER_RUN).all();
 
-    // Shuffle sources to ensure coverage equality
-    const sources = (sourcesResult.results || []).sort(() => 0.5 - Math.random());
-    const BATCH_SIZE = 10; // Process more in parallel
+    const sources = sourcesResult.results || [];
+    const BATCH_SIZE = 6; // Process in parallel within the run
+
+    // Per-invocation budgets (shared across fixed-source + discovery tasks) to
+    // cap total fetches/DB writes and stay within Worker limits.
+    const MAX_ITEMS_PER_SOURCE = 6;
+    const MAX_NEW_ITEMS_PER_FIXED_SOURCE = 2;
+    let scrapeBudget = 8;   // full-content scrapes (each is an extra fetch)
+    let fixedItemBudget = 12;
+    let discoveryItemBudget = 8;
 
     // Define the Fixed Sources Task
     const fixedSourcesTask = async () => {
@@ -201,66 +355,55 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
             await Promise.all(batch.map(async (source: any) => {
                 const s = source;
                 try {
-                    let items: Array<{ title: string; url: string; content: string; publishedAt: string }> = [];
+                    let items: Array<{ title: string; url: string; content: string; publishedAt: string; imageUrl: string | null; imageCredit: string | null; publisherName: string | null; publisherUrl: string | null }> = [];
 
                     if (s.type === 'rss') {
                         const rssItems = await parseRSS(s.url);
                         items = rssItems.map(item => ({
-                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate,
+                            title: item.title, url: item.link, content: item.description, publishedAt: item.pubDate, imageUrl: item.imageUrl, imageCredit: item.imageCredit, publisherName: item.publisherName, publisherUrl: item.publisherUrl,
                         }));
                     } else if (s.type === 'newsapi' && env.NEWS_API_KEY) {
                         const newsItems = await fetchNewsAPI(env.NEWS_API_KEY, s.url);
                         items = newsItems.map(item => ({
-                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt,
+                            title: item.title, url: item.url, content: item.description || '', publishedAt: item.publishedAt, imageUrl: null, imageCredit: null, publisherName: item.source?.name || null, publisherUrl: null,
                         }));
                     }
 
-                    for (const item of items) {
-                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE source_id = ? AND external_id = ?`).bind(s.id, item.url).first();
+                    // Cap items examined per source to bound DB/dedup calls.
+                    let acceptedFromSource = 0;
+                    for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
+                        if (fixedItemBudget <= 0 || acceptedFromSource >= MAX_NEW_ITEMS_PER_FIXED_SOURCE) break;
+                        // URL-level dedup is intentionally global: duplicate source
+                        // rows must not turn one wire record into several articles.
+                        const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ? LIMIT 1`).bind(item.url).first();
                         if (existing) continue;
 
-                        // COMPREHENSIVE AFRICA KEYWORDS - All 54 Countries + Key Terms
-                        const africaKeywords = [
-                            // Pan-African Terms
-                            'africa', 'african', 'sub-saharan', 'afrique', 'afrika',
-                            // Northern Africa
-                            'algeria', 'egypt', 'libya', 'morocco', 'tunisia', 'mauritania', 'western sahara',
-                            // Eastern Africa
-                            'burundi', 'comoros', 'djibouti', 'eritrea', 'ethiopia', 'kenya', 'madagascar',
-                            'malawi', 'mauritius', 'mozambique', 'rwanda', 'seychelles', 'somalia', 'south sudan',
-                            'sudan', 'tanzania', 'uganda', 'zambia', 'zimbabwe',
-                            // Western Africa
-                            'benin', 'burkina faso', 'cape verde', 'cabo verde', 'cote d\'ivoire', 'ivory coast',
-                            'gambia', 'ghana', 'guinea', 'guinea-bissau', 'liberia', 'mali', 'niger', 'nigeria',
-                            'senegal', 'sierra leone', 'togo',
-                            // Central Africa
-                            'angola', 'cameroon', 'central african republic', 'chad', 'congo', 'drc',
-                            'democratic republic of congo', 'equatorial guinea', 'gabon', 'sao tome',
-                            // Southern Africa
-                            'botswana', 'eswatini', 'swaziland', 'lesotho', 'namibia', 'south africa', 'africa south',
-                            // Major Cities (high signal)
-                            'lagos', 'cairo', 'johannesburg', 'nairobi', 'casablanca', 'addis ababa', 'accra',
-                            'dar es salaam', 'kinshasa', 'luanda', 'algiers', 'abuja', 'kigali', 'dakar'
-                        ];
-                        const isAfrican = africaKeywords.some(kw => item.title.toLowerCase().includes(kw) || item.content.toLowerCase().includes(kw));
-
-                        if (!isAfrican && !s.country_code) continue;
+                        // Strict Africa relevance gate (applies even to country-coded
+                        // sources — a regional outlet can still run off-topic wire stories).
+                        if (!isAfricanContent(item.title, item.content)) continue;
 
                         processed++;
+                        fixedItemBudget--;
+                        acceptedFromSource++;
 
                         let fullContent = item.content;
-                        if (fullContent.length < 500 && item.url) {
+                        let imageUrl = item.imageUrl;
+                        let imageCredit = item.imageCredit;
+                        if (fullContent.length < 500 && item.url && scrapeBudget > 0) {
+                            scrapeBudget--;
                             try {
                                 const scraped = await scrapeFullContent(item.url);
-                                if (scraped) fullContent = scraped;
+                                if (scraped.content) fullContent = scraped.content;
+                                imageUrl ||= scraped.imageUrl;
+                                imageCredit ||= scraped.imageCredit;
                             } catch (e) { /* Ignore */ }
                         }
 
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString()).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, publisher_name, publisher_url, status)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, s.id, item.url, item.title, fullContent, item.url, item.publishedAt || new Date().toISOString(), imageUrl, imageUrl ? (imageCredit || s.name) : null, imageUrl ? item.url : null, item.publisherName || s.name, item.publisherUrl || s.url).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: s.id, priority: 'normal',
@@ -303,16 +446,17 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
 
             // PRIORITY: 10 most underserved countries + 5 random for diversity
             const underservedCountries = (underservedQuery.results || []).map((c: any) => c.name);
-            const targetCountries = underservedCountries.slice(0, 10);
+            const targetCountries = underservedCountries.slice(0, 4);
             const sectorList = (sectors.results || []).map((s: any) => s.name);
-            const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 5);
+            const targetSectors = sectorList.sort(() => 0.5 - Math.random()).slice(0, 2);
 
             console.log(`PRIORITY COUNTRIES (underserved): ${targetCountries.join(', ')}`);
 
             const queries = [
                 ...targetCountries.map((c: string) => `"${c}" business news when:1d`),
                 ...targetSectors.map((s: string) => `"${s}" industry Africa news when:1d`),
-                '"Africa" economy investment when:1h'
+                '"Africa" economy investment when:1h',
+                `site:${['afdb.org', 'worldbank.org', 'imf.org', 'uneca.org', 'au.int', 'unctad.org', 'wto.org', 'news.un.org'][Math.floor(Date.now() / 60000) % 8]} Africa economy trade investment when:7d`,
             ];
 
             console.log(`Aggregating topics: ${queries.join(' | ')}`);
@@ -322,15 +466,21 @@ export async function ingestNews(env: Env): Promise<{ processed: number; queued:
                     const googleNewsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-US&gl=US&ceid=US:en`;
                     const items = await parseRSS(googleNewsUrl);
 
-                    for (const item of items) {
+                    let acceptedFromQuery = 0;
+                    for (const item of items.slice(0, MAX_ITEMS_PER_SOURCE)) {
+                        if (discoveryItemBudget <= 0 || acceptedFromQuery >= 1) break;
+                        // Discovery results can drift off-topic — enforce the same Africa gate.
+                        if (!isAfricanContent(item.title, item.description || '')) continue;
                         const existing = await env.DB.prepare(`SELECT id FROM ingested_items WHERE external_id = ?`).bind(item.link).first();
                         if (existing) continue;
 
+                        discoveryItemBudget--;
+                        acceptedFromQuery++;
                         const itemId = crypto.randomUUID();
                         await env.DB.prepare(`
-                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, status)
-                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, 'pending')
-                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString()).run();
+                            INSERT INTO ingested_items (id, source_id, external_id, title, content, url, published_at, image_url, image_credit, image_source_url, publisher_name, publisher_url, status)
+                            VALUES (?, 'google-news-aggregator', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+                        `).bind(itemId, item.link, item.title, item.description || '', item.link, item.pubDate || new Date().toISOString(), item.imageUrl, item.imageUrl ? (item.imageCredit || item.publisherName || 'Original reporting source') : null, item.imageUrl ? item.link : null, item.publisherName || 'Original reporting source', item.publisherUrl || item.link).run();
 
                         await env.CONTENT_QUEUE.send({
                             type: 'generate_article', ingested_item_id: itemId, source_id: 'google-news-aggregator', priority: 'normal',
@@ -378,6 +528,10 @@ export const DEFAULT_SOURCES = [
     { name: 'The Conversation Africa', type: 'rss', url: 'https://theconversation.com/africa/articles.atom', sector_id: null, country_code: null },
     { name: 'Semafor Africa', type: 'rss', url: 'https://www.semafor.com/feed/africa', sector_id: null, country_code: null },
     { name: 'Quartz Africa', type: 'rss', url: 'https://qz.com/africa/rss', sector_id: null, country_code: null },
+    { name: 'UN Economic Commission for Africa', type: 'rss', url: 'https://www.uneca.org/rss.xml', sector_id: null, country_code: null },
+    { name: 'African Union', type: 'rss', url: 'https://au.int/en/rss.xml', sector_id: null, country_code: null },
+    { name: 'UN News Africa', type: 'rss', url: 'https://news.un.org/feed/subscribe/en/news/region/africa/feed/rss.xml', sector_id: null, country_code: null },
+    { name: 'World Trade Organization', type: 'rss', url: 'https://www.wto.org/library/rss/latest_news_e.xml', sector_id: 'finance', country_code: null },
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // BUSINESS & INVESTMENT

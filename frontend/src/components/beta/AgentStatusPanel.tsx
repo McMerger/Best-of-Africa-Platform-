@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, Zap, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Plus, Trash2, TestTube } from 'lucide-react';
 import { request } from '../../services/api';
+import { stripMarkdown } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ interface Provider {
 
 const PROVIDER_LABELS: Record<string, { name: string; color: string; logo: string }> = {
   openai:     { name: 'OpenAI',                  color: '#10a37f', logo: '⬜' },
-  anthropic:  { name: 'Anthropic',               color: '#d97706', logo: '🔶' },
+  anthropic:  { name: 'Anthropic',               color: '#0F1F3D', logo: 'A' },
   gemini:     { name: 'Google Gemini',            color: '#4285f4', logo: '🔷' },
   openrouter: { name: 'OpenRouter',               color: '#7c3aed', logo: '🔮' },
   workers_ai: { name: 'Cloudflare Workers AI',    color: '#f6821f', logo: '☁️' },
@@ -64,7 +65,7 @@ const TASK_TYPE_LABELS: Record<string, string> = {
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; pulse: boolean }> = {
   OPERATIONAL: { label: 'Operational',  color: '#22c55e', pulse: false },
-  BUSY:        { label: 'Running',      color: '#C9A84C', pulse: true  },
+  BUSY:        { label: 'Running',      color: '#0F1F3D', pulse: true  },
   IDLE:        { label: 'Idle',         color: '#6b7280', pulse: false },
   DEGRADED:    { label: 'Degraded',     color: '#ef4444', pulse: true  },
 };
@@ -114,7 +115,7 @@ const PROVIDER_OPTIONS = [
   { value: 'anthropic',  label: 'Anthropic',                  models: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-6'] },
   { value: 'openai',     label: 'OpenAI',                     models: ['gpt-4o', 'gpt-4o-mini', 'o1-preview'] },
   { value: 'gemini',     label: 'Google Gemini',              models: ['gemini-2.5-pro', 'gemini-2.0-flash'] },
-  { value: 'workers_ai', label: 'Cloudflare Workers AI',      models: ['@cf/meta/llama-3.1-70b-instruct', '@cf/meta/llama-3.1-8b-instruct'] },
+  { value: 'workers_ai', label: 'Cloudflare Workers AI',      models: ['@cf/openai/gpt-oss-120b'] },
 ];
 
 function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClose: () => void; onSaved: () => void }) {
@@ -206,7 +207,7 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
               onChange={e => setIsDefault(e.target.checked)}
               className="w-4 h-4 accent-accent"
             />
-            <span className="text-sm text-foreground/70">Set as default system provider</span>
+            <span className="text-sm text-foreground/70">Preferred specialist provider (information remains on GPT-OSS 120B)</span>
           </label>
         </div>
 
@@ -219,9 +220,9 @@ function ProviderModal({ adminKey, onClose, onSaved }: { adminKey: string; onClo
           <button
             onClick={save}
             disabled={loading}
-            className="flex-1 bg-accent text-card font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
+            className="flex-1 bg-accent text-navy font-semibold py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-60"
           >
-            {loading ? 'Saving…' : 'Connect Provider'}
+            {loading ? 'Saving...' : 'Connect Provider'}
           </button>
         </div>
       </div>
@@ -249,7 +250,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
   // Only activate SSE + polling once the panel scrolls into view (saves network on page load)
   const { ref: panelRef, inView } = useInView({ triggerOnce: true, rootMargin: '100px' });
 
-  // Poll agent status every 30s — only when panel is visible
+  // Poll agent status every 30s, only when panel is visible
   const { data: status, isLoading: isStatusLoading, refetch } = useQuery<AgentStatus>({
     queryKey: ['agent-status'],
     queryFn: () => request<AgentStatus>('/agent/status'),
@@ -274,7 +275,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
       es.removeEventListener('agent_status', handleAgentStatus);
       es.close();
       eventSourceRef.current = null;
-      // Exponential backoff: 2s, 4s, 8s — give up after 3 retries
+      // Exponential backoff: 2s, 4s, 8s, give up after 3 retries
       if (sseRetryCount.current < 3) {
         const delay = Math.pow(2, sseRetryCount.current + 1) * 1000;
         sseRetryCount.current += 1;
@@ -357,7 +358,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
           </div>
         </div>
         <div className="relative min-h-[200px] p-6 flex flex-col items-center justify-center bg-card font-mono">
-          <div className="w-8 h-8 border-2 border-accent/20 border-t-[#C9A84C] rounded-full animate-spin mb-4" />
+          <div className="w-8 h-8 border-2 border-accent/20 border-t-[#0F1F3D] rounded-full animate-spin mb-4" />
           <span className="text-accent text-sm tracking-widest animate-pulse">
             {!inView ? 'CONNECTING TO NEWSROOM...' : 'LOADING SYSTEM STATUS...'}
           </span>
@@ -386,11 +387,11 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {/* Stats row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-white/5 border-b border-foreground/5">
           {[
-            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '—', icon: Clock,        color: 'text-foreground/50' },
-            { label: 'Running',    value: live?.tasks_24h.processing  ?? '—', icon: Zap,          color: 'text-accent' },
-            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '—', icon: CheckCircle,  color: 'text-accent' },
-            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '—', icon: AlertCircle,  color: 'text-destructive' },
-            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '—', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-foreground/20' },
+            { label: 'Pending',    value: live?.tasks_24h.pending    ?? '-', icon: Clock,        color: 'text-foreground/50' },
+            { label: 'Running',    value: live?.tasks_24h.processing  ?? '-', icon: Zap,          color: 'text-accent' },
+            { label: 'Done (24h)', value: live?.tasks_24h.completed   ?? '-', icon: CheckCircle,  color: 'text-accent' },
+            { label: 'Failed',     value: live?.tasks_24h.failed      ?? '-', icon: AlertCircle,  color: 'text-destructive' },
+            { label: 'Stalled',    value: live?.tasks_24h.stalled     ?? '-', icon: AlertCircle,  color: live?.tasks_24h.stalled ? 'text-destructive' : 'text-foreground/20' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="flex flex-col items-center justify-center py-4 px-2 gap-1">
               <Icon size={14} className={color} />
@@ -403,9 +404,9 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {/* Active provider */}
         <div className="px-6 py-4 border-b border-foreground/5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-foreground/40 text-xs uppercase tracking-wider">Provider</span>
+            <span className="text-foreground/40 text-xs uppercase tracking-wider">Information model</span>
             <span className="text-foreground/80 font-medium">{providerMeta?.logo} {providerInfo?.label || 'Workers AI'}</span>
-            <span className="text-foreground/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'llama-3.1-70b'}</span>
+            <span className="text-foreground/30 text-xs">· {providerInfo?.model?.split('/').pop() || 'gpt-oss-120b'}</span>
           </div>
           {adminKey && (
             <button
@@ -425,7 +426,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
               href={`/stories/${live.latest_article.slug}`}
               className="text-sm text-foreground/80 hover:text-accent transition-colors line-clamp-1"
             >
-              {live.latest_article.title}
+              {stripMarkdown(live.latest_article.title)}
             </a>
             <p className="text-[10px] text-foreground/30 mt-0.5">{relativeTime(live.latest_article.published_at)}</p>
           </div>
@@ -505,7 +506,7 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
         {live?.metrics_7d && live.metrics_7d.length > 0 && (
           <div className="px-6 pb-4 border-t border-foreground/5 pt-4">
             <p className="text-[10px] text-foreground/30 uppercase tracking-wider mb-3">7-day skill performance</p>
-            <div className="w-full overflow-x-auto">
+            <div className="responsive-data-table w-full overflow-x-auto">
               <table className="w-full text-[11px] text-left">
                 <thead>
                   <tr className="text-foreground/25 uppercase tracking-wider">
@@ -519,13 +520,13 @@ export function AgentStatusPanel({ adminKey }: AgentStatusPanelProps) {
                 <tbody>
                   {live.metrics_7d.map((row) => (
                     <tr key={row.agent_name} className="border-t border-foreground/5">
-                      <td className="py-1.5 pr-4 text-foreground/70 font-medium">{row.agent_name}</td>
-                      <td className="py-1.5 pr-3 text-foreground/50 text-right">{row.runs}</td>
-                      <td className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
-                      <td className="py-1.5 pr-3 text-right">
+                      <td data-label="Pipeline" className="py-1.5 pr-4 text-foreground/70 font-medium">{row.agent_name}</td>
+                      <td data-label="Runs" className="py-1.5 pr-3 text-foreground/50 text-right">{row.runs}</td>
+                      <td data-label="Done" className="py-1.5 pr-3 text-accent text-right">{row.tasks_done}</td>
+                      <td data-label="Fail" className="py-1.5 pr-3 text-right">
                         <span className={row.tasks_failed > 0 ? 'text-destructive' : 'text-foreground/20'}>{row.tasks_failed}</span>
                       </td>
-                      <td className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '—'}</td>
+                      <td data-label="Average duration" className="py-1.5 text-foreground/40 text-right">{row.avg_duration_ms ? `${Math.round(row.avg_duration_ms).toLocaleString()}ms` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

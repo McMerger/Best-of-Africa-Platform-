@@ -1,10 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, Calendar, Globe, BookOpen, ArrowRight, Headphones } from 'lucide-react';
+import { Sparkles, Zap, Calendar, BookOpen, ArrowRight, Headphones } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
+import { CountryFlag } from '../../components/CountryFlag';
 import { api } from '../../services/api';
+import { stripMarkdown } from '@/lib/utils';
 import { useMember } from '../../context/MemberContext';
 import { useAudio } from '../../context/AudioContext';
 import type { ArticleListItem } from '../../types';
@@ -46,17 +48,17 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
             }`}
         >
             {/* Index marker */}
-            <div className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent' : 'text-primary/20'}`}>
+            <div aria-hidden="true" className={`flex flex-col items-center pt-1 shrink-0 ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                 <span className="text-xs font-mono font-bold">{String(index + 1).padStart(2, '0')}</span>
                 <div className={`mt-2 w-px flex-1 ${isHighlighted ? 'bg-accent/30' : 'bg-background/10'}`} />
             </div>
 
             <div className="flex-1 min-w-0">
                 {(article.country_name || article.sector_name) && (
-                    <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 ${isHighlighted ? 'text-accent' : 'text-primary/40'}`}>
+                    <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mb-2 ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                         {article.country_name && (
-                            <span className="flex items-center gap-1">
-                                <Globe className="w-3 h-3" /> {article.country_name}
+                            <span className="flex items-center gap-1.5">
+                                <CountryFlag code={article.country_code} title={article.country_name} size={16} /> {article.country_name}
                             </span>
                         )}
                         {article.country_name && article.sector_name && <span>·</span>}
@@ -64,15 +66,15 @@ const ArticleRow: React.FC<{ article: ArticleListItem; index: number; isHighligh
                     </div>
                 )}
                 <h3 className={`font-serif text-xl font-bold mb-2 leading-snug ${isHighlighted ? 'text-foreground' : 'text-primary group-hover:text-accent'} transition-colors`}>
-                    {article.title}
+                    {stripMarkdown(article.title)}
                 </h3>
                 {article.summary && (
-                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/60'}`}>
-                        {article.summary}
+                    <p className={`text-sm leading-relaxed line-clamp-2 ${isHighlighted ? 'text-foreground/70' : 'text-primary/70'}`}>
+                        {stripMarkdown(article.summary)}
                     </p>
                 )}
                 {article.published_at && (
-                    <div className={`flex items-center gap-1 mt-3 text-xs ${isHighlighted ? 'text-accent/80' : 'text-primary/30'}`}>
+                    <div className={`flex items-center gap-1 mt-3 text-xs ${isHighlighted ? 'text-accent-ink' : 'text-primary/70'}`}>
                         <Calendar className="w-3 h-3" />
                         {new Date(article.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
@@ -145,44 +147,45 @@ export const BetaFeed: React.FC = () => {
         <div className="min-h-screen bg-background pb-24">
             <SEO
                 title="Daily Briefing | BOA-Story"
-                description="Your curated daily Africa intelligence briefing — the continent's most important stories, every morning."
+                description="Your curated daily Africa intelligence briefing, the continent's most important stories, every morning."
             />
 
-            {/* Masthead */}
-            <div className="bg-background text-foreground pt-20 pb-16 px-6">
-                <div className="max-w-3xl mx-auto">
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest">
-                            <Zap className="w-3.5 h-3.5" />
-                            Daily Briefing
-                        </div>
-                        <div className="flex items-center gap-2 text-foreground/40 text-xs">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {today}
+            {/* Masthead — newspaper treatment: centered nameplate between a
+                thick-thin double rule, with a dateline row inside the rules. */}
+            <div className="app-hero bg-background px-4 pb-10 pt-14 text-foreground sm:px-6 md:pb-14 md:pt-20">
+                <div className="max-w-3xl mx-auto text-center">
+                    <h1 className="font-serif text-[2.5rem] sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight mb-5">
+                        The Africa Intelligence Brief
+                    </h1>
+                    <div className="border-t-[3px] border-b border-foreground/80 py-2 mb-1">
+                        <div className="flex items-center justify-center gap-3 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/70">
+                            <span className="flex items-center gap-1.5 text-accent-ink"><Zap className="w-3 h-3" /> Daily Briefing</span>
+                            <span className="text-foreground/25">·</span>
+                            <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {today}</span>
+                            <span className="hidden sm:inline text-foreground/25">·</span>
+                            <span className="hidden sm:inline">54 Nations</span>
                         </div>
                     </div>
-                    <h1 className="font-serif text-5xl md:text-6xl font-black leading-tight mb-4">
-                        The Africa<br />Intelligence Brief
-                    </h1>
-                    <p className="text-foreground/60 text-lg max-w-xl">
+                    <div className="border-b border-foreground/20 mb-6" />
+                    <p className="text-foreground/70 text-lg max-w-xl mx-auto">
                         The continent's most important business stories, curated each morning for decision-makers.
                     </p>
                 </div>
             </div>
 
-            <div className="max-w-3xl mx-auto px-6">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
                 {/* Editorial Curated section (members only) */}
                 {isMember && (
                     <section className="mt-10 mb-12">
-                        <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest text-accent">
+                        <div className="flex items-center gap-2 mb-4 text-xs font-bold uppercase tracking-widest text-accent-ink">
                             <Sparkles className="w-4 h-4" />
                             Curated for You
                         </div>
 
                         {editorialSummary && (
                             <div className="p-5 bg-accent/5 border border-accent/20 rounded-2xl mb-6 text-sm text-primary/70 italic leading-relaxed">
-                                {editorialSummary}
+                                {stripMarkdown(editorialSummary)}
                             </div>
                         )}
 
@@ -197,7 +200,7 @@ export const BetaFeed: React.FC = () => {
                         ) : (
                             <div className="py-6 px-6 bg-background rounded-xl border border-primary/8 text-center text-primary/50 text-sm">
                                 <Sparkles className="w-8 h-8 text-accent/40 mx-auto mb-3" />
-                                <Link to="/settings" className="text-accent font-semibold hover:underline">
+                                <Link to="/settings" className="text-accent-ink font-semibold hover:underline">
                                     Set your country and sector preferences
                                 </Link>
                                 {' '}to unlock a personalised briefing.
@@ -217,7 +220,7 @@ export const BetaFeed: React.FC = () => {
                 {/* Featured top story */}
                 {!isLoadingFeatured && featured.length > 0 && !isMember && (
                     <section className="mt-10 mb-6">
-                        <div className="text-xs font-bold uppercase tracking-widest text-primary/40 mb-4 flex items-center gap-1">
+                        <div className="text-xs font-bold uppercase tracking-widest text-primary/70 mb-4 flex items-center gap-1">
                             <Zap className="w-3.5 h-3.5 text-accent" /> Top Story
                         </div>
                         <ArticleRow article={featured[0]} index={0} isHighlighted />
@@ -227,7 +230,7 @@ export const BetaFeed: React.FC = () => {
                 {/* Main feed */}
                 <section className={isMember ? '' : 'mt-0'}>
                     {!isMember && (
-                        <div className="text-xs font-bold uppercase tracking-widest text-primary/40 mb-4 mt-10 flex items-center gap-1">
+                        <div className="text-xs font-bold uppercase tracking-widest text-primary/70 mb-4 mt-10 flex items-center gap-1">
                             <BookOpen className="w-3.5 h-3.5" /> Latest Dispatches
                         </div>
                     )}
@@ -249,7 +252,7 @@ export const BetaFeed: React.FC = () => {
                         <Sparkles className="w-10 h-10 text-accent mx-auto mb-4" />
                         <h3 className="font-serif text-2xl font-bold mb-3 text-foreground">Proprietary Briefing</h3>
                         <p className="text-foreground/70 mb-8 max-w-xl mx-auto leading-relaxed">
-                            Founding Members receive an editor-curated briefing tailored to their exact markets and sectors — every single day.
+                            Founding Members receive an editor-curated briefing tailored to their exact markets and sectors, every single day.
                         </p>
                         <Link to="/membership" className="inline-block bg-accent text-primary font-bold px-8 py-3 rounded-full hover:brightness-110 transition-all">
                             Become a Founding Member

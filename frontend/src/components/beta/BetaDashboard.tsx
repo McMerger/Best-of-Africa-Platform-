@@ -25,7 +25,7 @@ export const BetaDashboard = ({ memberData, onLogout }: BetaDashboardProps) => {
   const renewalMsg = (() => {
     const days = memberData.expires_in_days;
     if (days == null) return null;
-    if (days <= 0) return 'Access expired — please renew';
+    if (days <= 0) return 'Access expired, please renew';
     if (days <= 7) return `Access expires in ${days} day${days === 1 ? '' : 's'}`;
     if (days <= 30) return `${days} days remaining`;
     return `Renews in ~${Math.ceil(days / 30)} months`;

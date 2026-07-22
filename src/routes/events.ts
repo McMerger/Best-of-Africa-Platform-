@@ -18,25 +18,34 @@ router.get('/', async (c) => {
     const limitNum = Math.min(50, Math.max(1, parseInt(limit || '20', 10) || 20));
 
     // Build WHERE clause
-    let whereClause = "status != 'Cancelled' AND date >= date('now')";
+    let whereClause = "LOWER(status) != 'cancelled' AND date(COALESCE(date_end, date_start)) >= date('now')";
     if (status === 'upcoming') {
-        whereClause = "status IN ('Upcoming', 'upcoming', 'Active', 'active') AND date >= date('now')";
+        whereClause = "LOWER(status) IN ('upcoming', 'active', 'registration_open', 'open') AND date(COALESCE(date_end, date_start)) >= date('now')";
     }
 
     try {
         const events = await c.env.DB.prepare(`
-            SELECT id, title, slug, date, location, country_code, event_type, status, hero_image_url
+            SELECT id, title, slug, date_start, date_end, location, country_code,
+                   category, status, is_featured, is_vip, description, registration_url
             FROM events
             WHERE ${whereClause}
-            ORDER BY date ASC
+            ORDER BY date_start ASC
             LIMIT ?
         `).bind(limitNum).all();
 
-        return c.json({ success: true, data: events.results || [] });
+        return c.json({
+            success: true,
+            data: (events.results || []).map((event: Record<string, unknown>) => ({
+                ...event,
+                date: event.date_start,
+                event_type: event.category,
+                is_exclusive: Boolean(event.is_vip),
+            })),
+        });
     } catch (err) {
         // Table may not exist yet or query failed — return empty rather than 500
         console.error('[events] list failed:', err);
-        return c.json({ success: true, data: [], message: 'Events temporarily unavailable' });
+        return c.json({ success: false, error: 'events_unavailable', message: 'Verified event records could not be loaded.' }, 503);
     }
 });
 
@@ -54,16 +63,17 @@ router.get('/:id', async (c) => {
 
     const eventData = event as Record<string, any>;
 
-    // Lazy Generate Value Proposition if missing
-    if (!eventData.ai_value_proposition) {
+    // Lazy-generate an evidence-aware context brief if the curated record does not
+    // already contain one. The production schema stores this as ai_context_brief.
+    if (!eventData.ai_context_brief) {
         try {
-            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.event_type}`;
-            const generated = await callConfiguredAI(c.env, { prompt, max_tokens: 200, temperature: 0.7 }).then(res => res?.trim());
+            const prompt = `System: You are an independent student writer for BOA-Story. Keep your tone authentic, grounded, and human. Avoid corporate, intelligence, or institutional jargon.\nUser: Event: ${eventData.title}\nDescription: ${eventData.description}\nType: ${eventData.category}`;
+            const generated = await callConfiguredAI(c.env, { prompt: `${prompt}\n\nProduce a complete event dossier: documented purpose and agenda, organiser, intended participants, relevant sectors, decision value, dates and logistics, preparation guidance, dependencies, uncertainties, source limitations, and a verification checklist. Distinguish confirmed details from organiser claims and do not invent speakers or outcomes.`, max_tokens: 5000, temperature: 0.2, response_profile: 'decision-brief' }).then(res => res?.trim());
 
             if (generated) {
-                eventData.ai_value_proposition = generated;
+                eventData.ai_context_brief = generated;
                 // Save back to DB for next time
-                await c.env.DB.prepare('UPDATE events SET ai_value_proposition = ? WHERE id = ?')
+                await c.env.DB.prepare('UPDATE events SET ai_context_brief = ? WHERE id = ?')
                     .bind(generated, id).run();
             }
         } catch (e) { /* Ignore failure, return without prop */ }
@@ -72,7 +82,10 @@ router.get('/:id', async (c) => {
     return c.json({
         event: {
             ...eventData,
-            value_proposition: eventData.ai_value_proposition // Return as clean field
+            date: eventData.date_start,
+            event_type: eventData.category,
+            is_exclusive: Boolean(eventData.is_vip),
+            value_proposition: eventData.ai_context_brief,
         }
     });
 });

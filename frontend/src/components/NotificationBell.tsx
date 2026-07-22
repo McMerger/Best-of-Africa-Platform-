@@ -3,6 +3,7 @@ import { BellIcon, BellOffIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
+import { stripMarkdown } from '@/lib/utils';
 
 interface Notification {
     id: string;
@@ -27,7 +28,7 @@ export const NotificationBell: React.FC = () => {
                 setUnread(res.data.filter((n: Notification) => !n.is_read).length);
             }
         } catch {
-            // Notifications may not be available yet — fail silently
+            // Notifications may not be available yet, fail silently
         }
     };
 
@@ -108,8 +109,8 @@ export const NotificationBell: React.FC = () => {
                                         <div className="flex items-start gap-3">
                                             {!n.is_read && <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-accent shrink-0" />}
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-primary leading-snug mb-0.5">{n.title}</p>
-                                                <p className="text-xs text-primary/50 leading-relaxed line-clamp-2">{n.message}</p>
+                                                <p className="text-sm font-semibold text-primary leading-snug mb-0.5">{stripMarkdown(n.title)}</p>
+                                                <p className="text-xs text-primary/50 leading-relaxed line-clamp-2">{stripMarkdown(n.message)}</p>
                                                 <div className="flex items-center justify-between mt-2">
                                                     <span className="text-[10px] text-primary/30">
                                                         {new Date(n.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}

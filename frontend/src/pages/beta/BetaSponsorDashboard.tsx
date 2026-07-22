@@ -29,8 +29,21 @@ export const BetaSponsorDashboard: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: timeseriesRes, isLoading: isLoadingSeries } = useQuery({
+    queryKey: ['campaign-timeseries', selectedCampaignId],
+    queryFn: () => api.getCampaignTimeseries(selectedCampaignId!, 14),
+    enabled: !!selectedCampaignId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const analytics = analyticsRes?.data;
   const activeCampaign = campaigns.find(c => c.id === selectedCampaignId);
+  // Real per-day delivery series (empty until impressions/clicks are recorded).
+  const timeline = (timeseriesRes?.data || []).map(d => ({
+    day: (d.day || '').slice(5),
+    impressions: d.impressions,
+    clicks: d.clicks,
+  }));
 
   if (!isMember) {
     return (
@@ -48,7 +61,7 @@ export const BetaSponsorDashboard: React.FC = () => {
             href={KO_FI_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
+            className="bg-accent text-navy font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
           >
             Inquire About Sponsorships
           </a>
@@ -84,14 +97,6 @@ export const BetaSponsorDashboard: React.FC = () => {
     );
   }
 
-  // Mock timeline data to visualize the performance since the analytics endpoint currently returns totals.
-  const mockTimeline = [
-    { day: 'Day 1', impressions: Math.round(analytics?.impressions! * 0.1), clicks: Math.round(analytics?.clicks! * 0.1) },
-    { day: 'Day 2', impressions: Math.round(analytics?.impressions! * 0.15), clicks: Math.round(analytics?.clicks! * 0.12) },
-    { day: 'Day 3', impressions: Math.round(analytics?.impressions! * 0.25), clicks: Math.round(analytics?.clicks! * 0.28) },
-    { day: 'Day 4', impressions: Math.round(analytics?.impressions! * 0.5), clicks: Math.round(analytics?.clicks! * 0.5) },
-  ];
-
   return (
     <>
       <SEO 
@@ -101,7 +106,7 @@ export const BetaSponsorDashboard: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
+        <div className="app-hero relative overflow-hidden border-b border-accent/20 bg-background px-6 pb-20 pt-16 text-foreground">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -215,30 +220,40 @@ export const BetaSponsorDashboard: React.FC = () => {
                 <BarChart3 className="text-accent" /> Delivery Trajectory
               </h3>
               <div className="h-[300px] w-full">
-                {isLoadingAnalytics ? (
+                {(isLoadingAnalytics || isLoadingSeries) ? (
                   <div className="w-full h-full bg-background/5 animate-pulse rounded-xl" />
+                ) : timeline.length === 0 ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center text-primary/40 gap-2">
+                    <Activity className="w-8 h-8 text-primary/20" />
+                    <p className="text-sm font-medium">No delivery recorded yet</p>
+                    <p className="text-xs max-w-xs">Daily impressions and clicks will appear here as this campaign runs.</p>
+                  </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={mockTimeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    {/* Same chart language as the dashboard/sector charts:
+                        navy 2px line (passes mark contrast), champagne gradient
+                        as decoration, recessive solid grid, ink axes, navy-card
+                        tooltip. Timeseries arrives day-ascending from the API. */}
+                    <AreaChart data={timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorImpressions" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0A2540" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#0A2540" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#0F1F3D" stopOpacity={0.28}/>
+                          <stop offset="95%" stopColor="#0F1F3D" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }} 
+                      <CartesianGrid vertical={false} stroke="rgba(15,31,61,0.06)" />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }} dy={10} />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11, fill: 'rgba(15,31,61,0.45)' }}
                         dx={-10}
                       />
-                      <RechartsTooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      <RechartsTooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid rgba(15,31,61,0.35)', backgroundColor: '#0F1F3D', color: '#fff', boxShadow: '0 12px 32px rgba(15,31,61,0.35)', fontSize: 13 }}
                         formatter={(value: any) => [value, 'Impressions']}
                       />
-                      <Area type="monotone" dataKey="impressions" stroke="#0A2540" strokeWidth={3} fillOpacity={1} fill="url(#colorImpressions)" />
+                      <Area type="monotone" dataKey="impressions" stroke="#0F1F3D" strokeWidth={2} fillOpacity={1} fill="url(#colorImpressions)" activeDot={{ r: 5, fill: '#0F1F3D', stroke: '#fff', strokeWidth: 2 }} isAnimationActive={false} />
                     </AreaChart>
                   </ResponsiveContainer>
                 )}

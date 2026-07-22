@@ -134,7 +134,7 @@ export const BetaMemberAccess = () => {
     }
   };
 
-  // ── Checking state — validating existing token ─────────────────────────────
+  // ── Checking state, validating existing token ─────────────────────────────
   if (phase === 'checking') {
     return (
       <div className="flex flex-col min-h-screen bg-background">
@@ -164,7 +164,7 @@ export const BetaMemberAccess = () => {
             </p>
             <button
               onClick={() => setPhase('form')}
-              className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all mb-6"
+              className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all mb-6"
             >
               Re-enter member email
             </button>
@@ -202,27 +202,26 @@ export const BetaMemberAccess = () => {
             />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col lg:flex-row">
+        <div className="flex-1 min-w-0 overflow-hidden bg-background">
           
           {/* Left Side Cover */}
-          <div className="hidden lg:block lg:w-1/2 relative">
-            <div className="absolute inset-0 bg-background/40 mix-blend-multiply z-10" />
-            <div className="gradient-overlay-light z-20" />
-            <img 
-              src="/images/v2_editorial_1.png" 
-              alt="Premium Access" 
-              className="absolute inset-0 w-full h-full object-cover object-center"
+          <div className="hidden">
+            <img
+              src="/images/v2_editorial_1.webp"
+              alt="Premium Access"
+              className="absolute inset-0 w-full h-full object-cover object-center hero-photo"
             />
+            <div className="absolute inset-0 z-10 hero-scrim" />
             <div className="absolute inset-0 z-30 flex flex-col justify-end p-20 pb-32">
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                     <div className="inline-flex items-center gap-3 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-5 py-2 rounded-full mb-8 backdrop-blur-md">
                         <Lock size={14} />
                         Founding Members
                     </div>
-                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-foreground drop-shadow-2xl">
+                    <h1 className="text-[4rem] font-serif leading-[0.9] tracking-tighter mb-6 text-white drop-shadow-2xl">
                         Unrestricted <br/><span className="text-accent italic">Intelligence.</span>
                     </h1>
-                    <p className="text-[1.125rem] font-light text-foreground/70 max-w-md leading-[1.8] drop-shadow-md">
+                    <p className="text-[1.125rem] font-light text-white/70 max-w-md leading-[1.8] drop-shadow-md">
                         Log in to access your curated briefings, market analytics, and VIP concierge portal.
                     </p>
                 </motion.div>
@@ -230,8 +229,8 @@ export const BetaMemberAccess = () => {
           </div>
 
           {/* Right Side Auth Flow */}
-          <div className="flex-1 lg:w-1/2 flex flex-col justify-center py-20 px-6 sm:px-12 lg:px-24 bg-card relative z-40 lg:-ml-6 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] border-l border-foreground/5">
-            <div className="max-w-md w-full mx-auto">
+          <div className="mx-auto flex min-h-[70vh] w-full min-w-0 max-w-[100vw] flex-col justify-center px-6 py-16 sm:max-w-xl sm:px-10">
+            <div className="mx-auto w-full min-w-0 max-w-[calc(100vw-3rem)] sm:max-w-md">
 
               {phase === 'otp' ? (
                 // ── OTP Form State ─────────────────────────────────────────────────
@@ -269,7 +268,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || otp.length < 6}
-                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(212,175,55,0.2)]"
+                      className="w-full bg-accent text-primary font-bold uppercase tracking-widest text-[11px] py-6 rounded-xl hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(15,31,61,0.2)]"
                     >
                       Verify Code
                     </button>
@@ -277,7 +276,7 @@ export const BetaMemberAccess = () => {
 
                   <div className="flex flex-col gap-4">
                     {resendSuccess && (
-                      <p className="text-[13px] text-accent text-center bg-accent/10 p-3 rounded-lg border border-accent/20 font-bold tracking-wide" role="status">New code sent — check your inbox.</p>
+                      <p className="text-[13px] text-accent text-center bg-accent/10 p-3 rounded-lg border border-accent/20 font-bold tracking-wide" role="status">New code sent, check your inbox.</p>
                     )}
                     <button
                       type="button"
@@ -285,7 +284,7 @@ export const BetaMemberAccess = () => {
                       disabled={isSubmitting || resendCooldown > 0}
                       className="text-[11px] text-foreground/50 hover:text-foreground uppercase tracking-widest font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-center"
                     >
-                      {isSubmitting ? 'Resending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
+                      {isSubmitting ? 'Resending...' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
                     </button>
                     <button
                       type="button"
@@ -331,7 +330,7 @@ export const BetaMemberAccess = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting || !email}
-                      className="w-full bg-background text-primary font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-accent transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+                      className="w-full bg-accent text-navy font-bold uppercase tracking-widest text-[11px] py-5 rounded-xl hover:bg-gold-italic transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(15,31,61,0.3)]"
                     >
                       {isSubmitting ? (
                         <>Verifying...</>

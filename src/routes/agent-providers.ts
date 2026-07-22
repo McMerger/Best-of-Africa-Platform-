@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROVIDERS ROUTER
-// Manage provider credentials that power ZeroClaw agents.
+// Manage optional provider credentials for explicit specialist integrations.
 // Supports: OpenAI, Anthropic, Google Gemini, OpenRouter, Moonshot (Kimi), Cloudflare Workers 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
+import { MODELS } from '../lib/ai';
 import { getProviderToken, storeProviderToken, clearProviderToken } from '../lib/provider-tokens';
 
 const router = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -19,7 +20,7 @@ const PROVIDER_DEFAULTS: Record<ProviderName, { model: string; label: string; ba
     gemini:     { model: 'gemini-2.5-pro',                  label: 'Google Gemini',       base_url: 'https://generativelanguage.googleapis.com/v1beta' },
     openrouter: { model: 'anthropic/claude-sonnet-4-6',     label: 'OpenRouter',          base_url: 'https://openrouter./api/v1' },
     moonshot:   { model: 'moonshot-v1-32k',                 label: 'Moonshot AI (Kimi)',  base_url: 'https://api.moonshot.cn/v1' },
-    workers_ai: { model: '@cf/meta/llama-3.1-70b-instruct', label: 'Cloudflare Workers AI' },
+    workers_ai: { model: MODELS.TEXT_GENERATION,             label: 'Cloudflare Workers AI' },
 };
 
 // Admin-only auth
@@ -237,8 +238,8 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
     `).all<{ provider: string; api_key: string; model: string; base_url: string; is_default: number }>();
 
     const providers: Record<string, unknown> = {};
-    let defaultProvider = 'workers_ai';
-    let defaultModel = '@cf/meta/llama-3.1-70b-instruct';
+    const defaultProvider = 'workers_ai';
+    const defaultModel = MODELS.TEXT_GENERATION;
 
     for (const row of rows.results) {
         if (row.provider === 'workers_ai') {
@@ -255,20 +256,14 @@ async function buildProviderConfig(env: Env): Promise<Record<string, unknown>> {
             providers.moonshot = { api_key: row.api_key, base_url: row.base_url || 'https://api.moonshot.cn/v1' };
         }
 
-        if (row.is_default) {
-            defaultProvider = row.provider;
-            defaultModel = row.model;
-        }
+        // Provider records remain available for specialist integrations, but
+        // informational agents are deliberately pinned below to GPT-OSS 120B.
     }
 
     // Workers always available as a fallback
     if (!providers.workers_ai) {
         providers.workers_ai = { type: 'workers_ai' };
     }
-    if (!rows.results.length) {
-        defaultProvider = 'workers_ai';
-    }
-
     return {
         providers,
         agents: { defaults: { provider: defaultProvider, model: defaultModel } },
@@ -317,7 +312,7 @@ router.post('/bootstrap/:provider', async (c) => {
         success: true,
         provider,
         expires_at,
-        message: `${PROVIDER_DEFAULTS[provider].label} API key bootstrapped. The platform will use it for all AI generation.`,
+        message: `${PROVIDER_DEFAULTS[provider].label} API key bootstrapped for explicit specialist integrations. Informational generation remains pinned to GPT-OSS 120B.`,
     });
 });
 

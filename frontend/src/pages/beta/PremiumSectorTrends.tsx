@@ -1,249 +1,103 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, DollarSign, Building2, ShieldAlert, CheckCircle2 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { ArrowLeft, Eye, FileSearch, Globe2, TrendingUp } from 'lucide-react';
 import { SEO } from '../../components/SEO';
+import { DataReadingGuide } from '../../components/PageReadingGuide';
 import { api } from '../../services/api';
-import { useMember } from '../../context/MemberContext';
-import { KO_FI_URL } from '../../constants/beta';
+
+const number = (value: number) => new Intl.NumberFormat('en').format(value);
+const compact = (value: number) => new Intl.NumberFormat('en', {
+  notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: 1,
+}).format(value);
+const valueWithUnit = (value: number, unit: string) => unit === 'current US$' ? `$${compact(value)}` : `${compact(value)} ${unit}`;
+const changeWithUnit = (value: number, unit: string) => {
+  const sign = value > 0 ? '+' : '';
+  if (unit === 'percentage points') return `${sign}${value.toFixed(1)} pp`;
+  if (unit === 'current US$') return `${sign}$${compact(value)}`;
+  return `${sign}${compact(value)} ${unit}`;
+};
+const period = (start: number, end: number) => start === end ? String(end) : `${start}–${end}`;
 
 export const PremiumSectorTrends: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { isMember } = useMember();
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['sector-trends', id],
+  const query = useQuery({
+    queryKey: ['sector-performance-dossier', id, 'market-v3'],
     queryFn: () => api.getSectorTrends(id!),
-    enabled: !!id && isMember,
+    enabled: Boolean(id),
   });
 
-  if (!isMember) {
-    return (
-      <>
-        <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-6 bg-background">
-          <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mb-6">
-            <TrendingUp className="w-10 h-10 text-accent" />
-          </div>
-          <h1 className="font-serif text-4xl text-primary mb-4">Premium Sector Analytics</h1>
-          <p className="text-primary/60 max-w-md mb-8">
-            Detailed financial metrics, year-over-year market size analysis, and investment outlooks are exclusively available to Founding Members.
-          </p>
-          <a
-            href={KO_FI_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-accent text-card font-bold px-8 py-4 rounded-xl shadow-lg hover:brightness-110 transition-all"
-          >
-            Become a Founding Member
-          </a>
-        </div>
-      </>
-    );
-  }
+  if (query.isLoading) return <div className="mx-auto max-w-6xl animate-pulse px-5 py-16 sm:px-6"><div className="h-14 w-2/3 rounded-xl bg-navy/10"/><div className="mt-12 grid gap-4 md:grid-cols-4">{[1,2,3,4].map(i => <div key={i} className="h-32 rounded-2xl bg-navy/5"/>)}</div><div className="mt-8 h-96 rounded-2xl bg-navy/5"/></div>;
+  if (query.isError || !query.data) return <div className="mx-auto flex min-h-[60vh] max-w-2xl flex-col justify-center px-5 sm:px-6"><p className="text-xs font-bold uppercase tracking-[.2em] text-navy/60">Official dataset request failed</p><h1 className="mt-3 font-serif text-4xl text-navy">The sector-performance dossier could not be loaded.</h1><p className="mt-4 leading-7 text-muted-foreground">Return to Market Intelligence or retry the official-data request.</p><div className="mt-8 flex flex-wrap gap-3"><button onClick={() => query.refetch()} className="rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Retry dossier</button><Link to="/intelligence/sectors" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold text-navy">Market Intelligence</Link></div></div>;
 
-  if (isLoading) {
-    return (
-      <>
-        <div className="max-w-5xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-8 bg-background/10 rounded w-1/3 mb-12" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-32 bg-background/5 rounded-xl border border-primary/10" />
-            ))}
-          </div>
-          <div className="h-[400px] bg-background/5 rounded-2xl border border-primary/10" />
-        </div>
-      </>
-    );
-  }
+  const { sector, market_performance: performance, methodology, updated_at } = query.data;
+  const kpis = [
+    { label: performance.headline_label, value: valueWithUnit(performance.headline_value, performance.headline_unit), detail: `middle country reading · ${period(performance.period_start,performance.period_end)}`, Icon: TrendingUp },
+    { label: 'Change in the middle reading', value: changeWithUnit(performance.comparison_value, performance.comparison_unit), detail: 'versus each country’s previous available value', Icon: FileSearch },
+    { label: 'Countries reading higher', value: `${performance.improving_markets_pct.toFixed(0)}%`, detail: 'higher does not automatically mean better', Icon: TrendingUp },
+    { label: 'Countries with usable data', value: number(performance.countries_reported), detail: `${performance.continent_coverage_pct.toFixed(0)}% of Africa’s 54 countries`, Icon: Globe2 },
+  ];
 
-  if (isError || !data) {
-    return (
-      <>
-        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
-          <h2 className="font-serif text-3xl mb-3">Sector data unavailable</h2>
-          <p className="text-primary/60 mb-8">We couldn't load the financial trends for this sector.</p>
-          <Link to="/intel" className="text-accent font-semibold flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <ArrowLeft size={16} /> Back to Market Intel
-          </Link>
-        </div>
-      </>
-    );
-  }
-
-  const { sector, trends, top_companies, summary } = data;
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000) return `$${(value / 1000).toFixed(1)}B`;
-    return `$${value}M`;
-  };
-
-  const isPositiveGrowth = summary.current_growth_rate && summary.current_growth_rate > 0;
-
-  return (
-    <>
-      <SEO 
-        title={`${sector.name} Trends | BOA-Story Premium`}
-        description={`Financial metrics, market size, and investment volume for the ${sector.name} sector in Africa.`}
-      />
-      
-      <div className="bg-background min-h-screen pb-24">
-        {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20">
-          <div className="max-w-5xl mx-auto">
-            <Link to="/intel" className="inline-flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm mb-8 transition-colors">
-              <ArrowLeft size={16} />
-              Market Intelligence
-            </Link>
-            
-            <div className="flex items-center gap-3 text-accent text-xs font-bold uppercase tracking-widest mb-4">
-              <TrendingUp size={16} />
-              Sector Financial Profile
-            </div>
-            
-            <h1 className="font-serif text-5xl md:text-6xl font-bold leading-tight mb-6">
-              {sector.name}
-            </h1>
-            <p className="text-foreground/70 text-lg max-w-2xl leading-relaxed">
-              {sector.description || `Comprehensive financial trends, market size projections, and regulatory outlook for ${sector.name} across the continent.`}
-            </p>
-          </div>
-        </div>
-
-        <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-10">
-          {/* Key Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Market Size ({summary.latest_year})</div>
-              <div className="text-3xl font-serif text-primary">
-                {summary.current_market_size ? formatCurrency(summary.current_market_size) : 'N/A'}
-              </div>
-            </motion.div>
-            
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Growth Rate</div>
-              <div className={`text-3xl font-serif ${isPositiveGrowth ? 'text-accent' : 'text-destructive'}`}>
-                {summary.current_growth_rate ? `${summary.current_growth_rate}%` : 'N/A'}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">YoY Change</div>
-              <div className="text-3xl font-serif text-primary">
-                {summary.yoy_change ? (summary.yoy_change > 0 ? `+${summary.yoy_change}%` : `${summary.yoy_change}%`) : 'N/A'}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-background rounded-xl p-6 border border-primary/10 shadow-sm">
-              <div className="text-primary/40 text-xs font-bold uppercase tracking-widest mb-2">Investment Vol</div>
-              <div className="text-3xl font-serif text-primary">
-                {trends.length > 0 ? formatCurrency(trends[trends.length - 1].investment_volume) : 'N/A'}
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Charts Section */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-background rounded-2xl border border-primary/10 p-6 md:p-8">
-                <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
-                  <DollarSign className="text-accent" /> Market Size Projections (USD)
-                </h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorSize" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis 
-                        tickFormatter={(val) => `$${val}M`} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }} 
-                        dx={-10}
-                      />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`$${value}M`, 'Market Size']}
-                      />
-                      <Area type="monotone" dataKey="market_size" stroke="#D4AF37" strokeWidth={3} fillOpacity={1} fill="url(#colorSize)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="bg-background rounded-2xl border border-primary/10 p-6 md:p-8">
-                <h3 className="font-serif text-2xl text-primary mb-6 flex items-center gap-2">
-                  <TrendingUp className="text-accent" /> Investment Volume Over Time
-                </h3>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trends} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="year" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                      <YAxis 
-                        tickFormatter={(val) => `$${val}M`} 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 12, fill: '#64748b' }} 
-                        dx={-10}
-                      />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        formatter={(value: any) => [`$${value}M`, 'Investment']}
-                        cursor={{ fill: '#f8fafc' }}
-                      />
-                      <Bar dataKey="investment_volume" fill="#0A2540" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar / Analysis */}
-            <div className="space-y-8">
-              {/* Regulatory Outlook */}
-              <div className="bg-background/5 rounded-2xl border border-primary/10 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <ShieldAlert className="text-accent w-5 h-5" />
-                  <h3 className="font-serif text-xl text-primary">Regulatory Outlook</h3>
-                </div>
-                <p className="text-primary/70 text-sm leading-relaxed mb-4">
-                  {summary.regulatory_outlook || "Stable with standard compliance requirements."}
-                </p>
-                <div className="text-[10px] uppercase tracking-widest text-primary/40 font-bold border-t border-primary/10 pt-4">
-                  Confidence: High
-                </div>
-              </div>
-
-              {/* Top Companies */}
-              {top_companies && top_companies.length > 0 && (
-                <div className="bg-background rounded-2xl border border-primary/10 p-6 shadow-sm">
-                  <div className="flex items-center gap-2 mb-5">
-                    <Building2 className="text-accent w-5 h-5" />
-                    <h3 className="font-serif text-xl text-primary">Major Players</h3>
-                  </div>
-                  <ul className="space-y-3">
-                    {top_companies.map((company, idx) => (
-                      <li key={idx} className="flex items-center gap-3 text-sm text-primary/80">
-                        <CheckCircle2 className="w-4 h-4 text-accent/60 shrink-0" />
-                        {company}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+  return <div className="min-h-screen bg-background pb-24 text-foreground">
+    <SEO title={`${sector.name} market performance | BOA-Story`} description={`Official multi-indicator performance, country breadth, structural conditions and questions for ${sector.name} across Africa.`}/>
+    <header className="border-b border-white/10 bg-navy px-5 py-16 text-white sm:px-6 md:py-24">
+      <div className="mx-auto max-w-6xl">
+        <Link to="/intelligence/sectors" className="inline-flex items-center gap-2 text-sm text-white/65 hover:text-white"><ArrowLeft size={15}/> Market Intelligence</Link>
+        <p className="mt-12 text-[11px] font-bold uppercase tracking-[.22em] text-white/60">Official sector-performance guide</p>
+        <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">{sector.name}</h1>
+        <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">Understand the main measure first, then use three separate measures to see structure and operating conditions. Dates, country coverage and limitations remain visible throughout.</p>
       </div>
-    </>
-  );
+    </header>
+
+    <main className="mx-auto max-w-6xl px-5 sm:px-6">
+      <section className="relative -mt-8 grid overflow-hidden rounded-2xl border border-border bg-white shadow-[0_18px_60px_-30px_rgba(15,31,61,.35)] sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map(({label,value,detail,Icon},index) => <motion.div key={label} initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{delay:index*.07}} className="border-b border-border p-6 last:border-0 sm:border-r lg:border-b-0"><Icon size={18} className="text-navy/70"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-muted-foreground">{label}</p><p className="mt-2 break-words font-serif text-3xl text-navy md:text-4xl">{value}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p></motion.div>)}
+      </section>
+
+      <div className="pt-10"><DataReadingGuide subject="this sector guide" /></div>
+
+      <section className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
+        <article className="rounded-2xl border border-border bg-white p-6 md:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Main measure</p>
+          <h2 className="mt-2 font-serif text-3xl text-navy">{performance.indicator_name}</h2>
+          <p className="mt-5 text-sm leading-7 text-navy/80"><strong>What this measures:</strong> {performance.scope}</p>
+          <div className="mt-5 rounded-lg bg-navy/[.04] p-4 text-sm leading-6 text-muted-foreground"><strong className="text-navy">What it cannot tell you by itself:</strong> {performance.caveat}</div>
+          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-5 text-xs text-muted-foreground"><span>Half of reporting countries fall between {performance.dispersion_low.toFixed(1)} and {performance.dispersion_high.toFixed(1)} {performance.headline_unit}</span><a href={performance.source_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline decoration-navy/25 underline-offset-4">{performance.source_name}</a></div>
+        </article>
+        <article className="rounded-2xl border border-border bg-white p-6 md:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Country comparison</p>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">These lists show only the main measure. “Highest” does not automatically mean strongest, safest or most attractive.</p>
+          <div className="mt-5 grid gap-6 sm:grid-cols-2">
+            <div><h3 className="text-sm font-bold text-navy">Highest recorded values</h3><ol className="mt-3 space-y-2 text-sm">{performance.leaders.map((market,index) => <li key={market.country_code} className="grid grid-cols-[1.25rem_1fr_auto] gap-2"><span className="text-muted-foreground">{index+1}.</span><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
+            <div><h3 className="text-sm font-bold text-navy">Lowest recorded values</h3><ol className="mt-3 space-y-2 text-sm">{performance.laggards.map((market,index) => <li key={market.country_code} className="grid grid-cols-[1.25rem_1fr_auto] gap-2"><span className="text-muted-foreground">{index+1}.</span><Link to={`/countries/${market.country_code}`} className="text-navy hover:underline">{market.country_name}</Link><span className="tabular-nums text-muted-foreground">{market.value.toFixed(1)}</span></li>)}</ol></div>
+          </div>
+        </article>
+      </section>
+
+      <section className="mt-14 border-t border-border pt-10">
+        <p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">Supporting evidence</p>
+        <h2 className="mt-2 max-w-3xl font-serif text-3xl text-navy md:text-4xl">Three other measures to read alongside the main one</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">No single number explains a sector. These measures add information about structure, access, capacity, cost or operating conditions. Their different units must remain separate.</p>
+        <div className="mt-7 grid gap-5 lg:grid-cols-3">
+          {performance.dimensions.map(item => <article key={item.indicator_code} className="flex flex-col rounded-2xl border border-border bg-white p-5 md:p-6">
+            <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-navy/60">{item.label}</p><h3 className="mt-2 text-base font-bold leading-6 text-navy">{item.indicator_name}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy">{item.movement}</span></div>
+            <p className="mt-6 font-serif text-4xl leading-none text-navy">{valueWithUnit(item.value,item.unit)}</p>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">Middle reading from {item.countries_reported} countries · {period(item.period_start,item.period_end)}</p>
+            <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-border bg-border text-center"><div className="bg-white p-3"><strong className="block text-sm text-navy">{changeWithUnit(item.comparison_value,item.comparison_unit)}</strong><span className="mt-1 block text-[8px] uppercase text-muted-foreground">change</span></div><div className="bg-white p-3"><strong className="block text-sm text-navy">{item.markets_rising_pct.toFixed(0)}%</strong><span className="mt-1 block text-[8px] uppercase text-muted-foreground">countries higher</span></div><div className="bg-white p-3"><strong className="block text-sm text-navy">{item.coverage_pct.toFixed(0)}%</strong><span className="mt-1 block text-[8px] uppercase text-muted-foreground">countries covered</span></div></div>
+            <p className="mt-5 text-sm leading-6 text-navy/80"><strong>What this means:</strong> {item.interpretation}</p>
+            <p className="mt-4 border-l-2 border-navy/20 pl-3 text-xs leading-5 text-muted-foreground"><strong className="text-navy">What it cannot prove:</strong> {item.caveat}</p>
+            <a href={item.source_url} target="_blank" rel="noopener noreferrer" className="mt-auto pt-5 text-xs font-semibold text-navy underline decoration-navy/25 underline-offset-4">Official series {item.indicator_code}</a>
+          </article>)}
+        </div>
+      </section>
+
+      <section className="mt-10 grid overflow-hidden rounded-2xl border border-border bg-white lg:grid-cols-2">
+        <div className="p-6 md:p-8"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">What the evidence establishes</p><h2 className="mt-2 font-serif text-3xl text-navy">The result in plain language</h2><ul className="mt-6 space-y-4 text-sm leading-6 text-navy/80"><li><strong className="text-navy">Typical reporting country:</strong> the middle value is {performance.headline_value.toFixed(1)} {performance.headline_unit}; its change from the previous available value is {changeWithUnit(performance.comparison_value,performance.comparison_unit)}.</li><li><strong className="text-navy">How countries differ:</strong> half of reporting countries sit between {performance.dispersion_low.toFixed(1)} and {performance.dispersion_high.toFixed(1)} {performance.headline_unit}.</li><li><strong className="text-navy">How widespread the direction is:</strong> {performance.improving_markets_pct.toFixed(0)}% of comparable countries recorded a higher value, using {performance.countries_reported} country series.</li><li><strong className="text-navy">Important caution:</strong> each supporting measure keeps its own unit, date and coverage. A higher reading is not always favourable.</li></ul></div>
+        <div className="border-t border-border bg-navy/[.025] p-6 md:p-8 lg:border-l lg:border-t-0"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-navy/60">What to investigate next</p><h2 className="mt-2 font-serif text-3xl text-navy">Questions the numbers cannot answer alone</h2><ol className="mt-6 space-y-4">{performance.diligence_questions.map((question,index) => <li key={question} className="grid grid-cols-[2rem_1fr] gap-3 text-sm leading-6 text-navy/80"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy text-xs font-bold text-white">{index+1}</span><span>{question}</span></li>)}</ol></div>
+      </section>
+
+      <section className="mt-8 rounded-2xl border border-border bg-navy p-6 text-white md:flex md:items-start md:justify-between md:gap-12 md:p-8"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-white/60">How the figures were prepared</p><h2 className="mt-2 font-serif text-2xl">Method and fair comparison</h2></div><div className="mt-4 max-w-2xl space-y-3 md:mt-0"><p className="text-sm leading-7 text-white/75">{methodology}</p><p className="flex items-center gap-2 text-xs text-white/60"><Eye size={14}/> Official snapshot retrieved {new Date(updated_at).toLocaleString()}</p></div></section>
+    </main>
+  </div>;
 };

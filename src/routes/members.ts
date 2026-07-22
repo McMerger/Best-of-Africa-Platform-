@@ -92,18 +92,45 @@ router.post('/kofi-webhook', async (c) => {
             ? new Date(Date.now() + 32 * 86400_000).toISOString()
             : new Date(Date.now() + 365 * 86400_000).toISOString();
 
+        // clients.api_key_hash is NOT NULL (the table predates members). Members
+        // authenticate via OTP + JWT, never by API key, so store a random hash
+        // that can never match a presented key. Without this the INSERT throws
+        // and every first-time Ko-fi payment fails to create the membership.
+        const apiKeyHash = [...crypto.getRandomValues(new Uint8Array(32))]
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+
         await c.env.DB.prepare(`
-            INSERT INTO clients (id, name, email, type, tier, rate_limit_per_hour, is_active, expires_at, created_at)
-            VALUES (?, ?, ?, 'member', ?, 500, 1, ?, ?)
-        `).bind(clientId, name, email, tier, expiresAt, new Date().toISOString()).run();
+            INSERT INTO clients (id, name, email, type, tier, api_key_hash, rate_limit_per_hour, is_active, expires_at, created_at)
+            VALUES (?, ?, ?, 'member', ?, ?, 500, 1, ?, ?)
+        `).bind(clientId, name, email, tier, apiKeyHash, expiresAt, new Date().toISOString()).run();
     }
+
+    // Live funding progress: every public contribution increments the running
+    // total + coffee count in system_config, so the "Live Funding Progress"
+    // widgets reflect reality instead of a hardcoded snapshot. Best-effort.
+    try {
+        if (amount > 0) {
+            const upd = await c.env.DB.prepare(
+                "UPDATE system_config SET value = CAST(CAST(value AS REAL) + ? AS TEXT) WHERE key = 'funding_raised'"
+            ).bind(amount).run();
+            if (!(upd as Record<string, any>).meta?.changes) {
+                await c.env.DB.prepare("INSERT INTO system_config (key, value) VALUES ('funding_raised', ?)").bind(String(amount)).run();
+            }
+        }
+        const cUpd = await c.env.DB.prepare(
+            "UPDATE system_config SET value = CAST(CAST(value AS INTEGER) + 1 AS TEXT) WHERE key = 'funding_coffees'"
+        ).run();
+        if (!(cUpd as Record<string, any>).meta?.changes) {
+            await c.env.DB.prepare("INSERT INTO system_config (key, value) VALUES ('funding_coffees', '1')").run();
+        }
+    } catch (e) { console.error('[kofi-webhook] funding progress update failed:', e); }
 
     // Issue a 30-day JWT for this member (they'll use it on the frontend)
     const token = await createJWT(clientId, c.env.JWT_SECRET, 30 * 86400);
 
     // Send Welcome Email in the background
     c.executionCtx.waitUntil(
-        sendWelcomeEmail(email, name, tier)
+        sendWelcomeEmail(c.env, email, name, tier)
             .then(success => {
                 const status = success ? 'SUCCESS' : 'FAILED';
                 console.log(`[Email] MailChannels Welcome email for ${email}: ${status}`);
@@ -133,6 +160,19 @@ router.post('/verify-email', async (c) => {
 
     const email = body.email?.toLowerCase().trim();
     if (!email) return c.json({ ok: false, error: 'Email required' }, 400);
+
+    // Abuse limits: per-IP throttle (membership enumeration / OTP farming) and
+    // a per-address cooldown so one member's inbox can't be bombed with codes.
+    // The cooldown is only WRITTEN after a successful send (below) — setting it
+    // up front would lock the user out for 60s after a failed delivery while
+    // telling them to "try again".
+    const { throttle } = await import('../lib/ratelimit');
+    const limited = await throttle(c, 'otp-request');
+    if (limited) return limited;
+    const cooldownKey = `otp_cooldown:${email}`;
+    if (await c.env.CACHE.get(cooldownKey)) {
+        return c.json({ ok: false, error: 'A code was just sent. Please wait a minute before requesting another.' }, 429);
+    }
 
     const client = await c.env.DB.prepare(`
         SELECT id, name, tier, is_active, expires_at
@@ -218,16 +258,26 @@ router.post('/verify-email', async (c) => {
     </html>
     `;
 
-    c.executionCtx.waitUntil(
-        import('../lib/email').then(({ sendEmail }) => {
-            return sendEmail({
-                to: email,
-                toName: client.name,
-                subject: `${otp} is your verification code`,
-                html: htmlEmail,
-            }).catch(err => console.error('[OTP Email Error]', err));
-        })
-    );
+    // Await the send and report failure honestly: telling someone to check an
+    // inbox that will never receive the code is a dead-end, not a login flow.
+    const { sendEmail } = await import('../lib/email');
+    const sent = await sendEmail(c.env, {
+        to: email,
+        toName: client.name,
+        subject: `${otp} is your verification code`,
+        html: htmlEmail,
+    });
+
+    if (!sent) {
+        console.error('[OTP Email] delivery failed for', email);
+        return c.json({
+            ok: false,
+            error: 'We could not send your access code just now. Please try again in a few minutes.',
+        }, 502);
+    }
+
+    // Delivery succeeded — start the per-address cooldown now.
+    await c.env.CACHE.put(cooldownKey, '1', { expirationTtl: 60 });
 
     return c.json({ ok: true, status: 'pending_otp' });
 });

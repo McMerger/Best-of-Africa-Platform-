@@ -1,127 +1,41 @@
 import React from 'react';
-import { useSystemConfig } from "@/hooks/useSystemConfig";
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Coffee } from 'lucide-react';
 import { KO_FI_URL } from '../constants/beta';
 
-export const Footer: React.FC = () => {
-    const { data: config } = useSystemConfig();
+const groups = [
+  { title: 'Read', links: [['Stories', '/posts'], ['Daily Briefing', '/feed'], ['Countries', '/countries'], ['Gallery', '/gallery']] },
+  { title: 'Intelligence', links: [['Market Intelligence', '/intelligence'], ['Continental Overview', '/dashboards/overview'], ['Decision Workspace', '/library']] },
+  { title: 'Services', links: [['Events', '/events'], ['Consultation', '/request-consultation'], ['Business Travel', '/travel']] },
+  { title: 'Account', links: [['Membership', '/membership'], ['Newsletter', '/newsletter'], ['Member Access', '/member-access'], ['Sign In', '/login']] },
+] as const;
 
-    return (
-        <footer className="relative mt-20 border-t border-foreground/5 bg-background overflow-hidden">
-            {/* Ambient Background Glow */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-50" />
-            <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
-            
-            <div className="container relative z-10 pt-32 pb-12">
-                <motion.div 
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="mb-32 grid gap-16 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr]"
-                >
-                    {/* Brand / Mission Column */}
-                    <div>
-                        <div className="mb-6 font-serif text-4xl md:text-5xl font-black tracking-tighter text-foreground drop-shadow-xl">
-                            BEST OF AFRICA<span className="text-accent">.</span>
-                        </div>
-                        <div className="mb-6 flex items-center gap-3">
-                            <span className="h-px w-8 bg-accent/50" />
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Intelligence Platform</span>
-                        </div>
-                        <p className="mb-8 max-w-[400px] text-[1.125rem] font-serif font-light leading-[1.8] text-foreground/70">
-                            "{config?.['footer_mission_statement'] || "Real stories about African lives, cities, and ideas — beyond charity ads and disaster headlines."}"
-                        </p>
-                        <a
-                            href={KO_FI_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-3 rounded-full bg-accent px-6 py-3.5 text-[11px] uppercase tracking-widest font-bold text-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] hover:bg-background hover:text-primary transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]"
-                        >
-                            <Coffee className="h-4 w-4" />
-                            Support the Mission
-                        </a>
-                    </div>
-
-                    {/* BOA-Story Column */}
-                    <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">BOA-Story</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
-                            <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Posts</Link></li>
-                            <li><Link to="/countries" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Countries</Link></li>
-                            <li><Link to="/gallery" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Gallery</Link></li>
-                            <li><Link to="/membership" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Membership</Link></li>
-                            <li><Link to="/supporter-feed" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Supporter Feed</Link></li>
-                            <li><Link to="/about" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />About</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Intelligence Column */}
-                    <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Intelligence</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
-                            <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Regional Dashboards</Link></li>
-                            <li><Link to="/intel" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Sector Analysis</Link></li>
-                            <li><Link to="/posts" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Reports Archive</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Diplomacy Column */}
-                    <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Diplomacy</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
-                            <li><Link to="/intelligence" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Narrative Strategy</Link></li>
-                            <li><Link to="/countries" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Member States</Link></li>
-                            <li><Link to="/dashboards/overview" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Risk Dashboards</Link></li>
-                        </ul>
-                    </div>
-
-                    {/* Client Access Column */}
-                    <div className="space-y-6">
-                        <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/40">Client Access</h4>
-                        <ul className="space-y-4 text-[13px] font-medium text-foreground/60">
-                            <li><Link to="/login" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Secure Login</Link></li>
-                            <li><Link to="/contact" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Contact Support</Link></li>
-                            <li><Link to="/newsletter" className="transition-colors hover:text-accent flex items-center gap-2 group"><span className="w-0 h-px bg-accent transition-all group-hover:w-2" />Newsletter</Link></li>
-                        </ul>
-                    </div>
-                </motion.div>
-
-                {/* Sub-Footer */}
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: 0.2 }}
-                    className="flex flex-col items-center justify-between gap-6 border-t border-foreground/5 pt-10 text-[10px] font-bold uppercase tracking-widest text-foreground/40 md:flex-row"
-                >
-                    <div className="flex flex-wrap items-center justify-center gap-6">
-                        <span>© {new Date().getFullYear()} Best of Africa.</span>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
-                        <Link to="/privacy" className="hover:text-accent transition-colors">PRIVACY POLICY</Link>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
-                        <Link to="/terms" className="hover:text-accent transition-colors">TERMS OF SERVICE</Link>
-                        <span className="hidden md:block w-1 h-1 rounded-full bg-foreground/20" />
-                        <Link to="/about" className="hover:text-accent transition-colors">EDITORIAL GUIDELINES</Link>
-                    </div>
-                    <div className="flex items-center gap-3 text-accent/80">
-                        <span>PREMIUM PAN-AFRICAN BRAND</span>
-                    </div>
-                </motion.div>
-                
-                {/* Massive Background Typography */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 100 }}
-                    whileInView={{ opacity: 0.03, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="absolute -bottom-10 md:-bottom-20 left-0 right-0 font-serif font-black text-[15vw] leading-none text-center pointer-events-none select-none text-foreground whitespace-nowrap overflow-hidden"
-                >
-                    AFRICA.
-                </motion.div>
+export const Footer: React.FC = () => (
+  <footer className="mt-24 border-t border-white/15 bg-navy text-white">
+    <div className="mx-auto max-w-[1400px] px-5 py-12 sm:px-6 md:py-16 lg:px-8">
+      <div className="grid gap-12 border-b border-white/15 pb-12 lg:grid-cols-[1.15fr_1.85fr] lg:gap-20">
+        <div>
+          <Link to="/" className="inline-flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-md bg-white font-serif text-xl font-black text-navy">B</span><span className="font-serif text-2xl font-semibold tracking-tight">BOA-Story</span></Link>
+          <p className="mt-6 max-w-md font-serif text-3xl leading-tight text-white md:text-4xl">African evidence, reporting and context in one place.</p>
+          <p className="mt-5 max-w-md text-sm leading-7 text-white/65">Independent reporting, country records and market intelligence designed to make complex developments understandable without reducing them to unsupported claims.</p>
+          <a href={KO_FI_URL} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-11 items-center rounded-md border border-white/30 px-4 text-sm font-bold text-white transition-colors hover:bg-white hover:text-navy">Support independent reporting</a>
+        </div>
+        <nav aria-label="Footer" className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4 sm:gap-10">
+          {groups.map(group => (
+            <div key={group.title}>
+              <h2 className="mb-5 border-b border-white/15 pb-3 text-xs font-bold uppercase tracking-[0.14em] text-white/55">{group.title}</h2>
+              <ul className="space-y-3.5 text-sm text-white/70">
+                {group.links.map(([label, to]) => <li key={to}><Link to={to} className="transition-colors hover:text-white">{label}</Link></li>)}
+              </ul>
             </div>
-        </footer>
-    );
-};
+          ))}
+        </nav>
+      </div>
+      <div className="flex flex-col gap-5 pt-7 text-xs text-white/55 md:flex-row md:items-center md:justify-between">
+        <span>© {new Date().getFullYear()} Best of Africa. All rights reserved.</span>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link to="/about" className="hover:text-white">About</Link><Link to="/contact" className="hover:text-white">Contact</Link><Link to="/privacy" className="hover:text-white">Privacy</Link><Link to="/terms" className="hover:text-white">Terms</Link><Link to="/settings" className="hover:text-white">Settings</Link>
+        </div>
+      </div>
+    </div>
+  </footer>
+);

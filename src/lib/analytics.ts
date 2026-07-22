@@ -40,6 +40,30 @@ export async function trackEvent(env: Env, event: AnalyticsEvent): Promise<void>
         if (event.type === 'search') {
             await incrementLiveCounter(env, 'searches');
         }
+
+        // Feed the engagement inputs on the article row — Analytics Engine is
+        // write-only for the app, so without these updates two of the three
+        // engagement-score inputs (read time, shares) could never move.
+        if (event.type === 'article_read' && event.article_id && event.duration_seconds) {
+            // Exponential moving average — no read-count column needed, and a
+            // clamp keeps a stuck tab from poisoning the average.
+            const dur = Math.max(0, Math.min(3600, Number(event.duration_seconds) || 0));
+            if (dur > 0) {
+                await env.DB.prepare(`
+                    UPDATE articles SET avg_read_time_seconds = CASE
+                        WHEN avg_read_time_seconds > 0 THEN avg_read_time_seconds * 0.8 + ? * 0.2
+                        ELSE ?
+                    END
+                    WHERE id = ?
+                `).bind(dur, dur, event.article_id).run();
+            }
+        }
+
+        if (event.type === 'article_share' && event.article_id) {
+            await env.DB.prepare(
+                'UPDATE articles SET share_count = share_count + 1 WHERE id = ?'
+            ).bind(event.article_id).run();
+        }
     } catch (error) {
         console.error('Failed to track event:', error);
     }
