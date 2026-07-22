@@ -709,6 +709,151 @@ router.get('/articles/needs-audit', async (c) => {
     return c.json({ data: articles.results || [], count: articles.results?.length || 0 });
 });
 
+// GET /admin/editorial/remediation-preview — read-only legacy corpus assessment.
+// Only objectively unverifiable records are eligible for automatic quarantine;
+// short or old records remain in the human/agent review queue.
+router.get('/editorial/remediation-preview', async (c) => {
+    const [counts, samples] = await Promise.all([
+        c.env.DB.prepare(`
+            SELECT
+                COUNT(*) AS published_total,
+                SUM(CASE WHEN last_audited_at IS NULL THEN 1 ELSE 0 END) AS unaudited,
+                SUM(CASE WHEN source_url IS NULL OR trim(source_url) = '' THEN 1 ELSE 0 END) AS missing_source,
+                SUM(CASE WHEN length(content) < 2500 THEN 1 ELSE 0 END) AS short_content
+            FROM articles
+            WHERE status = 'published'
+        `).first<Record<string, number>>(),
+        c.env.DB.prepare(`
+            SELECT id, slug, title, country_code, sector_id, created_at
+            FROM articles
+            WHERE status = 'published'
+              AND (source_url IS NULL OR trim(source_url) = '')
+            ORDER BY created_at DESC
+            LIMIT 25
+        `).all<Record<string, unknown>>(),
+    ]);
+
+    return c.json({
+        data: {
+            ...counts,
+            automatic_quarantine_rule: 'missing_source',
+            automatic_quarantine_candidates: counts?.missing_source || 0,
+            review_only: { short_content: counts?.short_content || 0 },
+            sample: samples.results || [],
+        },
+        generated_at: new Date().toISOString(),
+    });
+});
+
+// POST /admin/editorial/remediation/quarantine — reversible batch quarantine.
+// A caller must explicitly confirm the run. The narrow rule deliberately avoids
+// making subjective automated judgements about article length or writing style.
+router.post('/editorial/remediation/quarantine', async (c) => {
+    const body = await c.req.json<{ rule?: string; limit?: number; confirm?: boolean }>();
+    if (body.rule !== 'missing_source') {
+        return c.json({ error: 'unsupported_rule', message: 'Only missing_source can be quarantined automatically.' }, 400);
+    }
+    if (body.confirm !== true) {
+        return c.json({ error: 'confirmation_required', message: 'Set confirm to true after reviewing the preview.' }, 400);
+    }
+
+    const limit = Math.min(500, Math.max(1, Number(body.limit) || 100));
+    const runId = crypto.randomUUID();
+    const reason = 'No verifiable source URL was attached to this published record.';
+    const matched = await c.env.DB.prepare(`
+        SELECT COUNT(*) AS total FROM articles
+        WHERE status = 'published' AND (source_url IS NULL OR trim(source_url) = '')
+    `).first<{ total: number }>();
+
+    await c.env.DB.batch([
+        c.env.DB.prepare(`
+            INSERT INTO editorial_remediation_runs (id, rule, status, matched_count)
+            VALUES (?, 'missing_source', 'running', ?)
+        `).bind(runId, matched?.total || 0),
+        c.env.DB.prepare(`
+            INSERT INTO editorial_remediation_items (
+                run_id, article_id, previous_status, previous_moderation_status,
+                previous_moderation_score, reason
+            )
+            SELECT ?, id, status, moderation_status, moderation_score, ?
+            FROM articles
+            WHERE status = 'published' AND (source_url IS NULL OR trim(source_url) = '')
+            ORDER BY created_at ASC
+            LIMIT ?
+        `).bind(runId, reason, limit),
+        c.env.DB.prepare(`
+            UPDATE articles
+            SET status = 'pending_audit', moderation_status = 'flagged',
+                moderation_score = 0, updated_at = datetime('now')
+            WHERE id IN (
+                SELECT article_id FROM editorial_remediation_items WHERE run_id = ?
+            )
+        `).bind(runId),
+        c.env.DB.prepare(`
+            INSERT INTO article_feedback (
+                id, article_id, feedback_type, comment, is_processed_by_agent
+            )
+            SELECT ? || ':' || article_id, article_id, 'audit_fail',
+                   'Legacy remediation ' || ? || ': ' || reason, 0
+            FROM editorial_remediation_items WHERE run_id = ?
+        `).bind(runId, runId, runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_runs
+            SET status = 'completed',
+                processed_count = (SELECT COUNT(*) FROM editorial_remediation_items WHERE run_id = ?),
+                completed_at = datetime('now')
+            WHERE id = ?
+        `).bind(runId, runId),
+    ]);
+
+    const run = await c.env.DB.prepare(`
+        SELECT * FROM editorial_remediation_runs WHERE id = ?
+    `).bind(runId).first();
+    return c.json({ success: true, run });
+});
+
+// POST /admin/editorial/remediation/:runId/restore — emergency rollback for a run.
+router.post('/editorial/remediation/:runId/restore', async (c) => {
+    const runId = c.req.param('runId');
+    const run = await c.env.DB.prepare(`
+        SELECT id, status FROM editorial_remediation_runs WHERE id = ?
+    `).bind(runId).first<{ id: string; status: string }>();
+    if (!run) return c.json({ error: 'not_found' }, 404);
+    if (run.status === 'restored') return c.json({ error: 'already_restored' }, 409);
+
+    await c.env.DB.batch([
+        c.env.DB.prepare(`
+            UPDATE articles
+            SET status = COALESCE((
+                    SELECT previous_status FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ), status),
+                moderation_status = (
+                    SELECT previous_moderation_status FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ),
+                moderation_score = (
+                    SELECT previous_moderation_score FROM editorial_remediation_items i
+                    WHERE i.run_id = ? AND i.article_id = articles.id
+                ),
+                updated_at = datetime('now')
+            WHERE id IN (
+                SELECT article_id FROM editorial_remediation_items
+                WHERE run_id = ? AND restored_at IS NULL
+            ) AND status = 'pending_audit' AND moderation_status = 'flagged'
+        `).bind(runId, runId, runId, runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_items SET restored_at = datetime('now')
+            WHERE run_id = ? AND restored_at IS NULL
+        `).bind(runId),
+        c.env.DB.prepare(`
+            UPDATE editorial_remediation_runs SET status = 'restored' WHERE id = ?
+        `).bind(runId),
+    ]);
+
+    return c.json({ success: true, run_id: runId, status: 'restored' });
+});
+
 // POST /admin/articles/:id/audit — submit audit result from ZeroClaw proactive-editorial skill
 router.post('/articles/:id/audit', async (c) => {
     const id = c.req.param('id');
