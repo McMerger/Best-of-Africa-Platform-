@@ -42,24 +42,35 @@ export const BetaContinentalOverview: React.FC = () => {
   return <div className="min-h-screen bg-background pb-24 text-foreground">
     <SEO title="Continental Economic Overview | BOA-Story" description="Official continental and regional economic, trade, investment and sector-performance indicators across Africa’s 54 markets."/>
 
-    <header className="border-b border-white/10 bg-navy px-5 py-14 text-white sm:px-6 md:py-20">
-      <div className="mx-auto max-w-6xl">
-        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
-          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">Continental economic overview</p>
-          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Africa’s economy, explained with official data.</h1>
-          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">See the continent’s economic size, population, growth, inflation, investment and trade—then check the countries, years and limitations behind every figure.</p>
-          <div className="mt-8 flex flex-wrap gap-3"><Link to="/intelligence/sectors" className="rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy">Sector intelligence</Link><Link to="/countries" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white">Country dossiers</Link></div>
+    <header className="overflow-hidden border-b border-white/15 bg-navy text-white">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-10 sm:px-6 md:py-16 lg:grid-cols-[minmax(0,1.45fr)_minmax(19rem,.55fr)] lg:items-end lg:px-8 lg:py-20">
+        <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}}>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[.18em] text-white/65"><span>BOA evidence desk</span><span className="h-1 w-1 rounded-full bg-white/40"/><span>Continental economy</span></div>
+          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.8rem,7vw,6.4rem)] leading-[.91] tracking-[-.045em]">Africa’s economy in one verifiable record.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/75 md:text-xl md:leading-8">Move from continental scale to regional concentration, sector conditions and country evidence. Every figure keeps its unit, period, coverage and limitation visible.</p>
+          <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row"><Link to="/intelligence/sectors" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-5 text-sm font-bold text-navy">Open sector intelligence</Link><Link to="/countries" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/30 px-5 text-sm font-bold text-white">Compare country records</Link></div>
         </motion.div>
+        <aside className="border-t border-white/20 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0" aria-label="Dataset status">
+          <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/55">Current evidence release</p>
+          <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 lg:grid-cols-1">
+            <div><dt className="text-xs text-white/55">Countries in scope</dt><dd className="mt-1 font-serif text-3xl text-white">{data.countries_in_scope}</dd></div>
+            <div><dt className="text-xs text-white/55">Official measures</dt><dd className="mt-1 font-serif text-3xl text-white">{data.indicators.length}</dd></div>
+            <div className="col-span-2 lg:col-span-1"><dt className="text-xs text-white/55">Evidence source</dt><dd className="mt-1 text-sm font-semibold leading-5 text-white">{data.source_name}</dd></div>
+          </dl>
+        </aside>
       </div>
     </header>
 
     <IntelligenceTrustPanel updatedAt={data.retrieved_at} sourceLabel={data.source_name}/>
 
-    <div className="page-container dashboard-shell mt-10 md:mt-14">
-      <aside className="dashboard-rail" aria-label="Continental dashboard sections"><nav>{[['overview','Continental record'],['regions','Regional comparison'],['sectors','Sector performance']].map(([slug,label]) => <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>)}</nav></aside>
+    <nav className="sticky top-[4.5rem] z-30 border-b border-navy/15 bg-white/95 backdrop-blur-md lg:top-16" aria-label="Continental dashboard sections">
+      <div className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+        {[['overview','Continental record'],['regions','Regional comparison'],['sectors','Sector performance']].map(([slug,label]) => <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined} className={`shrink-0 rounded-md px-4 py-2.5 text-sm font-bold transition-colors ${view === slug ? 'bg-navy text-white' : 'text-navy/70 hover:bg-navy/5 hover:text-navy'}`}>{label}</Link>)}
+      </div>
+    </nav>
 
+    <div className="mx-auto mt-10 w-full max-w-[1400px] px-5 sm:px-6 md:mt-14 lg:px-8">
       <main className="page-stack min-w-0">
-        <DataReadingGuide subject="the continental overview" />
         {view === 'overview' && <>
           <section className="page-section">
             <div className="max-w-3xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-navy/60">Official continental record</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">How large is the economy, and which way is it moving?</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">A total adds reported country values together. A median shows the middle country and gives every country equal weight. The cards state which method is used.</p></div>
@@ -67,6 +78,8 @@ export const BetaContinentalOverview: React.FC = () => {
               {headlineCodes.map((code,index) => { const item=indicators[code]; const Icon=headlineIcons[index]; return <article key={code} className="rounded-2xl border border-border bg-white p-5 md:p-6"><Icon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{item.label}</p><p className="mt-2 break-words font-serif text-3xl text-navy">{formatValue(item.value,item.unit)}</p><p className="mt-3 text-xs leading-5 text-muted-foreground">{item.aggregation} · {item.countries_reported} countries · {period(item.period_start,item.period_end)}</p><p className="mt-4 border-t border-border pt-4 text-xs leading-5 text-navy/75"><strong>In plain language:</strong> {item.interpretation}</p></article>; })}
             </div>
           </section>
+
+          <DataReadingGuide subject="the continental overview" />
 
           <section className="page-section overflow-hidden rounded-2xl border border-border bg-white" aria-labelledby="continental-analysis-path">
             <div className="border-b border-border px-5 py-6 md:px-8">

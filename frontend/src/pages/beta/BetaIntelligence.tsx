@@ -34,23 +34,35 @@ export const BetaIntelligence = () => {
   return <div className="min-h-screen bg-background pb-24 text-foreground">
     <SEO title="African Market Intelligence | BOA-Story" description="Official multi-indicator African sector performance, country breadth, structural conditions and decision diligence."/>
 
-    <header className="border-b border-white/10 bg-navy px-5 py-14 text-white sm:px-6 md:py-20">
-      <div className="mx-auto max-w-6xl">
-        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
-          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">African market intelligence</p>
-          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Understand how African sectors are performing.</h1>
-          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">Official measures of output, access, infrastructure, investment and operating conditions across African economies. Every result explains what it measures, which countries and years it covers, and what it cannot prove.</p>
-          <div className="mt-8 flex flex-wrap gap-3"><Link to="/dashboards" className="rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy">Continental economy</Link><Link to="/countries" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white">Country dossiers</Link></div>
+    <header className="overflow-hidden border-b border-white/15 bg-navy text-white">
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-10 sm:px-6 md:py-16 lg:grid-cols-[minmax(0,1.45fr)_minmax(19rem,.55fr)] lg:items-end lg:px-8 lg:py-20">
+        <motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}}>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[.18em] text-white/65"><span>BOA evidence desk</span><span className="h-1 w-1 rounded-full bg-white/40"/><span>Market performance</span></div>
+          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.8rem,7vw,6.4rem)] leading-[.91] tracking-[-.045em]">African markets, measured sector by sector.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/75 md:text-xl md:leading-8">Read official measures of output, access, infrastructure, investment and operating conditions—without unsupported composite scores or newsroom-volume proxies.</p>
+          <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row"><Link to="/dashboards/overview" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-white px-5 text-sm font-bold text-navy">Open continental economy</Link><Link to="/countries" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-white/30 px-5 text-sm font-bold text-white">Compare country records</Link></div>
         </motion.div>
+        <aside className="border-t border-white/20 pt-6 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0" aria-label="Dataset status">
+          <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/55">Current evidence release</p>
+          <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5 lg:grid-cols-1">
+            <div><dt className="text-xs text-white/55">Sector dossiers</dt><dd className="mt-1 font-serif text-3xl text-white">{performance?.sectors_measured ?? '—'}</dd></div>
+            <div><dt className="text-xs text-white/55">Countries in scope</dt><dd className="mt-1 font-serif text-3xl text-white">{performance?.countries_in_scope ?? '—'}</dd></div>
+            <div className="col-span-2 lg:col-span-1"><dt className="text-xs text-white/55">Evidence source</dt><dd className="mt-1 text-sm font-semibold leading-5 text-white">{performance?.source_name || 'World Bank World Development Indicators'}</dd></div>
+          </dl>
+        </aside>
       </div>
     </header>
 
     <IntelligenceTrustPanel updatedAt={performance?.retrieved_at} sourceLabel={performance?.source_name || 'World Bank World Development Indicators'}/>
 
-    <div className="page-container dashboard-shell mt-10 md:mt-14">
-      <aside className="dashboard-rail" aria-label="Market intelligence sections"><nav>{[['overview','Performance matrix'],['sectors','Sector dossiers'],['methodology','Methodology']].map(([slug,label]) => <Link key={slug} to={`/intelligence/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>)}</nav></aside>
+    <nav className="sticky top-[4.5rem] z-30 border-b border-navy/15 bg-white/95 backdrop-blur-md lg:top-16" aria-label="Market intelligence sections">
+      <div className="mx-auto flex max-w-[1400px] gap-1 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
+        {[['overview','Performance matrix'],['sectors','Sector dossiers'],['methodology','Methodology']].map(([slug,label]) => <Link key={slug} to={`/intelligence/${slug}`} aria-current={view === slug ? 'page' : undefined} className={`shrink-0 rounded-md px-4 py-2.5 text-sm font-bold transition-colors ${view === slug ? 'bg-navy text-white' : 'text-navy/70 hover:bg-navy/5 hover:text-navy'}`}>{label}</Link>)}
+      </div>
+    </nav>
+
+    <div className="mx-auto mt-10 w-full max-w-[1400px] px-5 sm:px-6 md:mt-14 lg:px-8">
       <main className="page-stack min-w-0">
-        <DataReadingGuide subject="the market-intelligence dashboard" />
         {query.isLoading && <section className="grid animate-pulse gap-4 sm:grid-cols-2"><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-96 rounded-2xl bg-navy/5 sm:col-span-2"/></section>}
         {query.isError && <section className="rounded-2xl border border-border bg-white p-8"><p className="text-xs font-bold uppercase tracking-[.16em] text-navy/60">Official dataset request failed</p><h2 className="mt-2 font-serif text-3xl text-navy">The sector-performance record could not be loaded.</h2><button onClick={() => query.refetch()} className="mt-6 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Retry official data</button></section>}
 
@@ -66,6 +78,8 @@ export const BetaIntelligence = () => {
               ].map(([Icon,label,value,detail]) => { const MetricIcon=Icon as typeof Activity; return <article key={label as string} className="rounded-2xl border border-border bg-white p-5 md:p-6"><MetricIcon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{label as string}</p><p className="mt-2 font-serif text-3xl text-navy">{value as string | number}</p><p className="mt-2 text-xs text-muted-foreground">{detail as string}</p></article>; })}
             </div>
           </section>
+
+          <DataReadingGuide subject="the market-intelligence dashboard" />
 
           <section className="page-section rounded-2xl border border-border bg-white p-5 md:p-8" aria-labelledby="market-analysis-path">
             <div className="max-w-3xl">
