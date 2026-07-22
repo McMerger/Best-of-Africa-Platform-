@@ -6,6 +6,7 @@ import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
+import { DataReadingGuide } from '../../components/PageReadingGuide';
 
 const compact = (value: number, digits = 1) => new Intl.NumberFormat('en', {
   notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: digits,
@@ -44,9 +45,9 @@ export const BetaContinentalOverview: React.FC = () => {
     <header className="border-b border-white/10 bg-navy px-5 py-14 text-white sm:px-6 md:py-20">
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
-          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">Continental economic command centre</p>
-          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Africa at decision scale.</h1>
-          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">A sourced view of continental output, population, growth, inflation, foreign investment, trade, fixed investment and sector operating conditions, built from official country observations with visible periods and source limits.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">Continental economic overview</p>
+          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Africa’s economy, explained with official data.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">See the continent’s economic size, population, growth, inflation, investment and trade—then check the countries, years and limitations behind every figure.</p>
           <div className="mt-8 flex flex-wrap gap-3"><Link to="/intelligence/sectors" className="rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy">Sector intelligence</Link><Link to="/countries" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white">Country dossiers</Link></div>
         </motion.div>
       </div>
@@ -58,16 +59,17 @@ export const BetaContinentalOverview: React.FC = () => {
       <aside className="dashboard-rail" aria-label="Continental dashboard sections"><nav>{[['overview','Continental record'],['regions','Regional comparison'],['sectors','Sector performance']].map(([slug,label]) => <Link key={slug} to={`/dashboards/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>)}</nav></aside>
 
       <main className="page-stack min-w-0">
+        <DataReadingGuide subject="the continental overview" />
         {view === 'overview' && <>
           <section className="page-section">
-            <div className="max-w-3xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-navy/60">Official continental record</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Economic scale and direction</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">Totals aggregate the latest country observations; medians preserve equal country weight. Coverage and reporting years remain visible so continent-wide figures are never mistaken for perfectly synchronized national accounts.</p></div>
+            <div className="max-w-3xl"><p className="text-[11px] font-bold uppercase tracking-[.18em] text-navy/60">Official continental record</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">How large is the economy, and which way is it moving?</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">A total adds reported country values together. A median shows the middle country and gives every country equal weight. The cards state which method is used.</p></div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {headlineCodes.map((code,index) => { const item=indicators[code]; const Icon=headlineIcons[index]; return <article key={code} className="rounded-2xl border border-border bg-white p-5 md:p-6"><Icon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{item.label}</p><p className="mt-2 break-words font-serif text-3xl text-navy">{formatValue(item.value,item.unit)}</p><p className="mt-3 text-xs leading-5 text-muted-foreground">{item.aggregation} · {item.countries_reported} countries · {period(item.period_start,item.period_end)}</p></article>; })}
+              {headlineCodes.map((code,index) => { const item=indicators[code]; const Icon=headlineIcons[index]; return <article key={code} className="rounded-2xl border border-border bg-white p-5 md:p-6"><Icon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{item.label}</p><p className="mt-2 break-words font-serif text-3xl text-navy">{formatValue(item.value,item.unit)}</p><p className="mt-3 text-xs leading-5 text-muted-foreground">{item.aggregation} · {item.countries_reported} countries · {period(item.period_start,item.period_end)}</p><p className="mt-4 border-t border-border pt-4 text-xs leading-5 text-navy/75"><strong>In plain language:</strong> {item.interpretation}</p></article>; })}
             </div>
           </section>
 
           <section className="page-section">
-            <div className="flex flex-col gap-3 border-b border-border pb-6 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Macro and external accounts</p><h2 className="mt-2 font-serif text-3xl text-navy">Continental indicator ledger</h2></div><span className="text-xs text-muted-foreground">{data.indicators.length} source-defined fields</span></div>
+            <div className="flex flex-col gap-3 border-b border-border pb-6 md:flex-row md:items-end md:justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Trade, prices and investment</p><h2 className="mt-2 font-serif text-3xl text-navy">The other numbers needed for context</h2></div><span className="text-xs text-muted-foreground">{data.indicators.length} official measures in total</span></div>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {data.indicators.filter(item => !headlineCodes.includes(item.indicator_code)).map(item => <article key={item.indicator_code} className="rounded-xl border border-border bg-white p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{item.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{item.label}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy/60">{item.aggregation}</span></div>
@@ -80,7 +82,7 @@ export const BetaContinentalOverview: React.FC = () => {
           </section>
 
           <section className="page-section">
-            <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Country differentiation</p><h2 className="mt-2 font-serif text-3xl text-navy">Scale, growth and capital rankings</h2><p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">Each ranking uses one named indicator and its recorded year. It is not a composite attractiveness index.</p></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Country comparison</p><h2 className="mt-2 font-serif text-3xl text-navy">Which countries record the largest values?</h2><p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">Each list ranks only the named measure. A country’s position does not mean it is the “best” market, safest investment or strongest overall economy.</p></div>
             <div className="mt-7 grid gap-5 lg:grid-cols-3">
               {[
                 ['Largest economies', data.rankings.largest_economies, 'current US$'],
@@ -92,7 +94,7 @@ export const BetaContinentalOverview: React.FC = () => {
         </>}
 
         {view === 'regions' && <section className="page-section">
-          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Five-region comparison</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Regional economic structure</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">GDP, population and FDI are recorded sums; growth, inflation and investment intensity are country medians. Every card discloses the number of country observations behind each regional reading.</p></div>
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Five-region comparison</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">How Africa’s regions differ</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">GDP, population and foreign investment are added across countries. Growth, inflation and investment use the middle country reading. Each card shows how many countries supplied the data.</p></div>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {data.regions.map(region => <article key={region.region} className="rounded-2xl border border-border bg-white p-5 md:p-7">
               <div className="flex items-end justify-between gap-4 border-b border-border pb-5"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-navy/60">{region.country_count} countries</p><h3 className="mt-1 font-serif text-3xl text-navy">{region.region} Africa</h3></div><Link to={`/countries?region=${region.region}`} className="text-xs font-semibold text-navy">Open countries <ArrowRight size={12} className="inline"/></Link></div>

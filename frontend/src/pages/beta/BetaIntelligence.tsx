@@ -5,6 +5,7 @@ import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/SEO';
 import { api } from '../../services/api';
 import { IntelligenceTrustPanel } from '../../components/intelligence/IntelligenceTrustPanel';
+import { DataReadingGuide } from '../../components/PageReadingGuide';
 
 const compact = (value: number) => new Intl.NumberFormat('en', { notation: Math.abs(value) >= 100_000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(value);
 const valueWithUnit = (value: number, unit: string) => unit === 'current US$' ? `$${compact(value)}` : `${compact(value)} ${unit}`;
@@ -37,8 +38,8 @@ export const BetaIntelligence = () => {
       <div className="mx-auto max-w-6xl">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
           <p className="text-[11px] font-bold uppercase tracking-[.22em] text-white/60">African market intelligence</p>
-          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Performance at decision scale.</h1>
-          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">A decision-grade view of sector output, capital intensity, access, infrastructure, productive structure and operating constraints across African economies—using named official indicators with visible dates and limitations.</p>
+          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] tracking-tight md:text-7xl">Understand how African sectors are performing.</h1>
+          <p className="mt-7 max-w-3xl text-base leading-7 text-white/70 md:text-lg">Official measures of output, access, infrastructure, investment and operating conditions across African economies. Every result explains what it measures, which countries and years it covers, and what it cannot prove.</p>
           <div className="mt-8 flex flex-wrap gap-3"><Link to="/dashboards" className="rounded-md bg-white px-5 py-3 text-sm font-semibold text-navy">Continental economy</Link><Link to="/countries" className="rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white">Country dossiers</Link></div>
         </motion.div>
       </div>
@@ -49,29 +50,30 @@ export const BetaIntelligence = () => {
     <div className="page-container dashboard-shell mt-10 md:mt-14">
       <aside className="dashboard-rail" aria-label="Market intelligence sections"><nav>{[['overview','Performance matrix'],['sectors','Sector dossiers'],['methodology','Methodology']].map(([slug,label]) => <Link key={slug} to={`/intelligence/${slug}`} aria-current={view === slug ? 'page' : undefined}>{label}</Link>)}</nav></aside>
       <main className="page-stack min-w-0">
+        <DataReadingGuide subject="the market-intelligence dashboard" />
         {query.isLoading && <section className="grid animate-pulse gap-4 sm:grid-cols-2"><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-44 rounded-2xl bg-navy/5"/><div className="h-96 rounded-2xl bg-navy/5 sm:col-span-2"/></section>}
         {query.isError && <section className="rounded-2xl border border-border bg-white p-8"><p className="text-xs font-bold uppercase tracking-[.16em] text-navy/60">Official dataset request failed</p><h2 className="mt-2 font-serif text-3xl text-navy">The sector-performance record could not be loaded.</h2><button onClick={() => query.refetch()} className="mt-6 rounded-md bg-navy px-5 py-3 text-sm font-semibold text-white">Retry official data</button></section>}
 
         {performance && view === 'overview' && <>
           <section className="page-section">
-            <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Cross-sector performance matrix</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Comparable signals without a synthetic score</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">Each sector retains its own economically meaningful unit. The dashboard compares direction, breadth, data coverage and country dispersion but never ranks unlike indicators as if they were interchangeable.</p></div>
+            <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Cross-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Compare sectors without hiding what the numbers mean</h2><p className="mt-4 text-sm leading-7 text-muted-foreground md:text-base">Each sector uses the measure that fits it. Read the measure’s name and unit before comparing movement or country coverage. BOA does not blend unrelated measures into one score.</p></div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
                 [BarChart3,'Sectors measured',performance.sectors_measured,'sector dossiers'],
                 [Activity,'Official signals',signalCount,'primary and supporting series'],
                 [Globe2,'Countries in scope',performance.countries_in_scope,'African markets'],
-                [Scale,'Average coverage',`${averageCoverage.toFixed(0)}%`,'across all displayed signals'],
+                [Scale,'Average data coverage',`${averageCoverage.toFixed(0)}%`,'average share of 54 countries represented'],
               ].map(([Icon,label,value,detail]) => { const MetricIcon=Icon as typeof Activity; return <article key={label as string} className="rounded-2xl border border-border bg-white p-5 md:p-6"><MetricIcon size={18} className="text-navy/65"/><p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{label as string}</p><p className="mt-2 font-serif text-3xl text-navy">{value as string | number}</p><p className="mt-2 text-xs text-muted-foreground">{detail as string}</p></article>; })}
             </div>
           </section>
 
           <section className="page-section overflow-hidden rounded-2xl border border-border bg-white">
-            <div className="border-b border-border px-5 py-6 md:px-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Eight-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy">Current official readings</h2></div>
+            <div className="border-b border-border px-5 py-6 md:px-8"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Eight-sector comparison</p><h2 className="mt-2 font-serif text-3xl text-navy">What the latest available country data shows</h2><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">The large value is the middle country reading. “Higher” only describes direction; whether it is favourable depends on what the indicator measures.</p></div>
             <div className="divide-y divide-border">
               {performance.data.map(sector => <article key={sector.sector_id} className="grid gap-5 px-5 py-6 md:px-8 lg:grid-cols-[1.2fr_.8fr_1fr_auto] lg:items-center">
                 <div><p className="text-[9px] font-bold uppercase tracking-[.12em] text-muted-foreground">{sector.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{sector.sector_name}</h3><p className="mt-2 text-xs leading-5 text-muted-foreground">{sector.indicator_name} · {period(sector.period_start,sector.period_end)}</p></div>
-                <div><p className="text-[9px] uppercase tracking-[.1em] text-muted-foreground">{sector.headline_label}</p><p className="mt-1 font-serif text-2xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-1 text-xs text-muted-foreground">{changeWithUnit(sector.comparison_value,sector.comparison_unit)} from prior observation</p></div>
-                <div className="grid grid-cols-2 gap-3"><div><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">markets moving higher</span></div><div><strong className="block text-lg text-navy">{sector.continent_coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">country coverage</span></div></div>
+                <div><p className="text-[9px] uppercase tracking-[.1em] text-muted-foreground">Middle country reading · {sector.headline_label}</p><p className="mt-1 font-serif text-2xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-1 text-xs text-muted-foreground">{changeWithUnit(sector.comparison_value,sector.comparison_unit)} versus the previous available reading</p></div>
+                <div className="grid grid-cols-2 gap-3"><div><strong className="block text-lg text-navy">{sector.improving_markets_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">countries reading higher</span></div><div><strong className="block text-lg text-navy">{sector.continent_coverage_pct.toFixed(0)}%</strong><span className="text-[9px] uppercase tracking-[.08em] text-muted-foreground">of 54 countries covered</span></div></div>
                 <Link to={`/sectors/${sector.sector_id}/trends`} className="inline-flex items-center gap-2 text-xs font-semibold text-navy">Full dossier <ArrowRight size={14}/></Link>
               </article>)}
             </div>
@@ -79,13 +81,13 @@ export const BetaIntelligence = () => {
         </>}
 
         {performance && view === 'sectors' && <section className="page-section">
-          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Multi-indicator dossiers</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Sector performance in depth</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">Primary output or depth signals are read alongside structural and operating dimensions, country distributions and sector-specific diligence questions.</p></div>
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-navy/60">Detailed sector guides</p><h2 className="mt-2 font-serif text-3xl text-navy md:text-5xl">Understand each sector one measure at a time</h2><p className="mt-4 text-sm leading-7 text-muted-foreground">Start with the main measure, then use the three supporting measures to see structure and operating conditions. The questions at the end show what still requires investigation.</p></div>
           <div className="mt-8 grid gap-5 md:grid-cols-2">
             {performance.data.map(sector => <article key={sector.sector_id} className="flex flex-col rounded-2xl border border-border bg-white p-5 md:p-6">
               <div className="flex items-start justify-between gap-3 border-b border-border pb-4"><div><p className="text-[9px] font-bold uppercase tracking-[.12em] text-muted-foreground">{sector.indicator_code}</p><h3 className="mt-1 font-serif text-2xl text-navy">{sector.sector_name}</h3></div><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.1em] text-navy">{sector.direction}</span></div>
-              <div className="py-5"><p className="text-[10px] uppercase tracking-[.1em] text-muted-foreground">{sector.headline_label}</p><p className="mt-2 font-serif text-4xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Median across {sector.countries_reported} countries · {period(sector.period_start,sector.period_end)} · middle 50% {sector.dispersion_low.toFixed(1)}–{sector.dispersion_high.toFixed(1)}</p><p className="mt-4 text-sm leading-6 text-navy/80">{sector.scope}</p></div>
+              <div className="py-5"><p className="text-[10px] uppercase tracking-[.1em] text-muted-foreground">{sector.headline_label}</p><p className="mt-2 font-serif text-4xl text-navy">{valueWithUnit(sector.headline_value,sector.headline_unit)}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">Middle reading across {sector.countries_reported} countries · {period(sector.period_start,sector.period_end)} · half of the countries fall between {sector.dispersion_low.toFixed(1)} and {sector.dispersion_high.toFixed(1)}</p><p className="mt-4 text-sm leading-6 text-navy/80"><strong>What this measures:</strong> {sector.scope}</p></div>
               <div className="grid gap-2">{sector.dimensions.map(item => <div key={item.indicator_code} className="rounded-lg border border-border bg-navy/[.025] p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold text-navy">{item.label}</p><p className="mt-0.5 text-[9px] text-muted-foreground">{item.indicator_code} · {period(item.period_start,item.period_end)}</p></div><span className="text-right text-sm font-semibold text-navy">{valueWithUnit(item.value,item.unit)}</span></div><div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-muted-foreground"><span>{changeWithUnit(item.comparison_value,item.comparison_unit)} median change</span><span>{item.markets_rising_pct.toFixed(0)}% rising</span><span>{item.coverage_pct.toFixed(0)}% coverage</span></div></div>)}</div>
-              <div className="mt-5 border-t border-border pt-4"><p className="text-[9px] font-bold uppercase tracking-[.12em] text-navy/60">Priority diligence</p><ol className="mt-3 space-y-2">{sector.diligence_questions.slice(0,2).map((question,index) => <li key={question} className="grid grid-cols-[1.25rem_1fr] gap-2 text-xs leading-5 text-muted-foreground"><span>{index+1}.</span><span>{question}</span></li>)}</ol></div>
+              <div className="mt-5 border-t border-border pt-4"><p className="text-[9px] font-bold uppercase tracking-[.12em] text-navy/60">Questions to check next</p><ol className="mt-3 space-y-2">{sector.diligence_questions.slice(0,2).map((question,index) => <li key={question} className="grid grid-cols-[1.25rem_1fr] gap-2 text-xs leading-5 text-muted-foreground"><span>{index+1}.</span><span>{question}</span></li>)}</ol></div>
               <Link to={`/sectors/${sector.sector_id}/trends`} className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs font-semibold text-navy">Open complete performance dossier <ArrowRight size={14}/></Link>
             </article>)}
           </div>

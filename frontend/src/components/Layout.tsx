@@ -6,6 +6,7 @@ import { InterfaceTranslator } from './InterfaceTranslator';
 import { MEMBER_PREVIEW_MODE } from '../config/flags';
 import { ScrollToTopButton } from './ScrollToTopButton';
 import { MobileNavigationDock } from './MobileNavigationDock';
+import { PageReadingGuide } from './PageReadingGuide';
 
 
 
@@ -27,6 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </div>
                 )}
                 <Breadcrumbs />
+                <PageReadingGuide />
                 <main className={`flex-1 transition-all duration-300`}>
                     {children}
                 </main>
