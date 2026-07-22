@@ -13,8 +13,6 @@
 // (a full replacement — no layout-shift scoring), reusing the cached hero.
 // Any failure falls back to the unmodified shell, so article pages never break.
 
-const API_BASE = 'https://best-of-africa-backend.cortesmailles01.workers.dev/api/v1';
-
 const esc = (s) =>
   String(s || '')
     .replace(/&/g, '&amp;')
@@ -71,6 +69,7 @@ function buildFold({ heroUrl, mobileHeroUrl, kicker, title, summary }) {
 
 export async function onRequest(context) {
   const { params, env, request } = context;
+  const backend = String(env.BACKEND_ORIGIN || '').replace(/\/$/, '');
 
   // Always start from the real SPA shell.
   let html;
@@ -81,11 +80,16 @@ export async function onRequest(context) {
     return env.ASSETS.fetch(request);
   }
 
+  // The SPA remains available even if a new Pages installation has not yet
+  // attached its backend. Only server-rendered article metadata is skipped.
+  if (!backend) return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+  const apiBase = `${backend}/api/v1`;
+
   try {
     const origin = new URL(request.url).origin;
     const DEFAULT_IMG = `${origin}/og-default.jpg`;
     const slug = params.slug;
-    const r = await fetch(`${API_BASE}/articles/${encodeURIComponent(slug)}`, {
+    const r = await fetch(`${apiBase}/articles/${encodeURIComponent(slug)}`, {
       headers: { accept: 'application/json' },
       cf: { cacheTtl: 300, cacheEverything: true },
     });

@@ -10,6 +10,9 @@ dist/
 .env
 .env.local
 .dev.vars
+.cloudflare/
+frontend/.env.production.local
+frontend/.env.*.local
 
 # IDE
 .vscode/

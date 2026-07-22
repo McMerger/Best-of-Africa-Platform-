@@ -34,8 +34,10 @@ interface DigestArticle {
 // links must point at the live site, and unsubscribe at the backend endpoint
 // (RFC 8058-style one-click) carrying the subscription id as the token.
 const siteBase = (env: Env) => env.PUBLIC_SITE_URL || 'https://best-of-africa.pages.dev';
-const unsubscribeUrl = (env: Env, subscriptionId: string) =>
-    `${(env.PUBLIC_API_URL || 'https://best-of-africa-backend.cortesmailles01.workers.dev')}/api/v1/newsletter/unsubscribe?token=${encodeURIComponent(subscriptionId)}`;
+const unsubscribeUrl = (env: Env, subscriptionId: string) => {
+    const apiBase = (env.PUBLIC_API_URL || '').replace(/\/$/, '');
+    return apiBase ? `${apiBase}/api/v1/newsletter/unsubscribe?token=${encodeURIComponent(subscriptionId)}` : '#';
+};
 
 // ───────────────────────────────────────────────────────────────────────────────
 // Generate Daily Digest Content

@@ -1,8 +1,8 @@
 // Proxy the backend-generated RSS feed (see sitemap.xml.js for why).
-const BACKEND = 'https://best-of-africa-backend.cortesmailles01.workers.dev';
-
-export async function onRequestGet() {
-  const res = await fetch(`${BACKEND}/rss.xml`, {
+export async function onRequestGet(context) {
+  const backend = String(context.env.BACKEND_ORIGIN || '').replace(/\/$/, '');
+  if (!backend) return new Response('BACKEND_ORIGIN is not configured', { status: 503 });
+  const res = await fetch(`${backend}/rss.xml`, {
     cf: { cacheTtl: 1800, cacheEverything: true },
   });
   return new Response(res.body, {
