@@ -11,12 +11,6 @@ type Guide = {
   terms: Array<[string, string]>;
 };
 
-const isAnalysisPath = (pathname: string) =>
-  pathname.startsWith('/intelligence') ||
-  pathname.startsWith('/dashboards') ||
-  pathname.startsWith('/sectors/') ||
-  pathname.startsWith('/countries/');
-
 const guideForPath = (pathname: string): Guide => {
   if (pathname.startsWith('/intelligence') || pathname.startsWith('/sectors/')) {
     return {
@@ -136,7 +130,7 @@ export function PageReadingGuide() {
   const { pathname } = useLocation();
   const guide = useMemo(() => guideForPath(pathname), [pathname]);
   const [manualState, setManualState] = useState<{ path: string; open: boolean } | null>(null);
-  const open = manualState?.path === pathname ? manualState.open : isAnalysisPath(pathname);
+  const open = manualState?.path === pathname ? manualState.open : false;
 
   return <section className="border-b border-border bg-white" aria-label="Plain-language page guide">
     <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8">

@@ -198,7 +198,7 @@ export const BetaCountryHub = () => {
       
 
       {/* ── Hero ─────────────────────────────────────────────────────────────── */}
-      <div className="relative bg-card py-12 md:py-16 px-4 sm:px-6 border-b border-border">
+      <div className="app-hero relative border-b border-border bg-card px-4 py-12 sm:px-6 md:py-16">
         <motion.div 
           className="hidden"
           style={{ y: useTransform(scrollY, [0, 800], [0, 250]) }}

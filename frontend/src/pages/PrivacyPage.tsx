@@ -15,7 +15,7 @@ export const PrivacyPage: React.FC = () => {
         <>
             <SEO title="Privacy Policy" description="How Best of Africa collects, uses, and protects your personal information, including PIPEDA rights for Canadian users." />
             <div className="container py-14 md:py-20 max-w-3xl">
-                <header className="mb-10 border-b border-border pb-8">
+                <header className="app-hero mb-10 rounded-lg border-b border-border p-6 sm:p-8">
                     <h1 className="mb-4 text-4xl font-serif font-semibold tracking-tight text-ink md:text-5xl">Privacy Policy</h1>
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Last Updated: June 2026</p>
                 </header>

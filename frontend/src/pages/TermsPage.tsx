@@ -14,7 +14,7 @@ export const TermsPage: React.FC = () => {
         <>
             <SEO title="Terms of Service" description="The terms governing use of the Best of Africa platform and its content." />
             <div className="container py-14 md:py-20 max-w-3xl">
-                <header className="mb-10 border-b border-border pb-8">
+                <header className="app-hero mb-10 rounded-lg border-b border-border p-6 sm:p-8">
                     <h1 className="mb-4 text-4xl font-serif font-semibold tracking-tight text-ink md:text-5xl">Terms of Service</h1>
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-accent">Last Updated: June 2026</p>
                 </header>

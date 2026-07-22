@@ -106,7 +106,7 @@ export const BetaSponsorDashboard: React.FC = () => {
       
       <div className="bg-background min-h-screen pb-24">
         {/* Header */}
-        <div className="bg-background text-foreground pt-16 pb-20 px-6 border-b border-accent/20 relative overflow-hidden">
+        <div className="app-hero relative overflow-hidden border-b border-accent/20 bg-background px-6 pb-20 pt-16 text-foreground">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-accent/10 via-transparent to-transparent pointer-events-none" />
           
           <div className="max-w-6xl mx-auto relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">

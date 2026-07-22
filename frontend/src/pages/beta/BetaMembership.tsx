@@ -58,7 +58,7 @@ export const BetaMembership = () => {
 
       {/* Tiers */}
       <section className="py-12 md:py-16 px-6 max-w-6xl mx-auto">
-        <div className="text-left mb-12 max-w-3xl">
+        <div className="app-hero mb-12 max-w-4xl rounded-lg p-6 text-left sm:p-8 md:p-10">
           <h1 className="font-serif text-[32px] md:text-[44px] leading-tight mb-4">{t('mem.title', 'Join before the official launch')}</h1>
           <p className="text-base md:text-lg text-primary/70 max-w-2xl leading-relaxed mb-8">
             {t('mem.subtitle', 'Your support right now covers domains, tools, and the time to report and ship.')}

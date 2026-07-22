@@ -69,7 +69,7 @@ export const BetaEvents: React.FC = () => {
             />
             
             {/* Header */}
-            <div className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
+            <div className="app-hero border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-6xl mx-auto w-full">
                     <div>
                         <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">BOA-Story Network</p>

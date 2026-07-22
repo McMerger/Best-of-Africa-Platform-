@@ -78,7 +78,7 @@ export const BetaTravel: React.FC = () => {
             />
             
             {/* Hero Section */}
-            <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+            <div className="app-hero border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
                 <motion.div 
                   className="hidden"
                 >

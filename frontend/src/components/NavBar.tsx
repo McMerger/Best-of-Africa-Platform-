@@ -112,20 +112,21 @@ export const NavBar: React.FC = () => {
                 </div>
             )}
 
-            <div className="mx-auto flex h-[4.5rem] max-w-[1400px] items-center justify-between px-5 sm:px-6 lg:h-16 lg:px-8">
+            <div className="mx-auto flex h-[4.5rem] max-w-[1400px] items-center justify-between px-5 sm:px-6 lg:h-[4.75rem] lg:px-8">
                 {/* LEFT: Logo, "B BOA." lockup */}
                 <div className="flex items-center min-w-0 shrink-0 z-10">
-                    <Link to="/" className="flex items-center gap-2 group shrink-0">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy font-serif font-black text-white text-lg leading-none shadow-sm">B</span>
-                        <span className="text-xl md:text-2xl font-serif font-black tracking-tight text-navy">
-                            BOA<span className="text-accent">.</span>
+                    <Link to="/" className="group flex shrink-0 items-center gap-3" aria-label="BOA-Story home">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-md bg-navy font-serif text-lg font-black leading-none text-white">B</span>
+                        <span className="flex flex-col leading-none text-navy">
+                            <span className="font-serif text-xl font-black tracking-[-.04em] md:text-2xl">BOA</span>
+                            <span className="mt-1 text-[9px] font-bold uppercase tracking-[.24em] text-navy/55">Story</span>
                         </span>
                     </Link>
                 </div>
 
                 {/* CENTER: Desktop Nav */}
                 {/* navy/70 is the contrast floor for 11px text on white — /60 is 4.38:1, under WCAG's 4.5 */}
-                <nav aria-label="Primary navigation" className="hidden lg:flex items-center justify-center gap-0.5 xl:gap-2 text-[11px] font-bold text-navy/70 uppercase tracking-[0.15em] z-0 flex-1 lg:ml-2 xl:ml-8 relative">
+                <nav aria-label="Primary navigation" className="relative z-0 ml-5 hidden flex-1 items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-[0.11em] text-navy/70 lg:flex xl:ml-10">
                     {[
                         { path: '/intelligence', label: t('nav.intelligence_short', 'Intelligence'), priority: true },
                         { path: '/dashboards/overview', label: 'Dashboard', priority: true },
@@ -139,11 +140,8 @@ export const NavBar: React.FC = () => {
                             <Link
                                 key={item.path}
                                 to={item.path}
-                                className={cn("relative px-2.5 xl:px-4 py-2 transition-colors whitespace-nowrap z-10", item.priority && !isActive && "text-navy", isActive ? "text-navy" : "hover:text-accent")}
+                                className={cn("relative z-10 whitespace-nowrap rounded-md px-3 py-2.5 transition-colors xl:px-4", item.priority && !isActive && "text-navy", isActive ? "bg-navy text-white" : "hover:bg-navy/5 hover:text-navy")}
                             >
-                                {isActive && (
-                                    <span className="absolute inset-x-3 -bottom-[9px] h-0.5 bg-accent -z-10" />
-                                )}
                                 {item.label}
                             </Link>
                         );
@@ -182,7 +180,7 @@ export const NavBar: React.FC = () => {
 
                     <div className="hidden lg:block w-px h-6 bg-border mx-2" />
 
-                    <Button size="sm" asChild className="hidden lg:flex rounded-full font-bold px-5 xl:px-7 h-10 bg-accent text-navy hover:bg-gold-italic transition-all shadow-[0_2px_12px_rgba(15,31,61,0.25)] text-[11px] uppercase tracking-widest">
+                    <Button size="sm" asChild className="hidden h-10 rounded-md bg-navy px-5 text-[11px] font-bold uppercase tracking-widest text-white shadow-none transition-colors hover:bg-navy-mid lg:flex xl:px-7">
                         <Link to="/login">{isAuthenticated ? t('nav.account', 'Account') : t('nav.signin', 'Sign In')}</Link>
                     </Button>
 
@@ -270,7 +268,7 @@ export const NavBar: React.FC = () => {
                 </div>
             </div>
         </header>
-        <div aria-hidden="true" className={cn("h-[4.5rem] shrink-0 lg:h-16", isAuthenticated && "lg:h-24")} />
+        <div aria-hidden="true" className={cn("h-[4.5rem] shrink-0 lg:h-[4.75rem]", isAuthenticated && "lg:h-[7.5rem]")} />
         </>
     );
 };

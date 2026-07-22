@@ -152,7 +152,7 @@ export const BetaFeed: React.FC = () => {
 
             {/* Masthead — newspaper treatment: centered nameplate between a
                 thick-thin double rule, with a dateline row inside the rules. */}
-            <div className="bg-background text-foreground pt-14 md:pt-20 pb-10 md:pb-14 px-4 sm:px-6">
+            <div className="app-hero bg-background px-4 pb-10 pt-14 text-foreground sm:px-6 md:pb-14 md:pt-20">
                 <div className="max-w-3xl mx-auto text-center">
                     <h1 className="font-serif text-[2.5rem] sm:text-5xl md:text-6xl font-black leading-[1.05] tracking-tight mb-5">
                         The Africa Intelligence Brief

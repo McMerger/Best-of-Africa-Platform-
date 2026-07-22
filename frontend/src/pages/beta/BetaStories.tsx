@@ -158,7 +158,7 @@ export const BetaStories = () => {
       />
       
       {/* Hero Image Section */}
-      <section className="relative w-full border-b border-border bg-card px-5 py-12 sm:px-6 md:py-16">
+      <section className="app-hero relative w-full border-b border-border bg-card px-5 py-12 sm:px-6 md:py-16">
         <motion.div 
           className="hidden"
           initial={false}

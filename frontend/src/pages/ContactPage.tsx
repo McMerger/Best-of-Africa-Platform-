@@ -53,7 +53,7 @@ export const ContactPage: React.FC = () => {
         <>
             <SEO title="Contact" description="Reach Best of Africa for media inquiries, partnership opportunities, or support." />
             <div className="container py-14 md:py-20 max-w-5xl">
-                <div className="mb-10 max-w-2xl">
+                <div className="app-hero mb-10 max-w-3xl rounded-lg p-6 sm:p-8 md:p-10">
                     <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Contact</p>
                     <h1 className="mb-4 text-4xl font-serif font-semibold text-foreground md:text-5xl">
                         {config?.['contact_headline'] || "Contact Best of Africa"}

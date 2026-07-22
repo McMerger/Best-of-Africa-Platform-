@@ -59,7 +59,7 @@ export const BetaWorldCup: React.FC = () => {
       />
 
       {/* Hero */}
-      <div className="border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
+      <div className="app-hero border-b border-border bg-card px-4 py-14 sm:px-6 md:py-20">
         <motion.div className="hidden">
           <img
             src="/images/v2_events.webp"

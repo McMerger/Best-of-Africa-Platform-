@@ -130,7 +130,7 @@ export const BetaCountryTeaser = () => {
       <div className="max-w-7xl mx-auto px-5 py-12 sm:px-6 md:py-16">
 
         {/* Header */}
-        <header className="mb-10 max-w-3xl">
+        <header className="app-hero -mx-1 mb-10 max-w-4xl rounded-lg p-6 sm:p-8 md:p-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent-ink text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Globe size={12} />
             {t('countries.badge', '54 African Nations')}

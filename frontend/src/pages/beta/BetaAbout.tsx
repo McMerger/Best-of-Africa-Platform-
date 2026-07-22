@@ -20,7 +20,7 @@ export const BetaAbout = () => {
       />
       
       {/* 1. HERO, full navy band (spec §3.7) */}
-      <section className="border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
+      <section className="app-hero border-b border-border bg-card px-5 py-12 sm:px-6 sm:py-14 md:py-20">
         <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-[1fr_280px] md:items-end">
           <div>
             <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">About BOA-Story</p>

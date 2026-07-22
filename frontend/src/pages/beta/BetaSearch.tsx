@@ -81,7 +81,7 @@ export const BetaSearch: React.FC = () => {
             />
 
             {/* Search Header, navy band (spec §3.1) */}
-            <div className="border-b border-border bg-card px-5 py-12 text-foreground sm:px-6 sm:py-14 md:py-20">
+            <div className="app-hero border-b border-border bg-card px-5 py-12 text-foreground sm:px-6 sm:py-14 md:py-20">
                 <div className="max-w-4xl mx-auto relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                         <p className="text-[11px] font-bold uppercase tracking-widest text-accent mb-6 flex items-center gap-2">

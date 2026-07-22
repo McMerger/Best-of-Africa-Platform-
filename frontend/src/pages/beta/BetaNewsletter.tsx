@@ -94,7 +94,7 @@ export const BetaNewsletter = () => {
             </div>
           )}
 
-          <div className="mb-10 min-w-0 w-full">
+          <div className="app-hero mb-10 min-w-0 w-full rounded-lg p-6 sm:p-8">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-accent">Weekly briefing</p>
             <h1 className="max-w-full break-words font-serif text-ink text-[36px] md:text-[52px] leading-tight mb-4">
               Stay close to Africa's story.

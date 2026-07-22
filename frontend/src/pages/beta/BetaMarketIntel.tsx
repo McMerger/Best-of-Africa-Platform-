@@ -165,7 +165,7 @@ export const BetaMarketIntel = () => {
       
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="bg-background text-foreground pt-8 pb-16 px-6">
+      <div className="app-hero bg-background px-6 pb-16 pt-8 text-foreground">
         <div className="page-container">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent text-[11px] font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-6">
             <Heart size={12} />
